@@ -20,7 +20,7 @@
 | PROJ-3 | Mahlzeit-Input (Foto & Freitext) | P0 | Planned | PROJ-1, PROJ-2 | [Spec](PROJ-3-mahlzeit-input.md) |
 | PROJ-4 | KI-Analyse-Agent (Rückfragen + BLS + Makros) | P0 | Planned | PROJ-3, Sättigungsmatrix verifiziert | [Spec](PROJ-4-ki-analyse-agent.md) |
 | PROJ-5 | Sättigungs-Einschätzung & Verbesserungsvorschlag | P0 | Planned | PROJ-4 | [Spec](PROJ-5-saettigungs-einschaetzung.md) |
-| PROJ-6 | Mahlzeit-Historie | P1 | Roadmap | PROJ-1, PROJ-2, PROJ-4 | — |
+| PROJ-6 | Mahlzeit-Historie | P1 | Planned | PROJ-1, PROJ-2, PROJ-4, PROJ-5 | [Spec](PROJ-6-mahlzeit-historie.md) |
 | PROJ-7 | Ernährungs-Tagebuch & Inspiration | P2 | Roadmap | PROJ-6 | — |
 
 <!-- Add features above this line -->
