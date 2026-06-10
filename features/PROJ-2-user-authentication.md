@@ -1,0 +1,89 @@
+# PROJ-2: User Authentication
+
+## Status: Planned
+**Created:** 2026-06-10
+**Last Updated:** 2026-06-10
+
+## Dependencies
+- Requires: PROJ-1 (Supabase Infrastructure Setup) — Auth läuft über Supabase Auth, Profil-Eintrag wird bei Registrierung angelegt
+
+## User Stories
+- Als neuer Nutzer möchte ich mich mit E-Mail und Passwort registrieren, damit ich meine Mahlzeiten und Analysen persönlich gespeichert habe.
+- Als registrierter Nutzer möchte ich mich einloggen, damit ich auf meine gespeicherten Daten zugreifen kann.
+- Als Nutzer möchte ich nach dem Login direkt auf der Analyse-Seite landen, damit ich sofort loslegen kann.
+- Als Nutzer möchte ich mein Passwort zurücksetzen können, damit ich bei einem vergessenen Passwort nicht dauerhaft ausgesperrt bin.
+- Als Nutzer möchte ich meine E-Mail-Adresse bestätigen müssen, damit mein Konto gesichert ist.
+- Als Nutzer möchte ich mich ausloggen können, damit meine Daten auf geteilten Geräten geschützt sind.
+
+## Out of Scope
+- Google / Apple / OAuth Login — deferred to Post-MVP, Supabase-seitig später einfach nachrüstbar
+- Zwei-Faktor-Authentifizierung (2FA) — Post-MVP
+- Account-Löschung durch den Nutzer — Post-MVP
+- Admin-Zugang oder Nutzer-Verwaltung — kein Admin-Feature geplant
+- "Remember me"-Checkbox — Supabase-Sessions sind standardmäßig persistent, kein manueller Toggle nötig
+
+## Acceptance Criteria
+
+### Registrierung
+- [ ] Angenommen der Nutzer ist nicht eingeloggt, wenn er die Registrierungsseite aufruft und Name, E-Mail und Passwort eingibt und abschickt, dann erhält er eine Bestätigungsmail und wird auf eine Hinweisseite ("Bitte E-Mail bestätigen") weitergeleitet.
+- [ ] Angenommen der Nutzer versucht sich zu registrieren, wenn er eine bereits verwendete E-Mail-Adresse eingibt, dann wird eine klare Fehlermeldung angezeigt ("E-Mail bereits registriert").
+- [ ] Angenommen der Nutzer füllt das Registrierungsformular aus, wenn das Passwort kürzer als 8 Zeichen ist, dann wird eine Validierungsfehlermeldung angezeigt bevor der Request abgeschickt wird.
+- [ ] Angenommen der Nutzer klickt den Bestätigungslink in der E-Mail, wenn der Link gültig ist, dann wird er eingeloggt und landet direkt auf der Analyse-Seite.
+
+### Login
+- [ ] Angenommen der Nutzer ist registriert und hat seine E-Mail bestätigt, wenn er sich mit korrekten Zugangsdaten einloggt, dann landet er direkt auf der Analyse-Seite.
+- [ ] Angenommen der Nutzer versucht sich einzuloggen, wenn er falsche Zugangsdaten eingibt, dann wird eine generische Fehlermeldung angezeigt ("E-Mail oder Passwort falsch") ohne preiszugeben welches der beiden falsch ist.
+- [ ] Angenommen der Nutzer hat seine E-Mail noch nicht bestätigt, wenn er sich einloggen möchte, dann wird er darauf hingewiesen und kann die Bestätigungsmail erneut anfordern.
+
+### Passwort vergessen
+- [ ] Angenommen der Nutzer hat sein Passwort vergessen, wenn er auf "Passwort vergessen" klickt und seine E-Mail eingibt, dann erhält er eine E-Mail mit einem Reset-Link.
+- [ ] Angenommen der Nutzer klickt den Reset-Link, wenn er ein neues Passwort setzt, dann ist das alte Passwort ungültig und er wird mit dem neuen Passwort eingeloggt.
+- [ ] Angenommen ein Reset-Link wurde angefordert, wenn derselbe Link nach 1 Stunde nochmals aufgerufen wird, dann ist er abgelaufen und der Nutzer wird aufgefordert einen neuen anzufordern.
+
+### Zugangsschutz
+- [ ] Angenommen der Nutzer ist nicht eingeloggt, wenn er eine geschützte Seite (z.B. Analyse, Historie) aufruft, dann wird er zur Login-Seite weitergeleitet.
+- [ ] Angenommen der Nutzer ist eingeloggt, wenn er die Login- oder Registrierungsseite direkt aufruft, dann wird er zur Analyse-Seite weitergeleitet.
+
+### Logout
+- [ ] Angenommen der Nutzer ist eingeloggt, wenn er auf "Abmelden" klickt, dann wird die Session beendet und er landet auf der Login-Seite.
+
+## Edge Cases
+- **Abgelaufener Bestätigungslink:** Nutzer klickt den Verifizierungslink nach zu langer Zeit — klare Fehlermeldung mit Option, einen neuen Link anzufordern.
+- **Netzwerkfehler beim Login:** Formular bleibt ausgefüllt, Fehlermeldung wird angezeigt, kein Datenverlust.
+- **Direktlink nach Login:** Wenn ein nicht eingeloggter Nutzer auf `/analyse` verlinkt wird, soll er nach dem Login automatisch dorthin weitergeleitet werden (nicht immer zur Standard-Startseite).
+- **Session abgelaufen:** Wenn eine Session im Hintergrund abläuft, soll der Nutzer beim nächsten Interaktionsversuch sanft zur Login-Seite geleitet werden (kein harter Absturz).
+- **Mehrfach-Registrierung:** Nutzer versucht sich mit derselben E-Mail zweimal zu registrieren — eindeutige Fehlermeldung ohne technische Details.
+
+## Technical Requirements
+- **Mobile-first:** Alle Auth-Screens vollständig auf Mobilgeräten nutzbar (kein horizontales Scrollen, ausreichend große Touch-Targets)
+- **Session-Persistenz:** Supabase-Standard (JWT in localStorage), kein manueller Toggle nötig
+- **Passwort-Mindestlänge:** 8 Zeichen, client- und serverseitig validiert
+- **E-Mail-Bestätigung:** Pflicht vor erstem Login — kein Zugang ohne bestätigte E-Mail
+- **Reset-Link-Ablauf:** 1 Stunde (Supabase-Standard)
+
+## Open Questions
+- [ ] Welcher Absender-Name und welche Absender-Adresse sollen in den Auth-E-Mails erscheinen? (z.B. "endlichsatt <hello@endlichsatt.de>") — abhängig von Domain-Setup
+
+## Decision Log
+
+### Product Decisions
+| Decision | Rationale | Date |
+|----------|-----------|------|
+| Nur E-Mail + Passwort im MVP | Schnellste Umsetzung; OAuth per Supabase-Toggle später nachrüstbar ohne Architektur-Änderung | 2026-06-10 |
+| E-Mail-Verifizierung Pflicht | Schutz vor Fake-Accounts; sinnvoll bei persönlichen Gesundheitsdaten | 2026-06-10 |
+| Nach Login direkt zur Analyse-Seite | App hat eine Kernfunktion — kein Umweg über Dashboard bis PROJ-6 existiert | 2026-06-10 |
+| Keine "Remember me"-Checkbox | Supabase-Sessions sind standardmäßig persistent; Checkbox wäre UI-Rauschen ohne Mehrwert | 2026-06-10 |
+
+### Technical Decisions
+<!-- Added by /architecture -->
+
+---
+
+## Tech Design (Solution Architect)
+_To be added by /architecture_
+
+## QA Test Results
+_To be added by /qa_
+
+## Deployment
+_To be added by /deploy_

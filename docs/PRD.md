@@ -19,7 +19,7 @@ endlichsatt ist eine Web-App, die Nutzern hilft zu verstehen, warum bestimmte Ma
 | Priority | ID | Feature | Status |
 |----------|----|---------|--------|
 | P0 (MVP) | PROJ-1 | Supabase Infrastructure Setup | Planned |
-| P0 (MVP) | PROJ-2 | User Authentication | Roadmap |
+| P0 (MVP) | PROJ-2 | User Authentication | Planned |
 | P0 (MVP) | PROJ-3 | Mahlzeit-Input (Foto & Freitext) | Roadmap |
 | P0 (MVP) | PROJ-4 | KI-Analyse-Agent (Rückfragen + BLS + Makros) | Roadmap |
 | P0 (MVP) | PROJ-5 | Sättigungs-Einschätzung & Verbesserungsvorschlag | Roadmap |
@@ -40,6 +40,7 @@ endlichsatt ist eine Web-App, die Nutzern hilft zu verstehen, warum bestimmte Ma
 - Design-System: siehe `docs/design-system.md`
 - Sättigungsmatrix: siehe `docs/saettigungsmatrix.md` (muss vor PROJ-4 befüllt sein)
 - **PROJ-4 und PROJ-5 dürfen erst implementiert werden, nachdem die Sättigungsmatrix vom Nutzer verifiziert wurde**
+- **Mobile-first:** Alle Screens müssen vollständig auf Mobilgeräten nutzbar sein (kein separates Mobile-Feature, sondern durchgängige Anforderung)
 
 ## Non-Goals (diese Version)
 
