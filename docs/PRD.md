@@ -1,29 +1,51 @@
-# Product Requirements Document
+# Product Requirements Document — endlichsatt
 
 ## Vision
-_Describe what you are building and why._
+
+endlichsatt ist eine Web-App, die Nutzern hilft zu verstehen, warum bestimmte Mahlzeiten nicht sättigen — und wie man sie konkret verbessert. Anhand eines Fotos oder einer Freitexteingabe analysiert die App die Nährwerte über den Bundeslebensmittelschlüssel (BLS) und bewertet das Gericht mit einer proprietären Sättigungsmatrix. endlichsatt ist das, was nach dem Kalorienzählen kommt.
 
 ## Target Users
-_Who will use this product? Describe their needs and pain points._
+
+**Gesundheitsbewusste Erwachsene (25–45 Jahre)**, die:
+- Gewicht verlieren oder ihr Gewicht halten wollen
+- bereits wissen, was gesund ist, aber trotzdem oft schnell wieder Hunger haben
+- frustriert vom Kalorienzählen sind und etwas Tieferes verstehen wollen
+- nach Orientierung suchen, nicht nach Verboten
+
+**Pain Point:** "Ich esse vermeintlich gesund, bin aber zwei Stunden später schon wieder hungrig — und weiß nicht warum."
 
 ## Core Features (Roadmap)
 
-| Priority | Feature | Status |
-|----------|---------|--------|
-| P0 (MVP) | _Feature 1_ | Planned |
-| P0 (MVP) | _Feature 2_ | Planned |
-| P1 | _Feature 3_ | Planned |
-| P2 | _Feature 4_ | Planned |
+| Priority | ID | Feature | Status |
+|----------|----|---------|--------|
+| P0 (MVP) | PROJ-1 | Supabase Infrastructure Setup | Roadmap |
+| P0 (MVP) | PROJ-2 | User Authentication | Roadmap |
+| P0 (MVP) | PROJ-3 | Mahlzeit-Input (Foto & Freitext) | Roadmap |
+| P0 (MVP) | PROJ-4 | KI-Analyse-Agent (Rückfragen + BLS + Makros) | Roadmap |
+| P0 (MVP) | PROJ-5 | Sättigungs-Einschätzung & Verbesserungsvorschlag | Roadmap |
+| P1 | PROJ-6 | Mahlzeit-Historie | Roadmap |
+| P2 | PROJ-7 | Ernährungs-Tagebuch & Inspiration | Roadmap |
 
 ## Success Metrics
-_How will you measure success? (e.g., user signups, retention, task completion rate)_
+
+- **Wiederkehrrate:** >40 % der Nutzer analysieren mindestens 3 Mahlzeiten
+- **Analyse-Abschlussrate:** >70 % der gestarteten Analysen werden vollständig durchgeführt
+- **Nutzerzufriedenheit:** Verbesserungsvorschläge werden als "umsetzbar" bewertet (Feedback-Mechanismus in v2)
 
 ## Constraints
-_Budget, timeline, technical limitations, team size._
 
-## Non-Goals
-_What are you explicitly NOT building in this version?_
+- Solo-Entwickler-Projekt
+- Tech-Stack: Next.js 16, Supabase, Claude API (Anthropic)
+- BLS-Datenbank muss als Referenzquelle integriert oder abgefragt werden
+- Design-System: siehe `docs/design-system.md`
+- Sättigungsmatrix: siehe `docs/saettigungsmatrix.md` (muss vor PROJ-4 befüllt sein)
+- **PROJ-4 und PROJ-5 dürfen erst implementiert werden, nachdem die Sättigungsmatrix vom Nutzer verifiziert wurde**
 
----
+## Non-Goals (diese Version)
 
-Use `/requirements` to create detailed feature specifications for each item in the roadmap above.
+- Kein Kalorienzählen oder Tracking von Tageskalorienzielen
+- Keine Mahlzeit-Planung oder Einkaufslisten
+- Kein Sport- oder Workout-Tracking
+- Keine Community-Features oder Social Sharing
+- Kein Barcode-Scanner
+- Keine mobile App (Web first)

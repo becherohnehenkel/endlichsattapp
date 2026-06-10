@@ -1,0 +1,161 @@
+# Sättigungsmatrix
+
+> Fachliches Fundament für die KI-Analyse. Wird vom `/fachbereich`-Skill gelesen und in den System-Prompt des Analyse-Agenten eingebettet.
+
+---
+
+## 1. Sättigungsfaktoren (Makronährstoffe & Ballaststoffe)
+
+| Nährstoff | Sättigungswirkung | Begründung / Mechanismus |
+|-----------|-------------------|--------------------------|
+| Protein | ⭐⭐⭐⭐⭐ sehr hoch | Langsamste Verdauung aller Makronährstoffe. Stimuliert die Ausschüttung der Sättigungshormone GLP-1 und PYY. Verringert aktiv Heißhunger. Höchste thermische Wirkung (ca. 20–30 % der Kalorien werden für die Verdauung verbraucht). |
+| Ballaststoffe | ⭐⭐⭐⭐⭐ sehr hoch | Verlangsamen die Magenentleerung und Verdauung. Binden Wasser und quellen im Darm auf → erhöhen das physische Volumen. Stabilisieren den Blutzucker (kein rascher Abfall = weniger Heißhunger). |
+| Fett | ⭐⭐⭐ mittel | Verlangsamt die Magenentleerung. Trägt stark zum Geschmacksempfinden und zur sensorischen Zufriedenheit bei. Kalorisch dicht — geringe Menge kann viel Energie liefern, aber Sättigungssignal kommt verzögert. |
+| Komplexe Kohlenhydrate | ⭐⭐⭐ mittel | Werden langsamer abgebaut als einfache Zucker → stabiler Blutzucker, längere Energieversorgung. Oft kombiniert mit Ballaststoffen (Vollkorn, Hülsenfrüchte), was die Sättigungswirkung erhöht. |
+| Einfache Zucker | ⭐ niedrig | Schnelle Aufnahme → rascher Blutzuckeranstieg, ebenso rascher Abfall. Kein nachhaltiges Sättigungssignal. Triggern oft Appetit auf mehr statt weniger. |
+| Wasser / Volumen | ⭐⭐⭐⭐ hoch | Magenrezeptoren registrieren physische Dehnung — unabhängig vom Kaloriengehalt. Lebensmittel mit hohem Wasseranteil (Gemüse, bestimmte Früchte) erzeugen Fülle bei geringer Energiedichte. Sättigungssignal kommt ca. 20 Min. nach dem Essen. |
+
+---
+
+## 2. Qualitative Faktoren
+
+### Kauaufwand (Biss)
+Der Kauvorgang ist ein eigenständiger Sättigungsmechanismus. Mechanisches Zerkleinern und Speichelproduktion leiten die Verdauung ein und senden Signale ans Gehirn. Wer mehr kaut, isst automatisch langsamer — und gibt dem Körper Zeit, Sättigungshormone auszuschütten (ca. 20 Min. Verzögerung). Flüssige oder weiche Speisen (Shakes, eingeweichte Flocken, Smoothies) umgehen diesen Mechanismus fast vollständig.
+
+**Lebensmittel mit hohem Kauaufwand:**
+- Rohes oder bissfestes Gemüse (Gurke, Karotte, Blumenkohl, Salate)
+- Nüsse, Samen, Kerne
+- Kross Gebackenes oder Gebratenes (Brot, Knäckebrot, angebratenes Fleisch/Tofu/Fisch)
+- Hülsenfrüchte (al dente gegart)
+
+### Geschmackskomplexität
+Ein Gericht das nicht schmeckt, macht nicht wirklich zufrieden — auch wenn es kalorisch ausreichend ist. Sättigung ist nicht nur physiologisch, sondern auch sensorisch. Geschmack entsteht durch das gleichzeitige Zusammenspiel mehrerer Komponenten:
+
+- **Temperatur** (warm/kalt/Kontrast)
+- **Grundgeschmäcker** (süß, salzig, sauer, bitter, umami)
+- **Schärfe**
+- **Geruch** (bis zu 80 % des Geschmacksempfindens entstehen über den Geruch)
+- **Textur** (cremig, knusprig, körnig)
+- **Fett** (Träger von Aromen, erzeugt Mundgefühl)
+
+Je mehr dieser Dimensionen gleichzeitig aktiv sind, desto befriedigender das Gericht.
+
+### Energiedichte
+Lebensmittel mit niedriger Energiedichte (viel Wasser, viel Ballaststoffe, wenig Fett) erlauben größere Mengen bei gleicher Kalorienzufuhr. Das begünstigt die physische Magendehnung ohne Kalorienüberschuss.
+
+**Niedrige Energiedichte (ideal für Volumen):** Gurke, Zucchini, Blattsalate, Radieschen, Staudensellerie, Blumenkohl, Sauerkraut, Spinat, Wassermelone, Beeren, Papaya, Grapefruit.
+
+### Mahlzeitenfrequenz & Blutzuckerstabilität
+Unregelmäßiges Essen führt zu Blutzucker-Achterbahn, Energie-Crashs und erhöhter Heißhungeranfälligkeit. Empfehlung: 2–4 vollwertige Mahlzeiten pro Tag, die den Blutzucker in einem stabilen Normalbereich halten. Dies ist kein Naturgesetz — individuelle Anpassung nach Alltag, Arbeit und sozialer Kompatibilität hat Vorrang.
+
+### Art of Eating
+Bewusstes Essen ist ein vollwertiger Sättigungsfaktor, keine optionale Ergänzung. Ablenkung (Smartphone, TV, Essen im Gehen) verhindert, dass das Gehirn die Körpersignale verarbeiten kann — was zu mechanischem Überessen führt, ohne mehr Sättigung zu erzeugen.
+
+**Kernprinzipien:**
+1. Immer sitzen — Stehessen unterbricht den Bezug zur Mahlzeit
+2. Ablenkungen ausschalten (kein Smartphone, kein Fernseher, keine Musik)
+3. Vor dem ersten Bissen kurz am Essen riechen
+4. Gründlich kauen — jeden Bissen bis fast flüssig
+5. Auf die Details schmecken (Intensität, Frische, Komplexität)
+6. Auf Körpersignale hören — Sättigung kommt ca. 20 Min. nach dem Essen
+7. **Hara Hachi Bu**: japanische Praxis, mit dem Essen aufzuhören wenn der Magen zu ca. 80 % gefüllt ist
+
+---
+
+## 3. Sättigungs-Score / Bewertungslogik
+
+### Die sechs Bausteine der Sättigungs-Matrix
+
+Jede Mahlzeit wird anhand von sechs Bausteinen bewertet. Eine sättigende Mahlzeit arbeitet an einer Balance aus allen sechs — kein einzelner Baustein ist allein ausreichend.
+
+| Baustein | Bewertungsgrundlage |
+|----------|-------------------|
+| **Geschmack** | Wie viele Geschmacksdimensionen sind aktiv? (Temperatur, Textur, Grundgeschmäcker, Geruch, Fett) |
+| **Biss** | Gibt es Komponenten mit echtem Kauaufwand? Oder ist alles weich/flüssig? |
+| **Ballaststoffe** | Sind Vollkorn, Hülsenfrüchte, Gemüse, Obst oder Nüsse/Samen enthalten? Wie viel? |
+| **Proteine** | Welche Proteinquellen sind enthalten, und wie proteindicht sind sie? Die Skala bewertet einzelne Zutaten: 25%+ Proteinanteil am Eigengewicht = hohe Effizienz (wenig Zutat, große Wirkung — z.B. Thunfisch ~30%, Hähnchen ~25%); 12–24% = mittlere Effizienz (mehr Menge nötig — z.B. Tofu ~15%, Eier ~13%); <12% = niedrige Effizienz (muss Hauptzutat sein, um zu zählen — z.B. Linsen gekocht ~9%, Quark ~12%). Der Baustein ist "gut" wenn eine proteindichte Quelle klar im Gericht vorhanden ist, "mittel" wenn eine Quelle mit niedriger Effizienz die Hauptrolle spielt, "schwach" wenn keine nennenswerte Proteinquelle enthalten ist. |
+| **Volumen** | Enthält die Mahlzeit Lebensmittel mit hohem Wasseranteil und niedriger Energiedichte? |
+| **Art of Eating** | Kontextfaktoren: Wurde sitzend gegessen? Ablenkungsfrei? Bewusst gekaut? |
+
+### Drei-Punkte-Skala
+
+- **gut (grün)** — Baustein ist klar vorhanden und trägt aktiv zur Sättigung bei
+- **mittel (gelb/amber)** — Baustein ist ansatzweise vorhanden, aber ausbaufähig
+- **schwach (rot)** — Baustein fehlt oder ist vernachlässigbar
+
+### Gesamteinschätzung
+
+| Grüne Bausteine | Gesamtbewertung |
+|-----------------|----------------|
+| 5–6 | Sehr sättigend — gut strukturierte Mahlzeit |
+| 3–4 | Mäßig sättigend — klare Verbesserungspotenziale |
+| 0–2 | Wenig sättigend — deutliche Lücken, konkrete Upgrades notwendig |
+
+### Hinweis zur Gewichtung
+Nicht jede Mahlzeit muss alle sechs Bausteine vollständig abdecken. Isolierte Lebensmittel (z.B. Proteinpulver, ein Stück Obst) sind nicht per se schlecht — sie lösen gezielt einen spezifischen Mangel. Fast alle echten Lebensmittel haben mehrere Eigenschaften gleichzeitig (z.B. Hülsenfrüchte = Biss + Ballaststoffe + Volumen + Proteine).
+
+---
+
+## 4. Verbesserungs-Heuristiken
+
+### Erlaubte Optimierungen
+
+**Prinzip:** Verbesserungen müssen geschmacklich sinnvoll sein und den Charakter des Gerichts erhalten. Minimal effort, maximaler Effekt.
+
+| Ziel | Erlaubte Maßnahmen |
+|------|-------------------|
+| Mehr Biss | Nüsse oder Samen obendrauf, rohes Gemüse als Beilage, Zutaten kross anbraten statt kochen |
+| Mehr Ballaststoffe | Hülsenfrüchte einarbeiten (Linsen in Sauce, Kichererbsen zum Salat), Gemüse erhöhen, Obst hinzufügen |
+| Mehr Proteine | Eiweißreiche Quelle ergänzen die zum Gericht passt (Ei, Quark, Hüttenkäse, Skyr, Hülsenfrüchte, Tofu) |
+| Mehr Volumen | Gemüseanteil erhöhen, Flüssigkeitsanteil erhöhen (mehr Hafermilch, mehr Brühe), Beeren hinzufügen |
+| Mehr Geschmack | Gewürze, frische Kräuter, Röststoffe durch Anbraten, Säure (Zitrone, Essig), Umami (Parmesan, Miso, Tomatenmark) |
+
+### Verbotene Optimierungen
+
+- **Keine Flohsamenschalen in herzhafte Gerichte** — geschmacklich unpassend, wirkt wie ein Ernährungs-Hack statt echtes Essen
+- **Keine Light-Produkte** — reduzierter Fettgehalt bedeutet oft mehr Zucker oder Zusatzstoffe, und weniger Geschmackszufriedenheit
+- **Keine Mahlzeiten-Ersatz-Produkte** (Shakes, Riegel als "Lösung")
+- **Keine Supplemente als Primärempfehlung** — nur wenn ein isolierter, spezifischer Mangel besteht
+- **Kein Weglassen von Zutaten die der Nutzer offensichtlich mag** — Sättigung entsteht auch durch Freude am Essen
+- **Keine Empfehlung weniger zu essen** — das Ziel ist besser essen, nicht weniger
+
+### Abwägung Nährwert vs. Geschmack
+
+Geschmack hat immer Vorrang. Ein sättigendes Gericht das nicht schmeckt, wird nicht wiederholt — und löst damit kein Problem. Die Optimierung muss so gestaltet sein, dass das Gericht *besser* schmeckt oder zumindest gleich gut.
+
+### Prioritätsreihenfolge bei mehreren schwachen Bausteinen
+
+1. **Biss** — größte Wirkung auf das wahrgenommene Sättigungsgefühl
+2. **Ballaststoffe** — größte Wirkung auf die Sättigungsdauer
+3. **Volumen** — einfachste Verbesserung mit geringstem Kalorienaufwand
+4. **Geschmack** — nur wenn das Gericht nachweislich wenig Komplexität hat
+5. **Proteine** — Ergänzung vorschlagen, nicht ersetzen
+6. **Art of Eating** — immer erwähnen wenn andere Bausteine bereits stark sind
+
+---
+
+## 5. Quellen & Referenzen
+
+### Physiologische Sättigungsmechanismen
+- **GLP-1 (Glucagon-like Peptide-1)** und **PYY (Peptid YY)**: Sättigungshormone die primär durch Proteinzufuhr stimuliert werden. Signalisieren dem Hypothalamus Sättigung.
+- **Ghrelinunterdrückung**: Ghrelin ist das primäre Hungerhormon. Proteine und Ballaststoffe unterdrücken die Ghrelin-Ausschüttung stärker als Fett oder einfache Kohlenhydrate.
+- **Magenrezeptoren**: Mechanorezeptoren in der Magenwand reagieren auf Dehnung — unabhängig vom Kaloriengehalt. Grundlage für den Volumen-Baustein.
+- **Thermischer Effekt**: Protein hat mit ca. 20–30 % den höchsten thermischen Effekt aller Makronährstoffe (Kohlenhydrate ca. 5–10 %, Fett ca. 0–3 %).
+
+### Kauforschung
+- Mechanisches Kauen aktiviert den Kiefer-Hypothalamus-Signalweg und erhöht die Sättigungswahrnehmung unabhängig vom Nahrungsinhalt.
+- Langsames Essen (>20 Minuten) korreliert mit niedrigerer Gesamtkalorienaufnahme, da die Sättigungshormone Zeit brauchen um die Blut-Hirn-Schranke zu passieren.
+
+### Geruch & Geschmack
+- Bis zu 80 % des bewusst wahrgenommenen Geschmacks entsteht über den Geruchssinn (retronasal). Essen mit verstopfter Nase schmeckt kaum — Erdbeer- und Himbeermarmelade sind bei verschlossener Nase kaum zu unterscheiden.
+
+### Blutzucker & Mahlzeitenfrequenz
+- Unregelmäßiges Essen mit langen Fastenphasen gefolgt von großen Mahlzeiten führt zu Insulinspitzen und nachfolgendem reaktivem Blutzuckerabfall → erhöhte Heißhungeranfälligkeit.
+- 2–4 vollwertige Mahlzeiten stabilisieren den Blutzuckerverlauf ohne ständige Insulinstimulation. Extremfall dauerhafter Snacking: erhöhtes Risiko für Insulinresistenz und langfristig Typ-2-Diabetes.
+
+### Hara Hachi Bu
+- Japanische Ernährungsphilosophie aus Okinawa (einer der fünf "Blue Zones" mit überdurchschnittlicher Lebenserwartung): Essen einstellen wenn der Magen zu ca. 80 % gefüllt ist. Nutzt die 20-Minuten-Verzögerung des Sättigungssignals als Puffer gegen Überessen.
+
+### Bundeslebensmittelschlüssel (BLS)
+- Offizielle deutsche Nährwertdatenbank des Max-Rubner-Instituts (MRI). Referenz für Makro- und Mikronährstoffe von Lebensmitteln im deutschen Markt.
+- Ergänzt durch: USDA FoodData Central (internationale Lebensmittel), Open Food Facts (verarbeitete Produkte).

@@ -13,9 +13,26 @@
 
 ## Features
 
-| ID | Feature | Status | Spec | Created |
-|----|---------|--------|------|---------|
+| ID | Feature | Priority | Status | Abhängigkeiten | Spec |
+|----|---------|----------|--------|----------------|------|
+| PROJ-1 | Supabase Infrastructure Setup | P0 | Roadmap | — | — |
+| PROJ-2 | User Authentication | P0 | Roadmap | PROJ-1 | — |
+| PROJ-3 | Mahlzeit-Input (Foto & Freitext) | P0 | Roadmap | PROJ-1 | — |
+| PROJ-4 | KI-Analyse-Agent (Rückfragen + BLS + Makros) | P0 | Roadmap | PROJ-3, Sättigungsmatrix verifiziert | — |
+| PROJ-5 | Sättigungs-Einschätzung & Verbesserungsvorschlag | P0 | Roadmap | PROJ-4 | — |
+| PROJ-6 | Mahlzeit-Historie | P1 | Roadmap | PROJ-1, PROJ-2, PROJ-4 | — |
+| PROJ-7 | Ernährungs-Tagebuch & Inspiration | P2 | Roadmap | PROJ-6 | — |
 
 <!-- Add features above this line -->
 
-## Next Available ID: PROJ-1
+## Next Available ID: PROJ-8
+
+## Empfohlene Build-Reihenfolge
+
+1. **PROJ-1** — Infrastruktur zuerst, alles andere hängt davon ab
+2. **PROJ-2** — Auth, bevor User-Daten gespeichert werden
+3. **PROJ-3** — Input-UI, bevor der Agent gebaut wird
+4. **PROJ-4** — KI-Agent (erst starten, wenn Sättigungsmatrix verifiziert ist!)
+5. **PROJ-5** — Sättigungs-Output baut auf PROJ-4 auf
+6. **PROJ-6** — Historie als P1 nach dem MVP
+7. **PROJ-7** — Tagebuch als nice-to-have in einer späteren Iteration
