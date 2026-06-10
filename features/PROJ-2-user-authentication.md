@@ -62,7 +62,7 @@
 - **Reset-Link-Ablauf:** 1 Stunde (Supabase-Standard)
 
 ## Open Questions
-- [ ] Welcher Absender-Name und welche Absender-Adresse sollen in den Auth-E-Mails erscheinen? (z.B. "endlichsatt <hello@endlichsatt.de>") — abhängig von Domain-Setup
+- [x] Absender der Auth-E-Mails: `endlichsatt <hello@satt.mehralsabnehmen.de>` — Domain `satt.mehralsabnehmen.de` wird bei `/deploy` eingerichtet
 
 ## Decision Log
 
