@@ -15,7 +15,7 @@
 
 | ID | Feature | Priority | Status | Abhängigkeiten | Spec |
 |----|---------|----------|--------|----------------|------|
-| PROJ-1 | Supabase Infrastructure Setup | P0 | Planned | — | [Spec](PROJ-1-supabase-infrastructure.md) |
+| PROJ-1 | Supabase Infrastructure Setup | P0 | Architected | — | [Spec](PROJ-1-supabase-infrastructure.md) |
 | PROJ-2 | User Authentication | P0 | Planned | PROJ-1 | [Spec](PROJ-2-user-authentication.md) |
 | PROJ-3 | Mahlzeit-Input (Foto & Freitext) | P0 | Planned | PROJ-1, PROJ-2 | [Spec](PROJ-3-mahlzeit-input.md) |
 | PROJ-4 | KI-Analyse-Agent (Rückfragen + BLS + Makros) | P0 | Planned | PROJ-3, Sättigungsmatrix verifiziert | [Spec](PROJ-4-ki-analyse-agent.md) |
