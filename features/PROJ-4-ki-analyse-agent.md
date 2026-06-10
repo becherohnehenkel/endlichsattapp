@@ -32,9 +32,15 @@
 - [ ] Angenommen Mengenangaben fehlen für eine Zutat die das Ergebnis stark beeinflusst, wenn die KI unsicher über die Portion ist, dann fragt sie konkret nach (z.B. "Wie viele Esslöffel Olivenöl? Wie viel von der Packung?").
 - [ ] Angenommen der Nutzer hat alle Fragen beantwortet oder übersprungen, wenn die KI eine finale Zutatenliste erstellt, dann listet sie alle identifizierten Zutaten mit geschätzten Mengen auf — inklusive Kennzeichnung von Annahmen.
 
+### Bestätigung der Zutatenliste
+- [ ] Angenommen alle Rückfragen beantwortet oder übersprungen wurden, wenn die KI die finale Zutatenliste zusammengestellt hat, dann zeigt sie dem Nutzer eine Zusammenfassung ("Habe ich das richtig verstanden: 200g Hähnchenbrust, 1 EL Olivenöl, …?") bevor die Nährstoffberechnung startet.
+- [ ] Angenommen die Zutatenliste zur Bestätigung angezeigt wird, wenn der Nutzer etwas korrigiert (z.B. "Nein, es war Putenbrust"), dann aktualisiert die KI die Liste und zeigt sie erneut zur Bestätigung.
+- [ ] Angenommen die Zutatenliste zur Bestätigung angezeigt wird, wenn der Nutzer bestätigt, dann startet die Nährstoffberechnung.
+
 ### Nährstoffberechnung
-- [ ] Angenommen die Zutatenliste ist finalisiert, wenn die KI die Nährstoffe berechnet, dann nutzt sie den Bundeslebensmittelschlüssel (BLS) als primäre Quelle; für internationale oder verarbeitete Lebensmittel ergänzend USDA FoodData Central und Open Food Facts.
-- [ ] Angenommen ein Lebensmittel ist in keiner Datenbank gefunden, wenn die KI trotzdem eine Schätzung vornimmt, dann kennzeichnet sie diesen Wert explizit als Schätzung ("geschätzter Wert — nicht in Datenbank gefunden").
+- [ ] Angenommen die Zutatenliste ist finalisiert, wenn die KI die Nährstoffe berechnet, dann nutzt sie folgende Quellen in dieser Priorität: (1) Open Food Facts für verpackte/markierte Produkte (kostenlose REST API, 3,4 Mio. Produkte, gute Deutschland-Abdeckung), (2) USDA FoodData Central für generische Rohzutaten (Fleisch, Gemüse, Getreide), (3) eigenes Ernährungswissen des KI-Modells als Fallback für Schätzungen.
+- [ ] Angenommen ein Lebensmittel ist in keiner Datenbank gefunden, wenn die KI trotzdem eine Schätzung vornimmt, dann kennzeichnet sie diesen Wert explizit als Schätzung ("geschätzter Wert — Datenbank hat kein passendes Ergebnis geliefert").
+- [ ] Angenommen die Datenquellen liefern Ergebnisse, dann werden die Nährstoffwerte für den Nutzer sichtbar mit ihrer Quelle verknüpft, damit er die Daten bei Bedarf selbst prüfen kann.
 - [ ] Angenommen die Berechnung ist abgeschlossen, dann gibt der Agent folgende Nährstoffe aus: Protein (g), Kohlenhydrate gesamt (g), davon Zucker (g), Fett (g), Ballaststoffe (g), Energie (kcal) — jeweils für die Gesamtmahlzeit.
 
 ### Ausgabe-Format
@@ -56,8 +62,9 @@
 - **Foto + Text widersprechen sich** (z.B. Foto zeigt Pasta, Text sagt "Salat"): KI weist auf den Widerspruch hin und fragt nach Klärung.
 
 ## Technical Requirements
-- **Primäre Nährstoffdatenbank:** Bundeslebensmittelschlüssel (BLS) — Details zur Integration in `/architecture`
-- **Sekundäre Quellen:** USDA FoodData Central, Open Food Facts
+- **Nährstoffdatenbanken (Priorität):** (1) Open Food Facts API — verpackte/markierte Produkte, (2) USDA FoodData Central — generische Rohzutaten, (3) KI-eigenes Ernährungswissen — Fallback und Schätzungen
+- **BLS:** Nicht verwendet — veraltet (Stand 2010), kein öffentliches API, durch obige Quellen vollständig ersetzt
+- **Quellennachweis:** Genutzte Datenquelle pro Zutat für den Nutzer sichtbar
 - **Sprache:** Agent kommuniziert auf Deutsch; Rückfragen und Ausgaben sind auf Deutsch
 - **Rückfragen-Limit:** Max. 3 Runden × 2 Fragen = max. 6 Rückfragen (aus PROJ-3)
 - **Ausgabe-Nährstoffe:** Protein (g), KH gesamt (g), davon Zucker (g), Fett (g), Ballaststoffe (g), Energie (kcal)
@@ -65,8 +72,8 @@
 - **Ausgabe-Struktur:** Maschinenlesbar (JSON intern) damit PROJ-5 darauf aufbauen kann
 
 ## Open Questions
-- [ ] Wie wird der BLS technisch integriert? (Download + eigene DB, externe API, oder KI-Wissen als Fallback?) — Entscheidung in `/architecture PROJ-4`
-- [ ] Soll die verfeinerte Zutatenliste dem Nutzer vor der finalen Berechnung zur Bestätigung gezeigt werden ("Habe ich das richtig verstanden: …?") oder läuft das automatisch durch?
+- [x] Datenbankstrategie: BLS gestrichen. Open Food Facts (REST API, kostenlos) + USDA FoodData Central (REST API, kostenlos) + KI-Fallback. Nutzer sieht die Quelle pro Zutat und kann Daten selbst prüfen.
+- [x] Zutatenliste wird dem Nutzer vor der finalen Berechnung zur Bestätigung gezeigt → Ja, die KI zeigt eine Zusammenfassung ("Habe ich das richtig verstanden: …?") und der Nutzer bestätigt oder korrigiert bevor die Nährstoffberechnung startet.
 
 ## Decision Log
 
@@ -76,8 +83,9 @@
 | Qualitativ primär, Gramm sekundär (ausgegraut) | "Gefühl für das Essen" statt Zahlenfetischismus; passt zum Positioning "nach dem Kalorienzählen" | 2026-06-10 |
 | Kalorien nur als sekundäre Zusatzinfo | Kalorien sind nicht die Kernmetrik der App; sie erscheinen für Orientierung, nicht als Hauptfokus | 2026-06-10 |
 | Mengen werden aktiv nachgefragt wenn relevant | Präzision hat Priorität; Annahmen nur wenn Nutzer überspringt oder keine Angabe möglich | 2026-06-10 |
+| Zutatenliste vor Berechnung zur Bestätigung zeigen | Nutzer kann Fehler korrigieren bevor Nährstoffe berechnet werden; erhöht Vertrauen in das Ergebnis | 2026-06-10 |
 | Keine Mikronährstoffe im MVP | Komplexität ohne direkten Mehrwert für Sättigungsanalyse; Post-MVP | 2026-06-10 |
-| BLS primär + USDA + Open Food Facts supplementär | Deutsche App braucht deutsche Referenzdatenbank; internationale Ergänzung für globale Lebensmittel | 2026-06-10 |
+| Open Food Facts + USDA + KI-Fallback statt BLS | BLS veraltet (2010), kein öffentliches API; Open Food Facts hat moderne Supermarkt-Produkte (Rewe, Aldi, Edeka), USDA für Rohzutaten; Nutzer kann Datenquelle pro Zutat einsehen und bei Bedarf prüfen | 2026-06-10 |
 | Kein moralisierender Kommentar zu Alkohol | Nutzer sind informierte Erwachsene; App analysiert, urteilt nicht | 2026-06-10 |
 
 ### Technical Decisions
