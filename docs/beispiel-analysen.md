@@ -145,18 +145,22 @@ Gib dir 15 Minuten für dieses Frühstück. Hafer und Chia brauchen etwas Zeit z
 
 ---
 
-## Beispiel 3: Edge Case — Fast Food mit Schadensbegrenzung (Chicken Wings + Gemüsepfanne)
+## Beispiel 3: Edge Case — Fast Food allein (Chicken Wings, pur)
+
+*Dieses Beispiel zeigt wie eine typische Fast-Food-Mahlzeit — so wie sie meistens gegessen wird — durch eine einzige Ergänzung zu einer vollwertigen, sättigenden Mahlzeit wird.*
 
 ### Input des Nutzers
-*"Chicken Wings (frittiert) und eine Gemüsepfanne mit Zucchini, Paprika und Brokkoli."*
+*"Chicken Wings, frittiert — ca. 8 Stück."*
 
 ### Rückfragen des Agenten
-*"Eine kurze Frage: Wurde die Gemüsepfanne mit Öl gebraten — und wenn ja, mit wie viel ungefähr?"*
+*"Eine kurze Frage: Gab es noch eine Soße dazu — z.B. BBQ oder Honig-Senf?"*
 
-**Antwort:** *"Ja, 1–2 EL Olivenöl."*
+**Antwort:** *"Nur etwas BBQ-Soße."*
 
 ### Bestätigung Zutatenliste
-*"Hab ich das richtig verstanden: ~8 Chicken Wings (frittiert, ~300g mit Knochen = ~150g Fleisch), Gemüsepfanne aus Zucchini, Paprika und Brokkoli (~250g) in 1,5 EL Olivenöl gebraten? Ich habe keine Soße angenommen — falls es noch BBQ oder ähnliches gab, ergänze das gerne."*
+*"Hab ich das richtig verstanden: ~8 Chicken Wings (frittiert, ~300g mit Knochen = ~150g Fleisch), BBQ-Soße (~2 EL)? Keine Beilage sonst?"*
+
+**Antwort:** *"Genau, nur die Wings."*
 
 ---
 
@@ -166,35 +170,35 @@ Gib dir 15 Minuten für dieses Frühstück. Hafer und Chia brauchen etwas Zeit z
 
 | Baustein | Bewertung | Kommentar |
 |----------|-----------|-----------|
-| Geschmack | **gut** | Wings: knusprig, würzig, viel Röstaroma und Fett als Geschmacksträger. Gemüsepfanne: Röstaromen, verschiedene Texturen, Olivenöl. Starkes Geschmacksprofil. |
-| Biss | **gut** | Wings haben echten Kauaufwand (knusprige Panade, Fleisch am Knochen), Gemüse — wenn nicht zu lange gegart — liefert Biss. |
-| Ballaststoffe | **mittel** | Die Gemüsepfanne liefert Ballaststoffe (Brokkoli, Paprika, Zucchini) — aber verglichen mit der Gesamtmahlzeit ist es moderat. |
-| Proteine | **gut** | ~150g Hähnchenfl eisch liefern ~32g Protein — solide Proteinquelle. |
-| Volumen | **gut** | Die Gemüsepfanne mit 250g Gemüse (hoher Wasseranteil, niedriger Energiegehalt) füllt physisch. |
+| Geschmack | **gut** | Knusprig, würzig, Röstaromen, Fett als Geschmacksträger, süß-rauchige BBQ-Note — starkes Geschmacksprofil. |
+| Biss | **gut** | Knusprige Panade und Fleisch am Knochen fordern echten Kauaufwand. Einer der wenigen Fast-Food-Momente mit echtem Biss. |
+| Ballaststoffe | **schwach** | Praktisch null. Frittiertes Hähnchen ohne Beilage liefert keine nennenswerten Ballaststoffe. |
+| Proteine | **gut** | ~150g Hähnchenfleisch liefern ~32g Protein — solide und gesättigte Quelle. |
+| Volumen | **schwach** | Kalorisch dicht, physisch klein. 8 Wings verschwinden schnell — der Magen meldet sich nicht. |
 | Art of Eating | nicht bewertet | — |
 
-**Gesamtbewertung: Mäßig bis sehr sättigend (4 gut, 1 mittel)**
+**Gesamtbewertung: Mäßig sättigend (3 gut, 2 schwach)**
 
 **Nährwerte (Vorher):**
 | | Wert |
 |--|--|
-| Energie | ~620 kcal |
-| Protein | ~36g |
-| Kohlenhydrate | ~15g |
+| Energie | ~520 kcal |
+| Protein | ~32g |
+| Kohlenhydrate | ~12g |
 | davon Zucker | ~8g |
-| Fett | ~45g |
-| Ballaststoffe | ~6g |
+| Fett | ~35g |
+| Ballaststoffe | ~0g |
 
 **Erklärung:**
-Hier wurde klug kombiniert. Die Gemüsepfanne macht aus einem Fast-Food-Gericht eine Mahlzeit mit echtem Nährwert — Volumen, Biss und ein Teil der Ballaststoffe kommen von dort. Die Wings liefern Protein und Geschmack. Was noch fehlt: etwas mehr Ballaststoffe — das ist der einzige Baustein der noch ausbaufähig ist.
+Protein und Biss funktionieren hier gut — das ist mehr als bei den meisten Fast-Food-Gerichten. Was fehlt: Volumen und Ballaststoffe. Ohne Beilage ist das eine proteinreiche aber physisch kleine Mahlzeit. Dein Magen meldet Sättigung erst wenn er gedehnt wird — und das passiert hier kaum. In 1–2 Stunden kommt der Hunger zurück.
 
 ---
 
 ### Verbesserungsvorschläge
 
-**1. Gemischter Salat als Vorspeise (Baustein: Ballaststoffe + Volumen)**
-*Kleiner Salat vorweg: Blattsalat, Tomaten, Gurke, etwas Dressing.*
-(Warum: startet die Verdauung, füllt vor dem kalorienreichen Hauptgang — und die Ballaststoffe im Salat stabilisieren später den Blutzucker. Das "Salat zuerst"-Prinzip ist eine der einfachsten Sättigungs-Strategien.)
+**1. Gemüsepfanne oder gemischter Salat dazu (Baustein: Volumen + Ballaststoffe)**
+*Eine Gemüsepfanne (Zucchini, Paprika, Brokkoli — ~250g, kurz in 1 EL Öl gebraten) oder ein einfacher gemischter Salat als Beilage.*
+(Warum: Gemüse füllt physisch — der Magen wird gedehnt und meldet Sättigung. Gleichzeitig stabilisieren die Ballaststoffe den Blutzucker nach der Mahlzeit. Der Aufwand ist minimal, die Wirkung groß.)
 
 ---
 
@@ -206,25 +210,25 @@ Hier wurde klug kombiniert. Die Gemüsepfanne macht aus einem Fast-Food-Gericht 
 |----------|--------|---------|
 | Geschmack | gut | **gut** |
 | Biss | gut | **gut** |
-| Ballaststoffe | mittel | **gut** |
+| Ballaststoffe | schwach | **gut** |
 | Proteine | gut | **gut** |
-| Volumen | gut | **gut** |
+| Volumen | schwach | **gut** |
 | Art of Eating | — | — |
 
 **Gesamtbewertung: Sehr sättigend (5 von 5 = gut)**
 
-**Nährwerte (Nachher):**
+**Nährwerte (Nachher — mit Gemüsepfanne):**
 | | Vorher | Nachher | Delta |
 |--|--|--|--|
-| Energie | 620 kcal | ~680 kcal | +60 kcal |
-| Protein | 36g | ~38g | +2g |
-| Kohlenhydrate | 15g | ~22g | +7g |
+| Energie | 520 kcal | ~640 kcal | +120 kcal |
+| Protein | 32g | ~36g | +4g |
+| Kohlenhydrate | 12g | ~22g | +10g |
 | davon Zucker | 8g | ~10g | +2g |
-| Fett | 45g | ~47g | +2g |
-| Ballaststoffe | 6g | ~10g | **+4g** |
+| Fett | 35g | ~45g | +10g |
+| Ballaststoffe | 0g | ~6g | **+6g** |
 
 **Art of Eating Tipp:**
-Chicken Wings brauchen Zeit — und das ist gut so. Diese Mahlzeit zwingt dich zum Kauen. Nutz das: iss langsam, schmeck die Röstaromen, und hör auf wenn du zu ~80% satt bist. Dein Körper braucht 15–20 Minuten um das volle Signal zu senden.
+Chicken Wings zwingen dich zum Kauen — nutz das. Iss langsam, schmeck die Röstaromen, und hör bei ~80% Sättigung auf. Dein Körper braucht 15–20 Minuten um das volle Signal zu senden. Wer das respektiert, isst automatisch weniger ohne es zu merken.
 
 ---
 
