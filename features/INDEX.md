@@ -18,7 +18,7 @@
 | PROJ-1 | Supabase Infrastructure Setup | P0 | Planned | — | [Spec](PROJ-1-supabase-infrastructure.md) |
 | PROJ-2 | User Authentication | P0 | Planned | PROJ-1 | [Spec](PROJ-2-user-authentication.md) |
 | PROJ-3 | Mahlzeit-Input (Foto & Freitext) | P0 | Planned | PROJ-1, PROJ-2 | [Spec](PROJ-3-mahlzeit-input.md) |
-| PROJ-4 | KI-Analyse-Agent (Rückfragen + BLS + Makros) | P0 | Roadmap | PROJ-3, Sättigungsmatrix verifiziert | — |
+| PROJ-4 | KI-Analyse-Agent (Rückfragen + BLS + Makros) | P0 | Planned | PROJ-3, Sättigungsmatrix verifiziert | [Spec](PROJ-4-ki-analyse-agent.md) |
 | PROJ-5 | Sättigungs-Einschätzung & Verbesserungsvorschlag | P0 | Roadmap | PROJ-4 | — |
 | PROJ-6 | Mahlzeit-Historie | P1 | Roadmap | PROJ-1, PROJ-2, PROJ-4 | — |
 | PROJ-7 | Ernährungs-Tagebuch & Inspiration | P2 | Roadmap | PROJ-6 | — |

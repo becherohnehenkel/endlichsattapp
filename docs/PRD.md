@@ -21,7 +21,7 @@ endlichsatt ist eine Web-App, die Nutzern hilft zu verstehen, warum bestimmte Ma
 | P0 (MVP) | PROJ-1 | Supabase Infrastructure Setup | Planned |
 | P0 (MVP) | PROJ-2 | User Authentication | Planned |
 | P0 (MVP) | PROJ-3 | Mahlzeit-Input (Foto & Freitext) | Planned |
-| P0 (MVP) | PROJ-4 | KI-Analyse-Agent (Rückfragen + BLS + Makros) | Roadmap |
+| P0 (MVP) | PROJ-4 | KI-Analyse-Agent (Rückfragen + BLS + Makros) | Planned |
 | P0 (MVP) | PROJ-5 | Sättigungs-Einschätzung & Verbesserungsvorschlag | Roadmap |
 | P1 | PROJ-6 | Mahlzeit-Historie | Roadmap |
 | P2 | PROJ-7 | Ernährungs-Tagebuch & Inspiration | Roadmap |
