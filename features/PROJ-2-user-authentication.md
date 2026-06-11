@@ -1,8 +1,19 @@
 # PROJ-2: User Authentication
 
-## Status: Planned
+## Status: In Progress
 **Created:** 2026-06-10
-**Last Updated:** 2026-06-10
+**Last Updated:** 2026-06-11
+
+## Implementation Notes
+- `src/app/login/page.tsx` — Login-Formular (E-Mail + Passwort, redirectTo-Support)
+- `src/app/registrieren/page.tsx` — Registrierung (Name, E-Mail, Passwort min. 8 Zeichen)
+- `src/app/auth/callback/route.ts` — Supabase verifyOtp-Handler (signup & recovery)
+- `src/app/auth/bestaetigen/page.tsx` — "Schau ins Postfach" + Link erneut senden
+- `src/app/auth/passwort-vergessen/page.tsx` — Reset-Link anfordern
+- `src/app/auth/passwort-neu/page.tsx` — Neues Passwort setzen nach Reset-Link
+- `src/app/analyse/page.tsx` — Geschützte Placeholder-Seite mit Abmelden
+- Design-System-Farben in `globals.css` übernommen (#4A7C59 Primary, #FAF7F2 Background)
+- Inter-Font und `lang="de"` in `layout.tsx` gesetzt
 
 ## Dependencies
 - Requires: PROJ-1 (Supabase Infrastructure Setup) — Auth läuft über Supabase Auth, Profil-Eintrag wird bei Registrierung angelegt

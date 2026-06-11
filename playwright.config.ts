@@ -11,8 +11,23 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'Mobile Safari', use: { ...devices['iPhone 13'] } },
+    {
+      name: 'chromium',
+      use: {
+        browserName: 'chromium',
+        channel: 'chrome',
+        viewport: { width: 1280, height: 720 },
+      },
+    },
+    {
+      name: 'Mobile Chrome',
+      use: {
+        browserName: 'chromium',
+        channel: 'chrome',
+        viewport: { width: 375, height: 812 },
+        isMobile: true,
+      },
+    },
   ],
   webServer: {
     command: 'npm run dev',

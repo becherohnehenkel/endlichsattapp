@@ -1,8 +1,19 @@
 # PROJ-1: Supabase Infrastructure Setup
 
-## Status: Architected
+## Status: In Progress
 **Created:** 2026-06-10
 **Last Updated:** 2026-06-10
+
+## Implementation Notes
+- `src/lib/supabase/client.ts` — Browser-Client (createBrowserClient via @supabase/ssr)
+- `src/lib/supabase/server.ts` — Server-Client mit Cookie-Handling für App Router
+- `src/lib/supabase/admin.ts` — Service-Role-Client (nur serverseitig, umgeht RLS)
+- `middleware.ts` — Session-Refresh + Route-Protection (/analyse, /historie geschützt)
+- `src/types/database.ts` — Auto-generierte TypeScript-Typen aus Supabase Schema
+- `src/lib/env.ts` — Startup-Validierung der Umgebungsvariablen
+- Datenbank-Migrationen angewendet: `profiles`, `meals`, `meal_analyses` + RLS + Trigger
+- Storage-Bucket `meal-photos` erstellt (privat, 1 MB Limit, nur authentifizierte Pfade)
+- Alter Placeholder `src/lib/supabase.ts` gelöscht
 
 ## Dependencies
 - None
