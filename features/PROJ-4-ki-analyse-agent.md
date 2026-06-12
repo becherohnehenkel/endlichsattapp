@@ -298,6 +298,6 @@ Keine neuen npm-Pakete nötig. Alle externen APIs werden mit nativem `fetch` auf
 ## Deployment
 
 **Deployed:** 2026-06-12
-**Production URL:** satt.mehralsabnehmen.de
+**Production URL:** https://endlichsattapp.vercel.app/
 **Git Tag:** v1.4.0-PROJ-4
 **Neue Env-Variable:** `USDA_API_KEY` in Vercel Dashboard hinterlegt
