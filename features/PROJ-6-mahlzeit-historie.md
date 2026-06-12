@@ -1,6 +1,6 @@
 # PROJ-6: Mahlzeit-Historie
 
-## Status: In Progress
+## Status: Approved
 **Created:** 2026-06-10
 **Last Updated:** 2026-06-12
 
@@ -93,7 +93,49 @@
 _Inline mit /frontend implementiert — kein separater Architecture-Pass nötig (keine neue DB-Schema-Änderung)._
 
 ## QA Test Results
-_To be added by /qa_
+
+**QA Date:** 2026-06-12
+**QA Status:** APPROVED — bereit für `/deploy`
+
+### Testergebnisse
+
+| Suite | Tests | Ergebnis |
+|-------|-------|---------|
+| Vitest Unit-Tests (gesamt) | 38/38 | ✅ alle grün |
+| PROJ-6 E2E Chromium | 18/18 | ✅ alle grün |
+| PROJ-5 Regression Chromium | 31/31 | ✅ keine Regression |
+
+### Acceptance Criteria
+
+| AC | Beschreibung | Status |
+|----|-------------|--------|
+| AC1 | Timeline zeigt Mahlzeiten älteste oben, neueste unten | ✅ |
+| AC2 | Karte zeigt Thumbnail/Icon, Datum, Name, Sättigungs-Badge | ✅ |
+| AC3 | Ältere Einträge laden bei hasMore (Pagination) | ✅ |
+| AC4 | Tippen auf Karte öffnet vollständige PROJ-5-Ergebnisseite | ✅ |
+| AC5 | Zurück-Navigation landet in Timeline | ✅ (Browser-Back nativ) |
+| AC6 | "+ Neue Mahlzeit"-FAB immer sichtbar wenn Einträge vorhanden | ✅ |
+| AC7 | FAB navigiert zu Analyse-Flow | ✅ |
+| AC8 | Löschen zeigt Bestätigungsdialog | ✅ |
+| AC9 | Bestätigtes Löschen entfernt Eintrag + Foto aus Storage | ✅ |
+| AC10 | Leerer Zustand mit freundlicher Einladung + CTA in der Mitte | ✅ |
+
+### Security Audit
+
+- **IDOR (GET):** `eq('user_id', user.id)` — User kann nur eigene Mahlzeiten sehen ✅
+- **IDOR (DELETE):** `eq('user_id', user.id)` im SELECT vor dem DELETE — verhindert Löschen fremder Mahlzeiten ✅
+- **Auth:** `getUser()` (PKCE-sicher) statt `getSession()` in beiden Routes ✅
+- **XSS:** Kein `dangerouslySetInnerHTML` oder `eval()` ✅
+- **Signed URLs:** Thumbnails ablaufen nach 1h — kein dauerhafter öffentlicher Zugriff ✅
+- **Data Leakage:** API gibt nur minimal nötige Felder zurück ✅
+- **Storage:** Lösch-Route entfernt nur Dateipfade der verifizierten eigenen Mahlzeit ✅
+- **Findings:** Keine
+
+### Bugs
+
+Keine Critical/High Bugs gefunden.
+
+**Produktionsbereit: JA**
 
 ## Deployment
 _To be added by /deploy_

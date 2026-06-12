@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,20 +18,34 @@ import {
 import MahlzeitKarte, { type MealEntry } from '@/components/mahlzeit-karte'
 import { Plus } from 'lucide-react'
 
-interface MahlzeitHistorieProps {
-  initialMeals: MealEntry[]
-  hasMore: boolean
-}
-
-export default function MahlzeitHistorie({ initialMeals, hasMore: initialHasMore }: MahlzeitHistorieProps) {
-  // Display oldest-first (ascending) — initial data from server is newest-first, so reverse
-  const [meals, setMeals] = useState<MealEntry[]>([...initialMeals].reverse())
-  const [hasMore, setHasMore] = useState(initialHasMore)
-  const [serverOffset, setServerOffset] = useState(initialMeals.length)
+export default function MahlzeitHistorie() {
+  // Display oldest-first (ascending) — API returns newest-first, so reverse
+  const [meals, setMeals] = useState<MealEntry[]>([])
+  const [hasMore, setHasMore] = useState(false)
+  const [serverOffset, setServerOffset] = useState(0)
+  const [isLoading, setIsLoading] = useState(true)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function fetchInitial() {
+      try {
+        const res = await fetch('/api/mahlzeiten?limit=20&offset=0')
+        if (!res.ok) throw new Error()
+        const data: { meals: MealEntry[]; hasMore: boolean } = await res.json()
+        setMeals([...data.meals].reverse())
+        setHasMore(data.hasMore)
+        setServerOffset(data.meals.length)
+      } catch {
+        setLoadError('Deine Mahlzeiten konnten nicht geladen werden.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchInitial()
+  }, [])
 
   async function loadMore() {
     setIsLoadingMore(true)
@@ -62,6 +77,23 @@ export default function MahlzeitHistorie({ initialMeals, hasMore: initialHasMore
     } catch {
       setDeleteError('Löschen fehlgeschlagen. Bitte erneut versuchen.')
     }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="px-4 py-6 space-y-3">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="flex items-center gap-3">
+            <Skeleton className="w-16 h-16 rounded-lg flex-shrink-0" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-3 w-1/2" />
+              <Skeleton className="h-5 w-24 rounded-full" />
+            </div>
+          </div>
+        ))}
+      </div>
+    )
   }
 
   return (
