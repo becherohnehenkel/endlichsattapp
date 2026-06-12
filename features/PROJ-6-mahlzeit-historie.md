@@ -1,8 +1,8 @@
 # PROJ-6: Mahlzeit-Historie
 
-## Status: Planned
+## Status: In Progress
 **Created:** 2026-06-10
-**Last Updated:** 2026-06-10
+**Last Updated:** 2026-06-12
 
 ## Dependencies
 - Requires: PROJ-1 (Supabase Infrastructure) — Mahlzeiten und Analysen werden aus `meals` + `meal_analyses` geladen
@@ -77,12 +77,20 @@
 | Kalender/Filter/Insights deferred zu PROJ-7 | PROJ-6 = reiner Zugriff auf Verlauf; PROJ-7 = Arbeit mit dem Verlauf | 2026-06-10 |
 
 ### Technical Decisions
-<!-- Added by /architecture -->
+| Decision | Rationale | Date |
+|----------|-----------|------|
+| `/` als History-Landingpage statt separater Route | Natürlicher App-Einstieg; Analyse-Flow bleibt unter `/analyse` | 2026-06-12 |
+| API GET `/api/mahlzeiten` für Client-Side-Pagination | Server Component liefert erste 20; weitere per Fetch im Client | 2026-06-12 |
+| `ORDER BY created_at DESC`, client-seitig reversed | Neueste zuerst aus DB, älteste oben in der Timeline | 2026-06-12 |
+| `/mahlzeit/[id]` als eigene Route | Browser-Back stellt Scroll-Position nativ wieder her | 2026-06-12 |
+| AnalysisResult aus separaten DB-Spalten rekonstruiert | Schema hat `macros_before`, `satiety_scores_before` etc. statt single `result`-Spalte | 2026-06-12 |
+| Floating "Neue Mahlzeit"-Button (fixed bottom-right) | Immer im Thumb-Reach-Bereich auf Mobile; App-Chrome bleibt minimal | 2026-06-12 |
+| Backend inline mit Frontend implementiert | Keine neuen DB-Migrationen nötig; nur API-Routen für Paginierung und Delete | 2026-06-12 |
 
 ---
 
 ## Tech Design (Solution Architect)
-_To be added by /architecture_
+_Inline mit /frontend implementiert — kein separater Architecture-Pass nötig (keine neue DB-Schema-Änderung)._
 
 ## QA Test Results
 _To be added by /qa_

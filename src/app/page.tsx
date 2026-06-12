@@ -1,101 +1,79 @@
-import Image from 'next/image'
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
+import { Button } from '@/components/ui/button'
+import MahlzeitHistorie from '@/components/mahlzeit-historie'
+import type { MealEntry } from '@/components/mahlzeit-karte'
 
-export default function Home() {
+export default async function HistoriePage() {
+  const supabase = await createClient()
+  const { data: { session } } = await supabase.auth.getSession()
+  const user = session?.user ?? null
+
+  if (!user) redirect('/login?redirectTo=/')
+
+  type RawMeal = {
+    id: string
+    free_text: string | null
+    photo_thumbnail_path: string | null
+    created_at: string
+    meal_analyses: { satiety_scores_before: { overall: string } | null }[] | null
+  }
+
+  const { data: meals } = await supabase
+    .from('meals')
+    .select(`
+      id,
+      free_text,
+      photo_thumbnail_path,
+      created_at,
+      meal_analyses (
+        satiety_scores_before
+      )
+    `)
+    .eq('user_id', user.id)
+    .eq('status', 'completed')
+    .order('created_at', { ascending: false })
+    .limit(20)
+
+  const initialMeals: MealEntry[] = await Promise.all(
+    ((meals ?? []) as unknown as RawMeal[]).map(async (meal) => {
+      let thumbnailUrl: string | null = null
+      if (meal.photo_thumbnail_path) {
+        const { data } = await supabase.storage
+          .from('meal-photos')
+          .createSignedUrl(meal.photo_thumbnail_path, 3600)
+        thumbnailUrl = data?.signedUrl ?? null
+      }
+      return {
+        id: meal.id,
+        freeText: meal.free_text,
+        thumbnailUrl,
+        createdAt: meal.created_at,
+        gesamtbewertung: meal.meal_analyses?.[0]?.satiety_scores_before?.overall ?? null,
+      }
+    })
+  )
+
+  const hasMore = (meals?.length ?? 0) === 20
+
+  async function logout() {
+    'use server'
+    const supabase = await createClient()
+    await supabase.auth.signOut()
+    redirect('/login')
+  }
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{' '}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-10 border-b border-border bg-card/80 backdrop-blur-sm px-4 py-3 flex items-center justify-between">
+        <span className="font-semibold text-foreground tracking-tight">endlichsatt</span>
+        <form action={logout}>
+          <Button variant="ghost" size="sm" type="submit" className="text-muted-foreground text-sm h-8">
+            Abmelden
+          </Button>
+        </form>
+      </header>
+      <MahlzeitHistorie initialMeals={initialMeals} hasMore={hasMore} />
     </div>
   )
 }

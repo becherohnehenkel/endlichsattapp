@@ -34,9 +34,9 @@ export default function LoginPage() {
 
       if (data.session) {
         const params = new URLSearchParams(window.location.search)
-        const raw = params.get('redirectTo') ?? '/analyse'
+        const raw = params.get('redirectTo') ?? '/'
         // Only allow internal paths — reject absolute URLs and protocol-relative URLs
-        const redirectTo = raw.startsWith('/') && !raw.startsWith('//') ? raw : '/analyse'
+        const redirectTo = raw.startsWith('/') && !raw.startsWith('//') ? raw : '/'
         window.location.href = redirectTo
       }
     } finally {

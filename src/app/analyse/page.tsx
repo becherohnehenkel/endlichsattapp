@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import MahlzeitInput from '@/components/mahlzeit-input'
 
@@ -22,7 +23,9 @@ export default async function AnalysePage() {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-10 border-b border-border bg-card/80 backdrop-blur-sm px-4 py-3 flex items-center justify-between">
-        <span className="font-semibold text-foreground tracking-tight">endlichsatt</span>
+        <Link href="/" className="font-semibold text-foreground tracking-tight hover:text-[#4A7C59] transition-colors">
+          endlichsatt
+        </Link>
         <form action={logout}>
           <Button variant="ghost" size="sm" type="submit" className="text-muted-foreground text-sm h-8">
             Abmelden

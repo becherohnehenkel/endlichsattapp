@@ -1,6 +1,6 @@
 # PROJ-5: Sättigungs-Einschätzung & Verbesserungsvorschlag
 
-## Status: Approved
+## Status: Deployed
 **Created:** 2026-06-10
 **Last Updated:** 2026-06-12
 

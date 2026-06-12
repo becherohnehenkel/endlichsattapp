@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import FotoUploadZone from '@/components/foto-upload-zone'
 import ZutatenlisteBestaetigung, { type IngredientItem } from '@/components/zutatenliste-bestaetigung'
 import SaettigungsErgebnis, { type AnalysisResult } from '@/components/saettigungs-ergebnis'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
@@ -420,11 +421,18 @@ export default function MahlzeitInput({ userId }: MahlzeitInputProps) {
 
   if (step === 'done' && analysisResult) {
     return (
-      <SaettigungsErgebnis
-        result={analysisResult}
-        assumptions={assumptions}
-        onReset={resetForm}
-      />
+      <div>
+        <div className="px-4 pt-3 pb-0 flex justify-start">
+          <Link href="/" className="text-sm text-[#4A7C59] flex items-center gap-1 hover:underline">
+            ← Zur Übersicht
+          </Link>
+        </div>
+        <SaettigungsErgebnis
+          result={analysisResult}
+          assumptions={assumptions}
+          onReset={resetForm}
+        />
+      </div>
     )
   }
 
