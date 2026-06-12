@@ -129,6 +129,83 @@ export type Database = {
         }
         Relationships: []
       }
+      recipe_ingredients: {
+        Row: {
+          id: string
+          recipe_id: string
+          name: string
+          amount: number
+          unit: string
+          sort_order: number
+        }
+        Insert: {
+          id?: string
+          recipe_id: string
+          name: string
+          amount: number
+          unit: string
+          sort_order?: number
+        }
+        Update: {
+          id?: string
+          recipe_id?: string
+          name?: string
+          amount?: number
+          unit?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_ingredients_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recipes: {
+        Row: {
+          id: string
+          title: string
+          image_path: string | null
+          servings: number
+          cook_time_minutes: number
+          total_time_minutes: number
+          instructions: string
+          ingredient_tags: string[]
+          cuisine_tags: string[]
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          image_path?: string | null
+          servings: number
+          cook_time_minutes: number
+          total_time_minutes: number
+          instructions: string
+          ingredient_tags?: string[]
+          cuisine_tags?: string[]
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          image_path?: string | null
+          servings?: number
+          cook_time_minutes?: number
+          total_time_minutes?: number
+          instructions?: string
+          ingredient_tags?: string[]
+          cuisine_tags?: string[]
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
