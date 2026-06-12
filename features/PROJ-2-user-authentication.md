@@ -1,8 +1,9 @@
 # PROJ-2: User Authentication
 
-## Status: In Progress
+## Status: Deployed
 **Created:** 2026-06-10
-**Last Updated:** 2026-06-11
+**Last Updated:** 2026-06-12
+**Deployed:** 2026-06-12 — https://endlichsattapp.vercel.app
 
 ## Implementation Notes
 - `src/app/login/page.tsx` — Login-Formular (E-Mail + Passwort, redirectTo-Support)

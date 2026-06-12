@@ -1,9 +1,10 @@
 # PROJ-3: Mahlzeit-Input (Foto & Freitext)
 
-## Status: Approved
+## Status: Deployed
 **Created:** 2026-06-10
-**Last Updated:** 2026-06-11
+**Last Updated:** 2026-06-12
 **QA Completed:** 2026-06-11
+**Deployed:** 2026-06-12 — https://endlichsattapp.vercel.app
 
 ## Dependencies
 - Requires: PROJ-1 (Supabase Infrastructure) — für Foto-Upload in Storage und Speicherung der Mahlzeit
