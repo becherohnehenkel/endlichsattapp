@@ -72,6 +72,9 @@ export async function POST(request: Request) {
     } else if (msg.role === 'assistant') {
       try {
         const parsed = JSON.parse(msg.content)
+        if (typeof parsed.meal_description === 'string' && parsed.meal_description) {
+          contextParts.push(`Mahlzeitbeschreibung: ${parsed.meal_description}`)
+        }
         if (Array.isArray(parsed.questions) && parsed.questions.length > 0) {
           const questions = parsed.questions.map((q: { text: string }) => q.text).join(' / ')
           contextParts.push(`KI-Fragen: ${questions}`)
@@ -119,11 +122,20 @@ export async function POST(request: Request) {
   } catch {
     console.error('[analyse/complete] Claude non-JSON:', raw)
     extracted = {
-      ingredients: meal.free_text
-        ? [{ name: meal.free_text, amount: '1 Portion', isAssumption: true }]
-        : [],
+      ingredients: [],
       assumptions: ['Zutaten konnten nicht automatisch extrahiert werden'],
     }
+  }
+
+  // Safety: never return an empty ingredient list — the confirm step requires at least one
+  if (!extracted.ingredients || extracted.ingredients.length === 0) {
+    extracted.ingredients = meal.free_text
+      ? [{ name: meal.free_text, amount: '1 Portion', isAssumption: true }]
+      : [{ name: 'Mahlzeit (bitte Zutaten anpassen)', amount: '1 Portion', isAssumption: true }]
+    extracted.assumptions = [
+      ...(extracted.assumptions ?? []),
+      'Zutaten konnten nicht automatisch erkannt werden — bitte manuell anpassen',
+    ]
   }
 
   await supabase

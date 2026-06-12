@@ -226,7 +226,8 @@ export default function MahlzeitInput({ userId }: MahlzeitInputProps) {
         if (data.assumptions) setAssumptions(data.assumptions)
         setStep('confirming')
       } else {
-        setStep('done')
+        setApiError('Zutaten konnten nicht erkannt werden. Bitte beschreibe deine Mahlzeit im Textfeld und versuche es erneut.')
+        setStep('input')
       }
     } catch (err) {
       setApiError(err instanceof Error ? err.message : 'Ein Fehler ist aufgetreten.')

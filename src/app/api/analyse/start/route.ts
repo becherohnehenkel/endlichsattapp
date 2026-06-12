@@ -13,8 +13,10 @@ Identifiziere fehlende Informationen, die deine Analyse wesentlich beeinflussen 
 Frage nach: Kochfett/Menge, Fettgehalt von Milchprodukten, Portionsgrößen kalorienreicher Zutaten (Nüsse, Käse, Öl), Zubereitungsart (roh vs. gegart).
 Stelle maximal 2 Fragen. Wenn du genug weißt, setze needs_clarification auf false.
 
+WICHTIG: Fülle meal_description IMMER aus — beschreibe kurz was du siehst oder liest (z.B. "Spaghetti Bolognese mit Hackfleisch, Tomatensauce und Parmesan").
+
 Antworte AUSSCHLIESSLICH mit gültigem JSON, ohne Text davor oder danach:
-{"needs_clarification": boolean, "questions": [{"id": "q1", "text": "Frage hier"}]}`
+{"needs_clarification": boolean, "meal_description": "Kurze Beschreibung der Mahlzeit", "questions": [{"id": "q1", "text": "Frage hier"}]}`
 
 type ClaudeMessage = { role: 'user' | 'assistant'; content: string }
 
