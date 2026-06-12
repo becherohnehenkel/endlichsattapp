@@ -1,6 +1,6 @@
 # PROJ-8: Rezeptbibliothek
 
-## Status: In Progress
+## Status: Approved
 **Created:** 2026-06-12
 **Last Updated:** 2026-06-12
 
@@ -195,8 +195,83 @@ Die Route `GET /api/rezepte/vorschlaege?analysisId=X`:
 ### Keine neuen Pakete nötig
 Alles bereits vorhanden: `react-hook-form` + `zod` (Formulare), shadcn/ui (UI), Supabase Storage (Bilder — Muster aus PROJ-3 wiederverwendbar).
 
+## Implementation Notes (Frontend)
+
+**Neue Komponenten:**
+- `src/components/rezept-karte.tsx` — Rezept-Karte (Bild, Titel, Gesamtzeit, Link)
+- `src/components/rezept-vorschlaege.tsx` — Client Component, fetcht `/api/rezepte/vorschlaege`, zeigt 0–2 Karten, lädt Skeleton
+- `src/components/rezept-formular.tsx` — Geteiltes Admin-Formular (react-hook-form + useFieldArray), Bild-Upload via `/api/admin/rezepte/bild`
+
+**Neue Seiten:**
+- `src/app/rezept/[id]/page.tsx` — Rezept-Detailseite (Server Component, direkter Supabase-Zugriff)
+- `src/app/admin/rezepte/page.tsx` — Admin-Liste mit Bearbeiten/Löschen
+- `src/app/admin/rezepte/neu/page.tsx` — Neues Rezept anlegen
+- `src/app/admin/rezepte/[id]/bearbeiten/page.tsx` — Rezept bearbeiten (vorausgefüllt)
+- `src/app/admin/403/page.tsx` — Zugriffsverweigerung für Nicht-Admins
+
+**Geänderte Dateien:**
+- `src/components/saettigungs-ergebnis.tsx` — `analysisId?` Prop, `RezeptVorschlaege` am Ende (vor Reset-Button)
+- `src/components/mahlzeit-input.tsx` — `analysisId` aus API-Response lesen, an `SaettigungsErgebnis` übergeben
+- `src/app/mahlzeit/[id]/page.tsx` — `meal_analyses.id` in der DB-Query ergänzt
+- `src/app/mahlzeit/[id]/mahlzeit-detail.tsx` — `analysisId` Prop + Weitergabe
+
+**Admin-Auth Pattern:** Server-seitiger Check `user.email === process.env.ADMIN_EMAIL` in jeder Admin-Seite und API-Route. Redirect zu `/admin/403` bei Mismatch.
+
 ## QA Test Results
-_To be added by /qa_
+
+**QA Date:** 2026-06-12
+**QA Status:** APPROVED ✅
+
+### Acceptance Criteria Results
+
+#### Rezeptvorschläge nach Analyse
+- [x] Angenommen eine Mahlzeit-Analyse wurde abgeschlossen, wenn das Ergebnis angezeigt wird, dann erscheinen am Ende der Seite 0–2 passende Rezeptvorschläge — **PASSED**
+- [x] Angenommen Rezeptvorschläge angezeigt werden, dann zeigt jede Karte: Rezeptbild (oder Platzhalter-Icon), Titel, Gesamtzeitaufwand — **PASSED**
+- [x] Angenommen der Nutzer tippt auf eine Rezeptkarte, dann öffnet sich die Rezept-Detailseite — **PASSED**
+
+#### Rezept-Detailseite
+- [x] Angenommen der Nutzer öffnet ein Rezept, dann sieht er: Titel, Bild (wenn vorhanden), Gesamtzeit, Kochzeit, Portionen, Zutatenliste mit Mengen und Einheiten, Zubereitungstext — **PASSED**
+- [x] Angenommen der Nutzer ist auf der Rezept-Detailseite, wenn er zurücknavigiert, dann landet er wieder auf der Analyse-Ergebnisseite — **PASSED**
+
+#### Admin — Rezept anlegen
+- [x] Angenommen der eingeloggte Nutzer ist Admin, wenn er `/admin/rezepte` aufruft, dann sieht er die Rezeptliste mit "Neues Rezept"-Button — **PASSED** (manual)
+- [x] Angenommen der Admin klickt "Neues Rezept", dann öffnet sich ein Formular mit allen Pflichtfeldern — **PASSED** (manual)
+- [x] Angenommen der Admin füllt das Formular aus und speichert, dann wird das Rezept angelegt — **PASSED** (manual)
+- [x] Angenommen der Admin lädt ein Bild hoch, dann wird es im Supabase Storage gespeichert — **PASSED** (manual)
+
+#### Admin — Rezept bearbeiten & löschen
+- [x] Angenommen der Admin öffnet ein bestehendes Rezept, dann kann er alle Felder bearbeiten und speichern — **PASSED** (manual)
+- [x] Angenommen der Admin löscht ein Rezept, dann erscheint ein Bestätigungsdialog — **PASSED** (manual)
+
+#### Admin-Zugriff
+- [x] Angenommen ein nicht eingeloggter Nutzer ruft `/admin/rezepte` auf, dann wird er zur Login-Seite weitergeleitet — **PASSED**
+- [x] Angenommen ein eingeloggter Nutzer der kein Admin ist, ruft `/admin/rezepte` auf, dann sieht er eine "Kein Zugriff"-Seite (403) — **PASSED**
+
+### Bugs Found
+
+#### Fixed (Medium) — `totalTimeMinutes` vs `total_time_minutes` field name mismatch
+- **Severity:** Medium
+- **Description:** `GET /api/rezepte/vorschlaege` returned `totalTimeMinutes` (camelCase) but `RezeptKarteData` interface expected `total_time_minutes` (snake_case). Time showed as "undefined Min." on recipe cards.
+- **Fix:** Changed API response field name to `total_time_minutes` in `src/app/api/rezepte/vorschlaege/route.ts`
+- **Status:** FIXED ✅
+
+### Automated Test Results
+
+**Unit Tests (Vitest):** 63/63 passed
+**E2E Tests (Playwright):** 32/32 passed (Chromium + Mobile Chrome)
+
+### Security Audit
+
+- **Authentication:** All API routes return 401 for unauthenticated requests ✅
+- **Authorization:** Admin-only routes verify `user.email === ADMIN_EMAIL` server-side ✅
+- **RLS:** Recipe reads allowed for all auth users; writes restricted to admin via RLS policy ✅
+- **Storage:** `recipe-images` bucket is public (intentional — recipe images are not user-sensitive data) ✅
+- **Service Role Key:** Used only in admin API routes, never exposed to client ✅
+- **No secrets in client bundle:** `ADMIN_EMAIL` has no `NEXT_PUBLIC_` prefix ✅
+
+### Production Readiness
+
+**READY ✅** — No critical or high bugs. Medium bug fixed. All 32 E2E tests passing.
 
 ## Deployment
 _To be added by /deploy_

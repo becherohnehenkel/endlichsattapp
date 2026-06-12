@@ -67,6 +67,7 @@ export default function MahlzeitInput({ userId }: MahlzeitInputProps) {
   const [assumptions, setAssumptions] = useState<string[]>([])
   const [ingredients, setIngredients] = useState<IngredientItem[]>([])
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null)
+  const [analysisId, setAnalysisId] = useState<string | null>(null)
 
   function handleFotoChange(file: File) {
     if (fotoPreview) URL.revokeObjectURL(fotoPreview)
@@ -249,6 +250,7 @@ export default function MahlzeitInput({ userId }: MahlzeitInputProps) {
       if (!res.ok) throw new Error('Nährstoffberechnung fehlgeschlagen. Bitte erneut versuchen.')
       const data = await res.json()
       setAnalysisResult(data.result)
+      setAnalysisId(data.analysisId ?? null)
       setStep('done')
     } catch (err) {
       setApiError(err instanceof Error ? err.message : 'Ein Fehler ist aufgetreten.')
@@ -270,6 +272,7 @@ export default function MahlzeitInput({ userId }: MahlzeitInputProps) {
     setAssumptions([])
     setIngredients([])
     setAnalysisResult(null)
+    setAnalysisId(null)
     setStep('input')
   }
 
@@ -431,6 +434,7 @@ export default function MahlzeitInput({ userId }: MahlzeitInputProps) {
           result={analysisResult}
           assumptions={assumptions}
           onReset={resetForm}
+          analysisId={analysisId ?? undefined}
         />
       </div>
     )

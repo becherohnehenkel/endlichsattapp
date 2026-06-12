@@ -7,9 +7,10 @@ import SaettigungsErgebnis, { type AnalysisResult } from '@/components/saettigun
 interface MahlzeitDetailProps {
   result: AnalysisResult
   assumptions: string[]
+  analysisId?: string
 }
 
-export default function MahlzeitDetail({ result, assumptions }: MahlzeitDetailProps) {
+export default function MahlzeitDetail({ result, assumptions, analysisId }: MahlzeitDetailProps) {
   const router = useRouter()
 
   return (
@@ -29,6 +30,7 @@ export default function MahlzeitDetail({ result, assumptions }: MahlzeitDetailPr
         result={result}
         assumptions={assumptions}
         onReset={() => router.push('/analyse')}
+        analysisId={analysisId}
       />
     </div>
   )

@@ -9,6 +9,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
+import RezeptVorschlaege from '@/components/rezept-vorschlaege'
 
 type BausteinRating = 'gut' | 'mittel' | 'schwach' | 'nicht_bewertet'
 
@@ -53,6 +54,7 @@ interface SaettigungsErgebnisProps {
   result: AnalysisResult
   assumptions: string[]
   onReset: () => void
+  analysisId?: string
 }
 
 const PILLAR_ORDER: (keyof BausteineBewertung)[] = [
@@ -108,7 +110,7 @@ function PillarChip({
   )
 }
 
-export default function SaettigungsErgebnis({ result, assumptions, onReset }: SaettigungsErgebnisProps) {
+export default function SaettigungsErgebnis({ result, assumptions, onReset, analysisId }: SaettigungsErgebnisProps) {
   const allAssumptions = [...new Set([...assumptions, ...result.annahmen])]
   const [assumptionsOpen, setAssumptionsOpen] = useState(false)
   const gesamt = gesamtConfig(result.vorher.gesamtbewertung)
@@ -266,7 +268,15 @@ export default function SaettigungsErgebnis({ result, assumptions, onReset }: Sa
         </div>
       </div>
 
-      {/* ── 8. Reset ── */}
+      {/* ── 8. Rezeptvorschläge ── */}
+      {analysisId && (
+        <>
+          <Separator />
+          <RezeptVorschlaege analysisId={analysisId} />
+        </>
+      )}
+
+      {/* ── 9. Reset ── */}
       <Button variant="outline" size="lg" className="w-full" onClick={onReset}>
         Neue Mahlzeit analysieren
       </Button>

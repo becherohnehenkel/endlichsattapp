@@ -20,6 +20,7 @@ export default async function MahlzeitDetailPage({
       free_text,
       created_at,
       meal_analyses (
+        id,
         refined_ingredients,
         macros_before,
         macros_after,
@@ -39,6 +40,7 @@ export default async function MahlzeitDetailPage({
   if (!meal) notFound()
 
   type RawAnalysis = {
+    id: string
     refined_ingredients: { ingredients: AnalysisResult['zutatenliste']; assumptions: string[] } | null
     macros_before: AnalysisResult['vorher']['naehrwerte'] | null
     macros_after: AnalysisResult['nachher']['naehrwerte'] | null
@@ -87,5 +89,5 @@ export default async function MahlzeitDetailPage({
   const conversations = meal.meal_conversations as unknown as { assumptions: string[] | null }[]
   const assumptions: string[] = conversations?.[0]?.assumptions ?? []
 
-  return <MahlzeitDetail result={result} assumptions={assumptions} />
+  return <MahlzeitDetail result={result} assumptions={assumptions} analysisId={analysis.id} />
 }

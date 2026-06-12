@@ -63,7 +63,7 @@ export async function GET(request: Request) {
       id: r.id,
       title: r.title,
       imageUrl: imageUrl(r.image_path),
-      totalTimeMinutes: r.total_time_minutes,
+      total_time_minutes: r.total_time_minutes,
     })),
   })
 }
