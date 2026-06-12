@@ -1,6 +1,6 @@
 # PROJ-4: KI-Analyse-Agent (Rückfragen + BLS + Makros)
 
-## Status: Approved
+## Status: Deployed
 **Created:** 2026-06-10
 **Last Updated:** 2026-06-12
 
@@ -296,4 +296,8 @@ Keine neuen npm-Pakete nötig. Alle externen APIs werden mit nativem `fetch` auf
 **BEREIT** — Medium-Bug wurde während QA behoben. Keine Critical/High Bugs. Keine Medium Bugs mehr offen.
 
 ## Deployment
-_To be added by /deploy_
+
+**Deployed:** 2026-06-12
+**Production URL:** satt.mehralsabnehmen.de
+**Git Tag:** v1.4.0-PROJ-4
+**Neue Env-Variable:** `USDA_API_KEY` in Vercel Dashboard hinterlegt
