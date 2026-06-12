@@ -22,10 +22,11 @@
 | PROJ-5 | Sättigungs-Einschätzung & Verbesserungsvorschlag | P0 | Deployed | PROJ-4 | [Spec](PROJ-5-saettigungs-einschaetzung.md) |
 | PROJ-6 | Mahlzeit-Historie | P1 | Deployed | PROJ-1, PROJ-2, PROJ-4, PROJ-5 | [Spec](PROJ-6-mahlzeit-historie.md) |
 | PROJ-7 | Ernährungs-Tagebuch & Inspiration | P2 | Roadmap | PROJ-6 | — |
+| PROJ-8 | Rezeptbibliothek | P1 | Architected | PROJ-1, PROJ-2, PROJ-4, PROJ-5 | [Spec](PROJ-8-rezeptbibliothek.md) |
 
 <!-- Add features above this line -->
 
-## Next Available ID: PROJ-8
+## Next Available ID: PROJ-9
 
 ## Empfohlene Build-Reihenfolge
 
