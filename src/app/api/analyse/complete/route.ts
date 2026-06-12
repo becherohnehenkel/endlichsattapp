@@ -107,6 +107,7 @@ export async function POST(request: Request) {
   }
 
   const raw = response.content[0]?.type === 'text' ? response.content[0].text : ''
+  const cleaned = raw.replace(/^```(?:json)?\s*\n?/m, '').replace(/\n?```\s*$/m, '').trim()
 
   let extracted: {
     ingredients: { name: string; amount: string; isAssumption: boolean }[]
@@ -114,7 +115,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    extracted = JSON.parse(raw)
+    extracted = JSON.parse(cleaned)
   } catch {
     console.error('[analyse/complete] Claude non-JSON:', raw)
     extracted = {

@@ -116,6 +116,28 @@ describe('POST /api/analyse/complete', () => {
     expect(body.error).toContain('überlastet')
   })
 
+  it('parses Claude JSON wrapped in markdown code fences', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
+    mockMealSingle.mockResolvedValue({ data: { id: 'meal-1', user_id: 'user-1', free_text: 'Pasta' }, error: null })
+    mockConvSingle.mockResolvedValue({
+      data: { id: 'conv-1', claude_messages: [], assumptions: null },
+      error: null,
+    })
+    mockConvUpdate.mockResolvedValue({ error: null })
+    mockAnthropicCreate.mockResolvedValue({
+      content: [{ type: 'text', text: '```json\n' + JSON.stringify({
+        ingredients: [{ name: 'Pasta', amount: '200g', isAssumption: false }],
+        assumptions: [],
+      }) + '\n```' }],
+    })
+
+    const { POST } = await import('./route')
+    const res = await POST(makeRequest({ mealId: '550e8400-e29b-41d4-a716-446655440000' }))
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.ingredients[0].name).toBe('Pasta')
+  })
+
   it('falls back gracefully when Claude returns non-JSON', async () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
     mockMealSingle.mockResolvedValue({ data: { id: 'meal-1', user_id: 'user-1', free_text: 'Pasta' }, error: null })

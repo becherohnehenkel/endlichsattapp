@@ -1,8 +1,8 @@
 # PROJ-5: Sättigungs-Einschätzung & Verbesserungsvorschlag
 
-## Status: Planned
+## Status: In Progress
 **Created:** 2026-06-10
-**Last Updated:** 2026-06-10
+**Last Updated:** 2026-06-12
 
 ## Dependencies
 - Requires: PROJ-4 (KI-Analyse-Agent) — liefert Makros, Zutatenliste und Bausteine-Rohdaten als Input
@@ -92,12 +92,22 @@
 | Art of Eating immer als abschließender Tipp, nie als Vorwurf | Ton-Prinzip: informieren, nicht mahnen | 2026-06-10 |
 
 ### Technical Decisions
-<!-- Added by /architecture -->
+| Decision | Rationale | Date |
+|----------|-----------|------|
+| Kein separater `/architecture`-Schritt | Datenstruktur vollständig aus PROJ-4 bekannt; pure Rendering-Aufgabe | 2026-06-12 |
+| Rein clientseitiges Frontend — kein neues Backend | PROJ-4 liefert fertiges JSON; kein neuer API-Endpoint oder DB-Zugriff nötig | 2026-06-12 |
+| `SaettigungsErgebnis` als eigenständige Komponente | Klare Trennung; `MahlzeitInput` kümmert sich um den Flow, `SaettigungsErgebnis` nur ums Rendering | 2026-06-12 |
+| `min-[480px]:grid-cols-2` für Vorher/Nachher | Spec sagt 480px; Tailwind JIT erlaubt beliebige Breakpoints | 2026-06-12 |
+| Nährwerte immer sichtbar aber sehr klein/muted | Sekundäre Info wie in PROJ-4-Spec definiert; ausgegraut statt versteckt | 2026-06-12 |
 
 ---
 
 ## Tech Design (Solution Architect)
-_To be added by /architecture_
+_Kein separater Architecture-Pass nötig — Datenstruktur aus PROJ-4 vollständig definiert._
+
+## Implementation Notes
+- `src/components/saettigungs-ergebnis.tsx` — neue Komponente: rendert Gesamtbewertung, 6-Baustein-Grid, Verbesserungsvorschläge, Vorher/Nachher-Vergleich, Art-of-Eating-Tipp, Nährwerte
+- `src/components/mahlzeit-input.tsx` — `done`-Step-Placeholder durch `<SaettigungsErgebnis>` ersetzt; `analysisResult`-State von `unknown` auf `AnalysisResult | null` getypt
 
 ## QA Test Results
 _To be added by /qa_

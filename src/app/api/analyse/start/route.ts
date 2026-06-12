@@ -76,17 +76,26 @@ export async function POST(request: Request) {
 
   // Call Claude
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-  const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 512,
-    system: SYSTEM_PROMPT,
-    messages: [{ role: 'user', content: userMessageParts }],
-  })
+  let response
+  try {
+    response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 512,
+      system: SYSTEM_PROMPT,
+      messages: [{ role: 'user', content: userMessageParts }],
+    })
+  } catch (err) {
+    if (err instanceof Error && (err as Error & { status?: number }).status === 529) {
+      return NextResponse.json({ error: 'Die KI ist gerade überlastet. Bitte in ein paar Sekunden erneut versuchen.' }, { status: 503 })
+    }
+    throw err
+  }
 
   const raw = response.content[0]?.type === 'text' ? response.content[0].text : ''
+  const cleaned = raw.replace(/^```(?:json)?\s*\n?/m, '').replace(/\n?```\s*$/m, '').trim()
   let claudeResult: { needs_clarification: boolean; questions: { id: string; text: string }[] }
   try {
-    claudeResult = JSON.parse(raw)
+    claudeResult = JSON.parse(cleaned)
   } catch {
     console.error('[analyse/start] Claude returned non-JSON:', raw)
     // Fallback: no clarification needed

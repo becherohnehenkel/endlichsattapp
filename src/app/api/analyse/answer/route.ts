@@ -91,13 +91,14 @@ export async function POST(request: Request) {
   })
 
   const raw = response.content[0]?.type === 'text' ? response.content[0].text : ''
+  const cleaned = raw.replace(/^```(?:json)?\s*\n?/m, '').replace(/\n?```\s*$/m, '').trim()
   let claudeResult: {
     needs_clarification: boolean
     questions: { id: string; text: string }[]
     assumptions?: string[]
   }
   try {
-    claudeResult = JSON.parse(raw)
+    claudeResult = JSON.parse(cleaned)
   } catch {
     console.error('[analyse/answer] Claude returned non-JSON:', raw)
     claudeResult = { needs_clarification: false, questions: [], assumptions: [] }

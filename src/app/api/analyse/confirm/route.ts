@@ -231,6 +231,7 @@ export async function POST(request: Request) {
   }
 
   const raw = response.content[0]?.type === 'text' ? response.content[0].text : ''
+  const cleaned = raw.replace(/^```(?:json)?\s*\n?/m, '').replace(/\n?```\s*$/m, '').trim()
 
   type AnalysisResult = {
     zutatenliste: { name: string; amount: string; source: string; sourceName: string }[]
@@ -253,7 +254,7 @@ export async function POST(request: Request) {
 
   let result: AnalysisResult
   try {
-    result = JSON.parse(raw)
+    result = JSON.parse(cleaned)
   } catch {
     console.error('[analyse/confirm] Claude non-JSON:', raw)
     return NextResponse.json({ error: 'Analyse konnte nicht verarbeitet werden. Bitte erneut versuchen.' }, { status: 500 })

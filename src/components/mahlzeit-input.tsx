@@ -5,6 +5,7 @@ import imageCompression from 'browser-image-compression'
 import { createClient } from '@/lib/supabase/client'
 import FotoUploadZone from '@/components/foto-upload-zone'
 import ZutatenlisteBestaetigung, { type IngredientItem } from '@/components/zutatenliste-bestaetigung'
+import SaettigungsErgebnis, { type AnalysisResult } from '@/components/saettigungs-ergebnis'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
@@ -64,7 +65,7 @@ export default function MahlzeitInput({ userId }: MahlzeitInputProps) {
   const [questionsLoading, setQuestionsLoading] = useState(false)
   const [assumptions, setAssumptions] = useState<string[]>([])
   const [ingredients, setIngredients] = useState<IngredientItem[]>([])
-  const [analysisResult, setAnalysisResult] = useState<unknown>(null)
+  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null)
 
   function handleFotoChange(file: File) {
     if (fotoPreview) URL.revokeObjectURL(fotoPreview)
@@ -414,29 +415,15 @@ export default function MahlzeitInput({ userId }: MahlzeitInputProps) {
     )
   }
 
-  // ─── Done / Ergebnis-Platzhalter ───────────────────────────
+  // ─── Done / Sättigungs-Ergebnis ────────────────────────────
 
-  if (step === 'done') {
+  if (step === 'done' && analysisResult) {
     return (
-      <main className="px-4 py-6 max-w-sm mx-auto space-y-4">
-        {assumptions.length > 0 && (
-          <Alert>
-            <AlertDescription className="text-sm">
-              <span className="font-medium">Ich habe angenommen: </span>
-              {assumptions.join(', ')}
-            </AlertDescription>
-          </Alert>
-        )}
-        <div className="rounded-xl border border-border bg-card p-8 text-center space-y-2">
-          <p className="text-2xl">📊</p>
-          <p className="font-medium text-foreground">Deine Sättigungs-Analyse</p>
-          <p className="text-sm text-muted-foreground">Hier erscheint dein Ergebnis.</p>
-          <p className="text-xs text-muted-foreground/50 mt-4">(PROJ-5 füllt diesen Bereich)</p>
-        </div>
-        <Button variant="outline" size="lg" className="w-full" onClick={resetForm}>
-          Neue Mahlzeit analysieren
-        </Button>
-      </main>
+      <SaettigungsErgebnis
+        result={analysisResult}
+        assumptions={assumptions}
+        onReset={resetForm}
+      />
     )
   }
 
