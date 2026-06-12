@@ -174,7 +174,7 @@ test.describe('Nährstoffberechnung', () => {
     )
     await reachConfirming(page)
     await page.getByRole('button', { name: /passt so/i }).click()
-    await expect(page.getByText('Deine Sättigungs-Analyse')).toBeVisible({ timeout: 8000 })
+    await expect(page.getByText('Die 6 Sättigungs-Bausteine')).toBeVisible({ timeout: 8000 })
   })
 
   test('Geänderte Zutaten werden korrekt an /api/analyse/confirm gesendet', async ({ page }) => {
@@ -190,7 +190,7 @@ test.describe('Nährstoffberechnung', () => {
     await page.locator('input[placeholder="Zutat"]').fill('Putenbrust')
     await page.getByRole('button', { name: 'Fertig' }).click()
     await page.getByRole('button', { name: /passt so/i }).click()
-    await expect(page.getByText('Deine Sättigungs-Analyse')).toBeVisible({ timeout: 8000 })
+    await expect(page.getByText('Die 6 Sättigungs-Bausteine')).toBeVisible({ timeout: 8000 })
     const body = capturedBody as { ingredients: { name: string }[] }
     expect(body.ingredients[0].name).toBe('Putenbrust')
   })

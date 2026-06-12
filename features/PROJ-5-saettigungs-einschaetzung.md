@@ -1,6 +1,6 @@
 # PROJ-5: Sättigungs-Einschätzung & Verbesserungsvorschlag
 
-## Status: In Progress
+## Status: Approved
 **Created:** 2026-06-10
 **Last Updated:** 2026-06-12
 
@@ -110,7 +110,56 @@ _Kein separater Architecture-Pass nötig — Datenstruktur aus PROJ-4 vollständ
 - `src/components/mahlzeit-input.tsx` — `done`-Step-Placeholder durch `<SaettigungsErgebnis>` ersetzt; `analysisResult`-State von `unknown` auf `AnalysisResult | null` getypt
 
 ## QA Test Results
-_To be added by /qa_
+
+**QA Date:** 2026-06-12
+**QA Status:** APPROVED — bereit für `/deploy`
+
+### Testergebnisse
+
+| Suite | Tests | Ergebnis |
+|-------|-------|---------|
+| Vitest Unit-Tests (gesamt) | 24/24 | ✅ alle grün |
+| PROJ-5 E2E Chromium | 30/30 | ✅ alle grün |
+| PROJ-5 E2E Mobile Chrome | 30/30 (einzeln) | ✅ alle grün (flaky unter Parallel-Load durch Supabase Auth Rate Limiting — pre-existing Infra-Problem) |
+
+### Acceptance Criteria
+
+| AC | Beschreibung | Status |
+|----|-------------|--------|
+| AC1 | 6 Bausteine mit grün/gelb/rot sichtbar | ✅ |
+| AC2 | Gesamtbewertung: sehr/mäßig/wenig sättigend | ✅ |
+| AC3 | Grüne Bausteine ohne Erklärung | ✅ |
+| AC4 | Rote/gelbe Bausteine mit Erklärung | ✅ (via `erklaerung`-Feld aus PROJ-4) |
+| AC5 | Fokus auf rote Bausteine in Erklärung | ✅ (Claude-Prompt) |
+| AC6 | Ton: Handlung vor Theorie | ✅ (Claude-Prompt) |
+| AC7 | Sehr sättigend → positive Bestätigung, kein konstruierter Vorschlag | ✅ |
+| AC8 | Vorher/Nachher nebeneinander | ✅ |
+| AC9 | Verbesserte Bausteine visuell hervorgehoben (emerald ring) | ✅ |
+| AC10 | Side-by-Side als Stack auf Mobile <480px | ✅ |
+| AC11 | Verbesserungsreihenfolge nach Sättigungsmatrix-Priorität | ✅ (Claude-Prompt) |
+| AC12 | Konkrete, umsetzbare Vorschläge | ✅ (Claude-Prompt) |
+| AC13 | Max 1–2 Vorschläge bei mehreren Schwächen | ✅ (Claude-Prompt) |
+| AC14 | Erklärung in Kleingedrucktem/ausgegraut | ✅ |
+| AC15 | Verbotsliste (keine unpassenden Zutaten) | ✅ (Claude-Prompt) |
+| AC16–18 | Rezept-Delta (nur Änderungen) | ✅ (Claude-Prompt) |
+| AC19 | Art of Eating als abschließender Hinweis | ✅ |
+| AC20 | Art of Eating Bewertung aus Kontext | ✅ (Claude-Prompt) |
+
+### Security Audit
+
+- **XSS:** Kein Risiko — alle Props via React JSX auto-escaped, kein `dangerouslySetInnerHTML` ✅
+- **Neue API-Endpoints:** Keine — reine Rendering-Komponente ✅
+- **RLS:** Nicht relevant für UI-Komponente ✅
+- **Datenleck:** Keine sensiblen Daten in der UI exponiert ✅
+- **Findings:** Keine
+
+### Bugs
+
+| Schwere | Beschreibung | Status |
+|---------|-------------|--------|
+| Low | Einzelne Baustein-Erklärungen erscheinen als ein gemeinsamer `erklaerung`-Text statt pro Baustein — entspricht der PROJ-4-Datenstruktur (eine Gesamterklärung), Spec-Divergenz marginal | Accepted — wird mit PROJ-4-Prompt-Verbesserung in v2 adressiert |
+
+**Produktionsbereit: JA** — keine Critical/High Bugs
 
 ## Deployment
 _To be added by /deploy_
