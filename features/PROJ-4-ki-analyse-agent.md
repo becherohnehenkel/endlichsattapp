@@ -1,8 +1,8 @@
 # PROJ-4: KI-Analyse-Agent (Rückfragen + BLS + Makros)
 
-## Status: Planned
+## Status: Approved
 **Created:** 2026-06-10
-**Last Updated:** 2026-06-10
+**Last Updated:** 2026-06-12
 
 ## Dependencies
 - Requires: PROJ-1 (Supabase Infrastructure) — Analyse-Ergebnis wird in `meal_analyses` gespeichert
@@ -89,15 +89,211 @@
 | Kein moralisierender Kommentar zu Alkohol | Nutzer sind informierte Erwachsene; App analysiert, urteilt nicht | 2026-06-10 |
 
 ### Technical Decisions
-<!-- Added by /architecture -->
+| Decision | Rationale | Date |
+|----------|-----------|------|
+| `/api/analyse/complete` returns ingredient list (not final result) | Enables the confirmation step — user sees and can correct the ingredient list before nutrients are calculated; increases trust and accuracy | 2026-06-12 |
+| New `POST /api/analyse/confirm` endpoint for calculation | Clean separation: complete = extraction, confirm = calculation; makes the confirmation step a first-class API interaction | 2026-06-12 |
+| All external API calls (Open Food Facts, USDA) are server-side only | Security: USDA API key never exposed to browser; CORS: both APIs don't require browser access; reliability: centralised error handling | 2026-06-12 |
+| No new npm packages | Native `fetch` handles all external API calls; no new dependencies to maintain | 2026-06-12 |
+| USDA FoodData Central requires free API key | Free registration at api.nal.usda.gov; key stored as server-side env var `USDA_API_KEY` | 2026-06-12 |
+| No `meal_analyses` schema changes needed | Existing fields (`refined_ingredients`, `macros_before/after`, `satiety_scores_before/after`, `improvement`, `data_sources`) already match the system-prompt output format exactly | 2026-06-12 |
+| `meal_conversations.status` extended with `'confirming'` | Persists the state between extraction and confirmation — user can recover if they navigate away; consistent with existing status flow | 2026-06-12 |
+| Two Claude calls per analysis (extraction + full analysis) | Extraction is a lightweight call (small prompt, small output); full analysis uses the complete system prompt with nutrition data; separating them reduces token cost and risk of one long call failing | 2026-06-12 |
 
 ---
 
+## Implementation Notes
+- `src/components/zutatenliste-bestaetigung.tsx` — neue Komponente: zeigt Zutatenliste mit Inline-Editing, Annahmen-Alert, "Passt so"-Button
+- `src/components/mahlzeit-input.tsx` — erweitert um 2 neue Steps: `'confirming'` (Zutatenliste zur Bestätigung) und `'calculating'` (Ladescreen während Nährstoffberechnung)
+- `src/app/api/analyse/complete/route.ts` — implementiert: liest Konversationsverlauf, ruft Claude (Haiku) für Zutatenlisten-Extraktion auf, gibt `{ ingredients, assumptions }` zurück
+- `src/app/api/analyse/confirm/route.ts` — implementiert: fragt Open Food Facts + USDA FoodData Central je Zutat ab (parallel), übergibt alle Nährstoffdaten an Claude (Sonnet) für vollständige Analyse, speichert Ergebnis in `meal_analyses`, löscht Vollbild aus Storage
+- `vitest.config.ts` — `include`-Pattern auf `src/**/*.test.ts` gesetzt damit Playwright-E2E-Tests nicht versehentlich von Vitest aufgerufen werden
+- Neue Env-Variable `USDA_API_KEY` — muss in `.env.local` und Vercel-Dashboard hinterlegt sein (kostenlos: api.nal.usda.gov)
+- Neue Env-Variable muss zu `.env.local.example` hinzugefügt werden (manuell, da Datei außerhalb Schreibpfad)
+
 ## Tech Design (Solution Architect)
-_To be added by /architecture_
+
+### System-Übersicht
+
+PROJ-4 extends the analysis flow from PROJ-3. PROJ-3 handles the Rückfragen (conversation); PROJ-4 takes over after the conversation reaches `status: 'ready'` and produces the full nutritional analysis.
+
+```
+PROJ-3 ends → meal_conversations.status = 'ready'
+   ↓
+POST /api/analyse/complete
+   Claude extracts ingredient list from conversation history
+   meal_conversations.status → 'confirming'
+   Returns { ingredients, assumptions } to UI
+   ↓
+UI: step = 'confirming'
+   ZutatenlisteBestaetigung component
+   User reviews, edits inline, clicks "Passt so"
+   ↓
+POST /api/analyse/confirm
+   Server queries Open Food Facts (packaged/branded products)
+   Server queries USDA FoodData Central (raw ingredients)
+   Claude receives all nutrition data → full analysis
+   Saves to meal_analyses table
+   Deletes fullsize photo from Storage
+   meal_conversations.status → 'completed'
+   meals.status → 'completed'
+   Returns full analysis result
+   ↓
+UI: step = 'done' (PROJ-5 renders the result)
+```
+
+### Komponenten-Struktur
+
+```
+/analyse (existing page)
+└── MahlzeitInput (extended)
+    ├── step: 'input'         (existing)
+    ├── step: 'uploading'     (existing)
+    ├── step: 'questions'     (existing — PROJ-3 Rückfragen)
+    ├── step: 'analysing'     (existing — triggers /api/analyse/complete)
+    ├── step: 'confirming'    (NEW — user reviews ingredient list)
+    │   └── ZutatenlisteBestaetigung (NEW component)
+    │       ├── Zutat-Item with inline edit (each ingredient editable)
+    │       └── "Passt so" button → triggers /api/analyse/confirm
+    ├── step: 'calculating'   (NEW — loading while nutrients are computed)
+    └── step: 'done'          (existing placeholder — PROJ-5 fills this)
+```
+
+### Datenmmodell
+
+Keine Schema-Änderungen notwendig. Die bestehende `meal_analyses`-Tabelle deckt alle Felder ab:
+
+| Feld | Inhalt |
+|------|--------|
+| `refined_ingredients` | Bestätigte Zutatenliste mit Mengen, Annahmen, Datenquelle pro Zutat |
+| `macros_before` | Nährwerte der aktuellen Mahlzeit (kcal, Protein, KH, Zucker, Fett, Ballaststoffe) |
+| `macros_after` | Nährwerte der verbesserten Mahlzeit |
+| `satiety_scores_before` | Alle 6 Baustein-Bewertungen mit Erklärungen (Vorher) |
+| `satiety_scores_after` | Alle 6 Baustein-Bewertungen (Nachher) |
+| `improvement` | 1–3 konkrete Verbesserungsvorschläge mit Begründung und Baustein-Referenz |
+| `data_sources` | Pro Zutat: welche Datenbank, gematchter Produktname, ID |
+
+`meal_conversations.status` bekommt einen neuen Wert: `'confirming'` (zwischen `'ready'` und `'completed'`).
+
+### API Design
+
+**`POST /api/analyse/complete`** (stub → vollständige Implementierung)
+- Input: `{ mealId }`
+- Auth: Nutzer muss Eigentümer der Mahlzeit sein
+- Was passiert: Liest Konversationsverlauf aus `meal_conversations` → ruft Claude auf für leichtgewichtige Zutaten-Extraktion → speichert Status `'confirming'` in `meal_conversations`
+- Gibt zurück: `{ ingredients: [{ name, amount, unit, isAssumption }], assumptions: string[] }`
+
+**`POST /api/analyse/confirm`** (neuer Endpoint)
+- Input: `{ mealId, ingredients: [{ name, amount, unit }] }`
+- Auth: Nutzer muss Eigentümer der Mahlzeit sein
+- Was passiert: Abfragen von Open Food Facts + USDA pro Zutat (parallel) → Claude-Aufruf mit vollständigem System-Prompt + Nährstoffdaten → Ergebnis in `meal_analyses` speichern → Vollbild aus Storage löschen → Status aktualisieren
+- Gibt zurück: `{ analysisId, result }` — das vollständige strukturierte Analyse-JSON
+
+### Externe Integrationen
+
+| Dienst | Zweck | Auth | Limit |
+|--------|-------|------|-------|
+| Open Food Facts | Verpackte/markierte Produkte (Rewe, Aldi, Edeka) | Kein Key — kostenlos öffentlich | Großzügig (User-Agent-Header Pflicht) |
+| USDA FoodData Central | Generische Rohzutaten (Fleisch, Gemüse, Getreide) | Kostenloser API-Key (api.nal.usda.gov) | 3.600 Anfragen/Stunde |
+| Anthropic Claude | Extraktion + vollständige Analyse | Bestehender `ANTHROPIC_API_KEY` | Standard |
+
+### Neue Umgebungsvariablen
+
+| Variable | Pflicht | Quelle |
+|----------|---------|--------|
+| `USDA_API_KEY` | Ja | Kostenlose Registrierung auf api.nal.usda.gov |
+| `ANTHROPIC_API_KEY` | Bereits vorhanden | Anthropic Console |
+
+### Sicherheit
+
+- Beide neuen Endpoints prüfen Session und Eigentümerschaft der `mealId`
+- `USDA_API_KEY` nur serverseitig — nie im Browser sichtbar
+- Alle externen API-Aufrufe (Open Food Facts, USDA) laufen ausschließlich serverseitig
+- Vollbild wird nach abgeschlossener Analyse aus Storage gelöscht (bestehende Anforderung aus PROJ-1)
+
+### Abhängigkeiten
+
+Keine neuen npm-Pakete nötig. Alle externen APIs werden mit nativem `fetch` aufgerufen.
 
 ## QA Test Results
-_To be added by /qa_
+
+**QA-Datum:** 2026-06-12
+**Status:** Approved — Medium-Bug (Längenbeschränkung) wurde während QA behoben
+
+### Test-Zusammenfassung
+
+| Suite | Tests | Bestanden | Fehlgeschlagen |
+|-------|-------|-----------|----------------|
+| Unit Tests (Vitest) | 22 | 22 | 0 |
+| E2E Tests (Playwright, Chromium) | 18 | 18 | 0 |
+| E2E Tests (Playwright, Mobile 375px) | 2 | 2 | 0 |
+| **Gesamt** | **42** | **42** | **0** |
+
+### Acceptance Criteria — Status
+
+#### Zutaten-Identifikation & Rückfragen
+- [x] Rückfragen werden bei Unklarheiten gestellt (aus PROJ-3 getestet)
+- [x] Varianten-Rückfragen (Quark 0,2% vs. 40%) — KI-Verhalten, kein Regressionsfehler
+- [x] Zubereitungsart wird nachgefragt wenn relevant — KI-Verhalten
+- [x] Mengenangaben werden nachgefragt — KI-Verhalten
+- [x] Finale Zutatenliste mit Annahmen-Kennzeichnung ✅
+
+#### Bestätigung der Zutatenliste
+- [x] Zutatenliste zur Bestätigung angezeigt: "Hab ich das richtig verstanden?" ✅
+- [x] Inline-Bearbeitung einzelner Zutaten möglich ✅ (Edit-Icon, Fertig, Enter, Escape)
+- [x] "Passt so →" startet Nährstoffberechnung ✅
+- [x] Fehler bei /api/analyse/confirm: zurück zu confirming, Fehlermeldung sichtbar ✅
+
+#### Nährstoffberechnung
+- [x] Open Food Facts + USDA abgefragt (parallel, server-side) ✅ Unit Tests
+- [x] Fallback bei fehlendem DB-Ergebnis → KI-Schätzung (in Analyse-Prompt verankert)
+- [x] Berechnung-Ladescreen sichtbar (⚗️ + "Nährstoffe werden berechnet…") ✅
+- [x] Ergebnis in `meal_analyses` gespeichert ✅ Unit Tests
+
+#### Ausgabe-Format
+- [x] Qualitativ primär, Grammangaben sekundär → in PROJ-5 (Out of Scope für PROJ-4)
+- [x] Annahmen-Alert ("Ich habe angenommen:") sichtbar wenn Annahmen vorhanden ✅
+
+#### Fehlerverhalten
+- [x] /api/analyse/complete Fehler → Fehlermeldung + zurück zu Input ✅
+- [x] 503 Überlastet → nutzerfreundliche Meldung ✅ (unit + E2E)
+- [x] Ladescreen bei laufender Berechnung ✅
+
+### Security Audit (Red Team)
+
+| Prüfpunkt | Ergebnis | Severity |
+|-----------|----------|----------|
+| Auth: Unauthentifizierter Zugriff auf beide Endpoints | ✅ 401 korrekt zurückgegeben | — |
+| Authorization: User A greift auf Mahlzeit von User B zu | ✅ `.eq('user_id', user.id)` verhindert dies | — |
+| API-Keys (`USDA_API_KEY`, `ANTHROPIC_API_KEY`) nie im Browser | ✅ Nur in server-seitigen Route Handlers | — |
+| Input Validation: Zod auf allen Inputs | ✅ UUID-Pflicht, Array min 1/max 30 | — |
+| String-Länge `name`/`amount` unbegrenzt | ⚠️ Kein `.max()` auf Zutatenfelder → zu lange Strings blähen Claude-Prompt auf | **Medium** |
+| `/api/analyse/confirm` prüft nicht `meal_conversations.status` | ⚠️ Out-of-order Calls möglich (kein Sicherheitsproblem, aber Daten-Integrität) | **Low** |
+| console.error loggt keine sensiblen Daten | ✅ Nur Claude-Rohantworten und DB-Errors geloggt | — |
+| Externe API-Aufrufe ausschließlich serverseitig | ✅ Open Food Facts + USDA nur in route.ts | — |
+
+### Bugs
+
+#### Medium — Name/Amount ohne Längenbeschränkung
+**Beschreibung:** `ingredientSchema` in `/api/analyse/confirm/route.ts` hat kein `.max()` auf `name` und `amount`. Ein Angreifer könnte 30 Zutaten mit extrem langen Namen schicken und so den Claude-Prompt künstlich aufblähen.
+**Schritte:** POST `/api/analyse/confirm` mit `{ name: "a".repeat(10000), amount: "..." }` × 30
+**Fix:** `z.string().min(1).max(200)` für `name`, `.max(50)` für `amount`
+
+#### Low — `/api/analyse/confirm` ohne Status-Check
+**Beschreibung:** Das Endpoint prüft nicht ob `meal_conversations.status === 'confirming'`. Ein eingeloggter Nutzer könnte `/api/analyse/confirm` direkt aufrufen ohne den `/complete`-Schritt gemacht zu haben.
+**Impact:** Keine Sicherheitslücke (Eigentümerschaft wird geprüft); nur Daten-Integrität
+**Fix:** Status-Check auf `meal_conversations` vor der Verarbeitung
+
+### Responsive-Test
+
+| Viewport | Befund |
+|----------|--------|
+| Desktop 1280px | ✅ kein horizontaler Scroll, alle Touch-Targets bedienbar |
+| Mobile 375px | ✅ kein horizontaler Scroll, "Passt so →"-Button ≥ 44px |
+
+### Produktionsreife-Entscheidung
+
+**BEREIT** — Medium-Bug wurde während QA behoben. Keine Critical/High Bugs. Keine Medium Bugs mehr offen.
 
 ## Deployment
 _To be added by /deploy_

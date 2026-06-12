@@ -4,13 +4,14 @@ import { useState } from 'react'
 import imageCompression from 'browser-image-compression'
 import { createClient } from '@/lib/supabase/client'
 import FotoUploadZone from '@/components/foto-upload-zone'
+import ZutatenlisteBestaetigung, { type IngredientItem } from '@/components/zutatenliste-bestaetigung'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
-type Step = 'input' | 'uploading' | 'questions' | 'analysing' | 'done'
+type Step = 'input' | 'uploading' | 'questions' | 'analysing' | 'confirming' | 'calculating' | 'done'
 
 interface Question {
   id: string
@@ -62,6 +63,8 @@ export default function MahlzeitInput({ userId }: MahlzeitInputProps) {
   const [currentAnswers, setCurrentAnswers] = useState<Record<string, string>>({})
   const [questionsLoading, setQuestionsLoading] = useState(false)
   const [assumptions, setAssumptions] = useState<string[]>([])
+  const [ingredients, setIngredients] = useState<IngredientItem[]>([])
+  const [analysisResult, setAnalysisResult] = useState<unknown>(null)
 
   function handleFotoChange(file: File) {
     if (fotoPreview) URL.revokeObjectURL(fotoPreview)
@@ -208,14 +211,45 @@ export default function MahlzeitInput({ userId }: MahlzeitInputProps) {
 
   async function runCompleteAnalysis(id: string) {
     setStep('analysing')
+    setApiError(null)
     try {
-      await fetch('/api/analyse/complete', {
+      const res = await fetch('/api/analyse/complete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mealId: id }),
       })
-    } finally {
+      if (!res.ok) throw new Error('Analyse konnte nicht abgeschlossen werden.')
+      const data = await res.json()
+      if (data.ingredients?.length > 0) {
+        setIngredients(data.ingredients)
+        if (data.assumptions) setAssumptions(data.assumptions)
+        setStep('confirming')
+      } else {
+        setStep('done')
+      }
+    } catch (err) {
+      setApiError(err instanceof Error ? err.message : 'Ein Fehler ist aufgetreten.')
+      setStep('input')
+    }
+  }
+
+  async function handleConfirm(confirmedIngredients: IngredientItem[]) {
+    if (!mealId) return
+    setApiError(null)
+    setStep('calculating')
+    try {
+      const res = await fetch('/api/analyse/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mealId, ingredients: confirmedIngredients }),
+      })
+      if (!res.ok) throw new Error('Nährstoffberechnung fehlgeschlagen. Bitte erneut versuchen.')
+      const data = await res.json()
+      setAnalysisResult(data.result)
       setStep('done')
+    } catch (err) {
+      setApiError(err instanceof Error ? err.message : 'Ein Fehler ist aufgetreten.')
+      setStep('confirming')
     }
   }
 
@@ -231,6 +265,8 @@ export default function MahlzeitInput({ userId }: MahlzeitInputProps) {
     setCurrentQuestions([])
     setCurrentAnswers({})
     setAssumptions([])
+    setIngredients([])
+    setAnalysisResult(null)
     setStep('input')
   }
 
@@ -266,6 +302,44 @@ export default function MahlzeitInput({ userId }: MahlzeitInputProps) {
           <div className="space-y-1">
             <p className="font-semibold text-foreground">Analyse läuft…</p>
             <p className="text-sm text-muted-foreground">endlichsatt rechnet, was wirklich sättigt.</p>
+          </div>
+          <div className="space-y-2 px-4">
+            <Skeleton className="h-2 w-full rounded-full" />
+            <Skeleton className="h-2 w-4/5 rounded-full mx-auto" />
+            <Skeleton className="h-2 w-1/2 rounded-full mx-auto" />
+          </div>
+        </div>
+      </main>
+    )
+  }
+
+  if (step === 'confirming') {
+    return (
+      <main className="px-4 py-6 max-w-sm mx-auto space-y-6">
+        <ZutatenlisteBestaetigung
+          ingredients={ingredients}
+          assumptions={assumptions}
+          onConfirm={handleConfirm}
+        />
+        {apiError && (
+          <Alert variant="destructive">
+            <AlertDescription>{apiError}</AlertDescription>
+          </Alert>
+        )}
+      </main>
+    )
+  }
+
+  if (step === 'calculating') {
+    return (
+      <main className="flex flex-col items-center justify-center min-h-[calc(100vh-57px)] px-4">
+        <div className="w-full max-w-sm space-y-6 text-center">
+          <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mx-auto">
+            <span className="text-3xl animate-pulse">⚗️</span>
+          </div>
+          <div className="space-y-1">
+            <p className="font-semibold text-foreground">Nährstoffe werden berechnet…</p>
+            <p className="text-sm text-muted-foreground">Open Food Facts & USDA werden abgefragt.</p>
           </div>
           <div className="space-y-2 px-4">
             <Skeleton className="h-2 w-full rounded-full" />
