@@ -1,6 +1,6 @@
 # PROJ-6: Mahlzeit-Historie
 
-## Status: Approved
+## Status: Deployed
 **Created:** 2026-06-10
 **Last Updated:** 2026-06-12
 
@@ -138,4 +138,7 @@ Keine Critical/High Bugs gefunden.
 **Produktionsbereit: JA**
 
 ## Deployment
-_To be added by /deploy_
+
+**Deployed:** 2026-06-12
+**Tag:** v1.6.0-PROJ-6
+**Vercel:** Auto-deploy via push to `main`
