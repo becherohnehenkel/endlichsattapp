@@ -1,6 +1,14 @@
+'use client'
+
+import { useState } from 'react'
+import { ChevronDown, ChevronUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Separator } from '@/components/ui/separator'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
 
 type BausteinRating = 'gut' | 'mittel' | 'schwach' | 'nicht_bewertet'
 
@@ -102,6 +110,7 @@ function PillarChip({
 
 export default function SaettigungsErgebnis({ result, assumptions, onReset }: SaettigungsErgebnisProps) {
   const allAssumptions = [...new Set([...assumptions, ...result.annahmen])]
+  const [assumptionsOpen, setAssumptionsOpen] = useState(false)
   const gesamt = gesamtConfig(result.vorher.gesamtbewertung)
   const isSehrSaettigend = result.vorher.gesamtbewertung === 'sehr_saettigend'
   const hasVorschlaege = result.vorschlaege.length > 0
@@ -113,20 +122,30 @@ export default function SaettigungsErgebnis({ result, assumptions, onReset }: Sa
   return (
     <main className="px-4 py-6 max-w-sm mx-auto space-y-6">
 
-      {/* Annahmen */}
+      {/* Annahmen — ausklappbar */}
       {allAssumptions.length > 0 && (
-        <Alert>
-          <AlertDescription className="text-sm">
-            <span className="font-medium">Basierend auf Annahmen: </span>
-            {allAssumptions.join(' · ')}
-          </AlertDescription>
-        </Alert>
+        <Collapsible open={assumptionsOpen} onOpenChange={setAssumptionsOpen}>
+          <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border border-border bg-muted/40 px-3 py-2.5 text-sm text-muted-foreground hover:bg-muted/60 transition-colors">
+            <span className="font-medium">ℹ️ Basierend auf Annahmen</span>
+            {assumptionsOpen ? <ChevronUp className="h-4 w-4 flex-shrink-0" /> : <ChevronDown className="h-4 w-4 flex-shrink-0" />}
+          </CollapsibleTrigger>
+          <CollapsibleContent className="px-3 pt-2 pb-1">
+            <ul className="space-y-1">
+              {allAssumptions.map((a, i) => (
+                <li key={i} className="text-xs text-muted-foreground flex gap-2">
+                  <span className="text-muted-foreground/50 flex-shrink-0">·</span>
+                  <span>{a}</span>
+                </li>
+              ))}
+            </ul>
+          </CollapsibleContent>
+        </Collapsible>
       )}
 
       {/* ── 1. Gesamtbewertung ── */}
-      <div className="space-y-3">
+      <div className="space-y-3 text-center">
         <span
-          className={`inline-block px-3 py-1 rounded-full border text-sm font-semibold ${gesamt.color} ${gesamt.bg} ${gesamt.border}`}
+          className={`inline-block px-5 py-2 rounded-full border text-base font-semibold ${gesamt.color} ${gesamt.bg} ${gesamt.border}`}
         >
           {gesamt.label}
         </span>

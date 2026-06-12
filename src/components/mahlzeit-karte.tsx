@@ -68,6 +68,7 @@ export default function MahlzeitKarte({
             height={64}
             className="w-16 h-16 rounded-lg object-cover"
             loading="lazy"
+            unoptimized
           />
         ) : (
           <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center">
