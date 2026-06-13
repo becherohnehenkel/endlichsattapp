@@ -345,7 +345,7 @@ export default function MahlzeitInput({ userId }: MahlzeitInputProps) {
           </div>
           <div className="space-y-1">
             <p className="font-semibold text-foreground">Nährstoffe werden berechnet…</p>
-            <p className="text-sm text-muted-foreground">Open Food Facts & USDA werden abgefragt.</p>
+            <p className="text-sm text-muted-foreground">Bundeslebensmittelschlüssel (BLS) wird durchsucht.</p>
           </div>
           <div className="space-y-2 px-4">
             <Skeleton className="h-2 w-full rounded-full" />
