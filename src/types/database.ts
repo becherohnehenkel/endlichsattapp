@@ -137,6 +137,7 @@ export type Database = {
           amount: number
           unit: string
           sort_order: number
+          macros_per_100g: Json | null
         }
         Insert: {
           id?: string
@@ -145,6 +146,7 @@ export type Database = {
           amount: number
           unit: string
           sort_order?: number
+          macros_per_100g?: Json | null
         }
         Update: {
           id?: string
@@ -153,6 +155,7 @@ export type Database = {
           amount?: number
           unit?: string
           sort_order?: number
+          macros_per_100g?: Json | null
         }
         Relationships: [
           {

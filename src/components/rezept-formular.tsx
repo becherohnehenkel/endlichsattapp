@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { useForm, useFieldArray } from 'react-hook-form'
+import { useForm, useFieldArray, Controller } from 'react-hook-form'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,6 +10,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Plus, Trash2, Upload, ChefHat } from 'lucide-react'
+import UsdaIngredientInput from '@/components/usda-ingredient-input'
+import type { NutritionPer100g } from '@/lib/nutrition'
 
 interface IngredientRow {
   name: string
@@ -51,6 +53,10 @@ export default function RezeptFormular({
   const [imageError, setImageError] = useState<string | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  // Parallel array to fields — stores USDA-selected macros per ingredient (null = use text search)
+  const [ingredientMacros, setIngredientMacros] = useState<(NutritionPer100g | null)[]>(
+    () => (defaultValues?.ingredients ?? [{ name: '', amount: '', unit: 'g' }]).map(() => null)
+  )
 
   const { register, control, handleSubmit, formState: { errors } } = useForm<RezeptFormularValues>({
     defaultValues: {
@@ -113,6 +119,7 @@ export default function RezeptFormular({
             amount: parseFloat(i.amount) || 0,
             unit: i.unit.trim() || 'Stück',
             sort_order: idx,
+            macros_per_100g: ingredientMacros[idx] ?? null,
           })),
         image_path: uploadedPath ?? undefined,
       }
@@ -174,10 +181,32 @@ export default function RezeptFormular({
         <Label>Zutaten *</Label>
         {fields.map((field, index) => (
           <div key={field.id} className="flex gap-2 items-start">
-            <Input
-              placeholder="Name"
-              className="flex-1"
-              {...register(`ingredients.${index}.name`)}
+            <Controller
+              control={control}
+              name={`ingredients.${index}.name`}
+              render={({ field: f }) => (
+                <UsdaIngredientInput
+                  value={f.value}
+                  onChange={f.onChange}
+                  onBlur={f.onBlur}
+                  onSelectUsda={(result) => {
+                    f.onChange(result.description)
+                    setIngredientMacros(prev => {
+                      const next = [...prev]
+                      next[index] = result.per100g
+                      return next
+                    })
+                  }}
+                  onClearMacros={() => {
+                    setIngredientMacros(prev => {
+                      const next = [...prev]
+                      next[index] = null
+                      return next
+                    })
+                  }}
+                  linkedMacros={ingredientMacros[index] ?? null}
+                />
+              )}
             />
             <Input
               placeholder="Menge"
@@ -197,7 +226,10 @@ export default function RezeptFormular({
               variant="ghost"
               size="icon"
               className="flex-shrink-0 text-muted-foreground hover:text-destructive"
-              onClick={() => remove(index)}
+              onClick={() => {
+                remove(index)
+                setIngredientMacros(prev => prev.filter((_, i) => i !== index))
+              }}
               disabled={fields.length === 1}
             >
               <Trash2 className="h-4 w-4" />
@@ -208,7 +240,10 @@ export default function RezeptFormular({
           type="button"
           variant="outline"
           size="sm"
-          onClick={() => append({ name: '', amount: '', unit: 'g' })}
+          onClick={() => {
+            append({ name: '', amount: '', unit: 'g' })
+            setIngredientMacros(prev => [...prev, null])
+          }}
           className="w-full"
         >
           <Plus className="h-4 w-4 mr-2" />

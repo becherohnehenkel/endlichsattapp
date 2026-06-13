@@ -132,7 +132,7 @@ export async function queryOpenFoodFacts(ingredient: string): Promise<NutritionS
 // ─── Recipe macro calculation ────────────────────────────────
 
 export async function calculateMacrosPerServing(
-  ingredients: { name: string; amount: number; unit: string }[],
+  ingredients: { name: string; amount: number; unit: string; macros_per_100g?: NutritionPer100g | null }[],
   servings: number
 ): Promise<MacrosPerServing | null> {
   const totals = { kcal: 0, protein_g: 0, carbs_g: 0, sugar_g: 0, fat_g: 0, fiber_g: 0 }
@@ -142,7 +142,9 @@ export async function calculateMacrosPerServing(
     ingredients.map(async (ing) => {
       const grams = toGrams(ing.amount, ing.unit, ing.name)
       if (grams === null || grams <= 0) return null
-      const source = (await queryUSDA(ing.name)) ?? (await queryOpenFoodFacts(ing.name))
+      // Use stored USDA data if available, otherwise fall back to live text search
+      const per100g = ing.macros_per_100g ?? (await queryUSDA(ing.name))?.per100g ?? (await queryOpenFoodFacts(ing.name))?.per100g
+      const source = per100g ? { per100g } : null
       if (!source) return null
       const factor = grams / 100
       return {

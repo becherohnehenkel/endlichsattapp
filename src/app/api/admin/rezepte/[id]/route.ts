@@ -15,6 +15,7 @@ const IngredientSchema = z.object({
   amount: z.number().positive(),
   unit: z.string().min(1),
   sort_order: z.number().int().optional().default(0),
+  macros_per_100g: z.record(z.string(), z.number()).nullable().optional(),
 })
 
 const RecipeUpdateSchema = z.object({
@@ -110,13 +111,17 @@ export async function PUT(
         amount: ing.amount,
         unit: ing.unit,
         sort_order: ing.sort_order ?? i,
+        macros_per_100g: ing.macros_per_100g ?? null,
       }))
     )
 
   if (ingredientsError) return NextResponse.json({ error: 'Fehler beim Speichern der Zutaten' }, { status: 500 })
 
-  // Recalculate and save macros synchronously (Vercel kills background promises after response)
-  const macros = await calculateMacrosPerServing(ingredients, recipeData.servings)
+  // Recalculate and save macros synchronously, using stored USDA data where available
+  const macros = await calculateMacrosPerServing(
+    ingredients.map(ing => ({ ...ing, macros_per_100g: (ing.macros_per_100g ?? null) as unknown as import('@/lib/nutrition').NutritionPer100g | null })),
+    recipeData.servings
+  )
   await admin.from('recipes').update({
     macros_per_serving: (macros ?? null) as unknown as import('@/types/database').Json,
   }).eq('id', id)
