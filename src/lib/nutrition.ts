@@ -70,15 +70,38 @@ function toGrams(amount: number, unit: string, ingredientName: string): number |
   return null
 }
 
+// ─── Alltagsbegriff → BLS-Bezeichnung ───────────────────────
+// Umgangssprachliche deutsche Begriffe die im BLS anders heißen
+
+const BLS_ALIASES: Record<string, string> = {
+  hafermilch:    'haferdrink',
+  mandelmilch:   'mandeldrink',
+  reismilch:     'reisdrink',
+  sojamilch:     'sojadrink',
+  kokosmilch:    'kokosnuss',
+  dinkelmilch:   'dinkeldrink',
+  erbsenprotein: 'erbse',
+  magerquark:    'speisequark mager',
+  hüttenkäse:   'cottage cheese',
+  feta:          'schafskäse',
+  joghurt:       'joghurt',
+}
+
+function normalizeName(name: string): string {
+  const lower = name.toLowerCase().trim()
+  return BLS_ALIASES[lower] ?? name
+}
+
 // ─── BLS database lookup (primary) ──────────────────────────
 
 export async function queryBLS(ingredient: string): Promise<NutritionSource | null> {
+  const searchName = normalizeName(ingredient)
   try {
     const admin = createAdminClient()
     const { data } = await admin
       .from('bls_lebensmittel')
       .select('kcal_100g, protein_g_100g, fat_g_100g, carbs_g_100g, fiber_g_100g, sugar_g_100g')
-      .ilike('name_de', `%${ingredient}%`)
+      .ilike('name_de', `%${searchName}%`)
       .limit(1)
       .single()
 

@@ -48,9 +48,29 @@ function parseGrams(amountStr) {
   return null
 }
 
+// ─── Alltagsbegriff → BLS-Bezeichnung ───────────────────────
+const BLS_ALIASES = {
+  hafermilch:    'haferdrink',
+  mandelmilch:   'mandeldrink',
+  reismilch:     'reisdrink',
+  sojamilch:     'sojadrink',
+  kokosmilch:    'kokosnuss',
+  dinkelmilch:   'dinkeldrink',
+  erbsenprotein: 'erbse',
+  magerquark:    'speisequark mager',
+  hüttenkäse:   'cottage cheese',
+  feta:          'schafskäse',
+}
+
+function normalizeName(name) {
+  const lower = name.toLowerCase().trim()
+  return BLS_ALIASES[lower] ?? name
+}
+
 // ─── BLS lookup ──────────────────────────────────────────────
 async function lookupBLS(supabaseUrl, serviceKey, name) {
-  const encoded = encodeURIComponent(`%${name}%`)
+  const searchName = normalizeName(name)
+  const encoded = encodeURIComponent(`%${searchName}%`)
   const url = `${supabaseUrl}/rest/v1/bls_lebensmittel?name_de=ilike.${encoded}&select=kcal_100g,protein_g_100g,fat_g_100g,carbs_g_100g,fiber_g_100g,sugar_g_100g&limit=1`
   try {
     const res = await fetch(url, {
