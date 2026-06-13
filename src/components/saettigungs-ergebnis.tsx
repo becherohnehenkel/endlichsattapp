@@ -279,37 +279,49 @@ export default function SaettigungsErgebnis({ result, assumptions, onReset, anal
       )}
 
       {/* ── 8. Nährwerte ── */}
-      <div className="space-y-2">
-        <p className="text-sm font-semibold text-foreground">Nährwerte</p>
-        <div className={`grid gap-3 ${hasVorschlaege ? 'grid-cols-2' : 'grid-cols-1'}`}>
-          <div className="space-y-1">
-            {hasVorschlaege && (
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Jetzt</p>
-            )}
-            <div className="flex flex-col gap-0.5 text-xs text-muted-foreground">
-              <span>{result.vorher.naehrwerte.kcal} kcal</span>
-              <span>{result.vorher.naehrwerte.protein_g}g Protein</span>
-              <span>{result.vorher.naehrwerte.kohlenhydrate_g}g Kohlenhydrate</span>
-              <span className="pl-2 text-muted-foreground/60">davon {result.vorher.naehrwerte.zucker_g}g Zucker</span>
-              <span>{result.vorher.naehrwerte.fett_g}g Fett</span>
-              <span>{result.vorher.naehrwerte.ballaststoffe_g}g Ballaststoffe</span>
-            </div>
-          </div>
-          {hasVorschlaege && (
-            <div className="space-y-1">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Nach Verbesserung</p>
-              <div className="flex flex-col gap-0.5 text-xs text-muted-foreground">
-                <span>{result.nachher.naehrwerte.kcal} kcal</span>
-                <span>{result.nachher.naehrwerte.protein_g}g Protein</span>
-                <span>{result.nachher.naehrwerte.kohlenhydrate_g}g Kohlenhydrate</span>
-                <span className="pl-2 text-muted-foreground/60">davon {result.nachher.naehrwerte.zucker_g}g Zucker</span>
-                <span>{result.nachher.naehrwerte.fett_g}g Fett</span>
-                <span>{result.nachher.naehrwerte.ballaststoffe_g}g Ballaststoffe</span>
+      {(() => {
+        const n = result.vorher.naehrwerte
+        const hasData = n.kcal > 0 || n.protein_g > 0 || n.fett_g > 0
+        return (
+          <div className="space-y-2">
+            <p className="text-sm font-semibold text-foreground">Nährwerte</p>
+            {!hasData ? (
+              <p className="text-xs text-muted-foreground">
+                Für dieses Produkt konnten keine Nährwertdaten gefunden werden (nicht im BLS oder Open Food Facts).
+              </p>
+            ) : (
+              <div className={`grid gap-3 ${hasVorschlaege ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                <div className="space-y-1">
+                  {hasVorschlaege && (
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Jetzt</p>
+                  )}
+                  <div className="flex flex-col gap-0.5 text-xs text-muted-foreground">
+                    <span>{n.kcal} kcal</span>
+                    <span>{n.protein_g}g Protein</span>
+                    <span>{n.kohlenhydrate_g}g Kohlenhydrate</span>
+                    <span className="pl-2 text-muted-foreground/60">davon {n.zucker_g}g Zucker</span>
+                    <span>{n.fett_g}g Fett</span>
+                    <span>{n.ballaststoffe_g}g Ballaststoffe</span>
+                  </div>
+                </div>
+                {hasVorschlaege && (
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Nach Verbesserung</p>
+                    <div className="flex flex-col gap-0.5 text-xs text-muted-foreground">
+                      <span>{result.nachher.naehrwerte.kcal} kcal</span>
+                      <span>{result.nachher.naehrwerte.protein_g}g Protein</span>
+                      <span>{result.nachher.naehrwerte.kohlenhydrate_g}g Kohlenhydrate</span>
+                      <span className="pl-2 text-muted-foreground/60">davon {result.nachher.naehrwerte.zucker_g}g Zucker</span>
+                      <span>{result.nachher.naehrwerte.fett_g}g Fett</span>
+                      <span>{result.nachher.naehrwerte.ballaststoffe_g}g Ballaststoffe</span>
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
-          )}
-        </div>
-      </div>
+            )}
+          </div>
+        )
+      })()}
 
       {/* ── 9. Rezeptvorschläge ── */}
       {analysisId && (

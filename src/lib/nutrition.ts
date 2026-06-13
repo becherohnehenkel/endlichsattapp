@@ -283,30 +283,36 @@ function buildOFFQueries(ingredient: string): string[] {
 export async function queryOpenFoodFacts(ingredient: string): Promise<NutritionSource | null> {
   const queries = buildOFFQueries(ingredient)
 
+  const endpoints = ['https://de.openfoodfacts.org', 'https://world.openfoodfacts.org']
+
   for (const query of queries) {
-    try {
-      const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&json=1&page_size=3&fields=product_name,nutriments`
-      const res = await fetch(url, {
-        headers: { 'User-Agent': 'endlichsatt/1.0 (satiety analysis app)' },
-        signal: AbortSignal.timeout(5000),
-      })
-      if (!res.ok) continue
-      const data = await res.json()
-      const product = data.products?.[0]
-      if (!product?.nutriments) continue
-      const n = product.nutriments
-      return {
-        per100g: {
-          kcal:      Number(n['energy-kcal_100g'] ?? n['energy-kcal'] ?? 0),
-          protein_g: Number(n['proteins_100g'] ?? n['proteins'] ?? 0),
-          carbs_g:   Number(n['carbohydrates_100g'] ?? n['carbohydrates'] ?? 0),
-          sugar_g:   Number(n['sugars_100g'] ?? n['sugars'] ?? 0),
-          fat_g:     Number(n['fat_100g'] ?? n['fat'] ?? 0),
-          fiber_g:   Number(n['fiber_100g'] ?? n['fiber'] ?? 0),
-        },
+    for (const base of endpoints) {
+      try {
+        const url = `${base}/cgi/search.pl?search_terms=${encodeURIComponent(query)}&json=1&page_size=3&fields=product_name,nutriments`
+        const res = await fetch(url, {
+          headers: { 'User-Agent': 'endlichsatt/1.0 (satiety analysis app)' },
+          signal: AbortSignal.timeout(5000),
+        })
+        if (!res.ok) continue
+        const contentType = res.headers.get('content-type') ?? ''
+        if (!contentType.includes('application/json')) continue
+        const data = await res.json()
+        const product = data.products?.[0]
+        if (!product?.nutriments) continue
+        const n = product.nutriments
+        return {
+          per100g: {
+            kcal:      Number(n['energy-kcal_100g'] ?? n['energy-kcal'] ?? 0),
+            protein_g: Number(n['proteins_100g'] ?? n['proteins'] ?? 0),
+            carbs_g:   Number(n['carbohydrates_100g'] ?? n['carbohydrates'] ?? 0),
+            sugar_g:   Number(n['sugars_100g'] ?? n['sugars'] ?? 0),
+            fat_g:     Number(n['fat_100g'] ?? n['fat'] ?? 0),
+            fiber_g:   Number(n['fiber_100g'] ?? n['fiber'] ?? 0),
+          },
+        }
+      } catch {
+        continue
       }
-    } catch {
-      continue
     }
   }
   return null
