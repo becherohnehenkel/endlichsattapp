@@ -134,6 +134,48 @@ Geschmack hat immer Vorrang. Ein sättigendes Gericht das nicht schmeckt, wird n
 
 ---
 
+### Nüsse, Samen und Kerne sind Multi-Pillar-Zutaten
+
+Körner, Samen und Nüsse (z.B. Sonnenblumenkerne, Kürbiskerne, Sesam, Walnüsse, Mandeln) dürfen **niemals nur dem Biss-Baustein zugeordnet werden**. Sie liefern gleichzeitig:
+
+- **Biss** — echter Kauaufwand, mechanischer Sättigungsreiz
+- **Fett** — trägt zur verzögerten Magenentleerung bei und ist Hauptgeschmacksträger (Aromen, Mundgefühl)
+- **Ballaststoffe** — je nach Menge relevant
+- **Sensorische Zufriedenheit** — das Fett macht den entscheidenden Unterschied zwischen "satt" und "wirklich zufrieden"
+
+**Konsequenz für die Analyse:** Wenn Kerne/Samen in einer Mahlzeit enthalten sind, wird der Fett-Beitrag im Baustein **Geschmack** und in der Gesamtbewertung mitgezählt — nicht nur als Biss-Upgrade. In der Kommunikation mit dem Nutzer beide Wirkungen benennen: *"Die Körner geben nicht nur Biss, sondern liefern auch die Fette die das Gericht wirklich sättigend machen."*
+
+---
+
+### Tauschprinzip: Kalorienneutrale Verbesserung
+
+Wenn eine Verbesserung kalorienreiche Zutaten ergänzt (Kerne, Nüsse, Eier, Käse, Proteinbeilagen), soll **gleichzeitig eine weniger sättigungsrelevante Kalorienquelle reduziert werden** — damit die Gesamtkalorien ähnlich bleiben. Typische Tauschkandidaten:
+
+| Ergänzung | Reduktion |
+|-----------|-----------|
+| Kerne/Samen (ca. 20–30g) | Dressing oder Öl um ca. 1 EL reduzieren |
+| Ei oder Proteinbeilage | Dressing-Menge halbieren |
+| Nüsse | Sauce oder Dressing reduzieren |
+| Käse | Croutons oder Brot weglassen |
+
+**Ziel:** Gleiche oder ähnliche Gesamtkalorien, aber höherer Sättigungsindex durch bessere Nährstoffstruktur. Das Tauschprinzip dem Nutzer transparent kommunizieren: *"Damit du trotz der Extras bei ähnlichen Kalorien bleibst, würde ich das Dressing um einen Esslöffel reduzieren."*
+
+---
+
+### Verbesserungsvorschläge müssen konkret und berechenbar sein
+
+Jeder Vorschlag muss folgendes enthalten — vage Alternativen reichen nicht:
+
+- **Eine spezifische Zutat** (nicht "Ei oder Thunfisch") — immer die eine konkrete Wahl nennen, die für die Berechnung verwendet wurde
+- **Eine konkrete Grammangabe** (z.B. "1 hartgekochtes Ei, ca. 60g")
+- **Das resultierende Nährwertdelta** (kcal, Protein, Fett, Ballaststoffe) so dass der Nutzer versteht was sich wirklich verändert
+
+**Beispiel korrekt:** *"1 hartgekochtes Ei (ca. 60g) on top → +8g Protein, +5g Fett, +78 kcal"*
+
+**Beispiel falsch:** *"Proteinbeilage wie Ei oder Thunfisch hinzufügen"* — unklar welches, welche Menge, welcher Effekt.
+
+---
+
 ## 5. Quellen & Referenzen
 
 ### Physiologische Sättigungsmechanismen
