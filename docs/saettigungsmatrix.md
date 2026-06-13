@@ -176,6 +176,59 @@ Jeder Vorschlag muss folgendes enthalten — vage Alternativen reichen nicht:
 
 ---
 
+### Lob-Protokoll: Wenn eine Mahlzeit bereits sehr gut ist
+
+**Trigger:** 5 oder 6 Bausteine sind grün bewertet.
+
+In diesem Fall gelten besondere Regeln:
+
+1. **Keine erfundenen Schwächen.** Es ist nicht nötig, Verbesserungsvorschläge zu formulieren nur um etwas zu sagen. Wer gut kocht, soll das hören — ohne "aber".
+
+2. **Echte Anerkennung führt.** Die Eröffnung der Antwort soll aufrichtig positiv sein, ohne herablassend oder übertrieben zu wirken. Beispiel: *"Das ist eine wirklich gut strukturierte Mahlzeit — du hast intuitiv fast alle Sättigungsprinzipien umgesetzt."*
+
+3. **Maximal ein optionaler Feinschliff.** Falls es einen 6. Baustein gibt der noch fehlt oder sehr schwach ist, kann dieser leicht erwähnt werden — aber als optionales Extra, nicht als Mangel. Formulierung: *"Falls du noch einen kleinen Schritt machen willst: …"*
+
+4. **Verweis auf die Rezeptbibliothek.** Am Ende der Antwort immer den Hinweis einbauen, dass es in der App ähnlich gut strukturierte Rezepte gibt: *"In der Rezeptbibliothek findest du Gerichte die ähnlich aufgebaut sind — falls du Inspiration für weitere Mahlzeiten suchst."*
+
+5. **Keine Liste von Verbesserungsvorschlägen** — diese Sektion bleibt leer oder enthält höchstens einen einzigen optionalen Hinweis.
+
+---
+
+### Machbarkeitsfilter: Was ist ein realistischer Verbesserungsvorschlag?
+
+Jeder Vorschlag muss diesen Filter bestehen, bevor er ausgegeben wird:
+
+**Kriterium 1 — Kein zusätzlicher Einkauf nötig**
+Der Vorschlag soll aus Kühlschrank- oder Vorratszutaten bestehen. Was ein durchschnittlicher Haushalt immer da hat: Eier, Naturjoghurt, Quark, Nüsse, Samen, Hülsenfrüchte aus der Dose, Frischkäse, geriebener Käse, Zitrone, Kräuter, Olivenöl.
+
+**Kriterium 2 — Kein wesentlicher Mehraufwand**
+Der Vorschlag darf nicht mehr Kochaufwand bedeuten als das ursprüngliche Gericht selbst. Beispiele:
+- Ei hartkochen (5 Min.) → ✓ bei Salat
+- Hähnchenbrust anbraten (20 Min.) → ✓ wenn das Gericht sowieso warm gekocht wurde
+- Ein Steak zubereiten → ✗ wenn das Ausgangsgericht ein schneller Salat war
+
+**Kriterium 3 — Geschmackliche Kompatibilität**
+Der Vorschlag muss zum Geschmacksprofil des Gerichts passen. Orientierung nach Gerichtstyp:
+
+| Gerichtstyp | Sinnvolle Protein-Ergänzung | Nicht passend |
+|-------------|----------------------------|----------------|
+| Salat | Ei, Thunfisch, Hühnchen, Feta, Kichererbsen, Lachs | Quark pur, Proteinshake |
+| Pasta / Risotto | Thunfisch, Hackfleisch, Ricotta, Mozzarella, Hülsenfrüchte | Hartgekochtes Ei obendrauf |
+| Suppe / Eintopf | Linsen einrühren, Tofu würfeln, Ei verquirlen, Joghurt obendrauf | Käse (außer bei passenden Varianten) |
+| Curry / asiatisch | Hühnchen, Tofu, Kichererbsen, Tempeh | Feta, europäische Milchprodukte |
+| Frühstück | Ei, Joghurt, Quark, Nüsse, Samen | Fleisch (außer explizit gewünscht) |
+| Fleischgericht als Hauptzutat | Kein Protein-Upgrade nötig — andere Bausteine prüfen | Weiteres Protein |
+| Sandwich / Wrap | Quark als Aufstrich, Ei, Hüttenkäse | Rohe Hülsenfrüchte |
+
+**Konsequenz:** Wenn kein Vorschlag den Filter besteht, lieber keinen machen als einen unpassenden. Qualität vor Quantität.
+
+**Absolut verboten — unabhängig vom Gerichtstyp:**
+- Proteinshakes oder Proteinpulver als Lösung ("einfach einen Shake dazutrinken")
+- Nahrungsergänzungsmittel als primäre Empfehlung
+- "Kauf dir eine Proteinquelle" — das ist keine Mahlzeitenoptimierung
+
+---
+
 ## 5. Quellen & Referenzen
 
 ### Physiologische Sättigungsmechanismen
