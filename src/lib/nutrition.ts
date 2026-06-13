@@ -294,10 +294,10 @@ export async function queryOpenFoodFacts(ingredient: string): Promise<NutritionS
           signal: AbortSignal.timeout(5000),
         })
         if (!res.ok) continue
-        const contentType = res.headers.get('content-type') ?? ''
-        if (!contentType.includes('application/json')) continue
-        const data = await res.json()
-        const product = data.products?.[0]
+        // Rely on JSON.parse failure to detect bot-protection HTML pages
+        const data = await res.json().catch(() => null)
+        if (!data || !Array.isArray(data.products)) continue
+        const product = data.products[0]
         if (!product?.nutriments) continue
         const n = product.nutriments
         return {
