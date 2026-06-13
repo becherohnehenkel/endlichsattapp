@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import Link from 'next/link'
+import { ChevronDown, ChevronUp, ChefHat } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import {
@@ -40,6 +41,7 @@ export interface AnalysisResult {
     erklaerung: string
     naehrwerte: Naehrwerte
   }
+  rezeptbibliothek_hinweis?: boolean
   vorschlaege: { aktion: string; begruendung: string; baustein: string }[]
   nachher: {
     bausteine: BausteineBewertung
@@ -255,7 +257,22 @@ export default function SaettigungsErgebnis({ result, assumptions, onReset, anal
         </div>
       )}
 
-      {/* ── 7. Nährwerte ── */}
+      {/* ── 7. Rezeptbibliothek CTA (bei sehr sättigenden Mahlzeiten) ── */}
+      {result.rezeptbibliothek_hinweis && (
+        <Link href="/rezepte">
+          <div className="rounded-xl border border-[#4A7C59]/30 bg-[#E8F0EB] p-4 flex items-center gap-3 hover:border-[#4A7C59] transition-colors cursor-pointer">
+            <div className="w-9 h-9 rounded-full bg-[#4A7C59]/15 flex items-center justify-center shrink-0">
+              <ChefHat className="h-4 w-4 text-[#4A7C59]" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-[#4A7C59]">Zur Rezeptbibliothek</p>
+              <p className="text-xs text-[#4A7C59]/80 leading-snug">Ähnlich gut strukturierte Mahlzeiten entdecken</p>
+            </div>
+          </div>
+        </Link>
+      )}
+
+      {/* ── 8. Nährwerte ── */}
       <div className="space-y-2">
         <p className="text-sm font-semibold text-foreground">Nährwerte</p>
         <div className={`grid gap-3 ${hasVorschlaege ? 'grid-cols-2' : 'grid-cols-1'}`}>
@@ -288,7 +305,7 @@ export default function SaettigungsErgebnis({ result, assumptions, onReset, anal
         </div>
       </div>
 
-      {/* ── 8. Rezeptvorschläge ── */}
+      {/* ── 9. Rezeptvorschläge ── */}
       {analysisId && (
         <>
           <Separator />
@@ -296,7 +313,7 @@ export default function SaettigungsErgebnis({ result, assumptions, onReset, anal
         </>
       )}
 
-      {/* ── 9. Reset ── */}
+      {/* ── 10. Reset ── */}
       <Button variant="outline" size="lg" className="w-full" onClick={onReset}>
         Neue Mahlzeit analysieren
       </Button>
