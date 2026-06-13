@@ -251,9 +251,15 @@ export default function SaettigungsErgebnis({ result, assumptions, onReset, anal
 
       {/* ── 6. Art of Eating Tipp ── */}
       {result.art_of_eating_tipp && (
-        <div className="rounded-xl border border-border bg-muted/40 p-3 space-y-1">
+        <div className="rounded-xl border border-border bg-muted/40 p-3 space-y-1.5">
           <p className="text-xs font-semibold text-muted-foreground">🧘 Art of Eating</p>
           <p className="text-sm text-foreground">{result.art_of_eating_tipp}</p>
+          <Link
+            href="/wie-esse-ich-richtig"
+            className="inline-block text-xs font-medium text-[#4A7C59] hover:underline"
+          >
+            Wie esse ich richtig? →
+          </Link>
         </div>
       )}
 

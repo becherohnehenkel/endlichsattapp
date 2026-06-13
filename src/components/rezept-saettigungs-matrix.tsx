@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import type { RezeptSaettigungsMatrix, BausteinRating } from '@/lib/saettigungs-matrix-rezept'
 
@@ -51,8 +52,16 @@ export default function RezeptSaettigungsMatrix({ matrix }: { matrix: RezeptSaet
               }
             </button>
             {isOpen && (
-              <div className="px-3 py-2.5 bg-card border-t border-border">
+              <div className="px-3 py-2.5 bg-card border-t border-border space-y-2">
                 <p className="text-xs text-muted-foreground leading-relaxed">{bewertung.erklaerung}</p>
+                {pillar === 'art_of_eating' && (
+                  <Link
+                    href="/wie-esse-ich-richtig"
+                    className="inline-block text-xs font-medium text-[#4A7C59] hover:underline"
+                  >
+                    Wie esse ich richtig? →
+                  </Link>
+                )}
               </div>
             )}
           </div>
