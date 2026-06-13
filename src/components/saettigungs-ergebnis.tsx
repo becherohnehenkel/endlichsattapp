@@ -256,15 +256,35 @@ export default function SaettigungsErgebnis({ result, assumptions, onReset, anal
       )}
 
       {/* ── 7. Nährwerte ── */}
-      <div className="space-y-1">
-        <p className="text-xs font-medium text-muted-foreground">Nährwerte der Mahlzeit</p>
-        <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground/70">
-          <span>{result.vorher.naehrwerte.kcal} kcal</span>
-          <span>{result.vorher.naehrwerte.protein_g}g Protein</span>
-          <span>{result.vorher.naehrwerte.kohlenhydrate_g}g KH</span>
-          <span>(davon {result.vorher.naehrwerte.zucker_g}g Zucker)</span>
-          <span>{result.vorher.naehrwerte.fett_g}g Fett</span>
-          <span>{result.vorher.naehrwerte.ballaststoffe_g}g Ballaststoffe</span>
+      <div className="space-y-2">
+        <p className="text-sm font-semibold text-foreground">Nährwerte</p>
+        <div className={`grid gap-3 ${hasVorschlaege ? 'grid-cols-2' : 'grid-cols-1'}`}>
+          <div className="space-y-1">
+            {hasVorschlaege && (
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Jetzt</p>
+            )}
+            <div className="flex flex-col gap-0.5 text-xs text-muted-foreground">
+              <span>{result.vorher.naehrwerte.kcal} kcal</span>
+              <span>{result.vorher.naehrwerte.protein_g}g Protein</span>
+              <span>{result.vorher.naehrwerte.kohlenhydrate_g}g Kohlenhydrate</span>
+              <span className="pl-2 text-muted-foreground/60">davon {result.vorher.naehrwerte.zucker_g}g Zucker</span>
+              <span>{result.vorher.naehrwerte.fett_g}g Fett</span>
+              <span>{result.vorher.naehrwerte.ballaststoffe_g}g Ballaststoffe</span>
+            </div>
+          </div>
+          {hasVorschlaege && (
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Nach Verbesserung</p>
+              <div className="flex flex-col gap-0.5 text-xs text-muted-foreground">
+                <span>{result.nachher.naehrwerte.kcal} kcal</span>
+                <span>{result.nachher.naehrwerte.protein_g}g Protein</span>
+                <span>{result.nachher.naehrwerte.kohlenhydrate_g}g Kohlenhydrate</span>
+                <span className="pl-2 text-muted-foreground/60">davon {result.nachher.naehrwerte.zucker_g}g Zucker</span>
+                <span>{result.nachher.naehrwerte.fett_g}g Fett</span>
+                <span>{result.nachher.naehrwerte.ballaststoffe_g}g Ballaststoffe</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
