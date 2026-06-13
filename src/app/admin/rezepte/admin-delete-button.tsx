@@ -51,7 +51,7 @@ export default function AdminDeleteButton({ recipeId, title }: AdminDeleteButton
         <AlertDialogHeader>
           <AlertDialogTitle>Rezept löschen?</AlertDialogTitle>
           <AlertDialogDescription>
-            „{title}" wird unwiderruflich gelöscht — inklusive Bild und allen Zutaten.
+            &bdquo;{title}&ldquo; wird unwiderruflich gelöscht — inklusive Bild und allen Zutaten.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
