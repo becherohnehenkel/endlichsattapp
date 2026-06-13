@@ -74,42 +74,114 @@ function toGrams(amount: number, unit: string, ingredientName: string): number |
 // Umgangssprachliche deutsche Begriffe die im BLS anders heißen
 
 const BLS_ALIASES: Record<string, string> = {
-  // Milchalternativen
-  hafermilch:    'haferdrink',
-  mandelmilch:   'mandeldrink',
-  reismilch:     'reisdrink',
-  sojamilch:     'sojadrink',
-  kokosmilch:    'kokosnuss',
-  dinkelmilch:   'dinkeldrink',
-  // Milchprodukte
-  magerquark:    'speisequark mager',
-  hüttenkäse:   'cottage cheese',
-  feta:          'schafskäse',
-  joghurt:       'joghurt',
-  // Protein
-  erbsenprotein: 'erbse',
-  // Eier — kritisch: "eier" trifft sonst "Eierteigwaren roh"
-  eier:          'hühnerei roh',
-  ei:            'hühnerei roh',
-  hühnerei:     'hühnerei roh',
-  hühnereier:   'hühnerei roh',
-  // Tomatenprodukte — kritisch: "tomatensauce" trifft sonst Fertiggerichte
-  tomatensauce:  'tomaten passiert',
-  tomatensoße:   'tomaten passiert',
-  passata:       'tomaten passiert',
-  // Hülsenfrüchte Plural → BLS Singular
-  kichererbsen:  'kichererbse',
-  linsen:        'linse',
-  kidneybohnen:  'bohne kidney',
-  // Gemüse Plural → BLS Singular
-  kartoffeln:    'kartoffel',
-  zwiebeln:      'zwiebel',
-  möhren:        'möhre',
-  karotten:      'möhre',
-  tomaten:       'tomate',
-  // Fette
-  kokosöl:       'kokosfett',
-  ghee:          'butterschmalz',
+  // ── Milchalternativen ─────────────────────────────────────
+  hafermilch:           'haferdrink',
+  mandelmilch:          'mandeldrink',
+  reismilch:            'reisdrink',
+  sojamilch:            'sojadrink',
+  dinkelmilch:          'dinkeldrink',
+  kokosmilch:           'kokosmilch',                  // → Kokosmilch/Kokosnussmilch (korrigiert)
+
+  // ── Milchprodukte & Käse ──────────────────────────────────
+  butter:               'süßrahmbutter',               // BLS hat keinen Eintrag "Butter"
+  milch:                'vollmilch frisch',             // → Vollmilch frisch, 3,5 % Fett
+  sahne:                'schlagsahne mind. 30',         // → Schlagsahne mind. 30 % Fett
+  mozzarella:           'mozzarella mind. 45',          // Vollfettstufe als Default
+  parmesan:             'parmesan mind. 30',
+  gouda:                'gouda 48',                    // Vollfettstufe als Default
+  skyr:                 'skyr',                        // → Skyr, Frischkäse < 10 %
+  frischkäse:          'frischkäsezubereitung natur, mind. 40',
+  magerquark:           'speisequark mager',
+  hüttenkäse:          'cottage cheese',
+  feta:                 'schafskäse',
+
+  // ── Eier ──────────────────────────────────────────────────
+  // Kritisch: "eier" trifft sonst "Eierteigwaren roh" (342 kcal statt 135 kcal)
+  eier:                 'hühnerei roh',
+  ei:                   'hühnerei roh',
+  hühnerei:            'hühnerei roh',
+  hühnereier:          'hühnerei roh',
+
+  // ── Geflügel ──────────────────────────────────────────────
+  hähnchenbrust:       'hähnchen brustfilet, roh',
+  hühnchenbrust:       'hähnchen brustfilet, roh',
+  hähnchenbrustfilet:  'hähnchen brustfilet, roh',
+  hähnchenfilet:       'hähnchen brustfilet, roh',
+
+  // ── Fisch & Meeresfrüchte ─────────────────────────────────
+  lachs:                'lachs roh',                   // verhindert Lachsschinken-Match
+  thunfisch:            'thunfisch roh',
+  garnelen:             'garnele',                     // → Garnele/Granat/Krabbe, roh
+
+  // ── Tomatenprodukte ───────────────────────────────────────
+  // Kritisch: "tomatensauce" trifft sonst Fertiggerichte (205 kcal statt 29 kcal)
+  tomatensauce:         'tomaten passiert',
+  tomatensoße:          'tomaten passiert',
+  passata:              'tomaten passiert',
+
+  // ── Getreide & Teigwaren ──────────────────────────────────
+  // BLS kennt kein "Spaghetti" oder "Nudeln", nur "Teigwaren"
+  nudeln:               'teigwaren eifrei, roh',
+  pasta:                'teigwaren eifrei, roh',
+  spaghetti:            'teigwaren eifrei, roh',
+  penne:                'teigwaren eifrei, roh',
+  fusilli:              'teigwaren eifrei, roh',
+  rigatoni:             'teigwaren eifrei, roh',
+  farfalle:             'teigwaren eifrei, roh',
+  tagliatelle:          'eierteigwaren roh',            // Eiernudeln
+  // BLS schreibt "Hafer Flocken" mit Leerzeichen (nicht "Haferflocken")
+  haferflocken:         'hafer flocken',
+  mehl:                 'weizen mehl, type 405',        // Standard-Haushaltsmehl
+  weizenmehl:           'weizen mehl, type 405',
+  dinkelmehl:           'dinkel mehl, type 630',
+  reis:                 'reis poliert, roh',
+  couscous:             'couscous (hartweizen) roh',
+
+  // ── Gemüse ────────────────────────────────────────────────
+  // BLS schreibt "Broccoli" mit 'c', nicht 'k'
+  brokkoli:             'broccoli roh',
+  // Paprika = im BLS "Gemüsepaprika", Default: rot
+  paprika:              'gemüsepaprika rot, roh',
+  'rote paprika':       'gemüsepaprika rot, roh',
+  'grüne paprika':      'gemüsepaprika grün, roh',
+  'gelbe paprika':      'gemüsepaprika gelb, roh',
+  // Plural → eindeutiger BLS-Eintrag
+  kartoffeln:           'kartoffel',
+  zwiebel:              'speisezwiebel roh',
+  zwiebeln:             'speisezwiebel roh',
+  möhre:                'karotte',                     // → Karotte/Möhre, roh
+  möhren:               'karotte',
+  karotten:             'karotte',
+  karotte:              'karotte',
+  tomaten:              'tomate roh',
+  süßkartoffel:         'batate',                      // → Batate/Süßkartoffel, roh
+  süßkartoffeln:        'batate',
+  sellerie:             'knollensellerie roh',
+  stangensellerie:      'bleichsellerie roh',
+  champignons:          'champignon roh',
+  pilze:                'champignon roh',              // Default: Champignon
+
+  // ── Hülsenfrüchte (gekochte Form) ─────────────────────────
+  // Claude schätzt Gramm der verzehrfertigen Mahlzeit → gekochte Form korrekt
+  kichererbsen:         'kichererbse reif, gekocht',
+  linsen:               'linse reif, gekocht',
+  'rote linsen':        'linse rot, reif, gekocht',
+  kidneybohnen:         'bohne kidney',
+
+  // ── Nüsse & Samen ─────────────────────────────────────────
+  mandeln:              'mandel süß',
+  mandel:               'mandel süß',
+  haselnüsse:           'haselnuss',
+  chiasamen:            'chia-samen',
+  sonnenblumenkerne:    'sonnenblumenkern',
+  kürbiskerne:          'kürbiskern',
+
+  // ── Fette & Öle ───────────────────────────────────────────
+  kokosöl:              'kokosfett',
+  ghee:                 'butterschmalz',
+
+  // ── Proteinpulver ─────────────────────────────────────────
+  erbsenprotein:        'erbse',
 }
 
 function normalizeName(name: string): string {
