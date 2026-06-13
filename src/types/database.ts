@@ -217,6 +217,7 @@ export type Database = {
           id: string
           title: string
           image_path: string | null
+          focal_point: Json | null
           servings: number
           cook_time_minutes: number
           total_time_minutes: number
@@ -224,6 +225,7 @@ export type Database = {
           ingredient_tags: string[]
           cuisine_tags: string[]
           macros_per_serving: Json | null
+          saettigungs_matrix: Json | null
           created_at: string
           updated_at: string
         }
@@ -231,6 +233,7 @@ export type Database = {
           id?: string
           title: string
           image_path?: string | null
+          focal_point?: Json | null
           servings: number
           cook_time_minutes: number
           total_time_minutes: number
@@ -238,6 +241,7 @@ export type Database = {
           ingredient_tags?: string[]
           cuisine_tags?: string[]
           macros_per_serving?: Json | null
+          saettigungs_matrix?: Json | null
           created_at?: string
           updated_at?: string
         }
@@ -245,6 +249,7 @@ export type Database = {
           id?: string
           title?: string
           image_path?: string | null
+          focal_point?: Json | null
           servings?: number
           cook_time_minutes?: number
           total_time_minutes?: number
@@ -252,6 +257,7 @@ export type Database = {
           ingredient_tags?: string[]
           cuisine_tags?: string[]
           macros_per_serving?: Json | null
+          saettigungs_matrix?: Json | null
           created_at?: string
           updated_at?: string
         }

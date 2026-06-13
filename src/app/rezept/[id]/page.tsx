@@ -4,6 +4,8 @@ import { Clock, ChefHat, Users, Flame } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { createClient } from '@/lib/supabase/server'
 import BackButton from './back-button'
+import RezeptSaettigungsMatrix from '@/components/rezept-saettigungs-matrix'
+import type { RezeptSaettigungsMatrix as MatrixType } from '@/lib/saettigungs-matrix-rezept'
 
 export default async function RezeptDetailPage({
   params,
@@ -26,6 +28,7 @@ export default async function RezeptDetailPage({
       total_time_minutes,
       instructions,
       macros_per_serving,
+      saettigungs_matrix,
       recipe_ingredients (
         id,
         name,
@@ -46,6 +49,7 @@ export default async function RezeptDetailPage({
 
   type MacrosPerServing = { kcal: number; protein_g: number; kohlenhydrate_g: number; zucker_g: number; fett_g: number; ballaststoffe_g: number }
   const macros = recipe.macros_per_serving as MacrosPerServing | null
+  const matrix = recipe.saettigungs_matrix as MatrixType | null
 
   type Ingredient = { id: string; name: string; amount: number; unit: string; sort_order: number }
   const ingredients = (recipe.recipe_ingredients as unknown as Ingredient[])
@@ -61,14 +65,14 @@ export default async function RezeptDetailPage({
 
       <main className="max-w-sm mx-auto px-4 py-6 space-y-6">
 
-        {/* Bild */}
+        {/* Bild — quadratisch (Bilder werden beim Upload quadratisch zugeschnitten) */}
         {imageUrl ? (
-          <div className="w-full aspect-video rounded-xl overflow-hidden bg-muted">
+          <div className="w-full aspect-square rounded-xl overflow-hidden bg-muted">
             <Image
               src={imageUrl}
               alt={recipe.title}
               width={400}
-              height={225}
+              height={400}
               className="w-full h-full object-cover"
               unoptimized
               priority
@@ -127,6 +131,17 @@ export default async function RezeptDetailPage({
             {recipe.instructions}
           </p>
         </div>
+
+        {/* Sättigungs-Bausteine */}
+        {matrix && (
+          <>
+            <Separator />
+            <div className="space-y-3">
+              <p className="text-sm font-semibold text-foreground">Sättigungs-Bausteine</p>
+              <RezeptSaettigungsMatrix matrix={matrix} />
+            </div>
+          </>
+        )}
 
         {/* Nährwerte pro Portion */}
         {macros && (

@@ -4,6 +4,7 @@ import { requireAdmin } from '@/lib/admin-auth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { calculateMacrosPerServing } from '@/lib/nutrition'
+import { calculateRezeptMatrix } from '@/lib/saettigungs-matrix-rezept'
 
 function imageUrl(path: string | null): string | null {
   if (!path) return null
@@ -21,6 +22,7 @@ const IngredientSchema = z.object({
 const RecipeUpdateSchema = z.object({
   title: z.string().min(1).max(200),
   image_path: z.string().nullable().optional(),
+  focal_point: z.object({ x: z.number().min(0).max(1), y: z.number().min(0).max(1) }).nullable().optional(),
   servings: z.number().int().positive(),
   cook_time_minutes: z.number().int().min(0),
   total_time_minutes: z.number().int().min(0),
@@ -88,6 +90,7 @@ export async function PUT(
     .update({
       title: recipeData.title,
       image_path: recipeData.image_path ?? null,
+      focal_point: recipeData.focal_point ?? null,
       servings: recipeData.servings,
       cook_time_minutes: recipeData.cook_time_minutes,
       total_time_minutes: recipeData.total_time_minutes,
@@ -122,8 +125,10 @@ export async function PUT(
     ingredients.map(ing => ({ ...ing, macros_per_100g: (ing.macros_per_100g ?? null) as unknown as import('@/lib/nutrition').NutritionPer100g | null })),
     recipeData.servings
   )
+  const matrix = calculateRezeptMatrix(ingredients, macros as Record<string, number> | null)
   await admin.from('recipes').update({
     macros_per_serving: (macros ?? null) as unknown as import('@/types/database').Json,
+    saettigungs_matrix: matrix as unknown as import('@/types/database').Json,
   }).eq('id', id)
 
   return NextResponse.json({ success: true })

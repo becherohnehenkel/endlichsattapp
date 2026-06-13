@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Plus, Trash2, Upload, ChefHat } from 'lucide-react'
 import UsdaIngredientInput from '@/components/usda-ingredient-input'
+import BildCropper from '@/components/bild-cropper'
 import type { NutritionPer100g } from '@/lib/nutrition'
 
 interface IngredientRow {
@@ -49,11 +50,13 @@ export default function RezeptFormular({
 
   const [imagePreview, setImagePreview] = useState<string | null>(existingImageUrl ?? null)
   const [uploadedPath, setUploadedPath] = useState<string | null>(defaultValues?.image_path ?? null)
+  // Raw local blob URL shown in the cropper (before upload)
+  const [rawImageSrc, setRawImageSrc] = useState<string | null>(null)
+  const [cropMode, setCropMode] = useState(false)
   const [imageUploading, setImageUploading] = useState(false)
   const [imageError, setImageError] = useState<string | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
-  // Parallel array to fields — stores USDA-selected macros per ingredient (null = use text search)
   const [ingredientMacros, setIngredientMacros] = useState<(NutritionPer100g | null)[]>(
     () => (defaultValues?.ingredients ?? [{ name: '', amount: '', unit: 'g' }]).map(() => null)
   )
@@ -74,14 +77,23 @@ export default function RezeptFormular({
 
   const { fields, append, remove } = useFieldArray({ control, name: 'ingredients' })
 
-  async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
     setImageError(null)
+    // Create local blob URL for crop preview — no upload yet
+    const localUrl = URL.createObjectURL(file)
+    setRawImageSrc(localUrl)
+    setCropMode(true)
+    // Reset the input so the same file can be re-selected
+    e.target.value = ''
+  }
+
+  async function handleCropConfirm(blob: Blob) {
     setImageUploading(true)
     try {
       const formData = new FormData()
-      formData.append('file', file)
+      formData.append('file', blob, 'crop.jpg')
       const res = await fetch('/api/admin/rezepte/bild', { method: 'POST', body: formData })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Upload fehlgeschlagen')
@@ -90,8 +102,17 @@ export default function RezeptFormular({
     } catch (err) {
       setImageError(err instanceof Error ? err.message : 'Upload fehlgeschlagen')
     } finally {
+      if (rawImageSrc) URL.revokeObjectURL(rawImageSrc)
+      setRawImageSrc(null)
+      setCropMode(false)
       setImageUploading(false)
     }
+  }
+
+  function handleCropCancel() {
+    if (rawImageSrc) URL.revokeObjectURL(rawImageSrc)
+    setRawImageSrc(null)
+    setCropMode(false)
   }
 
   async function onSubmit(values: RezeptFormularValues) {
@@ -309,9 +330,27 @@ export default function RezeptFormular({
           className="hidden"
           onChange={handleImageChange}
         />
-        {imagePreview ? (
+
+        {/* Crop mode */}
+        {cropMode && rawImageSrc && (
+          <BildCropper
+            imageSrc={rawImageSrc}
+            onConfirm={handleCropConfirm}
+            onCancel={handleCropCancel}
+          />
+        )}
+
+        {/* Uploading indicator */}
+        {imageUploading && (
+          <div className="w-full aspect-square rounded-xl border border-border bg-muted/40 flex items-center justify-center">
+            <p className="text-sm text-muted-foreground">Wird hochgeladen…</p>
+          </div>
+        )}
+
+        {/* Preview of confirmed image */}
+        {!cropMode && !imageUploading && imagePreview && (
           <div className="space-y-2">
-            <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-muted">
+            <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-muted">
               <Image
                 src={imagePreview}
                 alt="Vorschau"
@@ -325,23 +364,25 @@ export default function RezeptFormular({
               variant="outline"
               size="sm"
               onClick={() => fileInputRef.current?.click()}
-              disabled={imageUploading}
             >
-              {imageUploading ? 'Wird hochgeladen…' : 'Bild ersetzen'}
+              Bild ersetzen
             </Button>
           </div>
-        ) : (
+        )}
+
+        {/* Upload button (no image yet) */}
+        {!cropMode && !imageUploading && !imagePreview && (
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            disabled={imageUploading}
-            className="w-full aspect-video rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary hover:text-primary transition-colors disabled:opacity-50"
+            className="w-full aspect-video rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary hover:text-primary transition-colors"
           >
             <Upload className="h-6 w-6" />
-            <span className="text-sm">{imageUploading ? 'Wird hochgeladen…' : 'Bild hochladen (JPEG/PNG/WebP, max. 5 MB)'}</span>
+            <span className="text-sm">Bild hochladen (JPEG/PNG/WebP, max. 5 MB)</span>
             <ChefHat className="h-4 w-4 opacity-40" />
           </button>
         )}
+
         {imageError && <p className="text-xs text-destructive">{imageError}</p>}
       </div>
 
@@ -364,7 +405,7 @@ export default function RezeptFormular({
         <Button
           type="submit"
           className="flex-1 bg-[#4A7C59] hover:bg-[#3d6849] text-white"
-          disabled={submitting || imageUploading}
+          disabled={submitting || imageUploading || cropMode}
         >
           {submitting ? 'Wird gespeichert…' : mode === 'edit' ? 'Speichern' : 'Rezept anlegen'}
         </Button>

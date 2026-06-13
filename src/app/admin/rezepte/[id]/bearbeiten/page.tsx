@@ -21,6 +21,7 @@ export default async function RezeptBearbeitenPage({
       id,
       title,
       image_path,
+      focal_point,
       servings,
       cook_time_minutes,
       total_time_minutes,
