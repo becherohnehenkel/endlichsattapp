@@ -23,10 +23,18 @@
 Der Kauvorgang ist ein eigenständiger Sättigungsmechanismus. Mechanisches Zerkleinern und Speichelproduktion leiten die Verdauung ein und senden Signale ans Gehirn. Wer mehr kaut, isst automatisch langsamer — und gibt dem Körper Zeit, Sättigungshormone auszuschütten (ca. 20 Min. Verzögerung). Flüssige oder weiche Speisen (Shakes, eingeweichte Flocken, Smoothies) umgehen diesen Mechanismus fast vollständig.
 
 **Lebensmittel mit hohem Kauaufwand:**
-- Rohes oder bissfestes Gemüse (Gurke, Karotte, Blumenkohl, Salate)
+- Rohes oder bissfestes Gemüse (Gurke, Karotte, Blumenkohl, Salate, Paprikaschote)
 - Nüsse, Samen, Kerne
-- Kross Gebackenes oder Gebratenes (Brot, Knäckebrot, angebratenes Fleisch/Tofu/Fisch)
-- Hülsenfrüchte (al dente gegart)
+- Kross Gebackenes oder Gebratenes (Brot, Knäckebrot, Granola, angebratenes Fleisch/Tofu/Fisch)
+- Hülsenfrüchte (al dente gegart): Kidneybohnen, Linsen, Kichererbsen
+- Pseudogetreide mit Textur: Quinoa
+
+**Ausgeschlossen vom Biss-Baustein (zählen NICHT):**
+- Gewürze in Pulverform (Paprikapulver, Kreuzkümmelpulver, Currypulver, ...)
+- Extrakte, Pasten, Pürees, Mus (Mandelmus, Tomatenmark, Ajvar, ...)
+- Öle, Essige, Soßen, Fonds, Brühen
+- Getrocknete oder gemahlene Kräuter und Gewürze
+- Regel: Wenn eine Zutat in der Küche typischerweise in Teelöffeln oder Gramm unter 10 dosiert wird, gehört sie nicht zum Biss-Baustein.
 
 ### Geschmackskomplexität
 Ein Gericht das nicht schmeckt, macht nicht wirklich zufrieden — auch wenn es kalorisch ausreichend ist. Sättigung ist nicht nur physiologisch, sondern auch sensorisch. Geschmack entsteht durch das gleichzeitige Zusammenspiel mehrerer Komponenten:
@@ -44,6 +52,12 @@ Je mehr dieser Dimensionen gleichzeitig aktiv sind, desto befriedigender das Ger
 Lebensmittel mit niedriger Energiedichte (viel Wasser, viel Ballaststoffe, wenig Fett) erlauben größere Mengen bei gleicher Kalorienzufuhr. Das begünstigt die physische Magendehnung ohne Kalorienüberschuss.
 
 **Niedrige Energiedichte (ideal für Volumen):** Gurke, Zucchini, Blattsalate, Radieschen, Staudensellerie, Blumenkohl, Sauerkraut, Spinat, Wassermelone, Beeren, Papaya, Grapefruit.
+
+**Ausgeschlossen vom Volumen-Baustein (zählen NICHT):**
+- Kleine Aromaten wie Knoblauch, Zwiebel (als Menge), Schalotte, Ingwer, Chili — viel zu wenig in realistischen Mengen um Magendehnung auszulösen
+- Konzentrate und Pasten (Tomatenmark, Ajvar) — hochkonzentriert, kein Volumeneffekt
+- Getrocknete oder gepulverte Formen von Lebensmitteln
+- Regel: Eine Zutat zählt nur als Volumen-Baustein, wenn sie in einer Menge verwendet wird die den Magen mechanisch füllen kann (typisch: ≥50g wasserhaltiges Lebensmittel).
 
 ### Mahlzeitenfrequenz & Blutzuckerstabilität
 Unregelmäßiges Essen führt zu Blutzucker-Achterbahn, Energie-Crashs und erhöhter Heißhungeranfälligkeit. Empfehlung: 2–4 vollwertige Mahlzeiten pro Tag, die den Blutzucker in einem stabilen Normalbereich halten. Dies ist kein Naturgesetz — individuelle Anpassung nach Alltag, Arbeit und sozialer Kompatibilität hat Vorrang.

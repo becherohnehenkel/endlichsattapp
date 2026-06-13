@@ -20,13 +20,31 @@ export interface RezeptSaettigungsMatrix {
   gesamtbewertung: 'sehr_saettigend' | 'maessig_saettigend' | 'wenig_saettigend'
 }
 
+// ── Biss ──────────────────────────────────────────────────────────────────────
+// Only whole foods with real chewing resistance count.
 const BISS_KEYWORDS = [
   'nuss', 'nüsse', 'mandel', 'mandeln', 'walnuss', 'cashew', 'erdnuss', 'haselnuss', 'pistazien',
   'kerne', 'kürbiskern', 'sonnenblumenkern', 'pinienkern', 'sesam', 'chia', 'leinsamen', 'chiasamen',
   'granola', 'müsli', 'knäckebrot', 'crouton',
   'karotte', 'möhre', 'gurke', 'paprika', 'apfel', 'sellerie', 'fenchel', 'kohlrabi', 'radieschen',
+  'quinoa',
+  'bohne', 'linse', 'kichererbse', 'erbse',
 ]
 
+// Spices, powders, extracts, purees and other processed forms that look like
+// Biss keywords but provide zero chewing resistance.
+const BISS_EXCLUSION_TERMS = [
+  'pulver', 'extrakt', 'püree', 'mus', 'paste', 'pesto', 'mark',
+  'öl', 'essig', 'sauce', 'soße', 'saft', 'sirup', 'fond', 'brühe', 'bouillon',
+  'gewürz', 'gewürzmischung', 'mehl', 'stärke',
+  'getrocknet', 'gerebelt', 'gemahlen',
+  // Paprika spice quality descriptors (indicate the powdered spice, not the vegetable)
+  'rosenscharf', 'edelsüß', 'geräuchert',
+]
+
+// ── Volumen ───────────────────────────────────────────────────────────────────
+// High-water, low-calorie whole foods only. Concentrated pastes and small
+// aromatics (garlic, ginger, chili) are explicitly excluded.
 const VOLUMEN_KEYWORDS = [
   'salat', 'blattsalat', 'feldsalat', 'rucola', 'spinat', 'kopfsalat', 'eisberg', 'romanasalat',
   'gurke', 'zucchini', 'brokkoli', 'blumenkohl', 'weißkohl', 'rotkohl', 'grünkohl', 'lauch', 'porree',
@@ -35,21 +53,43 @@ const VOLUMEN_KEYWORDS = [
   'quark', 'joghurt', 'skyr', 'magerquark',
 ]
 
+const VOLUMEN_EXCLUSION_TERMS = [
+  // Concentrated/powdered forms that lose volume
+  'pulver', 'extrakt', 'mark',
+  'öl', 'essig', 'gewürz', 'gewürzmischung', 'mehl', 'stärke', 'sirup',
+  'getrocknet', 'gerebelt', 'gemahlen', 'rosenscharf', 'edelsüß', 'geräuchert',
+  // Small aromatics — meaningful volume only in unrealistically large amounts
+  'knoblauch', 'zwiebel', 'schalotte', 'ingwer', 'chili',
+]
+
+// ── Geschmack ─────────────────────────────────────────────────────────────────
 const GESCHMACK_KEYWORDS = [
   'öl', 'olivenöl', 'rapsöl', 'butter', 'sahne', 'schmand', 'crème fraîche',
   'avocado', 'käse', 'parmesan', 'feta', 'mozzarella', 'gouda', 'cheddar', 'frischkäse', 'hüttenkäse',
   'kokosmilch', 'kokoscreme', 'mandelmus', 'erdnussmus', 'sesam', 'tahini', 'pesto',
   'bacon', 'speck', 'schinken', 'lachs', 'thunfisch',
-  'knoblauch', 'ingwer', 'chili', 'curry', 'paprikapulver', 'muskat', 'zimt', 'kreuzkümmel', 'gewürze',
+  'knoblauch', 'ingwer', 'chili', 'curry', 'paprika', 'paprikapulver', 'muskat', 'zimt', 'kreuzkümmel', 'gewürze',
   'zitrone', 'limette', 'balsamico', 'sojasauce', 'worcester', 'senf', 'dressing', 'soße', 'sauce',
+  'tomatenmark', 'ajvar', 'miso',
 ]
 
-function matchingIngredients(names: string[], keywords: string[]): string[] {
-  return names.filter(name => keywords.some(kw => name.includes(kw)))
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function matchingIngredients(names: string[], keywords: string[], exclusions: string[] = []): string[] {
+  return names.filter(name => {
+    if (exclusions.some(ex => name.includes(ex))) return false
+    return keywords.some(kw => name.includes(kw))
+  })
 }
 
 function capitalize(s: string) {
   return s.charAt(0).toUpperCase() + s.slice(1)
+}
+
+// Returns a short display name: strips trailing qualifiers and caps length.
+function displayName(ingredientName: string): string {
+  const short = ingredientName.split(/[,/(]/)[0].trim()
+  return capitalize(short)
 }
 
 export function calculateRezeptMatrix(
@@ -79,16 +119,16 @@ export function calculateRezeptMatrix(
     : { rating: 'schwach', erklaerung: `Nur ${fiberG}g Ballaststoffe pro Portion. Mehr Gemüse, Hülsenfrüchte oder Vollkornprodukte würden hier viel bewirken.` }
 
   // ── Biss ─────────────────────────────────────────────────────────────────
-  const bissMatches = matchingIngredients(names, BISS_KEYWORDS)
+  const bissMatches = matchingIngredients(names, BISS_KEYWORDS, BISS_EXCLUSION_TERMS)
   const biss: BausteinBewertung = bissMatches.length >= 2
     ? {
         rating: 'gut',
-        erklaerung: `${capitalize(bissMatches[0])} und ${bissMatches[1]} sorgen für echten Kauaufwand — das aktiviert Sättigungssignale deutlich früher als weiches Essen.`,
+        erklaerung: `${displayName(bissMatches[0])} und ${displayName(bissMatches[1])} sorgen für echten Kauaufwand — das aktiviert Sättigungssignale deutlich früher als weiches Essen.`,
       }
     : bissMatches.length === 1
     ? {
         rating: 'mittel',
-        erklaerung: `${capitalize(bissMatches[0])} liefert Biss, aber ein zweites Element (z.B. Kerne, Nüsse oder Rohkost) würde den Effekt deutlich verstärken.`,
+        erklaerung: `${displayName(bissMatches[0])} liefert Biss, aber ein zweites Element (z.B. Kerne, Nüsse oder Rohkost) würde den Effekt deutlich verstärken.`,
       }
     : {
         rating: 'schwach',
@@ -96,16 +136,16 @@ export function calculateRezeptMatrix(
       }
 
   // ── Volumen ───────────────────────────────────────────────────────────────
-  const volumenMatches = matchingIngredients(names, VOLUMEN_KEYWORDS)
+  const volumenMatches = matchingIngredients(names, VOLUMEN_KEYWORDS, VOLUMEN_EXCLUSION_TERMS)
   const volumen: BausteinBewertung = volumenMatches.length >= 2
     ? {
         rating: 'gut',
-        erklaerung: `${capitalize(volumenMatches[0])} und ${volumenMatches[1]} sind volumenreich — sie füllen den Magen ohne viele Kalorien zu liefern.`,
+        erklaerung: `${displayName(volumenMatches[0])} und ${displayName(volumenMatches[1])} sind volumenreich — sie füllen den Magen ohne viele Kalorien zu liefern.`,
       }
     : volumenMatches.length === 1
     ? {
         rating: 'mittel',
-        erklaerung: `${capitalize(volumenMatches[0])} bringt Volumen. Ein zweites wasserreiches Element (z.B. Gurke, Tomaten, Beeren) würde den Füllungseffekt verstärken.`,
+        erklaerung: `${displayName(volumenMatches[0])} bringt Volumen. Ein zweites wasserreiches Element (z.B. Gurke, Tomaten, Beeren) würde den Füllungseffekt verstärken.`,
       }
     : {
         rating: 'schwach',
@@ -117,12 +157,12 @@ export function calculateRezeptMatrix(
   const geschmack: BausteinBewertung = geschmackMatches.length >= 3
     ? {
         rating: 'gut',
-        erklaerung: `Gute Geschmackstiefe durch ${geschmackMatches.slice(0, 3).map(capitalize).join(', ')}. Fett, Würze und Aromen machen das Gericht wirklich befriedigend.`,
+        erklaerung: `Gute Geschmackstiefe durch ${geschmackMatches.slice(0, 3).map(n => displayName(n)).join(', ')}. Fett, Würze und Aromen machen das Gericht wirklich befriedigend.`,
       }
     : geschmackMatches.length >= 1
     ? {
         rating: 'mittel',
-        erklaerung: `${geschmackMatches.map(capitalize).join(', ')} ${geschmackMatches.length === 1 ? 'gibt' : 'geben'} Geschmack. Etwas mehr Säure, Würze oder Fett könnte das Gericht noch befriedigender machen.`,
+        erklaerung: `${geschmackMatches.map(n => displayName(n)).join(', ')} ${geschmackMatches.length === 1 ? 'gibt' : 'geben'} Geschmack. Etwas mehr Säure, Würze oder Fett könnte das Gericht noch befriedigender machen.`,
       }
     : {
         rating: 'schwach',
