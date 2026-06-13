@@ -229,7 +229,85 @@ Der Vorschlag muss zum Geschmacksprofil des Gerichts passen. Orientierung nach G
 
 ---
 
-## 5. Quellen & Referenzen
+## 5. Restaurant-Kontext
+
+### Grundprinzip: Strategie statt Zutaten
+
+Im Restaurant gelten andere Regeln als zu Hause. Der Nutzer kann die Zutaten nicht kontrollieren — er kann nur beeinflussen:
+1. **Was er bestellt** (und in welcher Reihenfolge)
+2. **Wie viel er davon isst** (Portion, Teilen)
+3. **Wie er isst** (Art of Eating — im Restaurant besonders relevant)
+
+**Konsequenz für Verbesserungsvorschläge:**
+- Keine Vorschläge wie "Kichererbsen dazugeben" oder "mit Vollkornbeilage" — das kann man nicht bestellen
+- Stattdessen: Bestell- und Verhaltensstrategien die mit dem vorhandenen Angebot funktionieren
+- Vorschläge müssen realistisch umsetzbar sein ohne die Situation zu verkomplizieren
+
+---
+
+### Strategie 1: Vorspeisensalat als Puffer
+
+**Wann sinnvoll:** Wenn die Hauptspeise kalorisch dicht und schwer ist (Schnitzel, Pasta, Pizza, Burger) und der Hunger groß ist.
+
+**Mechanismus:** Ein gemischter Salat als Vorspeise liefert Ballaststoffe und Volumen bevor das Hauptgericht kommt. Die Magenrezeptoren registrieren erste Füllung, Sättigungshormone beginnen anzusteigen. Ergebnis: Man isst beim Hauptgericht automatisch etwas weniger — ohne Verzicht, ohne Hunger.
+
+**Wichtig:** Das ist kein Trick um "weniger zu essen", sondern ein Weg um Nährstoffe zu priorisieren. Wer danach noch hungrig ist, isst das Hauptgericht weiter. Wer satt ist, hört früher auf — ganz natürlich.
+
+**Funktioniert besonders gut vor:**
+- Schnitzel, Braten, Fleischgerichte (wenig Volumen, viel Energie)
+- Pasta, Risotto (wenig Volumen, viele Kohlenhydrate)
+- Pizza (je nach Größe und Belag)
+- Burger (kalorisch dicht, wenig Volumen)
+
+**Funktioniert weniger gut vor:**
+- Gerichten die selbst schon viel Volumen haben (z.B. großer Fischfilet-Salat als Hauptgericht)
+- Kleinen, leichten Hauptgerichten wo kein Überschuss erwartet wird
+
+---
+
+### Strategie 2: Teilen
+
+**Wann sinnvoll:** Bei sehr großen oder kalorisch dichten Portionen in einer Gruppe.
+
+**Mechanismus:** Durch Teilen reduziert man die Portion auf ein sättigungsgerechtes Maß. Das funktioniert aber nur wenn man ehrlich einschätzt ob die halbe Portion ausreicht — nicht als Diät-Maßnahme, sondern als vernünftige Einschätzung.
+
+**Pizza-Beispiel:**
+Eine üppig belegte Pizza (viel Käse, Olivenöl, reichhaltige Beläge) enthält durch Fett und Geschmack bereits gute Sättigungspotenziale. Je nach Größe und eigenem Hunger kann das in drei Varianten enden:
+- **Ganze Pizza alleine, bewusst gegessen** → kann sehr sättigend sein wenn die Sättigungssignale beachtet werden
+- **Halbe Pizza + Salat teilen** → bessere Nährstoffbalance, wahrscheinlich ähnliche Sättigung
+- **Ganze Pizza + kein Salat, schnell gegessen** → weniger sättigend trotz mehr Kalorien (Art of Eating fehlt)
+
+**Konsequenz:** Beim Teilen ist Art of Eating besonders wichtig — wer die halbe Portion schnell und abgelenkt isst, profitiert nicht vom Teilen.
+
+---
+
+### Strategie 3: Art of Eating im Restaurant ist besonders kritisch
+
+Das Restaurant ist die höchste Risikostufe für schlechtes Art of Eating: Gespräche, Ablenkung, sozialem Druck schnell zu essen oder das Gleiche zu bestellen wie andere.
+
+**Restaurant-spezifische Empfehlungen:**
+- Zwischen den Bissen die Gabel ablegen — das ist der wichtigste Hebel
+- Kurze Pause in der Mitte des Hauptgerichts: *"Bin ich noch hungrig, oder esse ich aus Gewohnheit weiter?"*
+- Teller darf stehen bleiben — eine Restaurantportion ist selten auf den eigenen Hunger kalibriert
+- Smartphone weglegen (bei Gesellschaft sowieso, aber auch beim Allein-Essen)
+
+**Sättigungseffekt:** Langsames Essen im Restaurant kann den Unterschied machen ob eine "üppige" Mahlzeit sättigend wirkt oder nicht — unabhängig von den Zutaten.
+
+---
+
+### Erkennungsmuster: Wann ist eine Mahlzeit ein Restaurantbesuch?
+
+Der Assistent erkennt einen Restaurant-Kontext an:
+- Gerichten die man typischerweise nicht zu Hause kocht (Schnitzel mit Pommes, Pasta al forno, Sushi, etc.)
+- Beschreibungen wie "im Restaurant", "wir waren essen", "bestellt", "Speisekarte"
+- Sehr uniformen Portionen ohne individuelle Mengenangaben
+- Fehlenden Angaben zu Zubereitungsweise (weil man es nicht weiß)
+
+**Im Restaurant-Kontext gilt:** Vorschläge zur nächsten Mahlzeit ("Morgen beim Mittagessen könntest du...") sind erlaubt — nicht alle Optimierungen müssen beim aktuellen Gericht passieren.
+
+---
+
+## 6. Quellen & Referenzen
 
 ### Physiologische Sättigungsmechanismen
 - **GLP-1 (Glucagon-like Peptide-1)** und **PYY (Peptid YY)**: Sättigungshormone die primär durch Proteinzufuhr stimuliert werden. Signalisieren dem Hypothalamus Sättigung.

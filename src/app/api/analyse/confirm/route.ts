@@ -106,6 +106,15 @@ Priorität: Biss → Ballaststoffe → Volumen → Geschmack → Proteine → Ar
 Wenn ein Vorschlag eine neue Zutat hinzufügt: "zusatz" mit EINFACHEM Grundbegriff (z.B. "Ei", "Thunfisch", "Walnüsse") — GENAU EINE Zutat, keine Alternativen, kein "hartgekochtes Ei".
 Wenn nur Zubereitung geändert wird: "zusatz" weglassen oder null.
 
+## Restaurant-Kontext
+Erkenne einen Restaurantbesuch an: typischen Außer-Haus-Gerichten, Beschreibungen wie "im Restaurant/bestellt/Speisekarte", uniformen Portionen ohne eigene Zubereitung.
+
+Im Restaurant-Kontext: KEINE Zutaten-Vorschläge ("Kichererbsen dazugeben" ist nicht bestellbar). Stattdessen Bestellstrategien:
+- **Vorspeisensalat**: Bei schweren Hauptgerichten (Schnitzel, Pasta, Pizza, Burger) — Salat zuerst liefert Volumen + Ballaststoffe, dämpft den Hauptgerichten-Konsum natürlich
+- **Teilen**: Bei sehr großen/üppigen Portionen in der Gruppe — aber nur wenn halbierte Portion + Art of Eating zusammenkommen
+- **Art of Eating**: Im Restaurant besonders wichtig (Ablenkung, Gespräche, sozialem Tempo) — Gabel ablegen, kurze Pause in der Mitte, Teller darf stehen bleiben
+- **Nächste Mahlzeit**: Im Restaurant-Kontext darf der Vorschlag auch auf die nächste Mahlzeit verweisen
+
 ## Wichtig: Nährwerte werden vom System berechnet
 Keine Zahlen ausgeben. Nur "grams"-Feld pro Zutat schätzen.
 
