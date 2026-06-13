@@ -1,4 +1,6 @@
-// Shared nutrition lookup — pure USDA/OFFs APIs, zero Claude tokens
+// Shared nutrition lookup — BLS database + fallback to USDA/OFFs
+
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export interface NutritionPer100g {
   kcal: number
@@ -68,7 +70,35 @@ function toGrams(amount: number, unit: string, ingredientName: string): number |
   return null
 }
 
-// ─── External DB queries ─────────────────────────────────────
+// ─── BLS database lookup (primary) ──────────────────────────
+
+export async function queryBLS(ingredient: string): Promise<NutritionSource | null> {
+  try {
+    const admin = createAdminClient()
+    const { data } = await admin
+      .from('bls_lebensmittel')
+      .select('kcal_100g, protein_g_100g, fat_g_100g, carbs_g_100g, fiber_g_100g, sugar_g_100g')
+      .ilike('name_de', `%${ingredient}%`)
+      .limit(1)
+      .single()
+
+    if (!data) return null
+    return {
+      per100g: {
+        kcal:      Number(data.kcal_100g ?? 0),
+        protein_g: Number(data.protein_g_100g ?? 0),
+        carbs_g:   Number(data.carbs_g_100g ?? 0),
+        sugar_g:   Number(data.sugar_g_100g ?? 0),
+        fat_g:     Number(data.fat_g_100g ?? 0),
+        fiber_g:   Number(data.fiber_g_100g ?? 0),
+      },
+    }
+  } catch {
+    return null
+  }
+}
+
+// ─── USDA fallback (English ingredients / no BLS match) ─────
 
 export async function queryUSDA(ingredient: string): Promise<NutritionSource | null> {
   const apiKey = process.env.USDA_API_KEY
@@ -89,12 +119,12 @@ export async function queryUSDA(ingredient: string): Promise<NutritionSource | n
     )?.value ?? get('energy')
     return {
       per100g: {
-        kcal: Number(kcal),
+        kcal:      Number(kcal),
         protein_g: Number(get('protein')),
-        carbs_g: Number(get('carbohydrate')),
-        sugar_g: Number(get('sugars')),
-        fat_g: Number(get('total lipid')),
-        fiber_g: Number(get('fiber')),
+        carbs_g:   Number(get('carbohydrate')),
+        sugar_g:   Number(get('sugars')),
+        fat_g:     Number(get('total lipid')),
+        fiber_g:   Number(get('fiber')),
       },
     }
   } catch {
@@ -116,12 +146,12 @@ export async function queryOpenFoodFacts(ingredient: string): Promise<NutritionS
     const n = product.nutriments
     return {
       per100g: {
-        kcal: Number(n['energy-kcal_100g'] ?? n['energy-kcal'] ?? 0),
+        kcal:      Number(n['energy-kcal_100g'] ?? n['energy-kcal'] ?? 0),
         protein_g: Number(n['proteins_100g'] ?? n['proteins'] ?? 0),
-        carbs_g: Number(n['carbohydrates_100g'] ?? n['carbohydrates'] ?? 0),
-        sugar_g: Number(n['sugars_100g'] ?? n['sugars'] ?? 0),
-        fat_g: Number(n['fat_100g'] ?? n['fat'] ?? 0),
-        fiber_g: Number(n['fiber_100g'] ?? n['fiber'] ?? 0),
+        carbs_g:   Number(n['carbohydrates_100g'] ?? n['carbohydrates'] ?? 0),
+        sugar_g:   Number(n['sugars_100g'] ?? n['sugars'] ?? 0),
+        fat_g:     Number(n['fat_100g'] ?? n['fat'] ?? 0),
+        fiber_g:   Number(n['fiber_100g'] ?? n['fiber'] ?? 0),
       },
     }
   } catch {
@@ -142,18 +172,26 @@ export async function calculateMacrosPerServing(
     ingredients.map(async (ing) => {
       const grams = toGrams(ing.amount, ing.unit, ing.name)
       if (grams === null || grams <= 0) return null
-      // Use stored USDA data if available, otherwise fall back to live text search
-      const per100g = ing.macros_per_100g ?? (await queryUSDA(ing.name))?.per100g ?? (await queryOpenFoodFacts(ing.name))?.per100g
-      const source = per100g ? { per100g } : null
-      if (!source) return null
+
+      // 1. Stored BLS data (admin selected from live search)
+      // 2. BLS database lookup by name
+      // 3. USDA API fallback (for non-German / exotic ingredients)
+      // 4. Open Food Facts as last resort
+      const per100g =
+        ing.macros_per_100g ??
+        (await queryBLS(ing.name))?.per100g ??
+        (await queryUSDA(ing.name))?.per100g ??
+        (await queryOpenFoodFacts(ing.name))?.per100g
+
+      if (!per100g) return null
       const factor = grams / 100
       return {
-        kcal: source.per100g.kcal * factor,
-        protein_g: source.per100g.protein_g * factor,
-        carbs_g: source.per100g.carbs_g * factor,
-        sugar_g: source.per100g.sugar_g * factor,
-        fat_g: source.per100g.fat_g * factor,
-        fiber_g: source.per100g.fiber_g * factor,
+        kcal:      per100g.kcal * factor,
+        protein_g: per100g.protein_g * factor,
+        carbs_g:   per100g.carbs_g * factor,
+        sugar_g:   per100g.sugar_g * factor,
+        fat_g:     per100g.fat_g * factor,
+        fiber_g:   per100g.fiber_g * factor,
       }
     })
   )
@@ -161,23 +199,23 @@ export async function calculateMacrosPerServing(
   for (const r of results) {
     if (!r) continue
     anyFound = true
-    totals.kcal += r.kcal
+    totals.kcal      += r.kcal
     totals.protein_g += r.protein_g
-    totals.carbs_g += r.carbs_g
-    totals.sugar_g += r.sugar_g
-    totals.fat_g += r.fat_g
-    totals.fiber_g += r.fiber_g
+    totals.carbs_g   += r.carbs_g
+    totals.sugar_g   += r.sugar_g
+    totals.fat_g     += r.fat_g
+    totals.fiber_g   += r.fiber_g
   }
 
   if (!anyFound) return null
 
   const round = (n: number) => Math.round(n / servings)
   return {
-    kcal: round(totals.kcal),
-    protein_g: round(totals.protein_g),
+    kcal:            round(totals.kcal),
+    protein_g:       round(totals.protein_g),
     kohlenhydrate_g: round(totals.carbs_g),
-    zucker_g: round(totals.sugar_g),
-    fett_g: round(totals.fat_g),
+    zucker_g:        round(totals.sugar_g),
+    fett_g:          round(totals.fat_g),
     ballaststoffe_g: round(totals.fiber_g),
   }
 }

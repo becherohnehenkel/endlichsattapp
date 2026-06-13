@@ -190,7 +190,7 @@ export default function RezeptFormular({
                   onChange={f.onChange}
                   onBlur={f.onBlur}
                   onSelectUsda={(result) => {
-                    f.onChange(result.description)
+                    f.onChange(result.name_de)
                     setIngredientMacros(prev => {
                       const next = [...prev]
                       next[index] = result.per100g

@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      bls_lebensmittel: {
+        Row: {
+          bls_code: string
+          name_de: string
+          name_en: string | null
+          kcal_100g: number | null
+          protein_g_100g: number | null
+          fat_g_100g: number | null
+          carbs_g_100g: number | null
+          fiber_g_100g: number | null
+          sugar_g_100g: number | null
+          naehrwerte: Json | null
+          bls_version: string
+          imported_at: string
+        }
+        Insert: {
+          bls_code: string
+          name_de: string
+          name_en?: string | null
+          kcal_100g?: number | null
+          protein_g_100g?: number | null
+          fat_g_100g?: number | null
+          carbs_g_100g?: number | null
+          fiber_g_100g?: number | null
+          sugar_g_100g?: number | null
+          naehrwerte?: Json | null
+          bls_version?: string
+          imported_at?: string
+        }
+        Update: {
+          bls_code?: string
+          name_de?: string
+          name_en?: string | null
+          kcal_100g?: number | null
+          protein_g_100g?: number | null
+          fat_g_100g?: number | null
+          carbs_g_100g?: number | null
+          fiber_g_100g?: number | null
+          sugar_g_100g?: number | null
+          naehrwerte?: Json | null
+          bls_version?: string
+          imported_at?: string
+        }
+        Relationships: []
+      }
       meal_analyses: {
         Row: {
           created_at: string
