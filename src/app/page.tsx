@@ -182,6 +182,23 @@ export default async function StartPage() {
           </section>
         )}
 
+        {/* ── Sättigungs-Matrix Teaser ─────────────────────── */}
+        <section>
+          <Link href="/saettigungsmatrix">
+            <div className="rounded-2xl border border-[#4A7C59]/30 bg-[#E8F0EB] p-4 flex items-center gap-4 hover:border-[#4A7C59] transition-colors cursor-pointer">
+              <span className="text-3xl flex-shrink-0">🧩</span>
+              <div className="space-y-0.5 min-w-0">
+                <p className="text-sm font-semibold text-[#2D5016] leading-snug">
+                  Warum satt werden kein Zufall ist
+                </p>
+                <p className="text-xs text-[#4A7C59] font-medium">
+                  Zur Sättigungs-Matrix →
+                </p>
+              </div>
+            </div>
+          </Link>
+        </section>
+
         {/* ── Rezeptbibliothek Teaser ───────────────────────── */}
         {recipes.length > 0 && (
           <section className="space-y-3">
