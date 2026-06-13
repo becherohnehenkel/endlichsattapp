@@ -50,16 +50,42 @@ function parseGrams(amountStr) {
 
 // ─── Alltagsbegriff → BLS-Bezeichnung ───────────────────────
 const BLS_ALIASES = {
+  // Milchalternativen
   hafermilch:    'haferdrink',
   mandelmilch:   'mandeldrink',
   reismilch:     'reisdrink',
   sojamilch:     'sojadrink',
   kokosmilch:    'kokosnuss',
   dinkelmilch:   'dinkeldrink',
-  erbsenprotein: 'erbse',
+  // Milchprodukte
   magerquark:    'speisequark mager',
   hüttenkäse:   'cottage cheese',
   feta:          'schafskäse',
+  joghurt:       'joghurt',
+  // Protein
+  erbsenprotein: 'erbse',
+  // Eier — kritisch: "eier" trifft sonst "Eierteigwaren roh"
+  eier:          'hühnerei roh',
+  ei:            'hühnerei roh',
+  hühnerei:     'hühnerei roh',
+  hühnereier:   'hühnerei roh',
+  // Tomatenprodukte — kritisch: "tomatensauce" trifft sonst Fertiggerichte
+  tomatensauce:  'tomaten passiert',
+  tomatensoße:   'tomaten passiert',
+  passata:       'tomaten passiert',
+  // Hülsenfrüchte Plural → BLS Singular
+  kichererbsen:  'kichererbse',
+  linsen:        'linse',
+  kidneybohnen:  'bohne kidney',
+  // Gemüse Plural → BLS Singular
+  kartoffeln:    'kartoffel',
+  zwiebeln:      'zwiebel',
+  möhren:        'möhre',
+  karotten:      'möhre',
+  tomaten:       'tomate',
+  // Fette
+  kokosöl:       'kokosfett',
+  ghee:          'butterschmalz',
 }
 
 function normalizeName(name) {
