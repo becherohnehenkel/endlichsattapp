@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@/lib/supabase/server'
+import { queryBLS, type NutritionPer100g } from '@/lib/nutrition'
 
 const ingredientSchema = z.object({
   name: z.string().min(1).max(200),
@@ -13,96 +14,49 @@ const schema = z.object({
   ingredients: z.array(ingredientSchema).min(1).max(30),
 })
 
-// ─── Nutrition database helpers ─────────────────────────────
+// ─── Macro computation (server-side, BLS data) ───────────────
 
-interface NutritionPer100g {
+interface MacroInput {
+  grams: number
+  per100g: NutritionPer100g | undefined
+}
+
+interface Macros {
   kcal: number
   protein_g: number
-  carbs_g: number
-  sugar_g: number
-  fat_g: number
-  fiber_g: number
+  kohlenhydrate_g: number
+  zucker_g: number
+  fett_g: number
+  ballaststoffe_g: number
 }
 
-interface NutritionSource {
-  source: 'open_food_facts' | 'usda' | 'schaetzung'
-  sourceName: string
-  per100g: NutritionPer100g
-}
-
-async function queryOpenFoodFacts(ingredient: string): Promise<NutritionSource | null> {
-  try {
-    const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(ingredient)}&json=1&page_size=3&fields=product_name,nutriments`
-    const res = await fetch(url, {
-      headers: { 'User-Agent': 'endlichsatt/1.0 (satiety analysis app)' },
-      signal: AbortSignal.timeout(5000),
-    })
-    if (!res.ok) return null
-    const data = await res.json()
-    const product = data.products?.[0]
-    if (!product?.nutriments) return null
-    const n = product.nutriments
-    return {
-      source: 'open_food_facts',
-      sourceName: product.product_name ?? ingredient,
-      per100g: {
-        kcal: Number(n['energy-kcal_100g'] ?? n['energy-kcal'] ?? 0),
-        protein_g: Number(n['proteins_100g'] ?? n['proteins'] ?? 0),
-        carbs_g: Number(n['carbohydrates_100g'] ?? n['carbohydrates'] ?? 0),
-        sugar_g: Number(n['sugars_100g'] ?? n['sugars'] ?? 0),
-        fat_g: Number(n['fat_100g'] ?? n['fat'] ?? 0),
-        fiber_g: Number(n['fiber_100g'] ?? n['fiber'] ?? 0),
-      },
-    }
-  } catch {
-    return null
+function computeMacros(items: MacroInput[]): Macros {
+  const totals = { kcal: 0, protein_g: 0, kohlenhydrate_g: 0, zucker_g: 0, fett_g: 0, ballaststoffe_g: 0 }
+  for (const { grams, per100g } of items) {
+    if (!per100g || grams <= 0) continue
+    const f = grams / 100
+    totals.kcal            += per100g.kcal * f
+    totals.protein_g       += per100g.protein_g * f
+    totals.kohlenhydrate_g += per100g.carbs_g * f
+    totals.zucker_g        += per100g.sugar_g * f
+    totals.fett_g          += per100g.fat_g * f
+    totals.ballaststoffe_g += per100g.fiber_g * f
   }
-}
-
-async function queryUSDA(ingredient: string): Promise<NutritionSource | null> {
-  const apiKey = process.env.USDA_API_KEY
-  if (!apiKey) return null
-  try {
-    const url = `https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(ingredient)}&api_key=${apiKey}&pageSize=3&dataType=Foundation,SR%20Legacy`
-    const res = await fetch(url, { signal: AbortSignal.timeout(5000) })
-    if (!res.ok) return null
-    const data = await res.json()
-    const food = data.foods?.[0]
-    if (!food) return null
-
-    type FoodNutrient = { nutrientName: string; value: number; unitName: string }
-    const nutrients: FoodNutrient[] = food.foodNutrients ?? []
-
-    const get = (keyword: string) =>
-      nutrients.find(n => n.nutrientName?.toLowerCase().includes(keyword.toLowerCase()))?.value ?? 0
-
-    const kcal =
-      nutrients.find(
-        n => n.nutrientName?.toLowerCase().includes('energy') && n.unitName === 'KCAL'
-      )?.value ?? get('energy')
-
-    return {
-      source: 'usda',
-      sourceName: food.description ?? ingredient,
-      per100g: {
-        kcal: Number(kcal),
-        protein_g: Number(get('protein')),
-        carbs_g: Number(get('carbohydrate')),
-        sugar_g: Number(get('sugars')),
-        fat_g: Number(get('total lipid')),
-        fiber_g: Number(get('fiber')),
-      },
-    }
-  } catch {
-    return null
+  return {
+    kcal:            Math.round(totals.kcal),
+    protein_g:       Math.round(totals.protein_g),
+    kohlenhydrate_g: Math.round(totals.kohlenhydrate_g),
+    zucker_g:        Math.round(totals.zucker_g),
+    fett_g:          Math.round(totals.fett_g),
+    ballaststoffe_g: Math.round(totals.ballaststoffe_g),
   }
 }
 
 function formatNutrition(n: NutritionPer100g): string {
-  return `${n.kcal} kcal, ${n.protein_g}g Protein, ${n.carbs_g}g KH (${n.sugar_g}g Zucker), ${n.fat_g}g Fett, ${n.fiber_g}g Ballaststoffe`
+  return `${n.kcal} kcal, ${n.protein_g}g Protein, ${n.carbs_g}g KH, ${n.fat_g}g Fett, ${n.fiber_g}g Ballaststoffe`
 }
 
-// ─── Full analysis prompt ────────────────────────────────────
+// ─── Lean Claude prompt (no macro calculation) ───────────────
 
 const ANALYSIS_SYSTEM_PROMPT = `Du bist der Sättigungs-Assistent von endlichsatt. Du analysierst Mahlzeiten anhand der Sättigungs-Matrix mit 6 Bausteinen. Du bist präzise, herzlich und nie bevormundend.
 
@@ -120,35 +74,34 @@ Was du nie tust: "weniger essen" empfehlen, moralisieren, Light-Produkte vorschl
 
 **Volumen** — gut: viel Gemüse/Salat/quellende Lebensmittel | mittel: etwas Volumen | schwach: kalorisch dicht, wenig physisches Volumen
 
-**Art of Eating** — gut: sitzend, ablenkungsfrei, langsam | mittel: teilweise bewusst | schwach: im Stehen, mit Ablenkung | nicht_bewertet: wenn nicht angegeben (dann freundlichen Tipp am Ende)
+**Art of Eating** — gut: sitzend, ablenkungsfrei, langsam | mittel: teilweise bewusst | schwach: im Stehen, mit Ablenkung | nicht_bewertet: wenn nicht angegeben
 
 ## Gesamtbewertung
 5–6 gut: sehr_saettigend | 3–4 gut: maessig_saettigend | 0–2 gut: wenig_saettigend
 
 ## Verbesserungsvorschläge (1–3)
 Priorität: Biss → Ballaststoffe → Volumen → Geschmack → Proteine → Art of Eating
-Regeln: geschmacklich passend, konkret mit Menge ("eine Handvoll Walnüsse ca. 30g"), minimaler Aufwand, kein Light/Diät/Weniger-Essen
+Regeln: geschmacklich passend, konkret, minimaler Aufwand, kein Light/Diät/Weniger-Essen.
+Wenn ein Vorschlag eine neue Zutat hinzufügt: "zusatz"-Feld mit deutschem Namen und geschätzten Gramm.
+Wenn ein Vorschlag nur die Zubereitung ändert (kein zusatz): "zusatz" weglassen oder null setzen.
 
-## Nährstoffberechnung
-Berechne Gesamtnährstoffe aus den bereitgestellten Daten. Mengenumrechnung: 1 EL Öl ≈ 10g, 1 EL Butter ≈ 15g, 1 Handvoll Nüsse ≈ 30g, Pasta ungekocht ≈ 80g, Fleisch ≈ 150g, Fisch ≈ 130g.
-Wenn keine Datenbankwerte vorhanden: nutze eigenes Ernährungswissen, Quelle dann "schaetzung".
+## Wichtig: Nährwerte werden vom System berechnet
+Du musst KEINE Nährwerte berechnen oder ausgeben. Das System hat eine Datenbank und erledigt das automatisch.
+Deine einzige Aufgabe bei Mengen: "grams"-Feld pro Zutat schätzen (wie viel Gramm die Menge entspricht).
 
 Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Text davor oder danach:
 {
-  "zutatenliste": [{"name": "...", "amount": "...", "source": "open_food_facts|usda|schaetzung", "sourceName": "..."}],
+  "zutatenliste": [{"name": "...", "amount": "...", "grams": 0}],
   "annahmen": ["..."],
   "vorher": {
     "bausteine": {"geschmack": "gut|mittel|schwach", "biss": "gut|mittel|schwach", "ballaststoffe": "gut|mittel|schwach", "proteine": "gut|mittel|schwach", "volumen": "gut|mittel|schwach", "art_of_eating": "gut|mittel|schwach|nicht_bewertet"},
     "gesamtbewertung": "sehr_saettigend|maessig_saettigend|wenig_saettigend",
-    "erklaerung": "2-4 Sätze auf Deutsch, warm, Fokus auf schwache/mittlere Bausteine",
-    "naehrwerte": {"kcal": 0, "protein_g": 0, "kohlenhydrate_g": 0, "zucker_g": 0, "fett_g": 0, "ballaststoffe_g": 0}
+    "erklaerung": "2-4 Sätze auf Deutsch, warm, Fokus auf schwache/mittlere Bausteine"
   },
-  "vorschlaege": [{"aktion": "...", "begruendung": "...", "baustein": "biss|ballaststoffe|volumen|geschmack|proteine|art_of_eating"}],
+  "vorschlaege": [{"aktion": "...", "begruendung": "...", "baustein": "biss|ballaststoffe|volumen|geschmack|proteine|art_of_eating", "zusatz": {"name": "...", "grams": 0}}],
   "nachher": {
     "bausteine": {"geschmack": "...", "biss": "...", "ballaststoffe": "...", "proteine": "...", "volumen": "...", "art_of_eating": "..."},
-    "gesamtbewertung": "...",
-    "naehrwerte": {"kcal": 0, "protein_g": 0, "kohlenhydrate_g": 0, "zucker_g": 0, "fett_g": 0, "ballaststoffe_g": 0},
-    "deltas": [{"wert": "protein_g", "vorher": 0, "nachher": 0, "veraenderung": 0}]
+    "gesamtbewertung": "..."
   },
   "art_of_eating_tipp": "1 warmer Satz wenn nicht bewertet, sonst null"
 }`
@@ -180,23 +133,25 @@ export async function POST(request: Request) {
 
   if (!meal) return NextResponse.json({ error: 'Mahlzeit nicht gefunden' }, { status: 404 })
 
-  // Query both nutrition databases for each ingredient in parallel
-  const nutritionResults = await Promise.all(
-    ingredients.map(async (ingredient) => {
-      const [off, usda] = await Promise.all([
-        queryOpenFoodFacts(ingredient.name),
-        queryUSDA(ingredient.name),
-      ])
-      return { ingredient, off, usda }
+  // Query BLS for all ingredients in parallel — results cached for macro computation
+  const blsResults = await Promise.all(
+    ingredients.map(async (ing) => {
+      const bls = await queryBLS(ing.name)
+      return { ingredient: ing, per100g: bls?.per100g ?? undefined }
     })
   )
 
-  // Build context block for Claude
-  const ingredientLines = nutritionResults.map(({ ingredient, off, usda }) => {
+  // Build BLS lookup map (name → per100g) for post-Claude macro computation
+  const blsMap = new Map<string, NutritionPer100g>()
+  blsResults.forEach(({ ingredient, per100g }) => {
+    if (per100g) blsMap.set(ingredient.name, per100g)
+  })
+
+  // Build nutrition context block for Claude (qualitative use only)
+  const ingredientLines = blsResults.map(({ ingredient, per100g }) => {
     const lines = [`- ${ingredient.name}: ${ingredient.amount}`]
-    if (off) lines.push(`  Open Food Facts (${off.sourceName}): ${formatNutrition(off.per100g)} pro 100g`)
-    if (usda) lines.push(`  USDA (${usda.sourceName}): ${formatNutrition(usda.per100g)} pro 100g`)
-    if (!off && !usda) lines.push(`  Keine Datenbankwerte — bitte eigenes Ernährungswissen nutzen`)
+    if (per100g) lines.push(`  BLS-Daten: ${formatNutrition(per100g)} pro 100g`)
+    else lines.push(`  Keine BLS-Daten vorhanden`)
     return lines.join('\n')
   })
 
@@ -207,11 +162,11 @@ export async function POST(request: Request) {
   const userMessage = [
     mealContext,
     '',
-    'Bestätigte Zutatenliste mit Nährstoffdaten (pro 100g aus Datenbanken):',
+    'Bestätigte Zutatenliste mit BLS-Nährwertdaten (pro 100g — nur zur Einschätzung, du musst nichts berechnen):',
     ...ingredientLines,
     '',
     'Bitte führe die vollständige Sättigungs-Analyse durch.',
-    'Berechne die Gesamtnährstoffe für die angegebenen Mengen.',
+    'Schätze für jede Zutat die Gramm-Menge im "grams"-Feld.',
   ].join('\n')
 
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
@@ -219,7 +174,7 @@ export async function POST(request: Request) {
   try {
     response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 4096,
+      max_tokens: 2048,
       system: ANALYSIS_SYSTEM_PROMPT,
       messages: [{ role: 'user', content: userMessage }],
     })
@@ -233,26 +188,23 @@ export async function POST(request: Request) {
   const raw = response.content[0]?.type === 'text' ? response.content[0].text : ''
   const cleaned = raw.replace(/^```(?:json)?\s*\n?/m, '').replace(/\n?```\s*$/m, '').trim()
 
-  type AnalysisResult = {
-    zutatenliste: { name: string; amount: string; source: string; sourceName: string }[]
+  type ClaudeResult = {
+    zutatenliste: { name: string; amount: string; grams: number }[]
     annahmen: string[]
     vorher: {
       bausteine: Record<string, string>
       gesamtbewertung: string
       erklaerung: string
-      naehrwerte: Record<string, number>
     }
-    vorschlaege: { aktion: string; begruendung: string; baustein: string }[]
+    vorschlaege: { aktion: string; begruendung: string; baustein: string; zusatz?: { name: string; grams: number } | null }[]
     nachher: {
       bausteine: Record<string, string>
       gesamtbewertung: string
-      naehrwerte: Record<string, number>
-      deltas: { wert: string; vorher: number; nachher: number; veraenderung: number }[]
     }
     art_of_eating_tipp: string | null
   }
 
-  let result: AnalysisResult
+  let result: ClaudeResult
   try {
     result = JSON.parse(cleaned)
   } catch {
@@ -260,35 +212,90 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Analyse konnte nicht verarbeitet werden. Bitte erneut versuchen.' }, { status: 500 })
   }
 
-  // Persist to meal_analyses
+  // ─── Server-side macro computation ─────────────────────────
+
+  // Vorher: use Claude's grams estimates + cached BLS data
+  const vorherInputs: MacroInput[] = result.zutatenliste.map(z => ({
+    grams: z.grams ?? 0,
+    per100g: blsMap.get(z.name),
+  }))
+  const vorherMacros = computeMacros(vorherInputs)
+
+  // Zusatz-Zutaten aus Vorschlägen: neue BLS-Abfragen (nur für Additions)
+  const zusatzItems = result.vorschlaege
+    .map(v => v.zusatz)
+    .filter((z): z is { name: string; grams: number } => !!z && z.grams > 0)
+
+  const zusatzInputs: MacroInput[] = await Promise.all(
+    zusatzItems.map(async (z) => {
+      const bls = await queryBLS(z.name)
+      return { grams: z.grams, per100g: bls?.per100g ?? undefined }
+    })
+  )
+
+  const nachherMacros = computeMacros([...vorherInputs, ...zusatzInputs])
+
+  // Deltas (nur sinnvolle Unterschiede ≥ 1g / 1 kcal)
+  const macroKeys = ['kcal', 'protein_g', 'kohlenhydrate_g', 'zucker_g', 'fett_g', 'ballaststoffe_g'] as const
+  const deltas = macroKeys
+    .filter(k => Math.abs(nachherMacros[k] - vorherMacros[k]) >= 1)
+    .map(k => ({
+      wert: k,
+      vorher: vorherMacros[k],
+      nachher: nachherMacros[k],
+      veraenderung: nachherMacros[k] - vorherMacros[k],
+    }))
+
+  // Assemble full result (same shape as before for frontend compatibility)
+  const fullResult = {
+    zutatenliste: result.zutatenliste,
+    annahmen: result.annahmen,
+    vorher: {
+      bausteine: result.vorher.bausteine,
+      gesamtbewertung: result.vorher.gesamtbewertung,
+      erklaerung: result.vorher.erklaerung,
+      naehrwerte: vorherMacros,
+    },
+    vorschlaege: result.vorschlaege,
+    nachher: {
+      bausteine: result.nachher.bausteine,
+      gesamtbewertung: result.nachher.gesamtbewertung,
+      naehrwerte: nachherMacros,
+      deltas,
+    },
+    art_of_eating_tipp: result.art_of_eating_tipp ?? null,
+  }
+
+  // ─── Persist to meal_analyses ───────────────────────────────
+
   const { data: analysis, error: insertError } = await supabase
     .from('meal_analyses')
     .insert({
       meal_id: mealId,
       refined_ingredients: {
-        ingredients: result.zutatenliste,
-        assumptions: result.annahmen,
+        ingredients: fullResult.zutatenliste,
+        assumptions: fullResult.annahmen,
       },
-      macros_before: result.vorher.naehrwerte,
-      macros_after: result.nachher.naehrwerte,
+      macros_before: fullResult.vorher.naehrwerte as unknown as import('@/types/database').Json,
+      macros_after: fullResult.nachher.naehrwerte as unknown as import('@/types/database').Json,
       satiety_scores_before: {
-        pillars: result.vorher.bausteine,
-        overall: result.vorher.gesamtbewertung,
-        explanation: result.vorher.erklaerung,
+        pillars: fullResult.vorher.bausteine,
+        overall: fullResult.vorher.gesamtbewertung,
+        explanation: fullResult.vorher.erklaerung,
       },
       satiety_scores_after: {
-        pillars: result.nachher.bausteine,
-        overall: result.nachher.gesamtbewertung,
-        deltas: result.nachher.deltas,
+        pillars: fullResult.nachher.bausteine,
+        overall: fullResult.nachher.gesamtbewertung,
+        deltas: fullResult.nachher.deltas,
       },
       improvement: {
-        suggestions: result.vorschlaege,
-        art_of_eating_tip: result.art_of_eating_tipp,
+        suggestions: fullResult.vorschlaege,
+        art_of_eating_tip: fullResult.art_of_eating_tipp,
       },
-      data_sources: result.zutatenliste.map(i => ({
+      data_sources: fullResult.zutatenliste.map(i => ({
         ingredient: i.name,
-        source: i.source,
-        sourceName: i.sourceName,
+        source: blsMap.has(i.name) ? 'bls' : 'schaetzung',
+        sourceName: i.name,
       })),
     })
     .select('id')
@@ -299,7 +306,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Ergebnis konnte nicht gespeichert werden.' }, { status: 500 })
   }
 
-  // Update meal status and delete fullsize photo
   await supabase.from('meals').update({ status: 'completed' }).eq('id', mealId)
 
   if (meal.photo_fullsize_path) {
@@ -311,8 +317,5 @@ export async function POST(request: Request) {
     .update({ status: 'completed' })
     .eq('meal_id', mealId)
 
-  return NextResponse.json({
-    analysisId: analysis.id,
-    result,
-  })
+  return NextResponse.json({ analysisId: analysis.id, result: fullResult })
 }
