@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { requireAdmin } from '@/lib/admin-auth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
+import { calculateMacrosPerServing } from '@/lib/nutrition'
 
 function imageUrl(path: string | null): string | null {
   if (!path) return null
@@ -100,6 +101,11 @@ export async function POST(request: Request) {
     await admin.from('recipes').delete().eq('id', recipe.id)
     return NextResponse.json({ error: 'Fehler beim Speichern der Zutaten' }, { status: 500 })
   }
+
+  // Calculate macros in background — non-blocking for the response
+  calculateMacrosPerServing(ingredients, recipeData.servings).then(macros => {
+    if (macros) admin.from('recipes').update({ macros_per_serving: macros as unknown as import('@/types/database').Json }).eq('id', recipe.id)
+  })
 
   return NextResponse.json({ id: recipe.id }, { status: 201 })
 }

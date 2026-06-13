@@ -1,6 +1,6 @@
 import { notFound, redirect } from 'next/navigation'
 import Image from 'next/image'
-import { Clock, ChefHat, Users } from 'lucide-react'
+import { Clock, ChefHat, Users, Flame } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { createClient } from '@/lib/supabase/server'
 import BackButton from './back-button'
@@ -25,6 +25,7 @@ export default async function RezeptDetailPage({
       cook_time_minutes,
       total_time_minutes,
       instructions,
+      macros_per_serving,
       recipe_ingredients (
         id,
         name,
@@ -42,6 +43,9 @@ export default async function RezeptDetailPage({
   const imageUrl = recipe.image_path
     ? `${supabaseUrl}/storage/v1/object/public/recipe-images/${recipe.image_path}`
     : null
+
+  type MacrosPerServing = { kcal: number; protein_g: number; kohlenhydrate_g: number; zucker_g: number; fett_g: number; ballaststoffe_g: number }
+  const macros = recipe.macros_per_serving as MacrosPerServing | null
 
   type Ingredient = { id: string; name: string; amount: number; unit: string; sort_order: number }
   const ingredients = (recipe.recipe_ingredients as unknown as Ingredient[])
@@ -123,6 +127,37 @@ export default async function RezeptDetailPage({
             {recipe.instructions}
           </p>
         </div>
+
+        {/* Nährwerte pro Portion */}
+        {macros && (
+          <>
+            <Separator />
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Flame className="h-4 w-4 text-muted-foreground" />
+                <h2 className="text-sm font-semibold text-foreground">
+                  Nährwerte pro Portion
+                </h2>
+                <span className="text-xs text-muted-foreground">({recipe.servings} Port. gesamt)</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { label: 'Kalorien', value: `${macros.kcal} kcal` },
+                  { label: 'Protein', value: `${macros.protein_g}g` },
+                  { label: 'Kohlenhydrate', value: `${macros.kohlenhydrate_g}g` },
+                  { label: 'davon Zucker', value: `${macros.zucker_g}g` },
+                  { label: 'Fett', value: `${macros.fett_g}g` },
+                  { label: 'Ballaststoffe', value: `${macros.ballaststoffe_g}g` },
+                ].map(({ label, value }) => (
+                  <div key={label} className="rounded-lg border border-border bg-muted/40 p-2.5 text-center">
+                    <p className="text-xs text-muted-foreground leading-tight">{label}</p>
+                    <p className="text-sm font-semibold text-foreground mt-0.5">{value}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
 
       </main>
     </div>

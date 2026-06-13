@@ -175,6 +175,7 @@ export type Database = {
           instructions: string
           ingredient_tags: string[]
           cuisine_tags: string[]
+          macros_per_serving: Json | null
           created_at: string
           updated_at: string
         }
@@ -188,6 +189,7 @@ export type Database = {
           instructions: string
           ingredient_tags?: string[]
           cuisine_tags?: string[]
+          macros_per_serving?: Json | null
           created_at?: string
           updated_at?: string
         }
@@ -201,6 +203,7 @@ export type Database = {
           instructions?: string
           ingredient_tags?: string[]
           cuisine_tags?: string[]
+          macros_per_serving?: Json | null
           created_at?: string
           updated_at?: string
         }
