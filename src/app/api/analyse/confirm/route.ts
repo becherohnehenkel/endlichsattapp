@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@/lib/supabase/server'
-import { queryBLS, type NutritionPer100g } from '@/lib/nutrition'
+import { queryBLS, queryOpenFoodFacts, type NutritionPer100g } from '@/lib/nutrition'
 
 const ingredientSchema = z.object({
   name: z.string().min(1).max(200),
@@ -163,25 +163,35 @@ export async function POST(request: Request) {
 
   if (!meal) return NextResponse.json({ error: 'Mahlzeit nicht gefunden' }, { status: 404 })
 
-  // Query BLS for all ingredients in parallel — results cached for macro computation
-  const blsResults = await Promise.all(
-    ingredients.map(async (ing) => {
+  // Query BLS first, fall back to Open Food Facts for branded/convenience products
+  type LookupSource = 'bls' | 'off' | 'schaetzung'
+  type LookupResult = { ingredient: typeof ingredients[0]; per100g: NutritionPer100g | undefined; source: LookupSource }
+
+  const lookupResults = await Promise.all(
+    ingredients.map(async (ing): Promise<LookupResult> => {
       const bls = await queryBLS(ing.name)
-      return { ingredient: ing, per100g: bls?.per100g ?? undefined }
+      if (bls) return { ingredient: ing, per100g: bls.per100g, source: 'bls' }
+      const off = await queryOpenFoodFacts(ing.name)
+      if (off) return { ingredient: ing, per100g: off.per100g, source: 'off' }
+      return { ingredient: ing, per100g: undefined, source: 'schaetzung' }
     })
   )
 
-  // Build BLS lookup map (name → per100g) for post-Claude macro computation
-  const blsMap = new Map<string, NutritionPer100g>()
-  blsResults.forEach(({ ingredient, per100g }) => {
-    if (per100g) blsMap.set(ingredient.name, per100g)
+  // Build nutrition lookup map (name → {per100g, source}) for post-Claude macro computation
+  const nutritionMap = new Map<string, { per100g: NutritionPer100g; source: LookupSource }>()
+  lookupResults.forEach(({ ingredient, per100g, source }) => {
+    if (per100g) nutritionMap.set(ingredient.name, { per100g, source })
   })
 
   // Build nutrition context block for Claude (qualitative use only)
-  const ingredientLines = blsResults.map(({ ingredient, per100g }) => {
+  const ingredientLines = lookupResults.map(({ ingredient, per100g, source }) => {
     const lines = [`- ${ingredient.name}: ${ingredient.amount}`]
-    if (per100g) lines.push(`  BLS-Daten: ${formatNutrition(per100g)} pro 100g`)
-    else lines.push(`  Keine BLS-Daten vorhanden`)
+    if (per100g) {
+      const label = source === 'off' ? 'Open Food Facts' : 'BLS'
+      lines.push(`  Nährwertdaten (${label}): ${formatNutrition(per100g)} pro 100g`)
+    } else {
+      lines.push(`  Keine Datenbankdaten vorhanden — KI-Schätzung`)
+    }
     return lines.join('\n')
   })
 
@@ -245,10 +255,10 @@ export async function POST(request: Request) {
 
   // ─── Server-side macro computation ─────────────────────────
 
-  // Vorher: use Claude's grams estimates + cached BLS data
+  // Vorher: use Claude's grams estimates + cached nutrition data (BLS or OFF)
   const vorherInputs: MacroInput[] = result.zutatenliste.map(z => ({
     grams: z.grams ?? 0,
-    per100g: blsMap.get(z.name),
+    per100g: nutritionMap.get(z.name)?.per100g,
   }))
   const vorherMacros = computeMacros(vorherInputs)
 
@@ -259,8 +269,11 @@ export async function POST(request: Request) {
 
   const zusatzInputs: MacroInput[] = await Promise.all(
     zusatzItems.map(async (z) => {
-      const bls = await queryBLS(z.name)
-      return { grams: z.grams, per100g: bls?.per100g ?? undefined }
+      const per100g =
+        (await queryBLS(z.name))?.per100g ??
+        (await queryOpenFoodFacts(z.name))?.per100g ??
+        undefined
+      return { grams: z.grams, per100g }
     })
   )
 
@@ -326,7 +339,7 @@ export async function POST(request: Request) {
       },
       data_sources: fullResult.zutatenliste.map(i => ({
         ingredient: i.name,
-        source: blsMap.has(i.name) ? 'bls' : 'schaetzung',
+        source: nutritionMap.get(i.name)?.source ?? 'schaetzung',
         sourceName: i.name,
       })),
     })
