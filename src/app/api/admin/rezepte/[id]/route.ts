@@ -115,12 +115,11 @@ export async function PUT(
 
   if (ingredientsError) return NextResponse.json({ error: 'Fehler beim Speichern der Zutaten' }, { status: 500 })
 
-  // Recalculate macros in background after ingredient update
-  calculateMacrosPerServing(ingredients, recipeData.servings).then(macros => {
-    admin.from('recipes').update({
-      macros_per_serving: (macros ?? null) as unknown as import('@/types/database').Json,
-    }).eq('id', id)
-  })
+  // Recalculate and save macros synchronously (Vercel kills background promises after response)
+  const macros = await calculateMacrosPerServing(ingredients, recipeData.servings)
+  await admin.from('recipes').update({
+    macros_per_serving: (macros ?? null) as unknown as import('@/types/database').Json,
+  }).eq('id', id)
 
   return NextResponse.json({ success: true })
 }

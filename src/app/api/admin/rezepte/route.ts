@@ -102,10 +102,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Fehler beim Speichern der Zutaten' }, { status: 500 })
   }
 
-  // Calculate macros in background — non-blocking for the response
-  calculateMacrosPerServing(ingredients, recipeData.servings).then(macros => {
-    if (macros) admin.from('recipes').update({ macros_per_serving: macros as unknown as import('@/types/database').Json }).eq('id', recipe.id)
-  })
+  // Calculate and save macros synchronously (Vercel kills background promises after response)
+  const macros = await calculateMacrosPerServing(ingredients, recipeData.servings)
+  if (macros) {
+    await admin.from('recipes').update({
+      macros_per_serving: macros as unknown as import('@/types/database').Json,
+    }).eq('id', recipe.id)
+  }
 
   return NextResponse.json({ id: recipe.id }, { status: 201 })
 }
