@@ -1,6 +1,6 @@
 # PROJ-8: Rezeptbibliothek
 
-## Status: Approved
+## Status: Deployed
 **Created:** 2026-06-12
 **Last Updated:** 2026-06-12
 
@@ -274,4 +274,10 @@ Alles bereits vorhanden: `react-hook-form` + `zod` (Formulare), shadcn/ui (UI), 
 **READY ✅** — No critical or high bugs. Medium bug fixed. All 32 E2E tests passing.
 
 ## Deployment
-_To be added by /deploy_
+
+**Deployed:** 2026-06-13
+**Tag:** v1.8.0-PROJ-8
+**Production URL:** https://endlichsattapp.vercel.app
+
+**New env var required on Vercel:**
+- `ADMIN_EMAIL` — server-only, no NEXT_PUBLIC_ prefix. Must match the admin's login email to grant access to `/admin/rezepte`.
