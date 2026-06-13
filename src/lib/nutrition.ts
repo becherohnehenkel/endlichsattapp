@@ -252,31 +252,64 @@ export async function queryUSDA(ingredient: string): Promise<NutritionSource | n
   }
 }
 
-export async function queryOpenFoodFacts(ingredient: string): Promise<NutritionSource | null> {
-  try {
-    const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(ingredient)}&json=1&page_size=3&fields=product_name,nutriments`
-    const res = await fetch(url, {
-      headers: { 'User-Agent': 'endlichsatt/1.0 (satiety analysis app)' },
-      signal: AbortSignal.timeout(5000),
-    })
-    if (!res.ok) return null
-    const data = await res.json()
-    const product = data.products?.[0]
-    if (!product?.nutriments) return null
-    const n = product.nutriments
-    return {
-      per100g: {
-        kcal:      Number(n['energy-kcal_100g'] ?? n['energy-kcal'] ?? 0),
-        protein_g: Number(n['proteins_100g'] ?? n['proteins'] ?? 0),
-        carbs_g:   Number(n['carbohydrates_100g'] ?? n['carbohydrates'] ?? 0),
-        sugar_g:   Number(n['sugars_100g'] ?? n['sugars'] ?? 0),
-        fat_g:     Number(n['fat_100g'] ?? n['fat'] ?? 0),
-        fiber_g:   Number(n['fiber_100g'] ?? n['fiber'] ?? 0),
-      },
-    }
-  } catch {
-    return null
+// Builds multiple OFF search queries to handle German compound words and "Product von Brand" patterns.
+// "Proteinpudding von Ehrmann" → tries ["Proteinpudding Ehrmann", "Ehrmann Proteinpudding", "Ehrmann Protein"]
+function buildOFFQueries(ingredient: string): string[] {
+  const cleaned = ingredient
+    .replace(/\b(von|vom|mit|nach|der|die|das|für)\b/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+  const words = cleaned.split(' ').filter(Boolean)
+  const queries: string[] = [cleaned]
+
+  if (words.length > 1) {
+    queries.push([...words].reverse().join(' '))
   }
+
+  // "Compound von Brand" → "Brand stem" (first 7 chars of compound breaks German compound words)
+  const vonMatch = ingredient.match(/^(.+?)\s+(?:von|vom)\s+(.+)$/i)
+  if (vonMatch) {
+    const [, product, brand] = vonMatch
+    const firstWord = product.trim().split(' ')[0]
+    const stem = firstWord.length > 8 ? firstWord.slice(0, 7) : firstWord
+    const stemQuery = `${brand.trim()} ${stem}`
+    if (!queries.includes(stemQuery)) queries.push(stemQuery)
+  }
+
+  return queries
+}
+
+export async function queryOpenFoodFacts(ingredient: string): Promise<NutritionSource | null> {
+  const queries = buildOFFQueries(ingredient)
+
+  for (const query of queries) {
+    try {
+      const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&json=1&page_size=3&fields=product_name,nutriments`
+      const res = await fetch(url, {
+        headers: { 'User-Agent': 'endlichsatt/1.0 (satiety analysis app)' },
+        signal: AbortSignal.timeout(5000),
+      })
+      if (!res.ok) continue
+      const data = await res.json()
+      const product = data.products?.[0]
+      if (!product?.nutriments) continue
+      const n = product.nutriments
+      return {
+        per100g: {
+          kcal:      Number(n['energy-kcal_100g'] ?? n['energy-kcal'] ?? 0),
+          protein_g: Number(n['proteins_100g'] ?? n['proteins'] ?? 0),
+          carbs_g:   Number(n['carbohydrates_100g'] ?? n['carbohydrates'] ?? 0),
+          sugar_g:   Number(n['sugars_100g'] ?? n['sugars'] ?? 0),
+          fat_g:     Number(n['fat_100g'] ?? n['fat'] ?? 0),
+          fiber_g:   Number(n['fiber_100g'] ?? n['fiber'] ?? 0),
+        },
+      }
+    } catch {
+      continue
+    }
+  }
+  return null
 }
 
 // ─── Recipe macro calculation ────────────────────────────────
