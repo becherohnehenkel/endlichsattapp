@@ -9,6 +9,8 @@ const schema = z.object({
 
 const SYSTEM_PROMPT = `Du analysierst eine Mahlzeit auf ihre Sättigungswirkung.
 
+Verwende nie die Wörter "gesund", "ungesund" oder "Gesundheit". Sättigung ist kein Gesundheitsurteil.
+
 Identifiziere fehlende Informationen, die deine Analyse wesentlich beeinflussen würden.
 Frage nach: Kochfett/Menge, Fettgehalt von Milchprodukten, Portionsgrößen kalorienreicher Zutaten (Nüsse, Käse, Öl), Zubereitungsart (roh vs. gegart).
 Stelle maximal 2 Fragen. Wenn du genug weißt, setze needs_clarification auf false.

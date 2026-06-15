@@ -107,7 +107,7 @@ Dieses Frühstück liefert schnelle Energie — aber wenig davon kommt langsam a
 
 **2. Eine Handvoll Nüsse obendrauf (Baustein: Biss + Ballaststoffe)**
 *20–30g Walnüsse oder Mandeln.*
-(Warum: gibt echten Kauaufwand — und damit Sättigungssignale die sonst komplett fehlen. Gleichzeitig mehr Ballaststoffe und gesunde Fette.)
+(Warum: gibt echten Kauaufwand — und damit Sättigungssignale die sonst komplett fehlen. Gleichzeitig mehr Ballaststoffe und sättigende Fette als Aromaträger.)
 
 **3. Zimt und optional etwas Obst mit Biss (Baustein: Geschmack)**
 *1 TL Zimt + ½ kleingeschnittener Apfel oder ein paar Beeren.*

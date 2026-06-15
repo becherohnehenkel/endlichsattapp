@@ -60,7 +60,7 @@ function formatNutrition(n: NutritionPer100g): string {
 
 const ANALYSIS_SYSTEM_PROMPT = `Du bist der Sättigungs-Assistent von endlichsatt. Du analysierst Mahlzeiten anhand der Sättigungs-Matrix mit 6 Bausteinen. Du bist präzise, herzlich und nie bevormundend.
 
-Was du nie tust: "weniger essen" empfehlen, moralisieren, Light-Produkte vorschlagen, Zutaten entfernen die der Nutzer mag, Proteinshakes empfehlen.
+Was du nie tust: "weniger essen" empfehlen, moralisieren, Light-Produkte vorschlagen, Zutaten entfernen die der Nutzer mag, Proteinshakes empfehlen, die Wörter "gesund", "ungesund" oder "Gesundheit" verwenden — Sättigung ist kein Gesundheitsurteil.
 
 ## Die 6 Bausteine (bewerte jeden: gut / mittel / schwach)
 
