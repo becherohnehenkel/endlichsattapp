@@ -218,40 +218,6 @@ export async function queryBLS(ingredient: string): Promise<NutritionSource | nu
   }
 }
 
-// ─── USDA fallback (English ingredients / no BLS match) ─────
-
-export async function queryUSDA(ingredient: string): Promise<NutritionSource | null> {
-  const apiKey = process.env.USDA_API_KEY
-  if (!apiKey) return null
-  try {
-    const url = `https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(ingredient)}&api_key=${apiKey}&pageSize=3&dataType=Foundation,SR%20Legacy`
-    const res = await fetch(url, { signal: AbortSignal.timeout(5000) })
-    if (!res.ok) return null
-    const data = await res.json()
-    const food = data.foods?.[0]
-    if (!food) return null
-    type FoodNutrient = { nutrientName: string; value: number; unitName: string }
-    const nutrients: FoodNutrient[] = food.foodNutrients ?? []
-    const get = (kw: string) =>
-      nutrients.find(n => n.nutrientName?.toLowerCase().includes(kw.toLowerCase()))?.value ?? 0
-    const kcal = nutrients.find(
-      n => n.nutrientName?.toLowerCase().includes('energy') && n.unitName === 'KCAL'
-    )?.value ?? get('energy')
-    return {
-      per100g: {
-        kcal:      Number(kcal),
-        protein_g: Number(get('protein')),
-        carbs_g:   Number(get('carbohydrate')),
-        sugar_g:   Number(get('sugars')),
-        fat_g:     Number(get('total lipid')),
-        fiber_g:   Number(get('fiber')),
-      },
-    }
-  } catch {
-    return null
-  }
-}
-
 // Builds multiple OFF search queries to handle German compound words and "Product von Brand" patterns.
 // "Proteinpudding von Ehrmann" → tries ["Proteinpudding Ehrmann", "Ehrmann Proteinpudding", "Ehrmann Protein"]
 function buildOFFQueries(ingredient: string): string[] {
@@ -332,14 +298,12 @@ export async function calculateMacrosPerServing(
       const grams = toGrams(ing.amount, ing.unit, ing.name)
       if (grams === null || grams <= 0) return null
 
-      // 1. Stored BLS data (admin selected from live search)
-      // 2. BLS database lookup by name
-      // 3. USDA API fallback (for non-German / exotic ingredients)
-      // 4. Open Food Facts as last resort
+      // 1. Stored macros (admin pinned via BLS/OFF in recipe editor)
+      // 2. BLS database lookup by name (+ BLS_ALIASES for common German terms)
+      // 3. Open Food Facts fallback (handles branded/convenience products)
       const per100g =
         ing.macros_per_100g ??
         (await queryBLS(ing.name))?.per100g ??
-        (await queryUSDA(ing.name))?.per100g ??
         (await queryOpenFoodFacts(ing.name))?.per100g
 
       if (!per100g) return null
