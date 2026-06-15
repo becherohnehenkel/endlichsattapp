@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Plus, Trash2, Upload, ChefHat } from 'lucide-react'
-import UsdaIngredientInput from '@/components/usda-ingredient-input'
+import ZutatInputMitQuelle from '@/components/zutat-input-mit-quelle'
 import BildCropper from '@/components/bild-cropper'
 import type { NutritionPer100g } from '@/lib/nutrition'
 
@@ -206,15 +206,14 @@ export default function RezeptFormular({
               control={control}
               name={`ingredients.${index}.name`}
               render={({ field: f }) => (
-                <UsdaIngredientInput
+                <ZutatInputMitQuelle
                   value={f.value}
                   onChange={f.onChange}
                   onBlur={f.onBlur}
-                  onSelectUsda={(result) => {
-                    f.onChange(result.name_de)
+                  onSelectSource={(per100g) => {
                     setIngredientMacros(prev => {
                       const next = [...prev]
-                      next[index] = result.per100g
+                      next[index] = per100g
                       return next
                     })
                   }}

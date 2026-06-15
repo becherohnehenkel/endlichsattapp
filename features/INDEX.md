@@ -23,7 +23,7 @@
 | PROJ-6 | Mahlzeit-Historie | P1 | Deployed | PROJ-1, PROJ-2, PROJ-4, PROJ-5 | [Spec](PROJ-6-mahlzeit-historie.md) |
 | PROJ-7 | Ernährungs-Tagebuch & Inspiration | P2 | Roadmap | PROJ-6 | — |
 | PROJ-8 | Rezeptbibliothek | P1 | Deployed | PROJ-1, PROJ-2, PROJ-4, PROJ-5 | [Spec](PROJ-8-rezeptbibliothek.md) |
-| PROJ-9 | Rezept-Zutat: Anzeigename + OFF-Fallback | P1 | Architected | PROJ-8 | [Spec](PROJ-9-rezept-zutat-datenquellen.md) |
+| PROJ-9 | Rezept-Zutat: Anzeigename + OFF-Fallback | P1 | In Progress | PROJ-8 | [Spec](PROJ-9-rezept-zutat-datenquellen.md) |
 
 <!-- Add features above this line -->
 

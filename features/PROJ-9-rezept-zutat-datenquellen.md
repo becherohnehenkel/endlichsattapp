@@ -1,6 +1,6 @@
 # PROJ-9 — Rezept-Zutat: Anzeigename + OFF-Fallback
 
-**Status:** Architected  
+**Status:** In Progress  
 **Priorität:** P1  
 **Abhängigkeiten:** PROJ-8 (Rezeptbibliothek, deployed)
 
