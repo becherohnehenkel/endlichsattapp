@@ -2,12 +2,20 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { getAccessStatus } from '@/lib/paywall'
 import RezeptBibliothek, { type RezeptListItem } from '@/components/rezept-bibliothek'
 
 export default async function RezeptePage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  if (!user) redirect('/login?redirectTo=%2Frezepte')
+
+  // PROJ-11: Rezeptbibliothek ist nach Ablauf des 7-Tage-Übergangsfensters ebenfalls
+  // gesperrt, wenn kein Abo aktiv ist.
+  const access = await getAccessStatus(supabase, user.id)
+  if (!access.hasAccess) {
+    redirect('/upgrade')
+  }
 
   const { data: recipes } = await supabase
     .from('recipes')
@@ -35,6 +43,12 @@ export default async function RezeptePage() {
         <span className="font-semibold text-foreground tracking-tight flex-1 text-center">Rezepte</span>
         <div className="w-16" />
       </header>
+
+      {access.trialDaysRemaining !== null && (
+        <p className="text-center text-xs text-muted-foreground px-4 pt-3">
+          Noch {access.trialDaysRemaining} {access.trialDaysRemaining === 1 ? 'Tag' : 'Tage'} bis Freitext-Analyse & Rezepte eingeschränkt werden
+        </p>
+      )}
 
       <RezeptBibliothek rezepte={rezepte} />
     </div>

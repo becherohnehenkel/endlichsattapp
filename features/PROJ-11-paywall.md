@@ -172,6 +172,22 @@ Sonst: Weiterleitung zur Paywall-Seite
 - `/upgrade`-Seite (Paywall-UI, Checkout-Button, Customer-Portal-Link, "Ich habe einen Code"-Platzhalter für PROJ-12)
 - Einbindung von `getAccessStatus()` in `AnalysePage`/`RezeptePage` inkl. Redirect bei fehlendem Zugriff
 - Countdown-Hinweis-UI während des Übergangsfensters
+
+## Implementation Notes (Frontend)
+
+- `src/app/upgrade/page.tsx` (NEU) — liest `getAccessStatus()`, übergibt `subscriptionStatus` und den `?session_id`-Query-Parameter (Rückkehr von Checkout) an `UpgradeView`
+- `src/components/upgrade-view.tsx` (NEU, Client Component):
+  - bei vorhandener `session_id`: ruft `POST /api/stripe/sync-session` auf (Webhook-Fallback), zeigt währenddessen "Zahlung wird bestätigt…"
+  - Abo aktiv (`active`/`trialing`) → "Du bist Pro-Mitglied" + "Abo verwalten" (`POST /api/stripe/portal`) + Link zurück zu `/analyse`
+  - kein Abo → Preis (4,99€/Monat), "Jetzt freischalten" (`POST /api/stripe/checkout`), dezenter Hinweis dass Einladungscodes noch folgen (PROJ-12, bewusst kein nicht-funktionales Eingabefeld)
+- `src/app/analyse/page.tsx` — ruft zusätzlich `getAccessStatus()` auf, `redirect('/upgrade')` wenn `!hasAccess`; reicht `trialDaysRemaining` an `MahlzeitInput` weiter
+- `src/app/rezepte/page.tsx` — gleiche Zugriffsprüfung + Redirect; zeigt den Countdown-Hinweis direkt im Server Component oberhalb von `RezeptBibliothek` (kein neuer Prop nötig, da statischer Server-berechneter Wert); `redirect('/login')` um `redirectTo=/rezepte` ergänzt (war vorher ohne, kleine konsistente Verbesserung)
+- `src/components/mahlzeit-input.tsx` — neue Prop `trialDaysRemaining`; der bestehende "Foto-Scans aufgebraucht"-Hinweis (PROJ-10) wurde korrigiert (behauptete vorher fälschlich "Freitext bleibt unbegrenzt verfügbar" — das gilt seit PROJ-11 nicht mehr) und zeigt jetzt den Countdown, wenn ein Übergangsfenster läuft
+- Verifiziert: `npm run build` erfolgreich, Vitest unverändert (87/94, vorbestehende Fehler unberührt), PROJ-10-E2E-Suite (beide Test-Gruppen, inkl. erneutem Seed auf 0 Scans) weiterhin grün — keine Regression durch die Paywall-Integration
+
+**Bewusst nicht umgesetzt (gehört zu `/qa` bzw. PROJ-12):**
+- E2E-Tests für PROJ-11 selbst (neue `/upgrade`-Seite, Redirect-Verhalten von `/analyse`/`/rezepte`)
+- Tatsächliche Einladungscode-Eingabe (PROJ-12)
 - Aufruf von `/api/stripe/sync-session` beim Rückkehr-Redirect (`?session_id=...`) von der `/upgrade`-Seite
 
 ## QA Test Results

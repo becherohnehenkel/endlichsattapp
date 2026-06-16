@@ -24,6 +24,8 @@ interface MahlzeitInputProps {
   userId: string
   /** PROJ-10: verbleibende Foto-Scans des Nutzers — muss serverseitig in profiles.photo_scans_remaining gespiegelt sein */
   photoScansRemaining: number
+  /** PROJ-11: verbleibende Tage im Übergangsfenster, oder null wenn kein Trial läuft (siehe getAccessStatus()) */
+  trialDaysRemaining: number | null
 }
 
 // PROJ-10: muss mit dem DEFAULT in der profiles.photo_scans_remaining-Migration übereinstimmen
@@ -54,7 +56,7 @@ async function generateThumbnail(source: Blob, size: number): Promise<Blob> {
   })
 }
 
-export default function MahlzeitInput({ userId, photoScansRemaining }: MahlzeitInputProps) {
+export default function MahlzeitInput({ userId, photoScansRemaining, trialDaysRemaining }: MahlzeitInputProps) {
   const [foto, setFoto] = useState<File | null>(null)
   const [fotoPreview, setFotoPreview] = useState<string | null>(null)
   const [freitext, setFreitext] = useState('')
@@ -485,7 +487,10 @@ export default function MahlzeitInput({ userId, photoScansRemaining }: MahlzeitI
       ) : (
         <Alert>
           <AlertDescription>
-            📸 Deine Foto-Scans sind aufgebraucht — die Freitext-Analyse bleibt weiterhin unbegrenzt verfügbar. Beschreib deine Mahlzeit einfach unten.
+            📸 Deine Foto-Scans sind aufgebraucht. Beschreib deine Mahlzeit einfach unten.
+            {trialDaysRemaining !== null && (
+              <> Noch {trialDaysRemaining} {trialDaysRemaining === 1 ? 'Tag' : 'Tage'}, bis Freitext-Analyse & Rezepte ebenfalls eingeschränkt werden.</>
+            )}
           </AlertDescription>
         </Alert>
       )}

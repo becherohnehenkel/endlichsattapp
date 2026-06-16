@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { getAccessStatus } from '@/lib/paywall'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import MahlzeitInput from '@/components/mahlzeit-input'
@@ -23,6 +24,13 @@ export default async function AnalysePage() {
     .single()
   const photoScansRemaining = profile?.photo_scans_remaining ?? 0
 
+  // PROJ-11: Freitext-Analyse ist nach Ablauf des 7-Tage-Übergangsfensters ebenfalls
+  // gesperrt, wenn kein Abo aktiv ist (revidiert PROJ-10s "für immer unbegrenzt").
+  const access = await getAccessStatus(supabase, user.id)
+  if (!access.hasAccess) {
+    redirect('/upgrade')
+  }
+
   async function logout() {
     'use server'
     const supabase = await createClient()
@@ -42,7 +50,11 @@ export default async function AnalysePage() {
           </Button>
         </form>
       </header>
-      <MahlzeitInput userId={user.id} photoScansRemaining={photoScansRemaining} />
+      <MahlzeitInput
+        userId={user.id}
+        photoScansRemaining={photoScansRemaining}
+        trialDaysRemaining={access.trialDaysRemaining}
+      />
     </div>
   )
 }
