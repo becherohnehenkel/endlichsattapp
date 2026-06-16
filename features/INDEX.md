@@ -24,7 +24,7 @@
 | PROJ-7 | Ernährungs-Tagebuch & Inspiration | P2 | Roadmap | PROJ-6 | — |
 | PROJ-8 | Rezeptbibliothek | P1 | Deployed | PROJ-1, PROJ-2, PROJ-4, PROJ-5 | [Spec](PROJ-8-rezeptbibliothek.md) |
 | PROJ-9 | Rezept-Zutat: Anzeigename + OFF-Fallback | P1 | In Progress | PROJ-8 | [Spec](PROJ-9-rezept-zutat-datenquellen.md) |
-| PROJ-10 | Foto-Scan-Limit pro Nutzer | P1 | In Progress | PROJ-1, PROJ-2 | [Spec](PROJ-10-foto-scan-limit.md) |
+| PROJ-10 | Foto-Scan-Limit pro Nutzer | P1 | Approved | PROJ-1, PROJ-2 | [Spec](PROJ-10-foto-scan-limit.md) |
 | PROJ-11 | Paywall + Invite-Codes + Admin-Oberfläche | P2 | Roadmap | PROJ-1, PROJ-2, PROJ-8, PROJ-10 | — |
 
 <!-- Add features above this line -->
