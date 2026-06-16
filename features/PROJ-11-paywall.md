@@ -72,6 +72,7 @@
 | Abo-Verwaltung über Stripe Customer Portal statt eigener UI | Kündigung, Zahlungsmethode, Rechnungen — alles von Stripe gehostet, kein eigener Code nötig | 2026-06-16 |
 | Kündigung: Zugriff bis Ende der Abrechnungsperiode, danach Sperre ohne neuen Trial | Entspricht Stripes Standardverhalten, kein Sonderfall-Code nötig — einfach prüfen ob Subscription-Status aktiv ist | 2026-06-16 |
 | Kein Stripe-natives Trial — eigenes Übergangsfenster-Feld auf dem Profil | Stripe-Trials sind an die Subscription-Erstellung gekoppelt; unser Fenster beginnt aber beim Scan-Verbrauch, lange bevor überhaupt eine Subscription existiert | 2026-06-16 |
+| Deploy zunächst mit Stripe-Test-Modus-Keys, Live-Umstellung als separater, bewusster Schritt | PROJ-10 (Scan-Limit + 7-Tage-Fenster) lief erst seit diesem Tag — frühestens in 7 Tagen könnte überhaupt ein echter Nutzer die Paywall sehen, kein Zeitdruck. Live-Keys erfordern eigenes Produkt/Preis/Webhook im Live-Modus von Stripe (komplett getrennt vom Test-Modus) | 2026-06-16 |
 
 ### Technical Decisions
 <!-- Added by /architecture -->
@@ -272,4 +273,27 @@ Sonst: Weiterleitung zur Paywall-Seite
 - **Empfehlung:** Deployen. Die Sicherheits-Eigenschaften (das, was bei einer Paywall am meisten schiefgehen kann — sich selbst freischalten) sind nachweislich robust. Der offene Punkt ist Vollständigkeit der Verifikation, kein gefundenes Sicherheits- oder Funktionsproblem.
 
 ## Deployment
-_To be added by /deploy_
+
+**Deployed:** 2026-06-16
+**Production URL:** https://endlichsattapp.vercel.app
+**Tag:** `v1.11.0-PROJ-11`
+**Stripe-Modus:** Test-Modus (bewusste Entscheidung, siehe Decision Log unten — Live-Umstellung erfolgt separat, sobald der Product Owner bereit ist)
+
+### Pre-Deployment Checks
+- [x] `npm run build` erfolgreich
+- [x] `npm run lint` — keine neuen Fehler (1 vorbestehender Fehler in `art-of-eating-guide.tsx`, unberührt von PROJ-11)
+- [x] QA approved (siehe QA Test Results oben, 8/10 AC vollständig + 2 teilweise, 1 Low-Bug ohne Sicherheitsauswirkung)
+- [x] Keine Critical/High Bugs
+- [x] Keine Secrets im Git-Repository (History durchsucht, keine Treffer)
+- [x] Alle DB-Migrationen bereits während `/backend` live auf das Produktions-Supabase-Projekt angewendet
+- [x] Alle Commits gepusht
+- [x] **Vercel Environment Variables ergänzt:** `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, `STRIPE_WEBHOOK_SECRET` (Test-Modus-Werte) vom Product Owner im Vercel-Dashboard hinterlegt. Zugehöriger Test-Modus-Webhook-Endpunkt in Stripe auf `https://endlichsattapp.vercel.app/api/stripe/webhook` angelegt (Events: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`)
+- [x] Manueller Ende-zu-Ende-Test vom Product Owner durchgeführt: echte Stripe-Test-Zahlung (Testkarte) über `/upgrade` abgeschlossen → "Pro-Mitglied"-Zustand erfolgreich erreicht. Schließt die im QA-Bericht offen gelassene Lücke (AC-5 vollständig verifiziert)
+
+### Post-Deployment Verification
+- [x] Produktions-URL lädt (`307` zu `/login` für nicht eingeloggte Anfragen, erwartetes Verhalten)
+- [x] Diese Bookkeeping-Änderung löst einen frischen Vercel-Deploy aus, der die neu hinterlegten Env-Variablen erstmals lädt (Vercel übernimmt sie nicht rückwirkend auf bereits laufende Deployments)
+- [ ] Manuelle Verifikation der `/upgrade`-Seite direkt gegen die Produktions-URL (statt nur lokal) durch den Nutzer empfohlen, sobald der neue Deploy durch ist
+
+### Hinweis
+Kein Erst-Deployment — Vercel/GitHub-Anbindung bestand bereits seit dem MVP. Production-Ready-Essentials (Error Tracking, Security Headers etc.) wurden dort bereits eingerichtet, nicht erneut für dieses Feature wiederholt.
