@@ -22,7 +22,12 @@ interface Question {
 
 interface MahlzeitInputProps {
   userId: string
+  /** PROJ-10: verbleibende Foto-Scans des Nutzers — muss serverseitig in profiles.photo_scans_remaining gespiegelt sein */
+  photoScansRemaining: number
 }
+
+// PROJ-10: muss mit dem DEFAULT in der profiles.photo_scans_remaining-Migration übereinstimmen
+const TOTAL_PHOTO_SCANS = 3
 
 async function generateThumbnail(source: Blob, size: number): Promise<Blob> {
   return new Promise((resolve, reject) => {
@@ -49,11 +54,14 @@ async function generateThumbnail(source: Blob, size: number): Promise<Blob> {
   })
 }
 
-export default function MahlzeitInput({ userId }: MahlzeitInputProps) {
+export default function MahlzeitInput({ userId, photoScansRemaining }: MahlzeitInputProps) {
   const [foto, setFoto] = useState<File | null>(null)
   const [fotoPreview, setFotoPreview] = useState<string | null>(null)
   const [freitext, setFreitext] = useState('')
   const [validationError, setValidationError] = useState<string | null>(null)
+  // Lokale Kopie, damit wir nach einem erfolgreichen Foto-Scan (oder dem seltenen
+  // Race Case "im anderen Tab aufgebraucht") sofort nachziehen können, ohne die Seite neu zu laden.
+  const [scansRemaining, setScansRemaining] = useState(photoScansRemaining)
 
   const [step, setStep] = useState<Step>('input')
   const [loadingMessage, setLoadingMessage] = useState('')
@@ -127,9 +135,15 @@ export default function MahlzeitInput({ userId }: MahlzeitInputProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ photoPath, thumbPath, freeText: trimmedText || null }),
       })
-      if (!mealRes.ok) throw new Error('Mahlzeit konnte nicht gespeichert werden.')
-      const mealData = await mealRes.json()
+      const mealData = await mealRes.json().catch(() => null)
+      if (!mealRes.ok) {
+        // PROJ-10: seltener Race Case — Foto-Scans wurden zwischen Seitenaufruf und
+        // Absenden in einem anderen Tab/Gerät aufgebraucht. UI sofort nachziehen.
+        if (mealData?.code === 'PHOTO_SCAN_LIMIT_REACHED') setScansRemaining(0)
+        throw new Error(mealData?.error ?? 'Mahlzeit konnte nicht gespeichert werden.')
+      }
       setMealId(mealData.id)
+      if (foto) setScansRemaining(r => Math.max(0, r - 1))
 
       await startAnalysis(mealData.id)
     } catch (err) {
@@ -456,12 +470,25 @@ export default function MahlzeitInput({ userId }: MahlzeitInputProps) {
         </p>
       </div>
 
-      <FotoUploadZone
-        file={foto}
-        preview={fotoPreview}
-        onFileChange={handleFotoChange}
-        onRemove={handleFotoRemove}
-      />
+      {scansRemaining > 0 ? (
+        <div className="space-y-1.5">
+          <FotoUploadZone
+            file={foto}
+            preview={fotoPreview}
+            onFileChange={handleFotoChange}
+            onRemove={handleFotoRemove}
+          />
+          <p className="text-xs text-muted-foreground">
+            Noch {scansRemaining} von {TOTAL_PHOTO_SCANS} Foto-Scans übrig
+          </p>
+        </div>
+      ) : (
+        <Alert>
+          <AlertDescription>
+            📸 Deine Foto-Scans sind aufgebraucht — die Freitext-Analyse bleibt weiterhin unbegrenzt verfügbar. Beschreib deine Mahlzeit einfach unten.
+          </AlertDescription>
+        </Alert>
+      )}
 
       <div className="space-y-1.5">
         <div className="flex items-baseline gap-2">

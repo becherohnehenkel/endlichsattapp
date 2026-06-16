@@ -13,6 +13,16 @@ export default async function AnalysePage() {
     redirect('/login?redirectTo=%2Fanalyse')
   }
 
+  // PROJ-10: verbleibende Foto-Scans laden. Fällt defensiv auf 0 zurück (blockiert
+  // Foto-Upload statt fälschlich unbegrenzt zu erlauben), falls das Profil aus
+  // irgendeinem Grund nicht gelesen werden kann.
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('photo_scans_remaining')
+    .eq('id', user.id)
+    .single()
+  const photoScansRemaining = profile?.photo_scans_remaining ?? 0
+
   async function logout() {
     'use server'
     const supabase = await createClient()
@@ -32,7 +42,7 @@ export default async function AnalysePage() {
           </Button>
         </form>
       </header>
-      <MahlzeitInput userId={user.id} />
+      <MahlzeitInput userId={user.id} photoScansRemaining={photoScansRemaining} />
     </div>
   )
 }

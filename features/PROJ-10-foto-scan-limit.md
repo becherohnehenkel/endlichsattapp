@@ -131,6 +131,19 @@ Keine neuen — läuft komplett mit dem bestehenden Supabase/Next.js-Stack.
 - Anzeige des Hinweistexts bei der Foto-Upload-Zone bzw. des Blockierungs-Banners bei 0 Scans
 - Reaktion auf `code: 'PHOTO_SCAN_LIMIT_REACHED'` im Frontend, falls der seltene Race-Case eintritt (Counter wird zwischen Seitenaufruf und Absenden auf 0 reduziert)
 
+## Implementation Notes (Frontend)
+
+- `src/app/analyse/page.tsx` — liest `profiles.photo_scans_remaining` für den eingeloggten Nutzer (Server Component), Default `0` falls das Profil aus irgendeinem Grund nicht gelesen werden kann (blockiert defensiv statt fälschlich unbegrenzt zuzulassen). Reicht den Wert als neue Prop `photoScansRemaining` an `MahlzeitInput` weiter.
+- `src/components/mahlzeit-input.tsx`:
+  - neue Prop `photoScansRemaining`, gespiegelt in lokalem State `scansRemaining` (damit die UI nach einem erfolgreichen Foto-Scan sofort nachzieht, ohne Seiten-Reload)
+  - `scansRemaining > 0` → `FotoUploadZone` plus dezenter Text "Noch X von 3 Foto-Scans übrig"
+  - `scansRemaining === 0` → `FotoUploadZone` wird durch eine `Alert` ersetzt: "Deine Foto-Scans sind aufgebraucht — die Freitext-Analyse bleibt weiterhin unbegrenzt verfügbar."
+  - Nach erfolgreichem Anlegen einer Foto-Mahlzeit: `scansRemaining` optimistisch um 1 reduziert
+  - Race Case (Counter zwischen Seitenaufruf und Absenden in einem anderen Tab aufgebraucht): Route antwortet mit `403` + `code: 'PHOTO_SCAN_LIMIT_REACHED'`, Frontend setzt `scansRemaining` sofort auf 0 und zeigt die vom Server gelieferte Fehlermeldung
+  - Konstante `TOTAL_PHOTO_SCANS = 3` im Component-Code — muss mit dem DB-Default übereinstimmen (Kommentar im Code verweist darauf)
+- Verifiziert: `npm run build` erfolgreich, bestehende Vitest-Suite unverändert grün (58/65, die 7 Fehler sind vorbestehend in `admin/rezepte` und nicht von PROJ-10 betroffen — verifiziert per `git stash`)
+- Nicht erneut geprüft: Playwright-E2E (`tests/PROJ-3-mahlzeit-input.spec.ts`) — Selektoren nutzen `getByRole('button', { name: /foto aufnehmen/i })`, von der neuen Wrapper-`<div>` nicht betroffen; vollständiger Lauf bewusst `/qa` überlassen
+
 ## QA Test Results
 _To be added by /qa_
 
