@@ -203,6 +203,11 @@ Alle UI-Elemente werden mit bereits installierten shadcn/ui-Komponenten gebaut:
 - Debug-Routes `debug-auth` / `debug-middleware` entfernt
 - Middleware: `console.log` und Debug-Header entfernt
 
+### Bugfix 2026-06-16 — E2E-Tests erreichten den erwarteten Folgezustand nie
+Während des PROJ-2-Bugfix-Durchgangs (Login-Redirect seit PROJ-6) fiel auf: sobald `tests/PROJ-3-mahlzeit-input.spec.ts` überhaupt am Login vorbeikam, schlugen 4 Tests im "Rückfragen-Flow" fehl. Ursache: `mockApis()`s `/api/analyse/complete`-Mock gab nur `{ ok: true }` zurück — `runCompleteAnalysis()` in `mahlzeit-input.tsx` erwartet aber `{ ingredients: [...], assumptions?: [...] }` und interpretierte die fehlende Form als "Zutaten nicht erkannt", sprang zurück zu `'input'`. Die Tests warteten auf Text, der so nie erreicht wurde — vorher nie aufgefallen, weil der Login-Bug die Tests gar nicht so weit kommen ließ.
+
+Fix: `/api/analyse/complete`-Mock liefert jetzt realistische `ingredients`. Betroffene Tests klicken jetzt zusätzlich durch die Bestätigungs-Ansicht ("Hab ich das richtig verstanden?" / "Passt so →"), mit `/api/analyse/confirm` neu gemockt für die beiden Tests, die wirklich bis zum Endergebnis ("Neue Mahlzeit") durchlaufen müssen. Alle 21 Tests grün auf Chromium + Mobile Chrome.
+
 ## QA Test Results
 
 **QA Date:** 2026-06-11

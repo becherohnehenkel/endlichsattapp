@@ -12,6 +12,36 @@ const TINY_JPEG = Buffer.from(
   'base64'
 )
 
+// Realistische Mock-Daten für /api/analyse/complete und /api/analyse/confirm — vorher gab
+// /complete nur { ok: true } zurück, was runCompleteAnalysis() als "Zutaten nicht erkannt"
+// interpretierte und zurück zu 'input' schickte. Dadurch erreichten 4 Tests nie den
+// erwarteten Folgezustand (fiel erst auf, nachdem der Login-Redirect-Bug behoben wurde —
+// vorher kamen diese Tests gar nicht so weit). Siehe PROJ-2-Bugfix-Notiz 2026-06-16.
+const MOCK_INGREDIENTS = [
+  { name: 'Hähnchenbrust', amount: '150g' },
+  { name: 'Reis', amount: '80g' },
+]
+
+const MOCK_RESULT = {
+  zutatenliste: [{ name: 'Hähnchenbrust', amount: '150g', source: 'bls', sourceName: 'Hähnchenbrust' }],
+  annahmen: [],
+  vorher: {
+    bausteine: { geschmack: 'gut', biss: 'gut', ballaststoffe: 'mittel', proteine: 'gut', volumen: 'mittel', art_of_eating: 'nicht_bewertet' },
+    gesamtbewertung: 'sehr_saettigend',
+    erklaerung: 'Test-Erklärung.',
+    naehrwerte: { kcal: 500, protein_g: 40, kohlenhydrate_g: 50, zucker_g: 5, fett_g: 15, ballaststoffe_g: 5 },
+  },
+  rezeptbibliothek_hinweis: false,
+  vorschlaege: [],
+  nachher: {
+    bausteine: { geschmack: 'gut', biss: 'gut', ballaststoffe: 'mittel', proteine: 'gut', volumen: 'mittel', art_of_eating: 'nicht_bewertet' },
+    gesamtbewertung: 'sehr_saettigend',
+    naehrwerte: { kcal: 500, protein_g: 40, kohlenhydrate_g: 50, zucker_g: 5, fett_g: 15, ballaststoffe_g: 5 },
+    deltas: [],
+  },
+  art_of_eating_tipp: null,
+}
+
 async function loginAs(page: Page) {
   // Seit PROJ-6 ist "/" die Standard-Landingpage nach Login (ohne redirectTo) — explizit
   // anfordern, da diese Tests auf /analyse laufen. Siehe PROJ-2-Bugfix-Notiz 2026-06-16.
@@ -55,9 +85,23 @@ function mockApis(page: Page, scenario: 'questions' | 'ready' | 'skip-assumption
     }
   })
 
-  // /api/analyse/complete is PROJ-4 — mock it as no-op
+  // /api/analyse/complete (PROJ-4) — muss { ingredients, assumptions } liefern, sonst
+  // interpretiert runCompleteAnalysis() das als "Zutaten nicht erkannt" und bricht ab.
+  // assumptions hier bewusst NICHT mitschicken, damit die bereits über /answer gesetzten
+  // Annahmen (skip-assumptions-Szenario) nicht überschrieben werden.
   page.route('/api/analyse/complete', async route => {
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true }) })
+    await route.fulfill({
+      status: 200, contentType: 'application/json',
+      body: JSON.stringify({ ingredients: MOCK_INGREDIENTS }),
+    })
+  })
+
+  // /api/analyse/confirm (PROJ-5) — wird beim Klick auf "Passt so →" aufgerufen
+  page.route('/api/analyse/confirm', async route => {
+    await route.fulfill({
+      status: 200, contentType: 'application/json',
+      body: JSON.stringify({ analysisId: 'mock-analysis-id', result: MOCK_RESULT }),
+    })
   })
 }
 
@@ -184,8 +228,10 @@ test.describe('Rückfragen-Flow', () => {
     await textareas.nth(0).fill('In der Pfanne gebraten')
     await textareas.nth(1).fill('1 EL Olivenöl')
     await page.getByRole('button', { name: /weiter/i }).click()
-    // After answering (mock returns ready), should reach done state
-    await expect(page.getByText(/analyse-ergebnis|neue mahlzeit/i)).toBeVisible({ timeout: 8000 })
+    // After answering (mock returns ready), should reach the confirming step
+    await expect(page.getByText('Hab ich das richtig verstanden?')).toBeVisible({ timeout: 8000 })
+    await page.getByRole('button', { name: /passt so/i }).click()
+    await expect(page.getByText(/neue mahlzeit/i)).toBeVisible({ timeout: 8000 })
   })
 
   test('Überspringen startet Analyse sofort', async ({ page }) => {
@@ -195,7 +241,8 @@ test.describe('Rückfragen-Flow', () => {
     await page.getByRole('button', { name: /analysieren/i }).click()
     await expect(page.getByRole('button', { name: /überspringen/i })).toBeVisible({ timeout: 8000 })
     await page.getByRole('button', { name: /überspringen/i }).click()
-    await expect(page.getByText(/analyse-ergebnis|neue mahlzeit/i)).toBeVisible({ timeout: 8000 })
+    // Analyse läuft durch und erreicht die Bestätigungs-Ansicht (Zutatenliste)
+    await expect(page.getByText('Hab ich das richtig verstanden?')).toBeVisible({ timeout: 8000 })
   })
 
   test('Annahmen werden nach Überspringen angezeigt', async ({ page }) => {
@@ -213,9 +260,8 @@ test.describe('Rückfragen-Flow', () => {
     mockApis(page, 'ready')
     await page.fill('textarea', 'Detaillierte Beschreibung: 150g Hähnchenbrust in 1 EL Olivenöl gebraten, 80g Basmatireis, 100g Brokkoli gedünstet')
     await page.getByRole('button', { name: /analysieren/i }).click()
-    // Should jump directly to analysing/done without showing questions
-    // With mocked APIs the flow may skip 'analysing' — check any loading or done state
-    await expect(page.getByText(/analyse läuft|sättigungs-analyse|neue mahlzeit/i)).toBeVisible({ timeout: 8000 })
+    // Sollte ohne Rückfragen direkt zur Bestätigungs-Ansicht durchlaufen
+    await expect(page.getByText('Hab ich das richtig verstanden?')).toBeVisible({ timeout: 8000 })
     await expect(page.getByText(/rückfrage/i)).not.toBeVisible()
   })
 })
