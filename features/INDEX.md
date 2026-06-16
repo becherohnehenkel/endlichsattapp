@@ -25,11 +25,13 @@
 | PROJ-8 | Rezeptbibliothek | P1 | Deployed | PROJ-1, PROJ-2, PROJ-4, PROJ-5 | [Spec](PROJ-8-rezeptbibliothek.md) |
 | PROJ-9 | Rezept-Zutat: Anzeigename + OFF-Fallback | P1 | In Progress | PROJ-8 | [Spec](PROJ-9-rezept-zutat-datenquellen.md) |
 | PROJ-10 | Foto-Scan-Limit pro Nutzer | P1 | Deployed | PROJ-1, PROJ-2 | [Spec](PROJ-10-foto-scan-limit.md) |
-| PROJ-11 | Paywall + Invite-Codes + Admin-Oberfläche | P2 | Roadmap | PROJ-1, PROJ-2, PROJ-8, PROJ-10 | — |
+| PROJ-11 | Paywall | P2 | Planned | PROJ-1, PROJ-2, PROJ-8, PROJ-10 | [Spec](PROJ-11-paywall.md) |
+| PROJ-12 | Invite-Codes | P2 | Roadmap | PROJ-11 | — |
+| PROJ-13 | Admin-Dashboard | P2 | Roadmap | PROJ-8, PROJ-12 | — |
 
 <!-- Add features above this line -->
 
-## Next Available ID: PROJ-12
+## Next Available ID: PROJ-14
 
 ## Empfohlene Build-Reihenfolge
 
@@ -41,4 +43,6 @@
 6. **PROJ-6** — Historie als P1 nach dem MVP
 7. **PROJ-7** — Tagebuch als nice-to-have in einer späteren Iteration
 8. **PROJ-10** — Scan-Limit, bevor die Paywall kommt (einfacher, eigenständiger Baustein)
-9. **PROJ-11** — Paywall + Invite-Codes + Admin-UI, baut auf dem Scan-Limit-Konzept auf ("langfristig" laut Product Owner)
+9. **PROJ-11** — Paywall (Stripe), baut auf dem Scan-Limit-Konzept auf ("langfristig" laut Product Owner)
+10. **PROJ-12** — Invite-Codes als Bypass für die Paywall (Freunde/Familie zum Testen)
+11. **PROJ-13** — Admin-Dashboard (Code-Generierung + Link zur bestehenden Rezept-Verwaltung), zuletzt da rein additiv

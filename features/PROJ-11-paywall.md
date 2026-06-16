@@ -1,0 +1,93 @@
+# PROJ-11: Paywall
+
+## Status: Planned
+**Created:** 2026-06-16
+**Last Updated:** 2026-06-16
+
+## Dependencies
+- PROJ-1 (Supabase Infrastructure) — Subscription-Status auf dem Profil
+- PROJ-2 (User Authentication) — Paywall ist an den eingeloggten Nutzer gebunden
+- PROJ-10 (Foto-Scan-Limit) — der Foto-Scan-Counter ist der Auslöser für das Übergangsfenster; diese Spec **revidiert** PROJ-10s Entscheidung "Freitext-Analyse ist für immer unbegrenzt"
+- PROJ-8 (Rezeptbibliothek) — Zugriff auf die Rezeptbibliothek wird nach Ablauf des Übergangsfensters ebenfalls gesperrt
+
+## User Stories
+- Als Nutzer, der seine 3 kostenlosen Foto-Scans aufgebraucht hat, möchte ich noch 7 Tage lang Freitext-Analyse und Rezepte nutzen können, damit ich die App in Ruhe weiter ausprobieren kann, bevor ich mich entscheiden muss.
+- Als Nutzer möchte ich während dieser 7 Tage sehen, wie viel Zeit mir noch bleibt, damit ich nicht überrascht werde.
+- Als Nutzer möchte ich nach Ablauf der 7 Tage über ein günstiges Monats-Abo (4,99€) weiterhin vollen Zugriff bekommen können.
+- Als Nutzer möchte ich meine bereits erstellten Analysen (Mahlzeit-Historie) jederzeit einsehen können, auch wenn mein Zugriff sonst gesperrt ist.
+- Als Nutzer möchte ich mein Abo jederzeit selbst über eine vertraute, sichere Oberfläche verwalten oder kündigen können, ohne dafür eine E-Mail schreiben zu müssen.
+- Als Product Owner möchte ich, dass Stripe-Schlüssel niemals im Code oder in Git landen, damit kein Dritter Zugriff auf die Zahlungsintegration bekommen kann.
+
+## Out of Scope
+- Invite-Codes als Bypass-Mechanismus — _eigene Spec, PROJ-12_
+- Admin-Oberfläche zur Code-Generierung — _eigene Spec, PROJ-13_
+- Mehrere Preisstufen oder ein Jahresabo — spätere Erweiterung; die Architektur lässt das zu (Stripe Price ID ist konfigurierbar, nicht hartcodiert), wird aber jetzt nicht gebaut
+- Granulares Pro-Feature-Berechtigungssystem (z.B. unterschiedliche Tiers mit unterschiedlichen Feature-Sets) — bewusst nicht vorgebaut, ein einfaches `subscription_status`-Flag reicht für den aktuellen Bedarf
+- Sperrung der Mahlzeit-Historie — bewusst ausgeschlossen, Historie bleibt immer zugänglich
+- Eigenes Zahlungsformular (Stripe Elements/Custom Checkout) — Stripe Checkout (gehostet) gewählt
+- Eigene Abo-Verwaltungsoberfläche (Kündigen, Zahlungsmethode ändern) — Stripe Customer Portal (gehostet) gewählt
+- Stripes natives `trial_period_days`-Feature auf der Subscription — das 7-Tage-Übergangsfenster ist eine eigene, anwendungsseitige Phase (Timestamp auf dem Profil), keine Stripe-Subscription-Trial, da sie erst nach Verbrauch der Foto-Scans beginnt und nicht bei Registrierung
+
+## Acceptance Criteria
+
+**Format:** Angenommen [Vorbedingung] / Wenn [Aktion] / Dann [Ergebnis]
+
+- [ ] Angenommen ein Nutzer verbraucht seinen letzten Foto-Scan (Counter erreicht 0), wenn das zum ersten Mal passiert, dann wird ein 7-tägiges Übergangsfenster ab diesem Zeitpunkt gestartet und auf dem Profil gespeichert
+- [ ] Angenommen ein Nutzer befindet sich innerhalb des 7-Tage-Fensters, wenn er die Mahlzeit-Eingabeseite oder die Rezeptbibliothek aufruft, dann sieht er einen dezenten Hinweis wie viele Tage ihm noch verbleiben
+- [ ] Angenommen das 7-Tage-Fenster ist abgelaufen und der Nutzer hat kein aktives Abo und keinen eingelösten Code, wenn er eine Freitext-Analyse starten oder die Rezeptbibliothek öffnen möchte, dann wird er auf eine eigene Paywall-Seite weitergeleitet
+- [ ] Angenommen ein Nutzer befindet sich auf der Paywall-Seite, wenn er auf "Jetzt freischalten" klickt, dann wird er zu einer von Stripe gehosteten Checkout-Seite weitergeleitet
+- [ ] Angenommen ein Nutzer schließt die Zahlung über Stripe Checkout erfolgreich ab, wenn er zur App zurückkehrt, dann hat er sofort wieder vollen Zugriff auf Freitext-Analyse und Rezeptbibliothek
+- [ ] Angenommen ein Nutzer hat ein aktives Abo, wenn er auf "Abo verwalten" klickt, dann wird er zum Stripe Customer Portal weitergeleitet
+- [ ] Angenommen ein Nutzer kündigt sein Abo im Customer Portal, wenn die aktuelle Abrechnungsperiode endet, dann verliert er den Zugriff auf Freitext-Analyse und Rezeptbibliothek (kein neues 7-Tage-Fenster wird gestartet)
+- [ ] Angenommen eine Zahlung schlägt nach Stripes automatischen Wiederholungsversuchen endgültig fehl, wenn der Stripe-Subscription-Status dadurch nicht mehr "active"/"trialing" ist, dann wird der Zugriff gesperrt
+- [ ] Angenommen ein Nutzer hat bereits Mahlzeiten analysiert, wenn sein Zugriff gesperrt wird, dann kann er trotzdem weiterhin alle bisherigen Analysen in der Mahlzeit-Historie einsehen
+- [ ] Angenommen der Code wird committet/gepusht, wenn das passiert, dann landen die Stripe-Secrets (Secret Key, Webhook-Signing-Secret) nie im Git-Repository — nur als Server-seitige Env-Variablen, dokumentiert in `.env.local.example` mit Dummy-Werten
+
+## Edge Cases
+- Nutzer kehrt erst am Tag 10 zurück (nach Ablauf der 7 Tage) — sieht direkt die Paywall-Seite, kein nachträgliches Gewähren von Restzeit
+- Nutzer abonniert mitten im Übergangsfenster (z.B. Tag 3) — bekommt sofort vollen Zugriff, das restliche Übergangsfenster wird irrelevant
+- Stripe-Webhook trifft verzögert oder gar nicht ein, nachdem der Nutzer erfolgreich bei Stripe Checkout bezahlt hat — Nutzer darf nicht dauerhaft auf der Paywall-Seite hängen bleiben, nur weil der Webhook noch nicht verarbeitet wurde
+- Nutzer hat bereits ein aktives Abo, ruft aber trotzdem die Paywall-Seite auf — sollte nicht versehentlich eine zweite Checkout-Session/Zahlung auslösen können
+- Stripe-API ist kurzzeitig nicht erreichbar, während eine Checkout-Session erstellt werden soll — generische Fehlermeldung, kein App-Absturz
+- Nutzer löst während des Übergangsfensters einen Invite-Code ein (PROJ-12) — Paywall-Sperre greift danach gar nicht mehr, unabhängig vom Ablaufdatum des Fensters
+
+## Technical Requirements (optional)
+- Sicherheit: `STRIPE_SECRET_KEY` und `STRIPE_WEBHOOK_SECRET` ausschließlich als serverseitige Env-Variablen (kein `NEXT_PUBLIC_`-Präfix), niemals im Code hartcodiert, niemals committet
+- Webhook-Endpunkt muss die Stripe-Signatur verifizieren, bevor ein Event verarbeitet wird
+- Preis (4,99€) ist über eine Stripe Price ID konfigurierbar, nicht im Code hartcodiert — spätere Preisänderungen erfordern keinen Code-Deploy
+
+## Open Questions
+- [ ] Genauer Pfad/Name der Paywall-Seite (Vorschlag: `/upgrade`) — final in `/architecture` festlegen
+- [ ] Webhook-Fallback falls der Stripe-Webhook verzögert ist oder ausfällt (z.B. zusätzliche direkte Prüfung der Checkout-Session beim Rückkehr-Redirect, statt sich ausschließlich auf den Webhook zu verlassen) — technische Entscheidung für `/architecture`
+- [ ] Genauer Formulierungstext für den Countdown-Hinweis — Detail für `/frontend`
+
+## Decision Log
+
+### Product Decisions
+| Decision | Rationale | Date |
+|----------|-----------|------|
+| Paywall greift erst nach Verbrauch der 3 kostenlosen Foto-Scans, nicht direkt nach Registrierung | Nutzer soll die App erst kennenlernen können, bevor eine Kaufentscheidung gefordert wird | 2026-06-16 |
+| 7-tägiges Übergangsfenster nach Scan-Limit, danach Sperre von Freitext-Analyse + Rezeptbibliothek | Revidiert PROJ-10s "Freitext immer unbegrenzt" bewusst — gibt dem Nutzer eine faire Übergangsphase statt einer harten Sperre direkt bei 0 Scans | 2026-06-16 |
+| Mahlzeit-Historie bleibt von der Sperre ausgenommen | Eigene, bereits erstellte Daten einzusehen fühlt sich nicht wie eine zusätzliche Leistung an, sondern wie Besitz — Sperre dort wäre Datenverlust-Gefühl statt Kaufanreiz | 2026-06-16 |
+| Einfaches `subscription_status`-Flag statt granularem Pro-Feature-Berechtigungssystem | Aktuell gibt es nur einen gegateten Bereich (Freitext + Rezepte); ein Tier-System wäre spekulative Architektur ohne aktuellen Bedarf, lässt sich aber ohne Umbau später ergänzen | 2026-06-16 |
+| Preis: 4,99€/Monat, Stripe Checkout (gehostet) statt eigenem Formular | Niedrige Einstiegshürde; Stripe übernimmt PCI-Compliance komplett, deutlich weniger Code und Sicherheitsverantwortung für eine Solo-Entwickler-App | 2026-06-16 |
+| Abo-Verwaltung über Stripe Customer Portal statt eigener UI | Kündigung, Zahlungsmethode, Rechnungen — alles von Stripe gehostet, kein eigener Code nötig | 2026-06-16 |
+| Kündigung: Zugriff bis Ende der Abrechnungsperiode, danach Sperre ohne neuen Trial | Entspricht Stripes Standardverhalten, kein Sonderfall-Code nötig — einfach prüfen ob Subscription-Status aktiv ist | 2026-06-16 |
+| Kein Stripe-natives Trial — eigenes Übergangsfenster-Feld auf dem Profil | Stripe-Trials sind an die Subscription-Erstellung gekoppelt; unser Fenster beginnt aber beim Scan-Verbrauch, lange bevor überhaupt eine Subscription existiert | 2026-06-16 |
+
+### Technical Decisions
+<!-- Added by /architecture -->
+| Decision | Rationale | Date |
+|----------|-----------|------|
+
+---
+<!-- Sections below are added by subsequent skills -->
+
+## Tech Design (Solution Architect)
+_To be added by /architecture_
+
+## QA Test Results
+_To be added by /qa_
+
+## Deployment
+_To be added by /deploy_

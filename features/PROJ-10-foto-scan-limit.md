@@ -61,6 +61,7 @@
 | Counter ist immer dezent sichtbar, nicht nur bei niedrigem Stand | Transparenz von Anfang an statt einer Überraschung bei 0 | 2026-06-16 |
 | Einmalige Gesamtmenge (3) ohne automatisches Auffüllen | Einfachste MVP-Variante; ein Aufladen-Mechanismus kommt ggf. mit PROJ-11 (Invite-Codes) | 2026-06-16 |
 | Bestehende Konten erhalten per Migration ebenfalls den Default-Wert 3, kein Sonderfall | Konsistenz und Einfachheit; der Product Owner kann seinen eigenen Account danach händisch in der DB anpassen | 2026-06-16 |
+| **Revidiert durch PROJ-11:** "Freitext-Analyse ist für immer unbegrenzt" gilt ab PROJ-11 nicht mehr uneingeschränkt — nach einem 7-tägigen Übergangsfenster (beginnt wenn der Foto-Scan-Counter 0 erreicht) wird auch Freitext-Analyse gesperrt, falls kein Abo/Code vorliegt | War zum Zeitpunkt von PROJ-10 die richtige MVP-Entscheidung; mit der Paywall (PROJ-11) wurde bewusst nachgeschärft, siehe `features/PROJ-11-paywall.md` Decision Log | 2026-06-16 |
 
 ### Technical Decisions
 <!-- Added by /architecture -->
