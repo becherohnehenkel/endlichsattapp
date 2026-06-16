@@ -269,18 +269,21 @@ export type Database = {
           email: string
           id: string
           name: string | null
+          photo_scans_remaining: number
         }
         Insert: {
           created_at?: string
           email: string
           id: string
           name?: string | null
+          photo_scans_remaining?: number
         }
         Update: {
           created_at?: string
           email?: string
           id?: string
           name?: string | null
+          photo_scans_remaining?: number
         }
         Relationships: []
       }
@@ -289,7 +292,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      decrement_photo_scan: {
+        Args: Record<PropertyKey, never>
+        Returns: number | null
+      }
     }
     Enums: {
       [_ in never]: never

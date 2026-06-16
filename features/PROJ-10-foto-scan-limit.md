@@ -113,6 +113,24 @@ profiles (bestehende Tabelle)
 ### Dependencies (Pakete)
 Keine neuen — läuft komplett mit dem bestehenden Supabase/Next.js-Stack.
 
+## Implementation Notes (Backend)
+
+**Migrationen (Supabase, angewendet):**
+- `add_photo_scans_remaining_to_profiles` — neue Spalte `photo_scans_remaining integer NOT NULL DEFAULT 3` mit `CHECK (>= 0)`. Backfillt bestehende Konten automatisch auf 3 (Postgres-Verhalten bei `ADD COLUMN ... DEFAULT`).
+- `fix_photo_scans_remaining_column_protection` — Korrektur: ein column-level `REVOKE` allein griff nicht, weil `UPDATE` ursprünglich auf Tabellenebene an `authenticated`/`anon` vergeben war (table-level GRANT deckt implizit auch neue Spalten ab). Fix: `REVOKE UPDATE ON profiles` komplett, dann `GRANT UPDATE (name, email)` gezielt wieder — `photo_scans_remaining` bleibt für `authenticated`/`anon` nicht erreichbar, `service_role` unverändert voller Zugriff.
+- `restrict_decrement_photo_scan_to_authenticated` — Postgres gewährt `EXECUTE` auf neue Funktionen standardmäßig an `PUBLIC`; explizit auf `authenticated` eingeschränkt.
+- Neue Funktion `decrement_photo_scan()` — `SECURITY DEFINER`, nutzt intern `auth.uid()` (kein Parameter), atomares `UPDATE ... WHERE id = auth.uid() AND photo_scans_remaining > 0 RETURNING photo_scans_remaining`. Gibt `NULL` zurück wenn bereits 0 — darüber unterscheidet die Route "abgelehnt" von "erfolgreich reduziert".
+
+**Code:**
+- `src/app/api/meal/route.ts` — wenn `photoPath` gesetzt ist: ruft `supabase.rpc('decrement_photo_scan')` auf (normaler Session-Client, kein Admin-Client nötig, da die Funktion `SECURITY DEFINER` ist). `null` zurück → `403` mit `code: 'PHOTO_SCAN_LIMIT_REACHED'` und freundlicher Fehlermeldung, keine Mahlzeit wird angelegt. Fehler beim RPC-Call → `500`. Freitext-only-Requests rufen die Funktion gar nicht auf.
+- `src/types/database.ts` — `profiles`-Typen um `photo_scans_remaining` ergänzt, neue `Functions.decrement_photo_scan`-Definition.
+- Tests: `src/app/api/meal/route.test.ts` erweitert (9 Tests, alle grün) — deckt: Freitext ruft RPC nicht auf, Foto mit verbleibenden Scans dekrementiert, 0 Scans → 403 + kein Insert, RPC-Fehler → 500 + kein Insert.
+
+**Bewusst nicht umgesetzt (gehört zu `/frontend`):**
+- Lesen von `photo_scans_remaining` in `src/app/analyse/page.tsx` und Weitergabe als Prop an `MahlzeitInput`
+- Anzeige des Hinweistexts bei der Foto-Upload-Zone bzw. des Blockierungs-Banners bei 0 Scans
+- Reaktion auf `code: 'PHOTO_SCAN_LIMIT_REACHED'` im Frontend, falls der seltene Race-Case eintritt (Counter wird zwischen Seitenaufruf und Absenden auf 0 reduziert)
+
 ## QA Test Results
 _To be added by /qa_
 

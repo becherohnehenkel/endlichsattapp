@@ -28,6 +28,26 @@ export async function POST(request: Request) {
 
   const { photoPath, thumbPath, freeText } = parsed.data
 
+  // PROJ-10: Foto-Scans sind limitiert (Default 3, einmalig), Freitext bleibt unbegrenzt.
+  // Prüfung + Reduzierung läuft atomar in der DB (decrement_photo_scan), damit zwei
+  // gleichzeitige Anfragen den Counter nicht unter 0 drücken können.
+  if (photoPath) {
+    const { data: remaining, error: scanError } = await supabase.rpc('decrement_photo_scan')
+    if (scanError) {
+      console.error('[POST /api/meal] decrement_photo_scan', scanError)
+      return NextResponse.json({ error: 'Mahlzeit konnte nicht gespeichert werden.' }, { status: 500 })
+    }
+    if (remaining === null) {
+      return NextResponse.json(
+        {
+          error: 'Deine Foto-Scans sind aufgebraucht. Freitext-Analyse bleibt aber weiterhin unbegrenzt verfügbar.',
+          code: 'PHOTO_SCAN_LIMIT_REACHED',
+        },
+        { status: 403 }
+      )
+    }
+  }
+
   const { data: meal, error } = await supabase
     .from('meals')
     .insert({
