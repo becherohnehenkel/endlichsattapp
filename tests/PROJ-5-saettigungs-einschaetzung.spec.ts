@@ -4,7 +4,9 @@ const TEST_EMAIL = 'qa-test@endlichsatt.dev'
 const TEST_PASSWORD = 'QaTest123!'
 
 async function loginAs(page: Page) {
-  await page.goto('/login')
+  // Seit PROJ-6 ist "/" die Standard-Landingpage nach Login (ohne redirectTo) — explizit
+  // anfordern, da diese Tests auf /analyse laufen. Siehe PROJ-2-Bugfix-Notiz 2026-06-16.
+  await page.goto('/login?redirectTo=%2Fanalyse')
   await page.fill('#email', TEST_EMAIL)
   await page.fill('#password', TEST_PASSWORD)
   await page.click('button[type="submit"]')
