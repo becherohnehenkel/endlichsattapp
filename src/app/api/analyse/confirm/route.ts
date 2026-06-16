@@ -291,10 +291,30 @@ export async function POST(request: Request) {
 
   // ─── Server-side macro computation ─────────────────────────
 
-  // Vorher: use Claude's grams estimates + cached nutrition data (BLS or OFF)
-  const vorherInputs: MacroInput[] = result.zutatenliste.map(z => ({
+  // Claude restates the ingredient list in its analysis response (zutatenliste) instead of
+  // echoing the confirmed input verbatim — it sometimes rewords a name slightly (Singular/
+  // Plural, Wortstellung, Großschreibung). nutritionMap is keyed by the ORIGINAL input names,
+  // so a reworded name silently misses the cache and used to zero out an otherwise-found
+  // ingredient — even when the BLS/OFF lookup for it had succeeded. Fallback: re-resolve by
+  // Claude's actual name whenever the cache misses, so the join can never lose found data.
+  async function resolveNutrition(name: string): Promise<{ per100g: NutritionPer100g; source: LookupSource } | undefined> {
+    const cached = nutritionMap.get(name)
+    if (cached) return cached
+    const bls = await queryBLS(name)
+    if (bls) return { per100g: bls.per100g, source: 'bls' }
+    const off = await queryOpenFoodFacts(name)
+    if (off) return { per100g: off.per100g, source: 'off' }
+    return undefined
+  }
+
+  const resolvedIngredients = await Promise.all(
+    result.zutatenliste.map(async z => ({ z, resolved: await resolveNutrition(z.name) }))
+  )
+
+  // Vorher: use Claude's grams estimates + resolved nutrition data (BLS or OFF)
+  const vorherInputs: MacroInput[] = resolvedIngredients.map(({ z, resolved }) => ({
     grams: z.grams ?? 0,
-    per100g: nutritionMap.get(z.name)?.per100g,
+    per100g: resolved?.per100g,
   }))
   const vorherMacros = computeMacros(vorherInputs)
 
@@ -373,10 +393,10 @@ export async function POST(request: Request) {
         suggestions: fullResult.vorschlaege,
         art_of_eating_tip: fullResult.art_of_eating_tipp,
       },
-      data_sources: fullResult.zutatenliste.map(i => ({
-        ingredient: i.name,
-        source: nutritionMap.get(i.name)?.source ?? 'schaetzung',
-        sourceName: i.name,
+      data_sources: resolvedIngredients.map(({ z, resolved }) => ({
+        ingredient: z.name,
+        source: resolved?.source ?? 'schaetzung',
+        sourceName: z.name,
       })),
     })
     .select('id')
