@@ -237,4 +237,25 @@ Keine neuen — läuft komplett mit dem bestehenden Supabase/Next.js-Stack.
 - Bestehende `src/app/api/meal/route.test.ts` (von `/backend` geschrieben, 9 Tests) erneut verifiziert — weiterhin grün.
 
 ## Deployment
-_To be added by /deploy_
+
+**Deployed:** 2026-06-16
+**Production URL:** https://endlichsattapp.vercel.app
+**Tag:** `v1.10.0-PROJ-10`
+
+### Pre-Deployment Checks
+- [x] `npm run build` erfolgreich
+- [x] `npm run lint` — keine neuen Fehler (1 vorbestehender Fehler in `art-of-eating-guide.tsx`, unberührt von PROJ-10)
+- [x] QA approved (siehe QA Test Results oben, 7/7 AC)
+- [x] Keine Critical/High Bugs
+- [x] Keine neuen Env-Variablen nötig — `.env.local.example` unverändert
+- [x] Keine Secrets im Code
+- [x] Alle 3 DB-Migrationen bereits während `/backend` live auf das Produktions-Supabase-Projekt angewendet (`add_photo_scans_remaining_to_profiles`, `fix_photo_scans_remaining_column_protection`, `restrict_decrement_photo_scan_to_authenticated`)
+- [x] Alle Commits gepusht (Vercel auto-deployt bei Push auf `main`, bereits mehrfach während Backend/Frontend/QA bestätigt)
+
+### Post-Deployment Verification
+- [x] Produktions-URL lädt (`curl` → `307` zu `/login?redirectTo=/` für nicht eingeloggte Anfragen, erwartetes Verhalten)
+- [x] Backend wurde direkt gegen das echte Produktions-Supabase-Projekt entwickelt und getestet (kein separates Staging) — Migration, RPC und Spalten-Schutz sind dadurch bereits live verifiziert
+- [ ] Manuelle Verifikation im Browser durch den Nutzer ausstehend (Foto-Scan-Limit live mit echtem Account durchklicken)
+
+### Hinweis
+Dies ist kein Erst-Deployment — Vercel-Projekt, GitHub-Anbindung und Auto-Deploy bestehen bereits seit der MVP-Auslieferung. Production-Ready-Essentials (Error Tracking, Security Headers etc.) wurden dort bereits eingerichtet, nicht erneut für dieses Feature wiederholt.
