@@ -293,7 +293,7 @@ Sonst: Weiterleitung zur Paywall-Seite
 ### Post-Deployment Verification
 - [x] Produktions-URL lädt (`307` zu `/login` für nicht eingeloggte Anfragen, erwartetes Verhalten)
 - [x] Diese Bookkeeping-Änderung löst einen frischen Vercel-Deploy aus, der die neu hinterlegten Env-Variablen erstmals lädt (Vercel übernimmt sie nicht rückwirkend auf bereits laufende Deployments)
-- [ ] Manuelle Verifikation der `/upgrade`-Seite direkt gegen die Produktions-URL (statt nur lokal) durch den Nutzer empfohlen, sobald der neue Deploy durch ist
+- [x] Manuelle Verifikation der `/upgrade`-Seite direkt gegen die Produktions-URL durch den Product Owner: "Jetzt freischalten" auf `https://endlichsattapp.vercel.app/upgrade` führt korrekt zur echten Stripe-Sandbox-Checkout-Seite — bestätigt, dass die frisch hinterlegten Vercel-Env-Variablen geladen werden
 
 ### Hinweis
 Kein Erst-Deployment — Vercel/GitHub-Anbindung bestand bereits seit dem MVP. Production-Ready-Essentials (Error Tracking, Security Headers etc.) wurden dort bereits eingerichtet, nicht erneut für dieses Feature wiederholt.
