@@ -49,6 +49,7 @@
 
 ## Open Questions
 - [ ] Soll ein in PROJ-11 eingelöster Code den Counter erhöhen (additiv) oder auf einen neuen Wert setzen? Wird final in PROJ-11 entschieden, hier nur als Hinweis dass das Datenmodell (einfache Integer-Spalte) das unterstützen sollte.
+- [ ] Was passiert, wenn der Counter erfolgreich reduziert wurde, aber das Anlegen der Mahlzeit direkt danach aus einem anderen Grund fehlschlägt (seltener DB-Fehler)? `/backend` entscheidet die genaue Fehlerbehandlung (z.B. automatischer Rollback).
 
 ## Decision Log
 
@@ -65,12 +66,52 @@
 <!-- Added by /architecture -->
 | Decision | Rationale | Date |
 |----------|-----------|------|
+| Counter (`photo_scans_remaining`) lebt als neue Spalte direkt in `profiles`, keine eigene Tabelle | Ein einzelner Zähler pro Nutzer braucht keinen Join, einfachstes Datenmodell | 2026-06-16 |
+| Prüfung + Reduzierung läuft im bestehenden `POST /api/meal`-Endpunkt, kein neuer Endpunkt | Foto-Mahlzeiten laufen ohnehin durch diesen Endpunkt — kein zusätzlicher Request nötig | 2026-06-16 |
+| Prüfung + Reduzierung als eine atomare Datenbankoperation | Verhindert Race Conditions bei zwei gleichzeitigen Anfragen (z.B. zwei offene Tabs) — Counter kann nie unter 0 fallen | 2026-06-16 |
+| Counter ist auf Datenbankebene vor direkter Veränderung durch den Browser geschützt (nur Server darf ihn ändern) | Verhindert Manipulation über die Browser-Konsole/Netzwerk-Tab, selbst wenn die normale Profil-Update-Policy sonst eigene Felder erlaubt | 2026-06-16 |
+| Migration für Bestandskonten als einmaliges DB-Skript statt Code-Pfad in der App | Einfacher, einmaliger Vorgang braucht keine Laufzeit-Logik | 2026-06-16 |
 
 ---
 <!-- Sections below are added by subsequent skills -->
 
 ## Tech Design (Solution Architect)
-_To be added by /architecture_
+
+### Komponentenstruktur
+
+```
+AnalysePage (Server Component, src/app/analyse/page.tsx)
++-- liest profiles.photo_scans_remaining für den eingeloggten Nutzer
++-- MahlzeitInput (Client Component, erhält photoScansRemaining als neue Prop)
+    +-- Wenn photoScansRemaining > 0:
+    |   +-- FotoUploadZone — zusätzlich kleiner Text "Noch X von 3 Foto-Scans übrig"
+    +-- Wenn photoScansRemaining === 0:
+    |   +-- Hinweis-Banner statt Foto-Upload-Zone: "Deine Foto-Scans sind aufgebraucht — Freitext bleibt unbegrenzt verfügbar"
+    +-- Freitext-Textarea — immer aktiv, unabhängig vom Counter
+```
+
+### Datenmodell (in Worten)
+
+```
+profiles (bestehende Tabelle)
++ neue Spalte: photo_scans_remaining
+  - Zahl, Standardwert 3, darf nie negativ werden
+  - wird bei Account-Erstellung automatisch gesetzt
+  - bestehende Konten erhalten per einmaliger Migration ebenfalls 3
+  - darf NUR vom Server verändert werden — nicht direkt vom Browser
+    aus, selbst wenn jemand technisch versucht den eigenen Account
+    direkt anzusprechen
+```
+
+### API-Verhalten
+
+`POST /api/meal` (bestehender Endpunkt, keine neue Route nötig):
+- Enthält die Anfrage ein Foto: Counter wird zuerst geprüft. Bei 0 → Anfrage wird mit einer freundlichen Fehlermeldung abgelehnt, keine Mahlzeit wird angelegt. Bei ≥1 → Counter wird um genau 1 reduziert, danach läuft alles wie bisher.
+- Enthält die Anfrage nur Text: Counter wird gar nicht angefasst.
+- Prüfung + Reduzierung passiert in einem einzigen, nicht unterbrechbaren Datenbankschritt — verhindert, dass zwei gleichzeitige Anfragen (z.B. zwei offene Tabs) sich überholen und der Wert unter 0 fällt.
+
+### Dependencies (Pakete)
+Keine neuen — läuft komplett mit dem bestehenden Supabase/Next.js-Stack.
 
 ## QA Test Results
 _To be added by /qa_
