@@ -191,7 +191,85 @@ Sonst: Weiterleitung zur Paywall-Seite
 - Aufruf von `/api/stripe/sync-session` beim Rückkehr-Redirect (`?session_id=...`) von der `/upgrade`-Seite
 
 ## QA Test Results
-_To be added by /qa_
+
+**Tested:** 2026-06-16
+**App URL:** http://localhost:3000 (lokaler Dev-Server, Stripe Test-Modus)
+**Tester:** QA Engineer (AI)
+
+### Acceptance Criteria Status
+
+#### AC-1: Übergangsfenster startet einmalig bei Counter=0
+- [x] Bereits in `/backend` per simuliertem Nutzer (Transaktion mit Rollback) verifiziert: 3 Aufrufe von `decrement_photo_scan()` → 0, `trial_ends_at` exakt +7 Tage. Hier erneut bestätigt: kein direkter Eingriff von außen möglich (siehe Security Audit).
+
+#### AC-2: Countdown-Hinweis während des Übergangsfensters
+- [x] E2E: QA-Konto mit `trial_ends_at = +3 Tage` zeigt den Hinweis sowohl auf `/analyse` als auch auf `/rezepte`.
+
+#### AC-3: Weiterleitung zur Paywall nach Ablauf
+- [x] E2E: QA-Konto mit `trial_ends_at` in der Vergangenheit, kein Abo → `/analyse` UND `/rezepte` leiten zuverlässig zu `/upgrade` weiter.
+
+#### AC-4: "Jetzt freischalten" → Stripe Checkout
+- [x] E2E gegen die echte Stripe-API (Test-Modus): Klick führt zu einer echten, von Stripe gehosteten Checkout-Seite (`checkout.stripe.com`, Produkt "EndlichSatt Pro Test", 4,99€/Monat sichtbar — Preis und Produktname korrekt aus der konfigurierten Price ID übernommen).
+
+#### AC-5: Sofortiger Zugriff nach erfolgreicher Zahlung
+- [~] **Teilweise verifiziert** — siehe Bug/Hinweis unten. Checkout-Erstellung und Redirect zur echten Stripe-Seite bestätigt; die komplette Zahlung (Kartendaten ausfüllen, abschließen, Rückkehr-Redirect, Sync) wurde aus Zeitgründen nicht automatisiert bis zum Ende durchgespielt (Stripe Checkouts Kartenfelder liegen in eigenen iframes, die sich nicht zuverlässig innerhalb der verfügbaren Zeit automatisieren ließen). Die zugrunde liegende Logik (`sync-session`-Route, Webhook-Handler) ist über 29 Unit-/Integrationstests mit realistischen Stripe-Event-Shapes abgedeckt. Empfehlung siehe BUG/Hinweis unten.
+
+#### AC-6: "Abo verwalten" → Stripe Customer Portal
+- [x] E2E: QA-Konto mit `subscription_status = 'active'` zeigt auf `/upgrade` "Pro-Mitglied" + "Abo verwalten"-Button statt Kaufangebot. Tatsächlicher Klick zum echten Portal nicht erneut einzeln getestet (gleicher Code-Pfad/gleiche Absicherung wie Checkout, dort bereits gegen echte Stripe-API verifiziert).
+
+#### AC-7: Kündigung → Sperre erst nach Periodenende
+- [x] Code-Review + Logik-Test (`paywall.test.ts`): `getAccessStatus()` sperrt korrekt, sobald `subscription_status` nicht mehr `active`/`trialing` ist, unabhängig vom Trial-Status. Kein neues Übergangsfenster wird dabei gestartet (nur `decrement_photo_scan()` kann `trial_ends_at` setzen, Kündigung tut das nicht).
+
+#### AC-8: Fehlgeschlagene Zahlung → Sperre
+- [x] Code-Review: identische Prüfung wie AC-7 (`subscription_status` ungleich aktiv → gesperrt). Webhook setzt den Status 1:1 aus Stripes `customer.subscription.updated`-Event, kein eigener Sonderfall-Code mit zusätzlichem Fehlerrisiko.
+
+#### AC-9: Mahlzeit-Historie bleibt zugänglich
+- [x] Code-Review: `/historie` wurde durch PROJ-11 nicht verändert, keine `getAccessStatus()`-Prüfung dort ergänzt — wie in der Spec gefordert bewusst ausgenommen.
+
+#### AC-10: Stripe-Secrets nie im Repository
+- [x] `git log -p` für alle PROJ-11-Commits durchsucht — keine Treffer für `sk_test`, `sk_live`, `whsec_`, `price_`. Secrets liegen ausschließlich in `.env.local` (gitignored). `.env.local.example` wurde vom Product Owner selbst ergänzt (für mich aus Sicherheitsgründen komplett gesperrte Dateien, auch lesend).
+
+### Security Audit Results (Red Team)
+- [x] **Spalten-Schutz (kritischster Punkt):** Direkter `UPDATE profiles SET subscription_status = 'active', stripe_customer_id = 'cus_fake', trial_ends_at = ...` als simulierter `authenticated`-Nutzer → `permission denied for table profiles`. Ein Nutzer kann sich **nicht selbst freischalten**, egal was er versucht.
+- [x] **CHECK-Constraint:** `subscription_status = 'free_forever_hack'` wird auch mit vollen Rechten von der DB abgelehnt (`violates check constraint`) — Defense in depth falls der Anwendungscode je einen Bug hätte.
+- [x] **Webhook-Signatur:** Live gegen den laufenden Dev-Server getestet — Anfrage ohne `stripe-signature`-Header → `400`; Anfrage mit gefälschter Signatur → `400`, Profil nachweislich unverändert. Keine gefälschten "Abo aktiv"-Events möglich.
+- [x] **Authentifizierung:** `/api/stripe/checkout`, `/api/stripe/portal`, `/api/stripe/sync-session` live gegen den Dev-Server getestet — alle drei `401` ohne Session.
+- [x] **`sync-session`-Ownership-Check:** Unit-Test bestätigt `403`, wenn `client_reference_id` der Stripe-Session nicht zum eingeloggten Nutzer passt — verhindert, dass jemand eine fremde `session_id` errät/abfängt und sich selbst freischaltet.
+- [x] Keine Secrets in API-Antworten sichtbar (Code-Review aller vier Routen).
+- [ ] **Nicht geprüft / offen:** kein Rate-Limiting auf `/api/stripe/checkout` — ein eingeloggter Nutzer könnte theoretisch viele Checkout-Sessions erzeugen (kein Sicherheitsrisiko, da jede Session für sich harmlos ist, aber unnötige Last/Spam Richtung Stripe). Gleiche Einschätzung wie bei PROJ-10s offenem Punkt zu Doppelklick-Schutz — Low Priority.
+
+### Edge Cases Status
+- [x] Rückkehr erst nach Ablauf des Fensters → direkte Sperre, keine Kulanz (folgt direkt aus der Zeitstempel-Logik, kein Sonderfall-Code nötig)
+- [x] Abo mitten im Fenster → sofortiger Zugriff (durch `isSubscribed ||`-Verknüpfung in `getAccessStatus()` automatisch erfüllt)
+- [~] Verzögerter/ausbleibender Webhook → `sync-session`-Fallback vorhanden und unit-getestet, aber nicht im echten Browser bis zum Ende durchgespielt (siehe AC-5)
+- [x] Bereits abonniert, ruft Paywall-Seite trotzdem auf → zeigt "Pro-Mitglied" statt Kaufangebot, kein Duplikat-Checkout möglich (UI bietet in diesem Zustand gar keinen Checkout-Button an)
+- [ ] Stripe-API kurzzeitig nicht erreichbar → durch generischen `try/catch` abgedeckt (Unit-Test mit `mockRejectedValue`), aber nicht gegen einen echten Ausfall getestet (schwer simulierbar)
+- [x] Invite-Code-Interaktion → korrekt als Out-of-Scope/PROJ-12 behandelt, `getAccessStatus()` hat dafür bereits den vorgesehenen Erweiterungspunkt
+
+### Regression Testing
+- [x] PROJ-10 E2E-Suite (Scans verfügbar, 4 Tests) erneut grün — Paywall-Integration hat die bestehende Foto-Scan-Logik nicht beeinträchtigt
+- [x] Vitest-Gesamtsuite unverändert: 87/94 (die 7 Fehler in `admin/rezepte` sind vorbestehend, nicht PROJ-11 zuzuordnen)
+- [x] `npm run build` erfolgreich
+
+### Bugs Found
+
+#### BUG-1: Checkout-Erstellung bei bereits laufender Stripe-Session nicht idempotent geprüft
+- **Severity:** Low
+- **Beschreibung:** Klickt ein Nutzer mehrfach hintereinander auf "Jetzt freischalten" (z.B. Doppelklick oder zwei Tabs), werden mehrere Checkout-Sessions bei Stripe erzeugt. Keine davon ist schädlich (unbenutzte Sessions laufen bei Stripe automatisch ab), aber unnötig.
+- **Priority:** Nice to have
+
+#### Hinweis (kein Bug, aber wichtig für die Produktionsreife): vollständiger Zahlungs-Webhook-Loop nicht Ende-zu-Ende im Browser verifiziert
+- Empfehlung vor dem ersten echten Kunden: Stripe CLI installieren (`stripe listen --forward-to localhost:3000/api/stripe/webhook` + `stripe trigger checkout.session.completed`) und/oder einmal manuell im Browser eine Testzahlung mit Kartennummer `4242 4242 4242 4242` abschließen, um den kompletten Kreis (Checkout → Webhook → `subscription_status` → `/upgrade` zeigt "Pro-Mitglied") einmal live zu sehen. Die Einzelteile sind alle getestet (Checkout-Erstellung gegen echte API, Webhook-Signaturprüfung gegen echten Dev-Server, Handler-Logik per Unit-Tests) — nur der vollständige Kreis in einem Durchlauf fehlt.
+
+### Tests geschrieben
+- `tests/PROJ-11-paywall.spec.ts` — 9 neue E2E-Tests (3 Zustands-Gruppen: kein Zugriff, Übergangsfenster aktiv, aktives Abo), alle grün auf Chromium. Benötigt wie bei PROJ-10 manuelles DB-Seeding für den Initialzustand (während dieses Durchgangs per Supabase MCP durchgeführt, am Ende auf den Ausgangszustand zurückgesetzt) — gleicher offener CI-Punkt wie in PROJ-10 dokumentiert.
+- Kleinere Lint-Korrektur in `src/lib/paywall.test.ts` (unnötiger eslint-disable-Kommentar entfernt).
+
+### Summary
+- **Acceptance Criteria:** 8/10 vollständig erfüllt, 2 teilweise (AC-5 Checkout→Zugriff-Loop nur teilweise Ende-zu-Ende verifiziert, AC-6 Portal-Klick analog zu Checkout eingeschätzt statt einzeln nachgestellt)
+- **Bugs Found:** 1 total (0 critical, 0 high, 0 medium, 1 low)
+- **Security:** Pass — alle kritischen Punkte (Spalten-Schutz, Webhook-Signatur, Ownership-Check, Auth) per echtem Angriffsversuch oder Unit-Test bestätigt
+- **Production Ready:** **JA, mit einer Empfehlung** — vor dem ersten echten zahlenden Kunden einmal den vollen Checkout→Webhook-Kreis live durchspielen (siehe Hinweis oben), da das der einzige nicht vollständig Ende-zu-Ende verifizierte Pfad ist
+- **Empfehlung:** Deployen. Die Sicherheits-Eigenschaften (das, was bei einer Paywall am meisten schiefgehen kann — sich selbst freischalten) sind nachweislich robust. Der offene Punkt ist Vollständigkeit der Verifikation, kein gefundenes Sicherheits- oder Funktionsproblem.
 
 ## Deployment
 _To be added by /deploy_

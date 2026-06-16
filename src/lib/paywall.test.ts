@@ -10,7 +10,6 @@ function mockSupabase(profile: Record<string, unknown> | null) {
         }),
       }),
     }),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any
 }
 
