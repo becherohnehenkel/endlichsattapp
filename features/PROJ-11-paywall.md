@@ -57,8 +57,6 @@
 - Preis (4,99€) ist über eine Stripe Price ID konfigurierbar, nicht im Code hartcodiert — spätere Preisänderungen erfordern keinen Code-Deploy
 
 ## Open Questions
-- [ ] Genauer Pfad/Name der Paywall-Seite (Vorschlag: `/upgrade`) — final in `/architecture` festlegen
-- [ ] Webhook-Fallback falls der Stripe-Webhook verzögert ist oder ausfällt (z.B. zusätzliche direkte Prüfung der Checkout-Session beim Rückkehr-Redirect, statt sich ausschließlich auf den Webhook zu verlassen) — technische Entscheidung für `/architecture`
 - [ ] Genauer Formulierungstext für den Countdown-Hinweis — Detail für `/frontend`
 
 ## Decision Log
@@ -79,12 +77,76 @@
 <!-- Added by /architecture -->
 | Decision | Rationale | Date |
 |----------|-----------|------|
+| Zugriffsprüfung direkt in den Server Components (`AnalysePage`, `RezeptePage`) über eine gemeinsame Prüf-Funktion, statt dupliziert | Etabliertes Muster (wie `requireAdmin()` aus PROJ-9); eine Stelle für die Zugriffslogik statt zwei | 2026-06-16 |
+| `subscription_status` wird ausschließlich über den Stripe-Webhook aktualisiert, nie direkt nach dem Checkout-Redirect | Der Webhook ist signiert und kommt direkt von Stripe — ein Client-Redirect ließe sich fälschen oder wiederholen | 2026-06-16 |
+| Zusätzliche direkte Session-Prüfung beim Rückkehr-Redirect von Checkout (ergänzend zum Webhook) | Löst die Webhook-Verzögerung (offene Frage aus der Spec), ohne der Browser-Antwort blind zu vertrauen — Session-ID wird live bei Stripe nachgefragt | 2026-06-16 |
+| Stripe Node-SDK (`stripe`-Paket) nur serverseitig, kein `@stripe/stripe-js` im Browser | Checkout läuft komplett über Redirect zu einer von Stripe gehosteten URL — kleinere Angriffsfläche, weniger Code | 2026-06-16 |
+| `trial_ends_at` wird einmalig gesetzt, nie zurückgesetzt | Verhindert mehrfache Übergangsfenster durch wiederholtes Verbrauchen des Foto-Scan-Counters | 2026-06-16 |
+| Seitenpfad `/upgrade` für die Paywall-Seite | Klar, kurz, eindeutig | 2026-06-16 |
+| `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET`/`STRIPE_PRICE_ID` ausschließlich als Server-Env-Variablen, kein `NEXT_PUBLIC_`-Präfix | Secrets dürfen nie im Browser sichtbar oder im Git-Repository landen — lokal in `.env.local` (gitignored), produktiv im Vercel-Dashboard | 2026-06-16 |
 
 ---
 <!-- Sections below are added by subsequent skills -->
 
 ## Tech Design (Solution Architect)
-_To be added by /architecture_
+
+### Komponentenstruktur
+
+```
+AnalysePage (Server Component) — bereits PROJ-10-gated
++-- NEU: zusätzliche Zugriffsprüfung (Trial aktiv? Abo aktiv? Code eingelöst?)
++-- Gesperrt -> Weiterleitung zu /upgrade
++-- Im Übergangsfenster -> Countdown-Hinweis zusätzlich zum Foto-Scan-Hinweis
+
+RezeptePage (Server Component) — bisher offen für alle eingeloggten Nutzer
++-- NEU: gleiche Zugriffsprüfung wie AnalysePage
++-- Gesperrt -> Weiterleitung zu /upgrade
++-- Im Übergangsfenster -> Countdown-Hinweis oben auf der Seite
+
+/upgrade (NEU — Paywall-Seite)
++-- Erklärtext + Preis + "Jetzt freischalten" -> Stripe Checkout
++-- Hat der Nutzer bereits ein Abo: "Abo verwalten" -> Stripe Customer Portal
++-- Platz für "Ich habe einen Code"-Link (Funktion kommt mit PROJ-12)
+
+Webhook-Endpunkt (NEU, API-Route)
++-- Empfängt Stripe-Events direkt von Stripe, aktualisiert den Abo-Status
+```
+
+### Datenmodell (in Worten)
+
+```
+profiles (bestehende Tabelle)
++ trial_ends_at — Zeitstempel, wird EINMALIG gesetzt wenn der Foto-Scan-Counter
+  zum ersten Mal 0 erreicht ("jetzt + 7 Tage"), danach nie mehr verändert
++ stripe_customer_id — Referenz auf den Kunden in Stripe, leer bis zur ersten Zahlung
++ subscription_status — z.B. "active"/"canceled"/"past_due", leer = kein Abo.
+  Wird AUSSCHLIESSLICH über den Stripe-Webhook aktualisiert, nie direkt vom Client
+
+Zugriff auf Freitext-Analyse + Rezeptbibliothek ist erlaubt, wenn EINES zutrifft:
+  - photo_scans_remaining > 0, ODER
+  - trial_ends_at ist leer oder liegt noch in der Zukunft, ODER
+  - subscription_status ist "active"/"trialing", ODER
+  - ein gültiger Invite-Code wurde eingelöst (Datenmodell folgt mit PROJ-12)
+Sonst: Weiterleitung zur Paywall-Seite
+```
+
+### API-Verhalten
+
+- **`POST /api/stripe/checkout`** — erstellt eine Checkout-Session für den eingeloggten Nutzer, gibt die Stripe-URL zurück
+- **`POST /api/stripe/portal`** — erstellt einen Customer-Portal-Link (nur wenn bereits `stripe_customer_id` existiert)
+- **`POST /api/stripe/webhook`** — empfängt Events direkt von Stripe (nicht vom Browser), verifiziert die Signatur, aktualisiert `subscription_status`
+- **Webhook-Fallback:** Beim Rückkehr-Redirect von Checkout wird die Session zusätzlich direkt bei Stripe nachgefragt, damit der Nutzer nicht auf einen verzögerten Webhook warten muss
+
+### Sicherer Workflow für die Stripe-Keys
+
+- `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID` — ausschließlich Server-Env-Variablen, niemals `NEXT_PUBLIC_`-Präfix
+- Lokal in `.env.local` (bereits gitignored, vom Product Owner bereits mit Test-Mode-Werten befüllt), in Produktion direkt im Vercel-Dashboard eintragen
+- `.env.local.example` bekommt die drei Variablennamen mit Dummy-Werten dokumentiert
+- Der Webhook verifiziert jede Anfrage mit `STRIPE_WEBHOOK_SECRET` — gefälschte "Abo aktiv"-Events sind dadurch nicht möglich
+- Webhook-Secret und Live-Mode-Keys folgen erst kurz vor dem Deployment (Webhook-Endpunkt muss erst existieren, bevor er in Stripe registriert werden kann)
+
+### Dependencies (Pakete)
+- `stripe` — offizielles Node-SDK (serverseitig)
 
 ## QA Test Results
 _To be added by /qa_
