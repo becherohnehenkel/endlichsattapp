@@ -270,6 +270,9 @@ export type Database = {
           id: string
           name: string | null
           photo_scans_remaining: number
+          trial_ends_at: string | null
+          stripe_customer_id: string | null
+          subscription_status: string | null
         }
         Insert: {
           created_at?: string
@@ -277,6 +280,9 @@ export type Database = {
           id: string
           name?: string | null
           photo_scans_remaining?: number
+          trial_ends_at?: string | null
+          stripe_customer_id?: string | null
+          subscription_status?: string | null
         }
         Update: {
           created_at?: string
@@ -284,6 +290,9 @@ export type Database = {
           id?: string
           name?: string | null
           photo_scans_remaining?: number
+          trial_ends_at?: string | null
+          stripe_customer_id?: string | null
+          subscription_status?: string | null
         }
         Relationships: []
       }

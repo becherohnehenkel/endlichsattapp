@@ -148,6 +148,32 @@ Sonst: Weiterleitung zur Paywall-Seite
 ### Dependencies (Pakete)
 - `stripe` — offizielles Node-SDK (serverseitig)
 
+## Implementation Notes (Backend)
+
+**Migration (Supabase, angewendet):**
+- `add_paywall_fields_to_profiles` — neue Spalten `trial_ends_at`, `stripe_customer_id` (UNIQUE), `subscription_status` (CHECK auf gültige Stripe-Statuswerte) auf `profiles`. Tabellen-weites `UPDATE` für `authenticated`/`anon` war bereits in PROJ-10 entzogen — neue Spalten sind dadurch automatisch ohne weiteres `REVOKE` vor Client-Manipulation geschützt (per `information_schema.column_privileges` verifiziert: nur `SELECT`/`INSERT`/`REFERENCES`, kein `UPDATE`).
+- `decrement_photo_scan()` (PROJ-10) erweitert: setzt `trial_ends_at` einmalig auf "jetzt + 7 Tage", wenn der Counter durch dasselbe atomare Update auf 0 fällt und noch kein Fenster existiert — bleibt eine einzige Operation, kein Race-Condition-Risiko. Per simuliertem Nutzer (Transaktion mit Rollback) verifiziert: 3 Aufrufe → 0, `trial_ends_at` exakt +7 Tage gesetzt.
+
+**Code:**
+- `src/lib/stripe.ts` — server-only Stripe-Client (`STRIPE_SECRET_KEY`)
+- `src/lib/paywall.ts` — `getAccessStatus(supabase, userId)`: zentrale Zugriffsprüfung (aktives Abo ODER noch Foto-Scans übrig ODER Übergangsfenster läuft), liefert auch `trialDaysRemaining` für den Countdown-Hinweis. PROJ-12 ergänzt hier später die Invite-Code-Bedingung.
+- `src/app/api/stripe/checkout/route.ts` — erstellt Checkout-Session (Subscription-Modus), nutzt vorhandene `stripe_customer_id` falls vorhanden statt einen Duplikat-Kunden anzulegen
+- `src/app/api/stripe/portal/route.ts` — erstellt Customer-Portal-Link, `404` falls kein Abo vorhanden
+- `src/app/api/stripe/webhook/route.ts` — verifiziert Signatur mit `STRIPE_WEBHOOK_SECRET`, verarbeitet `checkout.session.completed`, `customer.subscription.updated`/`.deleted` (Admin-Client, da kein Nutzer-Session-Kontext bei einem Webhook)
+- `src/app/api/stripe/sync-session/route.ts` — Webhook-Fallback: fragt die Checkout-Session beim Rückkehr-Redirect direkt bei Stripe nach (nicht der Browser-URL vertrauen), Sicherheitscheck dass `client_reference_id` zum eingeloggten Nutzer passt (403 sonst)
+- `src/types/database.ts` — `profiles`-Typen ergänzt
+- `src/lib/env.ts` — `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET`/`STRIPE_PRICE_ID` zu `serverOnly` ergänzt
+
+**Tests:** 29 neue Tests (4 Routen + `paywall.ts`-Unit-Tests), alle grün. Bestehende Suite unverändert (87/94 — die 7 Fehler in `admin/rezepte` sind vorbestehend, nicht PROJ-11). `npm run build` erfolgreich.
+
+**Sicherheits-Hinweis:** Konnte `.env.local.example` nicht selbst aktualisieren — `.env*`-Dateien sind für mich aus Sicherheitsgründen komplett gesperrt (auch lesend). Der Product Owner hat die drei Variablennamen bereits selbst in `.env.local`/`.env.local.example` ergänzt.
+
+**Bewusst nicht umgesetzt (gehört zu `/frontend`):**
+- `/upgrade`-Seite (Paywall-UI, Checkout-Button, Customer-Portal-Link, "Ich habe einen Code"-Platzhalter für PROJ-12)
+- Einbindung von `getAccessStatus()` in `AnalysePage`/`RezeptePage` inkl. Redirect bei fehlendem Zugriff
+- Countdown-Hinweis-UI während des Übergangsfensters
+- Aufruf von `/api/stripe/sync-session` beim Rückkehr-Redirect (`?session_id=...`) von der `/upgrade`-Seite
+
 ## QA Test Results
 _To be added by /qa_
 

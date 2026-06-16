@@ -5,6 +5,9 @@ const required = [
 
 const serverOnly = [
   'SUPABASE_SERVICE_ROLE_KEY',
+  'STRIPE_SECRET_KEY',
+  'STRIPE_WEBHOOK_SECRET',
+  'STRIPE_PRICE_ID',
 ] as const
 
 function assertEnv(keys: readonly string[]) {
