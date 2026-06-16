@@ -77,6 +77,20 @@ Liegt die Rezept- oder Nutzerangabe in rohem/trockenem Gewicht vor (z.B. "1 Tass
 
 Die Bezeichnung der Zutat (inkl. ggf. "(gekocht)"/"(roh)"-Zusatz) muss exakt zum tatsächlichen Garzustand der verwendeten Grammzahl passen — niemals "(gekocht)" labeln, während noch mit dem rohen Gewicht gerechnet wird (oder umgekehrt). Die Umrechnung muss explizit in den Annahmen genannt werden, z.B.: *"1 Tasse roher Quinoa (~75g trocken) entspricht nach dem Kochen ca. 210g (Faktor ×2,8) — Nährwerte basieren auf gegartem Zustand."*
 
+### Hochenergiedichte + voluminenarme Gerichte (Fastfood-Erkennung)
+
+Manche Gerichte sind nicht einfach "energiedicht" (siehe oben), sondern strukturell so aufgebaut, dass eine normale Erwachsenenportion bereits weit über das hinausgeht, was für echte Sättigung nötig wäre — bei gleichzeitig kaum vorhandenem Eigenvolumen durch Gemüse oder Ballaststoffe. Hier hilft "noch mehr ergänzen" nicht, weil es die ohnehin schon hohe Kalorienmenge nur weiter erhöht (siehe Heuristik unten).
+
+**Erkennungskriterien (alle relevant, kein hartes Einzelmaß):**
+- Stark verarbeitet / Fastfood-Charakter (Lieferdienst, Imbiss, Fertigprodukt, frittiert/paniert)
+- Hoher Fett- und/oder Käseanteil als Hauptcharakteristikum des Gerichts
+- Kaum Eigenvolumen durch Gemüse/Ballaststoffe (kein Salat, keine Gemüsebeilage von Haus aus enthalten)
+- **Entscheidend:** Die tatsächlich gegessene Menge entspricht einer vollwertigen Erwachsenenportion und liegt bei **ca. 600–700 kcal oder mehr** in einer Sitzung
+
+**Typische Beispiele:** Pizza, Burger, Currywurst mit Pommes, Chicken/Dino-Nuggets (Erwachsenenportion), Pommes frites, fettreicher Döner.
+
+**Wichtige Abgrenzung:** Die Kriterien greifen NICHT bei Kinderportionen, Snacks oder Mahlzeiten, die für sich genommen schon unter dem normalen Energiebedarf liegen — selbst wenn es sich um dieselbe Art von Gericht handelt (z.B. ein Dino-Nuggets-Kinderteller, von einem Erwachsenen gegessen, liefert oft zu WENIG statt zu viel Energie für eine vollwertige Mahlzeit). In diesem Fall bleibt die normale Additions-Logik aktiv — siehe Verbesserungs-Heuristiken.
+
 ### Mahlzeitenfrequenz & Blutzuckerstabilität
 Unregelmäßiges Essen führt zu Blutzucker-Achterbahn, Energie-Crashs und erhöhter Heißhungeranfälligkeit. Empfehlung: 2–4 vollwertige Mahlzeiten pro Tag, die den Blutzucker in einem stabilen Normalbereich halten. Dies ist kein Naturgesetz — individuelle Anpassung nach Alltag, Arbeit und sozialer Kompatibilität hat Vorrang.
 
@@ -149,7 +163,7 @@ Nicht jede Mahlzeit muss alle sechs Bausteine vollständig abdecken. Isolierte L
 - **Keine Mahlzeiten-Ersatz-Produkte** (Shakes, Riegel als "Lösung")
 - **Keine Supplemente als Primärempfehlung** — nur wenn ein isolierter, spezifischer Mangel besteht
 - **Kein Weglassen von Zutaten die der Nutzer offensichtlich mag** — Sättigung entsteht auch durch Freude am Essen
-- **Keine Empfehlung weniger zu essen** — das Ziel ist besser essen, nicht weniger
+- **Keine Empfehlung weniger zu essen** — das Ziel ist besser essen, nicht weniger. Einzige Ausnahme: Portionskalibrierung bei hochenergiedichtem, voluminenarmem Fastfood (siehe eigener Abschnitt unten) — eng begrenzt, nie als generelle Regel zu verstehen.
 
 ### Abwägung Nährwert vs. Geschmack
 
@@ -157,12 +171,27 @@ Geschmack hat immer Vorrang. Ein sättigendes Gericht das nicht schmeckt, wird n
 
 ### Prioritätsreihenfolge bei mehreren schwachen Bausteinen
 
+0. **Portionskalibrierung** — NUR wenn die Erkennungskriterien für "hochenergiedicht + voluminenarm" erfüllt sind (siehe unten). In diesem Fall VOR allen anderen Prioritäten.
 1. **Biss** — größte Wirkung auf das wahrgenommene Sättigungsgefühl
 2. **Ballaststoffe** — größte Wirkung auf die Sättigungsdauer
 3. **Volumen** — einfachste Verbesserung mit geringstem Kalorienaufwand
 4. **Geschmack** — nur wenn das Gericht nachweislich wenig Komplexität hat
 5. **Proteine** — Ergänzung vorschlagen, nicht ersetzen
 6. **Art of Eating** — immer erwähnen wenn andere Bausteine bereits stark sind
+
+---
+
+### Portionskalibrierung bei hochenergiedichtem Fastfood (Ausnahme von "keine Iss-weniger-Empfehlung")
+
+**Trigger:** Die Erkennungskriterien für "hochenergiedicht + voluminenarm" sind erfüllt (siehe Abschnitt 2, "Hochenergiedichte + voluminenarme Gerichte") — insbesondere: Erwachsenenportion, ≥ ca. 600–700 kcal, kaum Eigenvolumen.
+
+Bei reinen Additions-Vorschlägen (mehr Ballaststoffe/Biss/Volumen ergänzen) wird ein bereits sehr kalorienreiches Gericht kalorisch noch größer, statt besser balanciert zu werden. Für diesen engen Fall gilt eine bewusste Ausnahme von "keine Empfehlung weniger zu essen":
+
+1. **Vor** allen Additions-Vorschlägen: Portionskalibrierung vorschlagen — z.B. "2/3" oder "die Hälfte", je nach Energiedichte des Gerichts.
+2. **Framing — niemals als Verzicht:** Kommuniziert wird eine Kalibrierung auf echte Sättigung, nicht eine Diät-Maßnahme. Gleiche Logik wie Hara Hachi Bu und die bestehende "Teilen"-Strategie im Restaurant-Kontext. Formulierungsvorbild: *"Bei diesem Energiegehalt reicht oft schon 2/3 für echte Sättigung — der Rest ist meist Gewohnheit, nicht Hunger."*
+3. **Immer mit einer Volumen-/Ballaststoff-Ergänzung kombinieren, wenn realistisch verfügbar** (z.B. Tütensalat + Dressing zur Lieferpizza) — damit die Gesamtkalorien gleich bleiben oder sinken, aber die Sättigung pro Kalorie steigt.
+4. **Wenn keine Ergänzung realistisch verfügbar ist** (z.B. Imbiss, Lieferdienst ohne Alternative): Portionskalibrierung allein reicht aus. Wie im Restaurant-Kontext darf optional auf die nächste Mahlzeit verwiesen werden.
+5. **Eng gefasste Ausnahme:** Diese Regel gilt NUR bei erfüllten Erkennungskriterien. Für alle anderen Gerichte — auch kalorienreiche, wenn sie nicht voluminenarm sind, oder kleine/Kinderportionen — bleibt "keine Iss-weniger-Empfehlung" unverändert in Kraft.
 
 ---
 

@@ -90,6 +90,7 @@
 | Rezept-Delta statt Vollrezept | Respektiert das Original; kurz und direkt umsetzbar | 2026-06-10 |
 | Vollständige Rezept-Geschmacksoptimierung Post-MVP | Braucht eigene Session und eigenes Feature; zu komplex für MVP-Scope | 2026-06-10 |
 | Art of Eating immer als abschließender Tipp, nie als Vorwurf | Ton-Prinzip: informieren, nicht mahnen | 2026-06-10 |
+| Portionskalibrierung als eng gefasste Ausnahme von "keine Iss-weniger-Empfehlung" bei hochenergiedichtem Fastfood (≥600–700 kcal, voluminenarm) | Additions-Vorschläge allein trieben die Kalorien eines bereits zu großen, voluminenarmen Gerichts nur weiter hoch; Framing als Portionskalibrierung (nicht Verzicht) hält die Kernregel für alle anderen Fälle intakt | 2026-06-16 |
 
 ### Technical Decisions
 | Decision | Rationale | Date |
@@ -111,6 +112,15 @@ _Kein separater Architecture-Pass nötig — Datenstruktur aus PROJ-4 vollständ
 
 ### Bugfix 2026-06-16
 Nutzer-Report: Bei `sehr_saettigend`-Mahlzeiten wurde der optionale Feinschliff-Vorschlag ausgeblendet ("kein konstruierter Verbesserungsvorschlag nötig"), aber der Vorher/Nachher-Bausteinvergleich und die "Nach Verbesserung"-Nährwertspalte liefen unabhängig weiter und zeigten geänderte Werte — für den Nutzer nicht nachvollziehbar, da die Begründung (der Vorschlag selbst) nicht sichtbar war. Fix: neue `showVorschlaege`-Variable (`hasVorschlaege && !isSehrSaettigend`) steuert jetzt einheitlich Vorschlagstext, Bausteinvergleich und Nährwert-Spalte „Nach Verbesserung" — alle drei erscheinen nur noch gemeinsam oder gar nicht.
+
+### Domain-Erweiterung 2026-06-16 — Portionskalibrierung bei hochenergiedichtem Fastfood
+Nutzer-Feedback: Bei Fastfood/stark verarbeiteten Gerichten (Pizza, Burger, Currywurst, Nuggets) schlug die Matrix bisher ausschließlich Additions-Vorschläge vor (mehr Ballaststoffe/Volumen/Biss) — das trieb die Gesamtkalorien eines bereits sehr energiedichten, voluminenarmen Gerichts weiter hoch statt es zu balancieren.
+
+Neue, eng gefasste Ausnahme von der Kernregel "keine Empfehlung weniger zu essen" (Sign-off vom Product Owner eingeholt, siehe Decision Log):
+- **Trigger:** Erwachsenenportion, ≥ ca. 600–700 kcal, kaum Eigenvolumen, Fastfood-/Convenience-Charakter (Pizza, Burger, Currywurst+Pommes, Chicken-Nuggets in Erwachsenenportion, Pommes, fettreicher Döner)
+- **Greift NICHT** bei Kinderportionen/Snacks oder Mahlzeiten die schon unter dem normalen Energiebedarf liegen — wichtige Abgrenzung, getestet anhand eines Dino-Nuggets-Kinderteller-Beispiels (siehe `docs/beispiel-analysen.md`, Beispiel 6)
+- Framing als Portionskalibrierung (nie als Verzicht), analog zur bestehenden "Teilen"-Strategie und Hara Hachi Bu — kombiniert mit einer Volumen-/Ballaststoff-Ergänzung wenn realistisch verfügbar (Beispiel 4: Lieferpizza), sonst Portionskalibrierung allein (Beispiel 5: Currywurst-Imbiss)
+- Geändert: `docs/saettigungsmatrix.md` (neue Erkennungs- + Heuristik-Abschnitte), `docs/system-prompt.md` (Schritt 5), `src/app/api/analyse/confirm/route.ts` (ANALYSIS_SYSTEM_PROMPT, aktiv laufender Prompt — kein separater `/prompt-engineer`-Skill in diesem Projekt, daher direkt integriert), `docs/beispiel-analysen.md` (3 neue Testbeispiele)
 
 ## QA Test Results
 

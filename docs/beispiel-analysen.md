@@ -1,8 +1,8 @@
 # Beispiel-Analysen
 
-> Drei approved Referenz-Analysen für den Sättigungs-Agenten.
+> Approved Referenz-Analysen für den Sättigungs-Agenten.
 > Dienen als Testgrundlage und Tonalitäts-Referenz.
-> Zuletzt aktualisiert: 2026-06-10
+> Zuletzt aktualisiert: 2026-06-16
 
 ---
 
@@ -245,5 +245,254 @@ Ein reiner Proteinshake als Mahlzeit ist eine **isolierte Intervention**, keine 
 
 **Agent-Antwort in diesem Fall:**
 *"Ein Proteinshake allein macht dich nicht nachhaltig satt — er löst gezielt einen Proteinmangel, mehr nicht. Wenn du ihn als Zwischenmahlzeit nutzt oder ein Defizit ausgleichst: völlig okay. Als Hauptmahlzeit würde ich ihn um Biss und Volumen ergänzen — zum Beispiel mit einer Handvoll Nüssen und etwas Obst. Das dauert 2 Minuten mehr und macht ihn zu einer echten Mahlzeit."*
+
+---
+
+## Beispiel 4: Portionskalibrierung — Lieferpizza, ganze Pizza allein gegessen
+
+*Zeigt die neue Sonderregel: Bei hochenergiedichtem, voluminenarmem Fastfood ≥ ca. 600–700 kcal steht Portionskalibrierung vor Additions-Vorschlägen — kombiniert mit einer Volumen-Ergänzung, damit die Sättigung pro Kalorie steigt statt die Gesamtkalorien nur weiter zu wachsen.*
+
+### Input des Nutzers
+*"Pizza Salami vom Lieferdienst, Standardgröße (~30cm) — die ganze Pizza alleine gegessen, keine Beilage."*
+
+### Rückfragen des Agenten
+Keine — Größe und Zusammensetzung sind eindeutig genug für eine belastbare Einschätzung.
+
+### Bestätigung Zutatenliste
+*"Hab ich das richtig verstanden: 1 ganze Pizza Salami (Ø~30cm, Hefeteig + Tomatensauce + Käse + Salami, ca. 500g), keine Beilage? Falls etwas fehlt, sag kurz Bescheid."*
+
+---
+
+### VORHER-Analyse
+
+**Bausteine:**
+
+| Baustein | Bewertung | Kommentar |
+|----------|-----------|-----------|
+| Geschmack | **gut** | Käse, Salami, Tomatensauce und Röstaromen vom Ofen — mehrere Geschmacksdimensionen aktiv. |
+| Biss | **mittel** | Knuspriger Rand bietet etwas Kauwiderstand, die Mitte ist überwiegend weich. |
+| Ballaststoffe | **schwach** | Weißmehlteig ohne Vollkornanteil, kein Gemüse — kaum Ballaststoffe. |
+| Proteine | **mittel** | Käse und Salami liefern Protein, sind aber nicht die proteindichte Hauptzutat des Gerichts. |
+| Volumen | **schwach** | Sehr kalorisch dicht (Käse, Öl im Teig), kaum physisches Eigenvolumen. |
+| Art of Eating | nicht bewertet | — |
+
+**Gesamtbewertung: Wenig sättigend (1 von 5 bewertet = gut)**
+
+**Nährwerte (Vorher):**
+| | Wert |
+|--|--|
+| Energie | ~1100 kcal |
+| Protein | ~45g |
+| Kohlenhydrate | ~120g |
+| davon Zucker | ~10g |
+| Fett | ~50g |
+| Ballaststoffe | ~6g |
+
+**Erklärung:**
+Geschmacklich macht die Pizza vieles richtig — Käse, Salami und die Röstaromen vom Ofen sorgen für ein rundes Profil. Das eigentliche Problem ist die Kombination aus sehr hoher Energiedichte und kaum vorhandenem Volumen: 1100 kcal in einer physisch kleinen, weichen Portion. Der Magen meldet hier kaum Dehnung, bevor die Kalorienmenge schon weit über das hinausgeht, was eine Mahlzeit braucht.
+
+---
+
+### Verbesserungsvorschläge
+
+**1. Bewusst 2/3 der Pizza essen + ein schneller Salat dazu (Baustein: Portionskalibrierung + Volumen + Ballaststoffe)**
+*2/3 der Pizza, dazu ein Tütensalat mit Essig-Öl-Dressing (falls im Haus) — ca. 80g Blattsalat + 1 EL Dressing.*
+(Warum: Bei diesem Energiegehalt reicht oft schon 2/3 für echte Sättigung — der Rest ist meist Gewohnheit, nicht Hunger. Mehr Belag würde die ohnehin hohe Kalorienmenge nur weiter erhöhen, ohne das Grundproblem — kaum Volumen — zu lösen. Der Salat liefert genau das, was fehlt, ohne dass die Gesamtkalorien wachsen.)
+
+---
+
+### NACHHER-Analyse
+
+**Bausteine:**
+
+| Baustein | Vorher | Nachher |
+|----------|--------|---------|
+| Geschmack | gut | **gut** |
+| Biss | mittel | **gut** |
+| Ballaststoffe | schwach | **gut** |
+| Proteine | mittel | **mittel** |
+| Volumen | schwach | **gut** |
+| Art of Eating | — | — |
+
+**Gesamtbewertung: Sehr sättigend (4 von 5 = gut)**
+
+**Nährwerte (Nachher — 2/3 Pizza + Salat):**
+| | Vorher | Nachher | Delta |
+|--|--|--|--|
+| Energie | 1100 kcal | ~815 kcal | **−285 kcal** |
+| Protein | 45g | ~31g | −14g |
+| Kohlenhydrate | 120g | ~83g | −37g |
+| davon Zucker | 10g | ~7g | −3g |
+| Fett | 50g | ~37g | −13g |
+| Ballaststoffe | 6g | ~7g | +1g |
+
+**Art of Eating Tipp:**
+Pizza lädt zum Durchessen vor dem Bildschirm ein — setz dich bewusst hin, iss langsam und merk dir: bei diesem Energiegehalt kommt das Sättigungssignal locker mit, bevor die ganze Pizza weg ist.
+
+---
+
+## Beispiel 5: Portionskalibrierung ohne Zusatz — Currywurst mit Pommes, Imbiss
+
+*Zeigt den Fall, in dem keine Volumen-/Ballaststoff-Ergänzung realistisch verfügbar ist (Imbiss-Kontext) — Portionskalibrierung steht dann allein, analog zur Restaurant-Kontext-Logik.*
+
+### Input des Nutzers
+*"Currywurst mit Pommes vom Imbiss, normale Portion."*
+
+### Rückfragen des Agenten
+Keine — Imbiss-Portionen sind uniform genug für eine belastbare Schätzung.
+
+### Bestätigung Zutatenliste
+*"Hab ich das richtig verstanden: 1 Currywurst (~150g) mit Currysauce, dazu eine normale Portion Pommes (~250g)? Keine weitere Beilage?"*
+
+---
+
+### VORHER-Analyse
+
+**Bausteine:**
+
+| Baustein | Bewertung | Kommentar |
+|----------|-----------|-----------|
+| Geschmack | **gut** | Currysauce (süß-würzig-scharf), Röstaromen von Wurst und Pommes — mehrere Dimensionen aktiv. |
+| Biss | **mittel** | Pommes geben etwas Kauwiderstand, die Wurst ist überwiegend weich. |
+| Ballaststoffe | **schwach** | Kein Gemüse, keine Vollkornkomponente. |
+| Proteine | **mittel** | Die Wurst liefert Protein, aber nicht in proteindichter Menge im Verhältnis zur Gesamtportion. |
+| Volumen | **schwach** | Sehr energiedicht (frittiertes Fett), kaum physisches Volumen. |
+| Art of Eating | nicht bewertet | — |
+
+**Gesamtbewertung: Wenig sättigend (1 von 5 bewertet = gut)**
+
+**Nährwerte (Vorher):**
+| | Wert |
+|--|--|
+| Energie | ~950 kcal |
+| Protein | ~22g |
+| Kohlenhydrate | ~85g |
+| davon Zucker | ~15g |
+| Fett | ~55g |
+| Ballaststoffe | ~6g |
+
+**Erklärung:**
+Geschmacklich liefert die Currysauce einiges, aber die Mahlzeit ist mit ~950 kcal bei kaum vorhandenem Volumen bereits eine übergroße Portion für das, was sie an Sättigung zurückgibt. Am Imbiss gibt es selten eine Möglichkeit, Volumen oder Ballaststoffe sinnvoll zu ergänzen — hier hilft vor allem, wie viel davon gegessen wird.
+
+---
+
+### Verbesserungsvorschläge
+
+**1. Bei den Pommes reicht oft eine kleinere Portion, ca. 2/3 (Baustein: Portionskalibrierung)**
+*Die Currywurst bleibt wie sie ist — sie bringt Geschmack und Protein, das muss nicht reduziert werden. Bei den Pommes (~250g → ~165g) reicht meist schon weniger für echte Sättigung.*
+(Warum: Am Imbiss ist selten eine Salat- oder Gemüseoption realistisch verfügbar — hier hilft die Portionskalibrierung allein. Kein "zusatz", da keine sinnvolle Ergänzung zur Hand ist.)
+
+---
+
+### NACHHER-Analyse
+
+**Bausteine:**
+
+| Baustein | Vorher | Nachher |
+|----------|--------|---------|
+| Geschmack | gut | **gut** |
+| Biss | mittel | **mittel** |
+| Ballaststoffe | schwach | **schwach** |
+| Proteine | mittel | **mittel** |
+| Volumen | schwach | **schwach** |
+| Art of Eating | — | — |
+
+**Gesamtbewertung: Wenig sättigend (1 von 5 = gut) — unverändert, aber bei deutlich weniger Kalorien**
+
+**Nährwerte (Nachher — Pommes reduziert):**
+| | Vorher | Nachher | Delta |
+|--|--|--|--|
+| Energie | 950 kcal | ~780 kcal | **−170 kcal** |
+| Protein | 22g | ~21g | −1g |
+| Kohlenhydrate | 85g | ~68g | −17g |
+| davon Zucker | 15g | ~14g | −1g |
+| Fett | 55g | ~47g | −8g |
+| Ballaststoffe | 6g | ~5g | −1g |
+
+**Art of Eating Tipp:**
+Falls die nächste Mahlzeit in den nächsten Stunden ansteht: ein Stück Obst oder ein paar Nüsse vorher schaffen das Volumen, das die Currywurst nicht liefert.
+
+---
+
+## Beispiel 6: Trigger greift NICHT — Dino-Nuggets-Kinderteller, von Erwachsenem gegessen
+
+*Zeigt die wichtige Abgrenzung: Frittiert/paniert allein reicht nicht für den Portionskalibrierung-Trigger — die Energiemenge muss tatsächlich einer Erwachsenenportion ≥ ca. 600–700 kcal entsprechen. Hier ist das Gegenteil das Problem: die Portion ist zu klein.*
+
+### Input des Nutzers
+*"Dino-Nuggets, Kinderportion (TK, ca. 6 Stück) — war danach noch hungrig."*
+
+### Rückfragen des Agenten
+Keine — die Menge ist eindeutig benannt.
+
+### Bestätigung Zutatenliste
+*"Hab ich das richtig verstanden: 6 Dino-Nuggets (TK, frittiert/gebacken, ca. 120g), keine Beilage?"*
+
+---
+
+### VORHER-Analyse
+
+**Bausteine:**
+
+| Baustein | Bewertung | Kommentar |
+|----------|-----------|-----------|
+| Geschmack | **mittel** | Würzige Panade, aber recht einfaches Profil ohne weitere Dimensionen. |
+| Biss | **mittel** | Knusprige Panade gibt etwas Kauwiderstand. |
+| Ballaststoffe | **schwach** | Keine Beilage, kaum Ballaststoffe in der Panade selbst. |
+| Proteine | **mittel** | Niedriger Fleischanteil in den Nuggets, dazu kleine Gesamtmenge. |
+| Volumen | **schwach** | Physisch kleine Portion. |
+| Art of Eating | nicht bewertet | — |
+
+**Gesamtbewertung: Wenig sättigend (0 von 5 bewertet = gut)**
+
+**Nährwerte (Vorher):**
+| | Wert |
+|--|--|
+| Energie | ~280 kcal |
+| Protein | ~10g |
+| Kohlenhydrate | ~22g |
+| davon Zucker | ~1g |
+| Fett | ~16g |
+| Ballaststoffe | ~1g |
+
+**Erklärung:**
+Trotz frittierter Panade greift die Portionskalibrierung-Regel hier NICHT — mit ~280 kcal liegt diese Mahlzeit weit unter der Erwachsenenportion-Schwelle (~600–700 kcal). Das eigentliche Problem ist nicht zu viel, sondern zu wenig Mahlzeit: Eine Kinderportion reicht für einen Erwachsenen-Energiebedarf schlicht nicht aus — kein Wunder, dass danach noch Hunger da war.
+
+---
+
+### Verbesserungsvorschläge
+
+**1. Joghurt mit Obst oder ein schneller Salat dazu (Baustein: Volumen + Proteine)**
+*Ein Becher Naturjoghurt (~150g) mit etwas Obst, oder ein gemischter Salat als Beilage.*
+(Warum: Die Portion ist für eine Erwachsenenmahlzeit zu klein — hier hilft Ergänzen, nicht Reduzieren. Joghurt bringt zusätzliches Protein, Obst und Salat liefern das fehlende Volumen.)
+
+---
+
+### NACHHER-Analyse
+
+**Bausteine:**
+
+| Baustein | Vorher | Nachher |
+|----------|--------|---------|
+| Geschmack | mittel | **mittel** |
+| Biss | mittel | **mittel** |
+| Ballaststoffe | schwach | **mittel** |
+| Proteine | mittel | **gut** |
+| Volumen | schwach | **gut** |
+| Art of Eating | — | — |
+
+**Gesamtbewertung: Mäßig sättigend (2 von 5 = gut)**
+
+**Nährwerte (Nachher — mit Joghurt + Obst):**
+| | Vorher | Nachher | Delta |
+|--|--|--|--|
+| Energie | 280 kcal | ~430 kcal | +150 kcal |
+| Protein | 10g | ~17g | +7g |
+| Kohlenhydrate | 22g | ~42g | +20g |
+| davon Zucker | 1g | ~13g | +12g |
+| Fett | 16g | ~17g | +1g |
+| Ballaststoffe | 1g | ~3g | +2g |
+
+**Art of Eating Tipp:**
+Kleine Portionen wie diese sind ein guter Moment, kurz zu checken: War das wirklich genug für eine ganze Mahlzeit, oder eher ein Snack zwischendurch? Beides ist okay — nur sollte die nächste Mahlzeit dann nicht zu weit weg sein.
 
 **Nie sagen:** "Du solltest keine Proteinshakes trinken." — das ist Bevormundung, kein Coaching.
