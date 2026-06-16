@@ -118,6 +118,10 @@ export default function SaettigungsErgebnis({ result, assumptions, onReset, anal
   const gesamt = gesamtConfig(result.vorher.gesamtbewertung)
   const isSehrSaettigend = result.vorher.gesamtbewertung === 'sehr_saettigend'
   const hasVorschlaege = result.vorschlaege.length > 0
+  // Bei sehr_saettigend wird der optionale Feinschliff-Vorschlag nicht angezeigt (siehe ── 3.) —
+  // dann dürfen auch die davon abhängigen Vorher/Nachher-Vergleiche nicht auftauchen, sonst
+  // wirken geänderte Nährwerte/Bausteine unbegründet (Nutzer sieht nie, was sich geändert hätte).
+  const showVorschlaege = hasVorschlaege && !isSehrSaettigend
 
   const improvedPillars = new Set(
     result.nachher.deltas.filter(d => d.veraenderung > 0).map(d => d.wert)
@@ -193,7 +197,7 @@ export default function SaettigungsErgebnis({ result, assumptions, onReset, anal
       )}
 
       {/* ── 4. Verbesserungsvorschläge ── */}
-      {hasVorschlaege && !isSehrSaettigend && (
+      {showVorschlaege && (
         <>
           <Separator />
           <div className="space-y-3">
@@ -217,7 +221,7 @@ export default function SaettigungsErgebnis({ result, assumptions, onReset, anal
       )}
 
       {/* ── 5. Vorher / Nachher Vergleich ── */}
-      {hasVorschlaege && (
+      {showVorschlaege && (
         <>
           <Separator />
           <div className="space-y-3">
@@ -290,9 +294,9 @@ export default function SaettigungsErgebnis({ result, assumptions, onReset, anal
                 Für dieses Produkt konnten keine Nährwertdaten gefunden werden (nicht im BLS oder Open Food Facts).
               </p>
             ) : (
-              <div className={`grid gap-3 ${hasVorschlaege ? 'grid-cols-2' : 'grid-cols-1'}`}>
+              <div className={`grid gap-3 ${showVorschlaege ? 'grid-cols-2' : 'grid-cols-1'}`}>
                 <div className="space-y-1">
-                  {hasVorschlaege && (
+                  {showVorschlaege && (
                     <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Jetzt</p>
                   )}
                   <div className="flex flex-col gap-0.5 text-xs text-muted-foreground">
@@ -304,7 +308,7 @@ export default function SaettigungsErgebnis({ result, assumptions, onReset, anal
                     <span>{n.ballaststoffe_g}g Ballaststoffe</span>
                   </div>
                 </div>
-                {hasVorschlaege && (
+                {showVorschlaege && (
                   <div className="space-y-1">
                     <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Nach Verbesserung</p>
                     <div className="flex flex-col gap-0.5 text-xs text-muted-foreground">

@@ -24,10 +24,10 @@ Der Kauvorgang ist ein eigenständiger Sättigungsmechanismus. Mechanisches Zerk
 
 **Lebensmittel mit hohem Kauaufwand:**
 - Rohes oder bissfestes Gemüse (Gurke, Karotte, Blumenkohl, Salate, Paprikaschote)
-- Nüsse, Samen, Kerne
+- Nüsse, Samen, Kerne, 
 - Kross Gebackenes oder Gebratenes (Brot, Knäckebrot, Granola, angebratenes Fleisch/Tofu/Fisch)
-- Hülsenfrüchte (al dente gegart): Kidneybohnen, Linsen, Kichererbsen
-- Pseudogetreide mit Textur: Quinoa
+- Hülsenfrüchte (al dente gegart): Kidneybohnen, Linsen, Kichererbsen, Bohnen aller Art
+- Pseudogetreide mit Textur: Quinoa, Amaranth, Buchweizen
 
 **Ausgeschlossen vom Biss-Baustein (zählen NICHT):**
 - Gewürze in Pulverform (Paprikapulver, Kreuzkümmelpulver, Currypulver, ...)
@@ -59,6 +59,24 @@ Lebensmittel mit niedriger Energiedichte (viel Wasser, viel Ballaststoffe, wenig
 - Getrocknete oder gepulverte Formen von Lebensmitteln
 - Regel: Eine Zutat zählt nur als Volumen-Baustein, wenn sie in einer Menge verwendet wird die den Magen mechanisch füllen kann (typisch: ≥50g wasserhaltiges Lebensmittel).
 
+### Roh-/Gekocht-Gewichtskonsistenz bei Getreide, Hülsenfrüchten & Pasta
+
+Getreide, Reis, Pseudogetreide (Quinoa, Bulgur, Couscous), Hülsenfrüchte und Pasta nehmen beim Garen Wasser auf und werden 2- bis 3-mal schwerer. Wird die geschätzte Grammzahl versehentlich dem falschen Garzustand zugeordnet (z.B. rohes Gewicht mit gegarten Nährwerten verrechnet, oder umgekehrt), ist das Kalorienergebnis um den Faktor 2–3 falsch — ein Risiko, das bei Rezeptangaben in Tassen/Bechern (roh/trocken) besonders hoch ist.
+
+**Regel:** Die für die Nährwertberechnung verwendete Grammzahl repräsentiert IMMER den gegarten/verzehrfertigen Zustand — das ist näher an der tatsächlich verzehrten Menge und an dem, was Nährwertdatenbanken (BLS) am häufigsten als Eintrag führen.
+
+Liegt die Rezept- oder Nutzerangabe in rohem/trockenem Gewicht vor (z.B. "1 Tasse roher Quinoa", "80g Reis, ungekocht"), muss zuerst auf das gegarte Gewicht umgerechnet werden:
+
+| Lebensmittel | Faktor roh → gekocht |
+|---|---|
+| Reis | ×2,5–3 |
+| Quinoa | ×2,8–3 |
+| Linsen, Kichererbsen, Bohnen (trocken) | ×2,5 |
+| Pasta | ×2,2–2,5 |
+| Couscous, Bulgur | ×2–2,2 |
+
+Die Bezeichnung der Zutat (inkl. ggf. "(gekocht)"/"(roh)"-Zusatz) muss exakt zum tatsächlichen Garzustand der verwendeten Grammzahl passen — niemals "(gekocht)" labeln, während noch mit dem rohen Gewicht gerechnet wird (oder umgekehrt). Die Umrechnung muss explizit in den Annahmen genannt werden, z.B.: *"1 Tasse roher Quinoa (~75g trocken) entspricht nach dem Kochen ca. 210g (Faktor ×2,8) — Nährwerte basieren auf gegartem Zustand."*
+
 ### Mahlzeitenfrequenz & Blutzuckerstabilität
 Unregelmäßiges Essen führt zu Blutzucker-Achterbahn, Energie-Crashs und erhöhter Heißhungeranfälligkeit. Empfehlung: 2–4 vollwertige Mahlzeiten pro Tag, die den Blutzucker in einem stabilen Normalbereich halten. Dies ist kein Naturgesetz — individuelle Anpassung nach Alltag, Arbeit und sozialer Kompatibilität hat Vorrang.
 
@@ -70,7 +88,7 @@ Bewusstes Essen ist ein vollwertiger Sättigungsfaktor, keine optionale Ergänzu
 2. Ablenkungen ausschalten (kein Smartphone, kein Fernseher, keine Musik)
 3. Vor dem ersten Bissen kurz am Essen riechen
 4. Gründlich kauen — jeden Bissen bis fast flüssig
-5. Auf die Details schmecken (Intensität, Frische, Komplexität)
+5. Auf die Details schmecken und riechen (Intensität, Frische, Komplexität)
 6. Auf Körpersignale hören — Sättigung kommt ca. 20 Min. nach dem Essen
 7. **Hara Hachi Bu**: japanische Praxis, mit dem Essen aufzuhören wenn der Magen zu ca. 80 % gefüllt ist
 
@@ -118,9 +136,9 @@ Nicht jede Mahlzeit muss alle sechs Bausteine vollständig abdecken. Isolierte L
 
 | Ziel | Erlaubte Maßnahmen |
 |------|-------------------|
-| Mehr Biss | Nüsse oder Samen obendrauf, rohes Gemüse als Beilage, Zutaten kross anbraten statt kochen |
-| Mehr Ballaststoffe | Hülsenfrüchte einarbeiten (Linsen in Sauce, Kichererbsen zum Salat), Gemüse erhöhen, Obst hinzufügen |
-| Mehr Proteine | Eiweißreiche Quelle ergänzen die zum Gericht passt (Ei, Quark, Hüttenkäse, Skyr, Hülsenfrüchte, Tofu) |
+| Mehr Biss | Nüsse oder Samen obendrauf, rohes Gemüse als Beilage, Zutaten kross anbraten statt kochen, Beilagensalat als Vorspeise, Klare Suppe vorneweg |
+| Mehr Ballaststoffe | Hülsenfrüchte einarbeiten (Linsen in Sauce, Kichererbsen zum Salat, Bohnen als Mus, Quinoa gekocht), Gemüse erhöhen, Obst hinzufügen |
+| Mehr Proteine | Eiweißreiche Quelle ergänzen die zum Gericht passt (Fleisch, Fisch, Ei, Quark, Hüttenkäse, Skyr, Hülsenfrüchte, Tofu) |
 | Mehr Volumen | Gemüseanteil erhöhen, Flüssigkeitsanteil erhöhen (mehr Hafermilch, mehr Brühe), Beeren hinzufügen |
 | Mehr Geschmack | Gewürze, frische Kräuter, Röststoffe durch Anbraten, Säure (Zitrone, Essig), Umami (Parmesan, Miso, Tomatenmark) |
 
@@ -213,7 +231,7 @@ In diesem Fall gelten besondere Regeln:
 Jeder Vorschlag muss diesen Filter bestehen, bevor er ausgegeben wird:
 
 **Kriterium 1 — Kein zusätzlicher Einkauf nötig**
-Der Vorschlag soll aus Kühlschrank- oder Vorratszutaten bestehen. Was ein durchschnittlicher Haushalt immer da hat: Eier, Naturjoghurt, Quark, Nüsse, Samen, Hülsenfrüchte aus der Dose, Frischkäse, geriebener Käse, Zitrone, Kräuter, Olivenöl.
+Der Vorschlag soll aus Kühlschrank- oder Vorratszutaten bestehen. Was ein durchschnittlicher Haushalt immer da hat: Eier, Naturjoghurt, Quark, Nüsse, Samen, Hülsenfrüchte aus der Dose, Haferflocken, Frischkäse, geriebener Käse, Zitrone, Kräuter, Gewürze, Olivenöl.
 
 **Kriterium 2 — Kein wesentlicher Mehraufwand**
 Der Vorschlag darf nicht mehr Kochaufwand bedeuten als das ursprüngliche Gericht selbst. Beispiele:
@@ -227,12 +245,12 @@ Der Vorschlag muss zum Geschmacksprofil des Gerichts passen. Orientierung nach G
 | Gerichtstyp | Sinnvolle Protein-Ergänzung | Nicht passend |
 |-------------|----------------------------|----------------|
 | Salat | Ei, Thunfisch, Hühnchen, Feta, Kichererbsen, Lachs | Quark pur, Proteinshake |
-| Pasta / Risotto | Thunfisch, Hackfleisch, Ricotta, Mozzarella, Hülsenfrüchte | Hartgekochtes Ei obendrauf |
+| Pasta / Risotto | Thunfisch, Hackfleisch, Ricotta, Mozzarella, Hülsenfrüchte, Meeresfrüchte, Fisch | Hartgekochtes Ei obendrauf |
 | Suppe / Eintopf | Linsen einrühren, Tofu würfeln, Ei verquirlen, Joghurt obendrauf | Käse (außer bei passenden Varianten) |
 | Curry / asiatisch | Hühnchen, Tofu, Kichererbsen, Tempeh | Feta, europäische Milchprodukte |
 | Frühstück | Ei, Joghurt, Quark, Nüsse, Samen | Fleisch (außer explizit gewünscht) |
 | Fleischgericht als Hauptzutat | Kein Protein-Upgrade nötig — andere Bausteine prüfen | Weiteres Protein |
-| Sandwich / Wrap | Quark als Aufstrich, Ei, Hüttenkäse | Rohe Hülsenfrüchte |
+| Sandwich / Wrap | Quark als Aufstrich, Ei, Hüttenkäse, Skyr, Thunfisch, Dosenbohnen, Dosenkichererbsen | Rohe Hülsenfrüchte |
 
 **Konsequenz:** Wenn kein Vorschlag den Filter besteht, lieber keinen machen als einen unpassenden. Qualität vor Quantität.
 

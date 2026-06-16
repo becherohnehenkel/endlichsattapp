@@ -125,6 +125,15 @@ Wenn der Nutzer einzelne Stücke aus einem Batch beschreibt (z.B. "3 Kardamomkno
 - In den annahmen dokumentieren: z.B. "Anteil: 1/15 des Gesamtrezepts (~X g pro Knoten)"
 - Das "grams"-Feld repräsentiert IMMER die tatsächlich konsumierte Menge — nie die Gesamtrezeptmenge
 
+## Roh-/Gekocht-Gewichtskonsistenz (Getreide, Hülsenfrüchte, Pasta)
+Reis, Quinoa, Bulgur, Couscous, Hülsenfrüchte und Pasta werden beim Garen 2- bis 3-mal schwerer (Wasseraufnahme). Das "grams"-Feld muss IMMER den gegarten/verzehrfertigen Zustand abbilden — niemals rohes/trockenes Gewicht mit einem "(gekocht)"-Namen kombinieren oder umgekehrt.
+Liegt die Angabe in rohem/trockenem Gewicht vor (z.B. "1 Tasse roher Quinoa"), zuerst umrechnen, BEVOR "grams" befüllt wird:
+- Reis, Quinoa: ×~2,5–3
+- Hülsenfrüchte (trocken: Linsen, Kichererbsen, Bohnen): ×~2,5
+- Pasta: ×~2,2–2,5
+- Couscous, Bulgur: ×~2–2,2
+Die Zutatenbezeichnung (inkl. "(gekocht)"/"(roh)") muss exakt zum tatsächlichen Garzustand von "grams" passen. Umrechnung immer explizit in "annahmen" nennen, z.B. "1 Tasse roher Quinoa (~75g trocken) → ca. 210g gegart (Faktor ×2,8), Nährwerte auf gegartem Zustand berechnet".
+
 ## Wichtig: Nährwerte werden vom System berechnet
 Keine Zahlen ausgeben. Nur "grams"-Feld pro Zutat schätzen.
 
@@ -173,6 +182,13 @@ export async function POST(request: Request) {
 
   if (!meal) return NextResponse.json({ error: 'Mahlzeit nicht gefunden' }, { status: 404 })
 
+  // Fetch Q&A assumptions — these are critical for portion scaling (e.g. "Rezept ergibt 15 Stück")
+  const { data: conv } = await supabase
+    .from('meal_conversations')
+    .select('assumptions')
+    .eq('meal_id', mealId)
+    .single()
+
   // Query BLS first, fall back to Open Food Facts for branded/convenience products
   type LookupSource = 'bls' | 'off' | 'schaetzung'
   type LookupResult = { ingredient: typeof ingredients[0]; per100g: NutritionPer100g | undefined; source: LookupSource }
@@ -209,8 +225,18 @@ export async function POST(request: Request) {
     ? `Ursprüngliche Beschreibung: ${meal.free_text}`
     : 'Ursprüngliche Eingabe: (nur Foto)'
 
+  const qaAssumptions = (conv?.assumptions ?? []) as string[]
+  const assumptionBlock = qaAssumptions.length > 0
+    ? [
+        '',
+        'Durch Rückfragen geklärte Informationen (WICHTIG — maßgeblich für grams-Berechnung):',
+        ...qaAssumptions.map(a => `- ${a}`),
+      ]
+    : []
+
   const userMessage = [
     mealContext,
+    ...assumptionBlock,
     '',
     'Bestätigte Zutatenliste mit BLS-Nährwertdaten (pro 100g — nur zur Einschätzung, du musst nichts berechnen):',
     ...ingredientLines,

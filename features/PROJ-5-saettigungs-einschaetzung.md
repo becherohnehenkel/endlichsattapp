@@ -109,6 +109,9 @@ _Kein separater Architecture-Pass nötig — Datenstruktur aus PROJ-4 vollständ
 - `src/components/saettigungs-ergebnis.tsx` — neue Komponente: rendert Gesamtbewertung, 6-Baustein-Grid, Verbesserungsvorschläge, Vorher/Nachher-Vergleich, Art-of-Eating-Tipp, Nährwerte
 - `src/components/mahlzeit-input.tsx` — `done`-Step-Placeholder durch `<SaettigungsErgebnis>` ersetzt; `analysisResult`-State von `unknown` auf `AnalysisResult | null` getypt
 
+### Bugfix 2026-06-16
+Nutzer-Report: Bei `sehr_saettigend`-Mahlzeiten wurde der optionale Feinschliff-Vorschlag ausgeblendet ("kein konstruierter Verbesserungsvorschlag nötig"), aber der Vorher/Nachher-Bausteinvergleich und die "Nach Verbesserung"-Nährwertspalte liefen unabhängig weiter und zeigten geänderte Werte — für den Nutzer nicht nachvollziehbar, da die Begründung (der Vorschlag selbst) nicht sichtbar war. Fix: neue `showVorschlaege`-Variable (`hasVorschlaege && !isSehrSaettigend`) steuert jetzt einheitlich Vorschlagstext, Bausteinvergleich und Nährwert-Spalte „Nach Verbesserung" — alle drei erscheinen nur noch gemeinsam oder gar nicht.
+
 ## QA Test Results
 
 **QA Date:** 2026-06-12

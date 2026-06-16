@@ -111,6 +111,13 @@
 - Neue Env-Variable `USDA_API_KEY` — muss in `.env.local` und Vercel-Dashboard hinterlegt sein (kostenlos: api.nal.usda.gov)
 - Neue Env-Variable muss zu `.env.local.example` hinzugefügt werden (manuell, da Datei außerhalb Schreibpfad)
 
+### Bugfix 2026-06-16
+Nutzer-Report: Kalorien einer Mahlzeit massiv unterschätzt (189 statt ~511 kcal laut Handrechnung). Ursache in `src/lib/nutrition.ts`:
+- Von Claude formulierte Zutatennamen mit Zubereitungs-Klammerzusatz (z.B. "Karotten (geraspelt)", "roter Quinoa (gekocht)") brachen sowohl das BLS-Alias-Matching als auch die `ilike`-Suche und die Open-Food-Facts-Abfrage — verifiziert per direktem API-Call (`count: 0` mit Klammer, mehrere Treffer ohne). Betroffene Zutaten wurden in `computeMacros()` stillschweigend mit 0 kcal gewertet statt geschätzt, obwohl als "schaetzung" gelabelt.
+- Fix: neue `stripDescriptors()`-Funktion entfernt Klammerzusätze vor `normalizeName()` (BLS-Alias + `ilike`) und vor `buildOFFQueries()`. Volle Bezeichnung bleibt fürs Display erhalten.
+- Zusätzlich entdeckt (System-Prompt-Lücke, separat behoben): Roh-/Gekocht-Gewichtsverwechslung bei Quinoa — `grams` basierte auf rohem/trockenem Gewicht, der Zutatenname sagte aber "(gekocht)". Neue Regel "Roh-/Gekocht-Gewichtskonsistenz" im `ANALYSIS_SYSTEM_PROMPT` ergänzt (siehe `docs/saettigungsmatrix.md` und `docs/system-prompt.md`).
+- Bekannte Restungenauigkeit: `queryBLS()` nutzt `ilike(...).limit(1)` ohne `ORDER BY` — bei mehreren passenden BLS-Einträgen (z.B. "Karotte/Möhre, roh/gekocht/gedünstet/...") ist die Auswahl nicht deterministisch priorisiert. Bisher kein akuter Fall gefunden, aber als Risiko notiert.
+
 ## Tech Design (Solution Architect)
 
 ### System-Übersicht

@@ -184,9 +184,20 @@ const BLS_ALIASES: Record<string, string> = {
   erbsenprotein:        'erbse',
 }
 
+// Claude formuliert Zutatennamen gern mit Zubereitungs-/Zustands-Zusatz in Klammern
+// (z.B. "Karotten (geraspelt)", "roter Quinoa (gekocht)"). Das ist gut für die Anzeige,
+// bricht aber sowohl das Alias-Matching als auch die BLS/OFF-Suche, weil keine Datenbank
+// diese Zusätze wortwörtlich im Namen führt — die Zutat fällt dann komplett unter den Tisch
+// (0 kcal statt der echten Werte). Für den Datenbank-Lookup wird der Klammerzusatz entfernt,
+// für die Anzeige bleibt der volle Name unverändert erhalten.
+function stripDescriptors(name: string): string {
+  return name.replace(/\([^)]*\)/g, ' ').replace(/\s+/g, ' ').trim()
+}
+
 function normalizeName(name: string): string {
-  const lower = name.toLowerCase().trim()
-  return BLS_ALIASES[lower] ?? name
+  const core = stripDescriptors(name)
+  const lower = core.toLowerCase().trim()
+  return BLS_ALIASES[lower] ?? core
 }
 
 // ─── BLS database lookup (primary) ──────────────────────────
@@ -221,7 +232,7 @@ export async function queryBLS(ingredient: string): Promise<NutritionSource | nu
 // Builds multiple OFF search queries to handle German compound words and "Product von Brand" patterns.
 // "Proteinpudding von Ehrmann" → tries ["Proteinpudding Ehrmann", "Ehrmann Proteinpudding", "Ehrmann Protein"]
 function buildOFFQueries(ingredient: string): string[] {
-  const cleaned = ingredient
+  const cleaned = stripDescriptors(ingredient)
     .replace(/\b(von|vom|mit|nach|der|die|das|für)\b/gi, ' ')
     .replace(/\s+/g, ' ')
     .trim()
