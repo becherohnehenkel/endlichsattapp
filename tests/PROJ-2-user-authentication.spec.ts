@@ -36,12 +36,11 @@ test.describe('Zugangsschutz', () => {
   })
 
   // BUG-4 (gefunden 2026-06-16, siehe Decision Log in features/PROJ-2-user-authentication.md):
-  // Middleware erkennt die Session in einem neu geöffneten Tab derselben Browser-Context nicht
-  // (getSession() liefert dort offenbar keinen Nutzer) — reproduziert deterministisch über 3
-  // Versuche, unabhängig vom Redirect-Ziel (auch mit dem alten Ziel "/analyse" getestet). Kein
-  // Zusammenhang mit BUG-1/der Startseiten-Umstellung. Mit test.fixme() markiert statt grün zu
-  // lügen, bis das separat untersucht wird.
-  test.fixme('Eingeloggter Nutzer wird von /login zur Startseite weitergeleitet', async ({ page }) => {
+  // war eine Next.js/Turbopack-Eigenheit — /login und /registrieren waren vollständig
+  // statische Seiten (keine serverseitige Datenabfrage), wodurch die Middleware-Weiterleitung
+  // für bereits eingeloggte Nutzer dort nie griff. Gefixt durch einen Server-Component-Wrapper
+  // um beide Seiten (macht sie dynamisch, gleiches Muster wie "/" und "/analyse").
+  test('Eingeloggter Nutzer wird von /login zur Startseite weitergeleitet', async ({ page }) => {
     await loginAs(page, TEST_EMAIL, TEST_PASSWORD)
     // New tab forces a real HTTP request so middleware runs (window.location.href is intercepted as soft nav)
     const newPage = await page.context().newPage()
@@ -50,7 +49,7 @@ test.describe('Zugangsschutz', () => {
     await newPage.close()
   })
 
-  test.fixme('Eingeloggter Nutzer wird von /registrieren zur Startseite weitergeleitet', async ({ page }) => {
+  test('Eingeloggter Nutzer wird von /registrieren zur Startseite weitergeleitet', async ({ page }) => {
     await loginAs(page, TEST_EMAIL, TEST_PASSWORD)
     const newPage = await page.context().newPage()
     await newPage.goto('/registrieren')

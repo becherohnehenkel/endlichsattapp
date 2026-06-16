@@ -21,9 +21,14 @@ QA-Fund während PROJ-10: PROJ-6 änderte den client-seitigen Post-Login-Redirec
 Fix: `middleware.ts` auf `/` vereinheitlicht. Diese Spec (Acceptance Criteria + User Story) und `tests/PROJ-2-user-authentication.spec.ts` auf das jetzt konsistente Verhalten aktualisiert. `redirectTo`-Verhalten (explizites Linkziel) bleibt unverändert auf `/analyse` o.ä.
 `tests/PROJ-3/4/5-*.spec.ts`: `loginAs()` fordert jetzt explizit `redirectTo=%2Fanalyse` an, da diese Tests auf der Analyse-Seite laufen müssen (PROJ-8 brauchte keinen Fix — navigiert dort bereits explizit selbst hin).
 
-**BUG-4 (neu gefunden, separat von BUG-1):** Beim ersten erfolgreichen Durchlauf dieser zuvor blockierten Tests kam ans Licht: `newPage.goto('/login')`/`/registrieren` in einem neuen Tab derselben Browser-Context erkennt die bestehende Session in der Middleware nicht (`getSession()` liefert dort keinen Nutzer) — deterministisch reproduziert über 3 Versuche, unabhängig vom Redirect-Ziel. Die zwei betroffenen Tests sind mit `test.fixme()` markiert statt grün zu lügen. Noch nicht behoben — eigener Untersuchungs-Durchgang empfohlen.
-
 **Weiterer Fund (gehört zu PROJ-3/4/5, nicht hier gefixt):** Mit dem BUG-1-Fix laufen PROJ-3s Rückfragen-Flow-Tests jetzt erstmals durch — und decken auf, dass `mockApis()`s `/api/analyse/complete`-Mock nicht die von `runCompleteAnalysis()` erwartete `{ ingredients: [...] }`-Form liefert (gleiches Muster wie der BUG-2-Fund in PROJ-10). 5 Tests in `PROJ-3-mahlzeit-input.spec.ts` schlagen dadurch fehl. War vorher unsichtbar, weil der Login-Redirect-Bug diese Tests nie so weit kommen ließ. Nicht im Rahmen dieses Fixes behoben — eigener Durchgang über die Mock-Shapes in PROJ-3/4/5 empfohlen.
+
+### Bugfix 2026-06-16 — BUG-4 behoben: Middleware-Redirect griff bei vollständig statischen Seiten nicht
+**Ursprünglicher Verdacht (falsch):** Middleware erkenne die Session in einem neu geöffneten Tab nicht. Tiefere Diagnose (Response-Header-Injection in der Middleware zum Debuggen, raw-curl-Replay des echten Session-Cookies, Litmus-Test mit bedingungslosem Redirect) widerlegte das: Selbst der GLEICHE Tab, direkt nach erfolgreichem Login, leitete bei `/login`-Aufruf nicht weiter — während ein bedingungsloser Test-Redirect für `/rezepte`, `/analyse`, `/wie-esse-ich-richtig` zuverlässig griff, aber für `/login`/`/registrieren` nie.
+
+**Tatsächliche Ursache:** `/login` und `/registrieren` waren reine `'use client'`-Seiten ohne serverseitige Datenabfrage — Next.js optimierte sie dadurch zu vollständig statischen Routen (`○` im Build-Output statt `ƒ`). Bei vollständig statischen Routen griff die Middleware-Weiterleitung in diesem Next.js-16/Turbopack-Dev-Setup nicht, unabhängig von Sessions/Cookies/Tabs.
+
+**Fix:** `src/app/login/page.tsx` und `src/app/registrieren/page.tsx` sind jetzt dünne async Server-Component-Wrapper (gleiches Muster wie `/` und `/analyse`), die selbst `getSession()` prüfen und bei bereits eingeloggtem Nutzer redirecten — die eigentliche Formular-UI wurde nach `src/components/login-form.tsx`/`registrieren-form.tsx` ausgelagert. Macht die Routen dynamisch (`ƒ` im Build-Output bestätigt), Middleware-Logik bleibt als zusätzliche Absicherung bestehen. Alle 18 Tests in `tests/PROJ-2-user-authentication.spec.ts` grün (Chromium + Mobile Chrome), inkl. der beiden vorher `test.fixme()`-markierten. Regression auf PROJ-3/PROJ-10 verifiziert (16/17, der eine "Fehler" war eine nicht zurückgesetzte Test-Vorbedingung, kein Bug).
 
 ## Dependencies
 - Requires: PROJ-1 (Supabase Infrastructure Setup) — Auth läuft über Supabase Auth, Profil-Eintrag wird bei Registrierung angelegt
@@ -98,6 +103,9 @@ Fix: `middleware.ts` auf `/` vereinheitlicht. Diese Spec (Acceptance Criteria + 
 
 ### Technical Decisions
 <!-- Added by /architecture -->
+| Decision | Rationale | Date |
+|----------|-----------|------|
+| `/login` und `/registrieren` als async Server-Component-Wrapper statt reiner `'use client'`-Seiten, Formular-UI ausgelagert nach `login-form.tsx`/`registrieren-form.tsx` | BUG-4-Fix: vollständig statische Routen ließen die Middleware-Weiterleitung für bereits eingeloggte Nutzer ins Leere laufen (Next.js/Turbopack-Eigenheit) — ein Server-Component-Wrapper mit eigener `getSession()`-Prüfung macht die Route dynamisch und übernimmt den Redirect zusätzlich selbst, robust unabhängig von der Middleware | 2026-06-16 |
 
 ---
 

@@ -127,8 +127,8 @@ test.describe('Eingabe-Formular', () => {
     mockApis(page, 'ready')
     await page.fill('textarea', 'Hähnchenbrust mit Reis und Brokkoli')
     await page.getByRole('button', { name: /analysieren/i }).click()
-    // With mocked APIs the flow may jump past 'analysing' to 'done' — check any loading or result state
-    await expect(page.getByText(/analyse läuft|vorbereitet|sättigungs-analyse|neue mahlzeit/i)).toBeVisible({ timeout: 5000 })
+    // Mit den gemockten APIs läuft die Analyse durch bis zur Bestätigungs-Ansicht
+    await expect(page.getByText('Hab ich das richtig verstanden?')).toBeVisible({ timeout: 8000 })
   })
 
   test('Ladestate — kein leerer Bildschirm nach Absenden', async ({ page }) => {
