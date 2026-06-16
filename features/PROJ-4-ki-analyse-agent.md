@@ -118,6 +118,11 @@ Nutzer-Report: Kalorien einer Mahlzeit massiv unterschätzt (189 statt ~511 kcal
 - Zusätzlich entdeckt (System-Prompt-Lücke, separat behoben): Roh-/Gekocht-Gewichtsverwechslung bei Quinoa — `grams` basierte auf rohem/trockenem Gewicht, der Zutatenname sagte aber "(gekocht)". Neue Regel "Roh-/Gekocht-Gewichtskonsistenz" im `ANALYSIS_SYSTEM_PROMPT` ergänzt (siehe `docs/saettigungsmatrix.md` und `docs/system-prompt.md`).
 - Bekannte Restungenauigkeit: `queryBLS()` nutzt `ilike(...).limit(1)` ohne `ORDER BY` — bei mehreren passenden BLS-Einträgen (z.B. "Karotte/Möhre, roh/gekocht/gedünstet/...") ist die Auswahl nicht deterministisch priorisiert. Bisher kein akuter Fall gefunden, aber als Risiko notiert.
 
+### Bugfix 2026-06-16 (Folge-Fix, gleicher Tag)
+Nutzer-Report: Nährwerte bei einer weiteren Mahlzeit erneut massiv unterschätzt, trotz vorherigem Fix bereits deployed. Per Supabase-API-Logs verifiziert: Die BLS-Abfragen für „karotte" und „kichererbse reif, gekocht" lieferten in der betroffenen Anfrage `200 OK` mit echten Daten — landeten im gespeicherten Ergebnis aber trotzdem als `"schaetzung"` (0 kcal).
+- Ursache: `nutritionMap` wurde vor dem Claude-Call anhand der bestätigten Eingabe-Zutatennamen aufgebaut. Die Makro-Berechnung jointe danach aber gegen `result.zutatenliste[].name` — Claudes eigene, frisch formulierte Namen aus der Analyse-Antwort (ein separater Prompt-Abschnitt, der die Zutatenliste ohnehin neu ausgeben muss). Schreibt Claude den Namen auch nur minimal anders (Singular/Plural, Wortstellung, Großschreibung), läuft der Map-Lookup leise ins Leere — unabhängig davon, ob der ursprüngliche BLS/OFF-Lookup erfolgreich war.
+- Fix in `src/app/api/analyse/confirm/route.ts`: neue `resolveNutrition()`-Funktion prüft zuerst `nutritionMap` (schneller Pfad für den Normalfall), fällt bei einem Cache-Miss aber auf einen frischen BLS/OFF-Lookup mit Claudes tatsächlichem Namen zurück. `vorherInputs` und `data_sources` nutzen jetzt beide dieselbe aufgelöste Liste (`resolvedIngredients`) statt zwei unabhängiger, gleich fragiler Joins.
+
 ## Tech Design (Solution Architect)
 
 ### System-Übersicht
