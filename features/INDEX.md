@@ -27,7 +27,7 @@
 | PROJ-10 | Foto-Scan-Limit pro Nutzer | P1 | Deployed | PROJ-1, PROJ-2 | [Spec](PROJ-10-foto-scan-limit.md) |
 | PROJ-11 | Paywall | P2 | Deployed | PROJ-1, PROJ-2, PROJ-8, PROJ-10 | [Spec](PROJ-11-paywall.md) |
 | PROJ-12 | Invite-Codes | P2 | Deployed | PROJ-11 | [Spec](PROJ-12-invite-codes.md) |
-| PROJ-13 | Admin-Dashboard | P2 | Roadmap | PROJ-8, PROJ-12 | — |
+| PROJ-13 | Admin-Dashboard | P2 | Planned | PROJ-8, PROJ-12 | [Spec](PROJ-13-admin-dashboard.md) |
 
 <!-- Add features above this line -->
 
