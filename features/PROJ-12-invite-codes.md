@@ -208,3 +208,67 @@ Keine neuen Pakete — läuft komplett mit dem bestehenden Supabase/Next.js-Stac
 | Rate-Limit über Supabase (kein Redis/Upstash) | Anwendungsfall ist niedrig-traffic; kein weiterer externer Service für ein simples Fehlversuch-Counter nötig | 2026-06-17 |
 | Code-Einlösung nur über API-Route (Admin-Client), kein direkter Browser-Zugriff auf `invite_codes` | Verhindert Manipulation (z.B. Codes auslesen oder als eingelöst markieren) durch einen angemeldeten Nutzer über die Browser-Konsole | 2026-06-17 |
 | `getAccessStatus()` liest `invite_code_redeemed_at` in derselben bestehenden Query | Kein zusätzlicher DB-Request; `profiles` wird ohnehin für jeden Seiten-Aufruf gelesen | 2026-06-17 |
+
+---
+
+## QA Test Results
+
+**QA-Datum:** 2026-06-17
+**Tester:** Claude Code (QA Engineer)
+**Status: APPROVED — Bereit für Deployment**
+
+### Acceptance Criteria
+
+| # | Kriterium | Ergebnis |
+|---|-----------|----------|
+| AC-1 | "Ich habe einen Code"-Link öffnet Eingabefeld auf derselben Seite (kein Seitenwechsel) | ✅ PASS |
+| AC-2 | Gültiger Code → eingelöst, Zugriff gesetzt, Erfolgsmeldung, Weiterleitung zu `/analyse` | ✅ PASS (API-gemockt) |
+| AC-3 | Nach Einlösen: Voller Zugriff auf `/analyse` und `/rezepte` unabhängig vom Trial | ✅ PASS (via paywall.ts-Logik und getAccessStatus) |
+| AC-4 | Ungültiger Code → Fehlermeldung "Dieser Code ist ungültig oder wurde bereits verwendet." | ✅ PASS |
+| AC-5 | Bereits-Zugriff-Nutzer: Code nicht verbraucht, Hinweis "Du hast bereits vollen Zugriff." | ✅ PASS |
+| AC-6 | Rate-Limit: Fehlermeldung identisch mit ungültigem Code, kein Lockout-Hinweis | ✅ PASS |
+| AC-7 | Countdown-Hinweis enthält "Code einlösen →"-Link → `/upgrade?showCode=1` | ✅ PASS |
+| AC-8 | Eingelöster Code kann von keinem anderen Nutzer verwendet werden | ✅ PASS (atomares UPDATE WHERE redeemed_by IS NULL — Code-Review verifiziert) |
+
+### Edge Cases
+
+| Edge Case | Ergebnis |
+|-----------|----------|
+| Nutzer ohne verbrauchte Scans: kein Code-Formular sichtbar | ✅ PASS (nur in Paywall/Trial-Zustand gezeigt) |
+| Doppelklick / Doppel-Submit: serverseitig idempotent | ✅ PASS (zweiter Request erhält alreadyHasAccess) |
+| Code mit Leerzeichen / Kleinschreibung → serverseitig normalisiert | ✅ PASS (route.ts: `.trim().toUpperCase()`) |
+| Netzwerkfehler → generische Fehlermeldung, Code bleibt unverbraucht | ✅ PASS |
+| `?showCode=1` öffnet Formular direkt mit Auto-Focus | ✅ PASS |
+| "Abbrechen" klappt Formular sauber ein | ✅ PASS |
+
+### Security Audit (Red Team)
+
+| Prüfung | Ergebnis |
+|---------|----------|
+| Unauthenticated POST an `/api/invite/redeem` → 401 | ✅ PASS |
+| Fehlender Code-Body → 422 (Zod-Validierung) | ✅ PASS |
+| Leerer Code → 422 | ✅ PASS |
+| Codes nicht über Browser direkt aus `invite_codes`-Tabelle auslesbar | ✅ PASS (RLS aktiviert, keine SELECT-Policy) |
+| Rate-Limit verhindert Brute-Force (10 Versuche/Stunde) | ✅ PASS (Supabase-Counter in invite_redemption_attempts) |
+| Race Condition bei zwei simultanen Tabs: nur erster Request gewinnt | ✅ PASS (atomares UPDATE WHERE redeemed_by IS NULL) |
+| Kein Hinweis ob Code existiert oder bereits eingelöst wurde | ✅ PASS (gleiche Meldung für beide Fälle) |
+
+### Automated Tests
+
+| Suite | Ergebnis |
+|-------|----------|
+| Vitest unit (route.ts): 9 Tests | ✅ 9/9 grün |
+| Playwright E2E: 28 Tests (Chromium + Mobile Chrome) | ✅ 28/28 grün |
+
+### Bugs
+
+**Keine Critical- oder High-Bugs gefunden.**
+
+### DB-Migrations-Reminder
+
+Vor dem Deployment müssen folgende 3 Migrationen in Supabase ausgeführt werden:
+1. `add_invite_code_redeemed_at_to_profiles`
+2. `create_invite_codes_table`
+3. `create_invite_redemption_attempts_table`
+
+Außerdem: Mindestens einen Test-Code in `invite_codes` anlegen um den Flow in Production zu verifizieren.
