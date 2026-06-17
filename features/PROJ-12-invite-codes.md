@@ -1,6 +1,6 @@
 # PROJ-12: Invite-Codes
 
-## Status: Planned
+## Status: In Progress
 **Created:** 2026-06-17
 **Last Updated:** 2026-06-17
 
@@ -160,6 +160,29 @@ Fehlversuche werden als Zeitstempel in einer leichtgewichtigen Spalte oder Mini-
 ### Dependencies
 
 Keine neuen Pakete — läuft komplett mit dem bestehenden Supabase/Next.js-Stack.
+
+## Implementierungsnotizen (Backend)
+
+**Implementiert 2026-06-17:**
+
+### DB-Migrationen (3 Stück — in Supabase anwenden)
+1. `add_invite_code_redeemed_at_to_profiles` — Spalte `invite_code_redeemed_at TIMESTAMPTZ DEFAULT NULL` auf `profiles` (geschützt durch bestehende column-level GRANTs aus PROJ-10)
+2. `create_invite_codes_table` — Tabelle `invite_codes` (`code TEXT PK`, `redeemed_by UUID REFERENCES auth.users`, `redeemed_at TIMESTAMPTZ`, `created_at TIMESTAMPTZ`); RLS aktiviert, keine Policies (nur Admin-Client)
+3. `create_invite_redemption_attempts_table` — Tabelle `invite_redemption_attempts` (`id UUID PK`, `user_id UUID NOT NULL REFERENCES auth.users ON DELETE CASCADE`, `attempted_at TIMESTAMPTZ`); Index auf `(user_id, attempted_at DESC)`
+
+### Implementierte Dateien
+- `src/app/api/invite/redeem/route.ts` — POST-Handler (Auth, Rate-Limit, Bereits-Zugriff-Check, atomares Redeem, Zugang setzen)
+- `src/app/api/invite/redeem/route.test.ts` — 9 Vitest-Tests, alle grün
+- `src/lib/paywall.ts` — `hasInviteAccess` zu `AccessStatus` und `getAccessStatus()` hinzugefügt
+- `src/types/database.ts` — Typen für `invite_codes`, `invite_redemption_attempts` und `invite_code_redeemed_at` auf `profiles` ergänzt
+- `src/lib/paywall.test.ts` — Test um `hasInviteAccess: false` ergänzt
+
+### Ausstehend (Frontend + E2E)
+- `/upgrade`-Seite: Code-Eingabe-UI (Input + Button + Feedback-States)
+- `upgrade-view.tsx` konsumiert `hasInviteAccess` aus `getAccessStatus()` für den "Code einlösen"-Link im Countdown-Hinweis
+- E2E-Tests: Playwright-Suite für den gesamten Einlöse-Flow
+
+---
 
 ### Technical Decisions
 | Entscheidung | Begründung | Datum |

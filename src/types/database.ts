@@ -263,11 +263,51 @@ export type Database = {
         }
         Relationships: []
       }
+      invite_codes: {
+        Row: {
+          code: string
+          redeemed_by: string | null
+          redeemed_at: string | null
+          created_at: string
+        }
+        Insert: {
+          code: string
+          redeemed_by?: string | null
+          redeemed_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          code?: string
+          redeemed_by?: string | null
+          redeemed_at?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      invite_redemption_attempts: {
+        Row: {
+          id: string
+          user_id: string
+          attempted_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          attempted_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          attempted_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
           email: string
           id: string
+          invite_code_redeemed_at: string | null
           name: string | null
           photo_scans_remaining: number
           trial_ends_at: string | null
@@ -278,6 +318,7 @@ export type Database = {
           created_at?: string
           email: string
           id: string
+          invite_code_redeemed_at?: string | null
           name?: string | null
           photo_scans_remaining?: number
           trial_ends_at?: string | null
@@ -288,6 +329,7 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          invite_code_redeemed_at?: string | null
           name?: string | null
           photo_scans_remaining?: number
           trial_ends_at?: string | null
