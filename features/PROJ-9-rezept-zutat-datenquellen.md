@@ -1,6 +1,6 @@
 # PROJ-9 — Rezept-Zutat: Anzeigename + OFF-Fallback
 
-**Status:** In Review  
+**Status:** Deployed  
 **Priorität:** P1  
 **Abhängigkeiten:** PROJ-8 (Rezeptbibliothek, deployed)
 
@@ -247,3 +247,25 @@ Keine Bugs gefunden.
 - **Bugs:** 0
 - **Security:** Pass
 - **Production Ready:** **YES**
+
+---
+
+## Deployment
+
+**Deployed:** 2026-06-17
+**Production URL:** https://endlichsattapp.vercel.app
+**Tag:** `v1.9.0-PROJ-9`
+
+### Pre-Deployment Checks
+- [x] `npm run build` erfolgreich
+- [x] `npm run lint` — 2 vorbestehende Einträge (`art-of-eating-guide.tsx`, `bild-cropper.tsx`), keine neuen
+- [x] QA approved (11/11 AC, 0 Bugs)
+- [x] Keine neuen Env-Variablen (OFF-Suche nutzt externe API ohne Key)
+- [x] Keine Secrets im Code
+- [x] Keine DB-Migrationen (kein neues Datenmodell)
+- [x] Alle Commits gepusht
+
+### Post-Deployment Verification
+- [x] Production-URL lädt (`curl` → HTTP 307, erwartetes Auth-Redirect-Verhalten)
+- [x] `/api/admin/off-search?q=quark` → 401 (korrekte Auth-Guard)
+- [x] `/api/admin/bls-search?q=quark` → 401 (korrekte Auth-Guard)

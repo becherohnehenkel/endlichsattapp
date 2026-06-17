@@ -23,7 +23,7 @@
 | PROJ-6 | Mahlzeit-Historie | P1 | Deployed | PROJ-1, PROJ-2, PROJ-4, PROJ-5 | [Spec](PROJ-6-mahlzeit-historie.md) |
 | PROJ-7 | Ernährungs-Tagebuch & Inspiration | P2 | Roadmap | PROJ-6 | — |
 | PROJ-8 | Rezeptbibliothek | P1 | Deployed | PROJ-1, PROJ-2, PROJ-4, PROJ-5 | [Spec](PROJ-8-rezeptbibliothek.md) |
-| PROJ-9 | Rezept-Zutat: Anzeigename + OFF-Fallback | P1 | Approved | PROJ-8 | [Spec](PROJ-9-rezept-zutat-datenquellen.md) |
+| PROJ-9 | Rezept-Zutat: Anzeigename + OFF-Fallback | P1 | Deployed | PROJ-8 | [Spec](PROJ-9-rezept-zutat-datenquellen.md) |
 | PROJ-10 | Foto-Scan-Limit pro Nutzer | P1 | Deployed | PROJ-1, PROJ-2 | [Spec](PROJ-10-foto-scan-limit.md) |
 | PROJ-11 | Paywall | P2 | Deployed | PROJ-1, PROJ-2, PROJ-8, PROJ-10 | [Spec](PROJ-11-paywall.md) |
 | PROJ-12 | Invite-Codes | P2 | Roadmap | PROJ-11 | — |
