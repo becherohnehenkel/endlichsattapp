@@ -272,3 +272,13 @@ Vor dem Deployment müssen folgende 3 Migrationen in Supabase ausgeführt werden
 3. `create_invite_redemption_attempts_table`
 
 Außerdem: Mindestens einen Test-Code in `invite_codes` anlegen um den Flow in Production zu verifizieren.
+
+## Deployment
+
+**Deployed:** 2026-06-17
+**Production URL:** https://endlichsattapp.vercel.app
+**Git Tag:** v1.12.0-PROJ-12
+
+**DB-Status Production:**
+- Alle 3 Migrationen bereits aktiv (angewendet 2026-06-17)
+- Test-Code `BETA2026` in `invite_codes` eingefügt für Produktions-Verifikation
