@@ -1,8 +1,15 @@
 # PROJ-13: Admin-Dashboard
 
-## Status: Approved
+## Status: Deployed
 **Created:** 2026-06-17
 **Last Updated:** 2026-06-17
+**Deployed:** 2026-06-17
+
+## Deployment
+
+- **Production:** satt.mehralsabnehmen.de (Vercel, auto-deploy via GitHub push)
+- **Neue Routen:** `/admin`, `/admin/codes`, `POST /api/admin/codes`, `DELETE /api/admin/codes/[code]`
+- **Keine DB-Migrationen:** Kein neues Schema — bestehende `invite_codes`-Tabelle aus PROJ-12
 
 ## Dependencies
 - PROJ-1 (Supabase Infrastructure) — Datenbank für Codes und Profile
