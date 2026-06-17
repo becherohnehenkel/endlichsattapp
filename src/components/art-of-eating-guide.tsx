@@ -1,7 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 import { Check } from 'lucide-react'
+
+function subscribe() { return () => {} }
+function getSnapshot() { return true }
+function getServerSnapshot() { return false }
 
 const STEPS = [
   {
@@ -45,16 +49,17 @@ const STEPS = [
 const STORAGE_KEY = 'aoe_completed'
 
 export default function ArtOfEatingGuide() {
-  const [completed, setCompleted] = useState<Set<number>>(new Set())
-  const [ready, setReady] = useState(false)
+  const isMounted = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
 
-  useEffect(() => {
+  const [completed, setCompleted] = useState<Set<number>>(() => {
+    if (typeof window === 'undefined') return new Set()
     try {
       const stored = localStorage.getItem(STORAGE_KEY)
-      if (stored) setCompleted(new Set(JSON.parse(stored) as number[]))
-    } catch { /* ignore */ }
-    setReady(true)
-  }, [])
+      return stored ? new Set(JSON.parse(stored) as number[]) : new Set()
+    } catch {
+      return new Set()
+    }
+  })
 
   function toggle(n: number) {
     setCompleted(prev => {
@@ -73,7 +78,7 @@ export default function ArtOfEatingGuide() {
 
   const allDone = completed.size === STEPS.length
 
-  if (!ready) return null
+  if (!isMounted) return null
 
   return (
     <div className="space-y-6">
