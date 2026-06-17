@@ -33,7 +33,8 @@ export default async function RezeptBearbeitenPage({
         name,
         amount,
         unit,
-        sort_order
+        sort_order,
+        macros_per_100g
       )
     `)
     .eq('id', id)
@@ -46,7 +47,7 @@ export default async function RezeptBearbeitenPage({
     ? `${supabaseUrl}/storage/v1/object/public/recipe-images/${recipe.image_path}`
     : null
 
-  type Ingredient = { id: string; name: string; amount: number; unit: string; sort_order: number }
+  type Ingredient = { id: string; name: string; amount: number; unit: string; sort_order: number; macros_per_100g: Record<string, number> | null }
   const sortedIngredients = (recipe.recipe_ingredients as unknown as Ingredient[])
     .sort((a, b) => a.sort_order - b.sort_order)
 
@@ -84,6 +85,7 @@ export default async function RezeptBearbeitenPage({
           recipeId={id}
           defaultValues={defaultValues}
           existingImageUrl={existingImageUrl}
+          defaultIngredientMacros={sortedIngredients.map(i => i.macros_per_100g as import('@/lib/nutrition').NutritionPer100g | null)}
         />
       </main>
     </div>

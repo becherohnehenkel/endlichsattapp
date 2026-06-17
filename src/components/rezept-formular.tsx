@@ -36,6 +36,7 @@ interface RezeptFormularProps {
   defaultValues?: Partial<RezeptFormularValues>
   recipeId?: string
   existingImageUrl?: string | null
+  defaultIngredientMacros?: (NutritionPer100g | null)[]
   mode: 'create' | 'edit'
 }
 
@@ -43,6 +44,7 @@ export default function RezeptFormular({
   defaultValues,
   recipeId,
   existingImageUrl,
+  defaultIngredientMacros,
   mode,
 }: RezeptFormularProps) {
   const router = useRouter()
@@ -58,7 +60,7 @@ export default function RezeptFormular({
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [ingredientMacros, setIngredientMacros] = useState<(NutritionPer100g | null)[]>(
-    () => (defaultValues?.ingredients ?? [{ name: '', amount: '', unit: 'g' }]).map(() => null)
+    () => (defaultValues?.ingredients ?? [{ name: '', amount: '', unit: 'g' }]).map((_, i) => defaultIngredientMacros?.[i] ?? null)
   )
 
   const { register, control, handleSubmit, formState: { errors } } = useForm<RezeptFormularValues>({

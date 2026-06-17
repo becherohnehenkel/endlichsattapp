@@ -55,7 +55,7 @@ export default function ZutatInputMitQuelle({
   // Show "Nicht im BLS?" button only after a search that returned 0 BLS results
   const [showOffButton, setShowOffButton] = useState(false)
 
-  const [isPinned, setIsPinned] = useState(false)
+  const [isPinned, setIsPinned] = useState(() => linkedMacros !== null)
   const [source, setSource] = useState<'bls' | 'off' | null>(null)
 
   const containerRef = useRef<HTMLDivElement>(null)
@@ -179,7 +179,9 @@ export default function ZutatInputMitQuelle({
 
   const badgeColor = source === 'off'
     ? 'text-blue-700 bg-blue-50 border-blue-200'
-    : 'text-emerald-600 bg-emerald-50 border-emerald-200'
+    : source === 'bls'
+      ? 'text-emerald-600 bg-emerald-50 border-emerald-200'
+      : 'text-muted-foreground bg-muted border-border'
 
   return (
     <div ref={containerRef} className="relative flex-1">
@@ -192,9 +194,9 @@ export default function ZutatInputMitQuelle({
       />
 
       {/* Quelle-Badge mit ✕ */}
-      {isPinned && source && (
+      {isPinned && (
         <span className={`absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5 text-[10px] font-medium border rounded px-1 py-0.5 ${badgeColor}`}>
-          ✓ {source === 'off' ? 'OFF' : 'BLS'}
+          ✓{source ? ` ${source === 'off' ? 'OFF' : 'BLS'}` : ''}
           <button
             type="button"
             onClick={handleClearPin}

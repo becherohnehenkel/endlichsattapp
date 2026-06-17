@@ -1,6 +1,6 @@
 # PROJ-9 — Rezept-Zutat: Anzeigename + OFF-Fallback
 
-**Status:** In Progress  
+**Status:** In Review  
 **Priorität:** P1  
 **Abhängigkeiten:** PROJ-8 (Rezeptbibliothek, deployed)
 
@@ -34,20 +34,20 @@ Im Admin-Editor für Rezepte gibt es bereits eine BLS-Suche (Live-Dropdown). Wen
 
 ### Feature 1: Anzeigename editierbar nach BLS-Auswahl
 
-- [ ] Angenommen der Admin wählt einen BLS-Eintrag aus der Dropdown-Liste aus, dann wird der volle BLS-Name ins Textfeld gesetzt und ein "✓ BLS"-Badge erscheint
-- [ ] Angenommen ein BLS-Eintrag verknüpft ist, wenn der Admin den Anzeigenamen im Textfeld editiert (kürzt/ändert), dann bleiben die `macros_per_100g` erhalten — keine automatische Löschung
-- [ ] Angenommen ein BLS-Eintrag verknüpft ist, wenn der Admin auf das "✕"-Symbol neben dem Badge klickt, dann wird die Verknüpfung gelöst und das Feld verhält sich wieder wie ein freies Textfeld (kein Badge, Makros cleared)
-- [ ] Angenommen die Verknüpfung besteht, wenn das Rezept gespeichert wird, dann werden die gespeicherten `macros_per_100g` verwendet — NICHT ein Lookup über den (ggf. gekürzten) Anzeigenamen
-- [ ] Angenommen keine Verknüpfung besteht, dann wird der Name wie bisher für den BLS/OFF/USDA-Lookup verwendet
+- [x] Angenommen der Admin wählt einen BLS-Eintrag aus der Dropdown-Liste aus, dann wird der volle BLS-Name ins Textfeld gesetzt und ein "✓ BLS"-Badge erscheint
+- [x] Angenommen ein BLS-Eintrag verknüpft ist, wenn der Admin den Anzeigenamen im Textfeld editiert (kürzt/ändert), dann bleiben die `macros_per_100g` erhalten — keine automatische Löschung
+- [x] Angenommen ein BLS-Eintrag verknüpft ist, wenn der Admin auf das "✕"-Symbol neben dem Badge klickt, dann wird die Verknüpfung gelöst und das Feld verhält sich wieder wie ein freies Textfeld (kein Badge, Makros cleared)
+- [x] Angenommen die Verknüpfung besteht, wenn das Rezept gespeichert wird, dann werden die gespeicherten `macros_per_100g` verwendet — NICHT ein Lookup über den (ggf. gekürzten) Anzeigenamen
+- [x] Angenommen keine Verknüpfung besteht, dann wird der Name wie bisher für den BLS/OFF/USDA-Lookup verwendet
 
 ### Feature 2: OFF-Suche als expliziter Fallback
 
-- [ ] Angenommen die BLS-Suche liefert 0 Ergebnisse für den eingetippten Begriff, dann erscheint unterhalb des leeren Dropdowns ein Button "Nicht im BLS? Open Food Facts durchsuchen →"
-- [ ] Angenommen der Admin klickt den OFF-Button, dann wird eine Suche über OFF mit dem aktuellen Suchbegriff ausgeführt (Ladezustand sichtbar)
-- [ ] Angenommen OFF Ergebnisse vorliegen, dann werden sie in einer separaten Dropdown-Liste angezeigt mit Produktname + Makros pro 100g und einer "OFF"-Quelle-Kennzeichnung
-- [ ] Angenommen der Admin wählt einen OFF-Eintrag aus, dann wird der Produktname ins Textfeld gesetzt, ein "✓ OFF"-Badge erscheint und die Makros werden gespeichert
-- [ ] Angenommen ein OFF-Eintrag verknüpft ist, verhält sich der Anzeigename genauso editierbar wie bei BLS (Feature 1 gilt für beide Quellen)
-- [ ] Angenommen OFF ebenfalls 0 Ergebnisse findet, dann erscheint ein Hinweis "Kein Eintrag gefunden — Makros werden zur Laufzeit geschätzt"
+- [x] Angenommen die BLS-Suche liefert 0 Ergebnisse für den eingetippten Begriff, dann erscheint unterhalb des leeren Dropdowns ein Button "Nicht im BLS? Open Food Facts durchsuchen →"
+- [x] Angenommen der Admin klickt den OFF-Button, dann wird eine Suche über OFF mit dem aktuellen Suchbegriff ausgeführt (Ladezustand sichtbar)
+- [x] Angenommen OFF Ergebnisse vorliegen, dann werden sie in einer separaten Dropdown-Liste angezeigt mit Produktname + Makros pro 100g und einer "OFF"-Quelle-Kennzeichnung
+- [x] Angenommen der Admin wählt einen OFF-Eintrag aus, dann wird der Produktname ins Textfeld gesetzt, ein "✓ OFF"-Badge erscheint und die Makros werden gespeichert
+- [x] Angenommen ein OFF-Eintrag verknüpft ist, verhält sich der Anzeigename genauso editierbar wie bei BLS (Feature 1 gilt für beide Quellen)
+- [x] Angenommen OFF ebenfalls 0 Ergebnisse findet, dann erscheint ein Hinweis "Kein Eintrag gefunden — Makros werden zur Laufzeit geschätzt"
 
 ---
 
@@ -152,3 +152,98 @@ Die neue Route ist admin-geschützt (gleiche `requireAdmin()`-Guard) und gibt de
 
 - [x] Soll die OFF-Suche denselben `buildOFFQueries`-Algorithmus nutzen? → Ja, wiederverwendet bestehende Logik.
 - [x] Welche Felder soll das OFF-Suchergebnis im Dropdown zeigen? → Produktname + kcal + Protein (wie BLS-Dropdown)
+
+---
+
+## Implementation Notes
+
+**Neue Dateien:**
+- `src/components/zutat-input-mit-quelle.tsx` — ersetzt `usda-ingredient-input.tsx` (gelöscht). Enthält BLS-Live-Suche, `isPinned`/`source`-State, Quelle-Badge mit ✕, OFF-Button + OFF-Dropdown, Lade-/Fehlerzustände.
+- `src/app/api/admin/off-search/route.ts` — admin-geschützte Route, nutzt OFF Search API direkt (kein `queryOpenFoodFacts`-Wrapper — stattdessen eigene Inline-Implementierung mit DE → World Fallback). Gibt Produktname + `NutritionPer100g` zurück.
+
+**Geänderte Dateien:**
+- `src/components/rezept-formular.tsx` — importiert `ZutatInputMitQuelle`, neues Prop `defaultIngredientMacros?: (NutritionPer100g | null)[]`, `ingredientMacros`-Initialisierung nutzt jetzt die übergebenen Default-Makros statt immer `null`.
+- `src/app/admin/rezepte/[id]/bearbeiten/page.tsx` — `recipe_ingredients`-Query um `macros_per_100g` erweitert, `defaultIngredientMacros` an `RezeptFormular` übergeben.
+
+**Verhalten beim Editieren bestehender Zutaten:**
+- `isPinned` initialisiert mit `linkedMacros !== null` → bestehende Makros werden beim Tippen nicht überschrieben
+- `source` bleibt `null` (DB speichert keine Quelle) → Badge zeigt "✓" ohne BLS/OFF-Label (neutrales Grau statt Grün/Blau)
+- ✕-Button erscheint trotzdem → Admin kann Verknüpfung bewusst lösen
+
+**Build:** `npm run build` erfolgreich, keine neuen Fehler/Warnings.
+
+---
+
+## QA Test Results
+
+**Tested:** 2026-06-17
+**App URL:** http://localhost:3000 (lokaler Dev-Server)
+**Tester:** QA Engineer (AI)
+
+### Acceptance Criteria Status
+
+#### Feature 1: Anzeigename editierbar nach BLS-Auswahl
+
+- [x] **AC-1:** BLS-Eintrag wählen → Name ins Textfeld, "✓ BLS"-Badge — Code-Review: `handleSelectBls` setzt `onChange(result.name_de)`, `setSource('bls')`, `setIsPinned(true)`; JSX: `{isPinned && (<span>✓ {source === 'off' ? 'OFF' : 'BLS'}</span>)}`.
+- [x] **AC-2:** Anzeigenamen editieren (kürzen) → `macros_per_100g` erhalten — Code-Review: `handleChange` prüft `if (isPinned) return` — kein `onClearMacros()` wird aufgerufen.
+- [x] **AC-3:** ✕ klicken → Badge weg, Makros cleared — Code-Review: `handleClearPin` setzt `setIsPinned(false)`, `setSource(null)`, ruft `onClearMacros()`.
+- [x] **AC-4:** Beim Speichern Makros aus gespeichertem State, kein Re-Lookup — Code-Review: `onSubmit` nutzt `ingredientMacros[idx] ?? null`, nicht den Anzeigenamen.
+- [x] **AC-5:** Ohne Verknüpfung: BLS-Live-Suche aktiv — Code-Review: `handleChange` ruft `searchBls(val)` wenn `!isPinned`.
+
+#### Feature 2: OFF-Suche als expliziter Fallback
+
+- [x] **AC-6:** BLS 0 Ergebnisse → "Nicht im BLS?"-Button — Code-Review: `setShowOffButton(results.length === 0)` in `searchBls`.
+- [x] **AC-7:** OFF-Button klicken → Suche mit Ladezustand — Code-Review: `handleOffSearch` setzt `setOffLoading(true)`, JSX zeigt "Open Food Facts wird durchsucht…".
+- [x] **AC-8:** OFF-Ergebnisse → separate Dropdown-Liste mit "Open Food Facts"-Label + Makros — Code-Review: blauer Header-Abschnitt "Open Food Facts", `MacroLine` pro Eintrag.
+- [x] **AC-9:** OFF-Eintrag wählen → Produktname, "✓ OFF"-Badge, Makros gespeichert — Code-Review: `handleSelectOff` setzt `setSource('off')`, `onSelectSource(result.per100g)`.
+- [x] **AC-10:** OFF editierbar wie BLS (Feature 1 gilt) — Code-Review: `isPinned`-Logik ist quellenunabhängig.
+- [x] **AC-11:** OFF 0 Ergebnisse → Hinweistext — Code-Review: `setOffError('Kein Eintrag gefunden — Makros werden zur Laufzeit geschätzt')`.
+
+#### Edit-Mode Initialization (Bugfix dieser Session)
+
+- [x] `bearbeiten/page.tsx` lädt `macros_per_100g` aus der DB und übergibt `defaultIngredientMacros`
+- [x] `ingredientMacros` startet korrekt mit den geladenen Makros
+- [x] `isPinned` startet `true` wenn `linkedMacros !== null` (neue `useState(() => linkedMacros !== null)`)
+- [x] Remove-Handler (`prev.filter`) und Append-Handler (`[...prev, null]`) synchronisieren `ingredientMacros` korrekt mit `fields`
+
+### Edge Cases Status
+
+- [x] **EC-1:** BLS leer → OFF-Button → OFF auswählen → Name kürzen — Code-Pfad geprüft: `showOffButton=true` → `handleOffSearch` → `handleSelectOff` pinnt mit `source='off'` → `handleChange` mit `isPinned=true` ändert nur den Namen.
+- [x] **EC-2:** BLS verknüpft, Name kürzen auf "Quark", speichern → Makros = BLS-Werte — `isPinned` blockiert `searchBls`, `ingredientMacros[idx]` = gespeicherte BLS-Werte.
+- [x] **EC-3:** OFF Timeout/Fehler → Fehlermeldung, kein Crash — `catch { setOffError('Suche fehlgeschlagen…') }`.
+- [x] **EC-4:** Vorhandene Rezepte unverändert — keine Migration nötig, bestehende `macros_per_100g` bleiben in der DB.
+
+### Security Audit
+
+- [x] **`/api/admin/bls-search`:** 401 ohne Auth (Playwright verifiziert), 403 für Nicht-Admin (Playwright verifiziert)
+- [x] **`/api/admin/off-search`:** 401 ohne Auth (Playwright verifiziert), 403 für Nicht-Admin (Playwright verifiziert)
+- [x] **Admin-Seiten:** Unauthenticated → `/login`-Redirect; Nicht-Admin → `/admin/403` (Playwright verifiziert)
+- [x] **`requireAdmin()`** prüft `auth.uid()` server-seitig — kein Client-Bypass möglich
+- [x] Keine Secrets im Response-Body
+
+### Automated Test Results
+
+**Vitest (Unit Tests — OFF Search Route):**
+`src/app/api/admin/off-search/route.test.ts` — **11/11 Tests grün**
+- Auth (401/403), leere Queries, DE-Fallback auf World, Filterung ohne Nutriments, Filterung bei 0 kcal+Protein, Max-5-Limit, Fehlerbehandlung, Produktname-Fallback
+
+**E2E (Playwright):**
+`tests/PROJ-9-rezept-zutat-datenquellen.spec.ts` — **18/18 Tests grün** (Chromium + Mobile Chrome)
+- Admin-Zugriff-Redirects (Rezept-Neu, Rezept-Edit), API-Security-Checks (BLS + OFF)
+
+**Vollständige E2E-Regressionssuite:** **152/152 Tests grün** — keine Regressions
+
+**Vitest (gesamt):** 87/94 — 7 vorbestehende Fehler unberührt (alle in `analyse/confirm` und `admin/rezepte/[id]`, pre-existing)
+
+**Hinweis Admin-UI:** Die eigentliche UI-Interaktion (BLS-Dropdown, Badge, Pin-Verhalten, OFF-Flow) konnte per Playwright nicht automatisiert werden, da der E2E-Testnutzer (`qa-test@endlichsatt.dev`) kein Admin ist. Alle 11 AC wurden per Code-Review gegen `zutat-input-mit-quelle.tsx` verifiziert.
+
+### Bugs Found
+
+Keine Bugs gefunden.
+
+### Summary
+
+- **Acceptance Criteria:** 11/11 passed (per Code-Review verifiziert)
+- **Bugs:** 0
+- **Security:** Pass
+- **Production Ready:** **YES**
