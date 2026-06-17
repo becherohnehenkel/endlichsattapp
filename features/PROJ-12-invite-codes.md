@@ -84,3 +84,88 @@ Die Paywall (PROJ-11) sperrt Freitext-Analyse und Rezeptbibliothek nach Ablauf d
 
 ### Open Questions
 - [ ] Wie viele Zeichen soll ein Code haben, und welches Format (z.B. `XXXX-XXXX` oder 8 zufällige alphanumerische Zeichen)? → Entscheidung bei PROJ-13 (Code-Generierung), hier nur als Hinweis: Format muss für beide Specs konsistent sein
+
+---
+
+## Tech Design (Solution Architect)
+
+### Komponentenstruktur
+
+```
+/upgrade (UpgradeView — bestehende Client Component, src/components/upgrade-view.tsx)
++-- [unverändert] "Jetzt freischalten" → Stripe Checkout
++-- [unverändert] "Abo verwalten" → Stripe Customer Portal
++-- "Ich habe einen Einladungscode" [NEU — ersetzt Platzhaltertext]
+    +-- Eingeklappt: Link-Text "Ich habe einen Einladungscode →"
+    +-- Ausgeklappt (nach Klick):
+        +-- Input: Code-Eingabefeld
+        +-- Button: "Einlösen" (mit Ladezustand)
+        +-- Fehlermeldung bei ungültigem/bereits eingelöstem Code
+
+POST /api/invite/redeem [NEUE API-Route]
++-- Auth-Guard (401 ohne Session)
++-- Rate-Limit-Prüfung (max 10 Fehlversuche / Stunde / Nutzer)
++-- Prüft ob Nutzer bereits Zugriff hat → früher Rückgabewert, kein Code verbraucht
++-- Atomares UPDATE: Code suchen + als eingelöst markieren in einem Schritt
++-- Bei Erfolg: invite_code_redeemed_at auf dem Profil setzen
+
+src/lib/paywall.ts — getAccessStatus() [ERWEITERUNG]
++-- Liest invite_code_redeemed_at aus profiles (gleiche Query, kein neuer Join)
++-- hasAccess = true wenn invite_code_redeemed_at gesetzt
+```
+
+### Datenmodell
+
+**Neue Tabelle: `invite_codes`**
+```
+Jeder Code hat:
+- code                → der eigentliche Code-String (Primärschlüssel, unique)
+- redeemed_by         → User-ID des Nutzers der ihn eingelöst hat (NULL bis eingelöst)
+- redeemed_at         → Zeitstempel der Einlösung (NULL bis eingelöst)
+- created_at          → wann der Code angelegt wurde (von PROJ-13 befüllt)
+
+Kein direkter Browser-Zugriff — nur über die API-Route mit Admin-Rechten.
+```
+
+**Erweiterung `profiles` (bestehend):**
+```
+Neue Spalte:
+- invite_code_redeemed_at → Zeitstempel wann ein Code eingelöst wurde, sonst NULL
+
+Diese Spalte ist der Access-Gate-Schalter:
+  NULL    → kein Code-Zugang
+  Timestamp → dauerhafter Paywall-Bypass, unabhängig von subscription_status
+```
+
+Warum ein eigenes Feld statt `subscription_status = 'invite'`? Wenn ein Nutzer nach einer Code-Einlösung später ein Abo abschließt und kündigt, würde der Stripe-Webhook `subscription_status` auf `canceled` setzen — und damit den Code-Zugang versehentlich entziehen. Das separate Feld vermeidet diesen Konflikt.
+
+### API-Route
+
+| Route | Methode | Auth | Zweck |
+|---|---|---|---|
+| `POST /api/invite/redeem` | NEU | eingeloggt | Code einlösen |
+
+**Serverseitiger Ablauf:**
+1. Auth prüfen → 401 wenn keine Session
+2. Rate-Limit zählen: Fehlversuche des Nutzers in der letzten Stunde ≥ 10 → 429 (gleiche Meldung wie bei ungültigem Code)
+3. Bereits-Zugriff-Prüfung: `invite_code_redeemed_at != null` oder aktives Abo → 200 `{ alreadyHasAccess: true }`
+4. **Atomares DB-Update:** `UPDATE invite_codes SET redeemed_by = ?, redeemed_at = NOW() WHERE code = ? AND redeemed_by IS NULL RETURNING code` — verhindert Race Condition (zwei Tabs gleichzeitig)
+5. Kein RETURNING-Ergebnis → Code existiert nicht oder bereits eingelöst → 422, Fehlversuch zählen
+6. Erfolg → `profiles.invite_code_redeemed_at` setzen → 200 `{ success: true }`
+
+### Rate-Limiting
+
+Fehlversuche werden als Zeitstempel in einer leichtgewichtigen Spalte oder Mini-Tabelle in Supabase festgehalten. Die API-Route zählt Einträge der letzten Stunde für den aktuellen Nutzer vor jedem Versuch. Kein externer Service nötig — Supabase reicht für diesen Anwendungsfall vollständig aus.
+
+### Dependencies
+
+Keine neuen Pakete — läuft komplett mit dem bestehenden Supabase/Next.js-Stack.
+
+### Technical Decisions
+| Entscheidung | Begründung | Datum |
+|---|---|---|
+| Separates `invite_code_redeemed_at`-Feld auf `profiles` statt `subscription_status = 'invite'` | Verhindert Konflikt mit Stripe-Webhook: wenn ein Nutzer nach Code-Einlösung später ein Abo kündigt, überschreibt Stripe `subscription_status` auf `canceled` — das eigene Feld bleibt unberührt | 2026-06-17 |
+| Atomares `UPDATE ... WHERE redeemed_by IS NULL` für die Code-Einlösung | Verhindert Race Condition bei zwei gleichzeitigen Tabs: nur die erste Anfrage findet die Bedingung erfüllt und erhält einen Rückgabewert — die zweite bekommt "bereits eingelöst" | 2026-06-17 |
+| Rate-Limit über Supabase (kein Redis/Upstash) | Anwendungsfall ist niedrig-traffic; kein weiterer externer Service für ein simples Fehlversuch-Counter nötig | 2026-06-17 |
+| Code-Einlösung nur über API-Route (Admin-Client), kein direkter Browser-Zugriff auf `invite_codes` | Verhindert Manipulation (z.B. Codes auslesen oder als eingelöst markieren) durch einen angemeldeten Nutzer über die Browser-Konsole | 2026-06-17 |
+| `getAccessStatus()` liest `invite_code_redeemed_at` in derselben bestehenden Query | Kein zusätzlicher DB-Request; `profiles` wird ohnehin für jeden Seiten-Aufruf gelesen | 2026-06-17 |

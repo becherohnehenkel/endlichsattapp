@@ -26,7 +26,7 @@
 | PROJ-9 | Rezept-Zutat: Anzeigename + OFF-Fallback | P1 | Deployed | PROJ-8 | [Spec](PROJ-9-rezept-zutat-datenquellen.md) |
 | PROJ-10 | Foto-Scan-Limit pro Nutzer | P1 | Deployed | PROJ-1, PROJ-2 | [Spec](PROJ-10-foto-scan-limit.md) |
 | PROJ-11 | Paywall | P2 | Deployed | PROJ-1, PROJ-2, PROJ-8, PROJ-10 | [Spec](PROJ-11-paywall.md) |
-| PROJ-12 | Invite-Codes | P2 | Planned | PROJ-11 | [Spec](PROJ-12-invite-codes.md) |
+| PROJ-12 | Invite-Codes | P2 | Architected | PROJ-11 | [Spec](PROJ-12-invite-codes.md) |
 | PROJ-13 | Admin-Dashboard | P2 | Roadmap | PROJ-8, PROJ-12 | — |
 
 <!-- Add features above this line -->
