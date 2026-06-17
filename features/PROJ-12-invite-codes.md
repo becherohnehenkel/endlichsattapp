@@ -177,10 +177,26 @@ Keine neuen Pakete — läuft komplett mit dem bestehenden Supabase/Next.js-Stac
 - `src/types/database.ts` — Typen für `invite_codes`, `invite_redemption_attempts` und `invite_code_redeemed_at` auf `profiles` ergänzt
 - `src/lib/paywall.test.ts` — Test um `hasInviteAccess: false` ergänzt
 
-### Ausstehend (Frontend + E2E)
-- `/upgrade`-Seite: Code-Eingabe-UI (Input + Button + Feedback-States)
-- `upgrade-view.tsx` konsumiert `hasInviteAccess` aus `getAccessStatus()` für den "Code einlösen"-Link im Countdown-Hinweis
-- E2E-Tests: Playwright-Suite für den gesamten Einlöse-Flow
+### Ausstehend (E2E-Tests)
+- Playwright-Suite für den gesamten Einlöse-Flow
+
+## Implementierungsnotizen (Frontend)
+
+**Implementiert 2026-06-17:**
+
+### Geänderte Dateien
+- `src/components/upgrade-view.tsx`
+  - Neue Props: `hasInviteAccess: boolean`, `defaultShowCode?: boolean`
+  - Eigene Erfolgsansicht wenn `hasInviteAccess && !isSubscribed`: "Einladungscode eingelöst"
+  - Invite-Code-Abschnitt ersetzt Platzhaltertext: kollabierbar, Link → aufgeklapptes Formular
+  - Formular: `<Input>` (uppercase, tracking-widest) + "Einlösen"-Button + Error-State
+  - Erfolg → `window.location.href = '/analyse'` (Hard-Redirect, damit `getAccessStatus()` neu geladen wird)
+  - Auto-Focus auf Input wenn `defaultShowCode = true`
+- `src/app/upgrade/page.tsx`
+  - `searchParams` um `showCode?: string` erweitert
+  - `hasInviteAccess` und `defaultShowCode={showCode === '1'}` an UpgradeView übergeben
+- `src/components/mahlzeit-input.tsx`
+  - Countdown-Hinweis um Link "Code einlösen →" ergänzt → `/upgrade?showCode=1`
 
 ---
 

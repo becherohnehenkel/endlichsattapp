@@ -489,7 +489,8 @@ export default function MahlzeitInput({ userId, photoScansRemaining, trialDaysRe
           <AlertDescription>
             📸 Deine Foto-Scans sind aufgebraucht. Beschreib deine Mahlzeit einfach unten.
             {trialDaysRemaining !== null && (
-              <> Noch {trialDaysRemaining} {trialDaysRemaining === 1 ? 'Tag' : 'Tage'}, bis Freitext-Analyse & Rezepte ebenfalls eingeschränkt werden.</>
+              <> Noch {trialDaysRemaining} {trialDaysRemaining === 1 ? 'Tag' : 'Tage'}, bis Freitext-Analyse & Rezepte eingeschränkt werden.{' '}
+              <a href="/upgrade?showCode=1" className="underline text-[#4A7C59] whitespace-nowrap">Code einlösen →</a></>
             )}
           </AlertDescription>
         </Alert>

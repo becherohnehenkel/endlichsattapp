@@ -7,13 +7,13 @@ import UpgradeView from '@/components/upgrade-view'
 export default async function UpgradePage({
   searchParams,
 }: {
-  searchParams: Promise<{ session_id?: string }>
+  searchParams: Promise<{ session_id?: string; showCode?: string }>
 }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login?redirectTo=%2Fupgrade')
 
-  const { session_id } = await searchParams
+  const { session_id, showCode } = await searchParams
   const access = await getAccessStatus(supabase, user.id)
 
   return (
@@ -25,7 +25,9 @@ export default async function UpgradePage({
       </header>
       <UpgradeView
         subscriptionStatus={access.subscriptionStatus}
+        hasInviteAccess={access.hasInviteAccess}
         sessionId={session_id ?? null}
+        defaultShowCode={showCode === '1'}
       />
     </div>
   )
