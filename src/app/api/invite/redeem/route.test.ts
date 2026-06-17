@@ -165,10 +165,10 @@ describe('POST /api/invite/redeem', () => {
     adminFrom
       .mockReturnValueOnce(attemptsCountChain(0))
       .mockReturnValueOnce(profileSelectChain(PROFILE_NONE))
-      .mockReturnValueOnce(codeUpdateChain({ code: 'GOODCODE' }).chain)
+      .mockReturnValueOnce(codeUpdateChain({ code: 'aB3kR7mX' }).chain)
       .mockReturnValueOnce(profileUpdateC)
     const { POST } = await import('./route')
-    const res = await POST(makeRequest({ code: 'goodcode' })) // lowercase → normalized
+    const res = await POST(makeRequest({ code: 'aB3kR7mX' }))
     expect(res.status).toBe(200)
     expect((await res.json()).success).toBe(true)
     expect(profileUpdate).toHaveBeenCalledWith(
@@ -176,19 +176,19 @@ describe('POST /api/invite/redeem', () => {
     )
   })
 
-  it('normalizes code to uppercase and trims whitespace before DB lookup', async () => {
+  it('trims whitespace from code before DB lookup (case preserved)', async () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
-    const { _updateFn: codeUpdate, chain: codeChain } = codeUpdateChain({ code: 'CLEAN' })
+    const { _updateFn: codeUpdate, chain: codeChain } = codeUpdateChain({ code: 'aB3kR7mX' })
     adminFrom
       .mockReturnValueOnce(attemptsCountChain(0))
       .mockReturnValueOnce(profileSelectChain(PROFILE_NONE))
       .mockReturnValueOnce(codeChain)
       .mockReturnValueOnce(profileUpdateChain().chain)
     const { POST } = await import('./route')
-    await POST(makeRequest({ code: '  clean  ' }))
-    // The .eq('code', ...) call receives the normalized value
+    await POST(makeRequest({ code: '  aB3kR7mX  ' }))
+    // Whitespace trimmed, case preserved
     const eqCall = codeUpdate.mock.results[0].value.eq
-    expect(eqCall).toHaveBeenCalledWith('code', 'CLEAN')
+    expect(eqCall).toHaveBeenCalledWith('code', 'aB3kR7mX')
   })
 
   it('allows exactly 9 attempts (not yet rate-limited) but still rejects invalid code', async () => {

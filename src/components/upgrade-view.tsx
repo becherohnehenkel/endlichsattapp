@@ -192,8 +192,7 @@ export default function UpgradeView({ subscriptionStatus, hasInviteAccess, sessi
                   onChange={e => { setCode(e.target.value); setCodeError(null) }}
                   placeholder="Einladungscode eingeben"
                   disabled={codeLoading}
-                  autoCapitalize="characters"
-                  className="text-center tracking-widest uppercase"
+                  className="text-center tracking-widest font-mono"
                 />
                 <Button
                   type="submit"

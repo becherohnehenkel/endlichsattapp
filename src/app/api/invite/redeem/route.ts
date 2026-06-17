@@ -26,7 +26,7 @@ export async function POST(request: Request) {
   const parsed = schema.safeParse(body)
   if (!parsed.success) return INVALID_RESPONSE
 
-  const normalizedCode = parsed.data.code.trim().toUpperCase()
+  const normalizedCode = parsed.data.code.trim()
   const admin = createAdminClient()
 
   // Rate-limit: count failed attempts in the last hour
