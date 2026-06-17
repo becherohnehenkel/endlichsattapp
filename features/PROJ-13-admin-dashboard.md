@@ -101,4 +101,79 @@ Zielgruppe: ausschließlich der Product Owner (Solo-Admin) — kein Multi-Admin-
 
 ### Open Questions
 - [x] Code-Format: 8 zufällige Zeichen aus `A-Za-z0-9` (Groß/Kleinbuchstaben + Ziffern gemischt), kein Trenner — z.B. `aB3kR7mX`. Entschieden 2026-06-17.
-- [ ] PROJ-12-Folgeänderung: `POST /api/invite/redeem` normalisiert aktuell auf `.toUpperCase()` — das muss entfernt werden, da Codes jetzt case-sensitiv sind. Muss vor oder zusammen mit PROJ-13 deployed werden.
+- [x] PROJ-12-Folgeänderung: `.toUpperCase()`-Normalisierung aus `POST /api/invite/redeem` entfernt (fix(PROJ-12)-Commit vom 2026-06-17). Codes sind jetzt case-sensitiv.
+
+---
+
+## Tech Design (Solution Architect)
+
+### Komponentenstruktur
+
+```
+/admin  (Server Page — NEU)
++-- Admin-Startseite
+    +-- Navigationskarte "Rezepte verwalten" → /admin/rezepte
+    +-- Navigationskarte "Invite-Codes" → /admin/codes
+
+/admin/codes  (Server Page — NEU)
++-- Zusammenfassung "X von Y Codes eingelöst"
++-- "Neuen Code generieren"-Button
++-- InviteCodesTable  (Client Component — NEU)
+    +-- Tabellenkopf: Code | Status | E-Mail | Datum | Aktionen
+    +-- Tabellenzeilen (eine pro Code)
+    |   +-- Code-Text (Monospace-Schrift)
+    |   +-- Status-Badge ("Verfügbar" / "Eingelöst")
+    |   +-- E-Mail des Einlösers (oder — wenn noch nicht eingelöst)
+    |   +-- Datum der Einlösung (oder —)
+    |   +-- Copy-Button → kurzes "Kopiert ✓"-Feedback
+    |   +-- Löschen-Button (nur bei "Verfügbar")
+    +-- Lösch-Bestätigungsdialog (shadcn AlertDialog)
+    +-- Leer-Zustand: "Noch keine Codes — generiere deinen ersten Code."
+```
+
+### Neue API-Routen
+
+| Route | Methode | Zweck |
+|-------|---------|-------|
+| `POST /api/admin/codes` | NEU | Zufälligen 8-Zeichen-Code generieren und in DB speichern |
+| `DELETE /api/admin/codes/[code]` | NEU | Code löschen — nur wenn noch nicht eingelöst |
+
+Bestehende Routen bleiben unverändert. Die Codes-Seite liest Daten beim Page-Load server-seitig (Admin-Client); Mutationen (Generieren/Löschen) passieren über diese neuen Routen.
+
+### Datenmodell
+
+Kein neues Datenbankschema — alle Tabellen existieren bereits:
+
+```
+invite_codes (aus PROJ-12):
+- code          → Primärschlüssel, wird in der Tabelle angezeigt
+- redeemed_by   → UUID des Einlösers (NULL = Verfügbar)
+- redeemed_at   → Zeitstempel der Einlösung
+- created_at    → Zeitstempel der Erstellung
+
+profiles (aus PROJ-1):
+- id            → Verknüpfung mit invite_codes.redeemed_by
+- email         → wird als "Eingelöst von"-Information angezeigt
+```
+
+Die Codes-Seite liest `invite_codes` mit einem JOIN auf `profiles` um die E-Mail des Einlösers zu ermitteln.
+
+### Wie Generieren und Löschen funktionieren
+
+**Generieren:** Admin klickt "Neuen Code generieren" → Frontend ruft `POST /api/admin/codes` → Server generiert 8 zufällige Zeichen aus `A-Za-z0-9` → prüft auf Kollision (bis zu 3 Versuche) → speichert in DB → Frontend aktualisiert die Liste (Next.js `router.refresh()`).
+
+**Löschen:** Admin klickt "Löschen" → AlertDialog erscheint → Admin bestätigt → `DELETE /api/admin/codes/[code]` → Server prüft ob `redeemed_by IS NULL` → löscht → Liste wird aktualisiert. Falls Code inzwischen eingelöst wurde: Fehlermeldung "Code wurde bereits eingelöst und kann nicht mehr gelöscht werden."
+
+### Tech-Entscheidungen
+
+| Entscheidung | Begründung | Datum |
+|---|---|---|
+| Server Page für initialen Load, Client Component `InviteCodesTable` für Interaktionen | Codes werden server-seitig geladen (kein Client-State beim ersten Render); Interactive Teile (Copy-Feedback, Dialog) brauchen Client-Code | 2026-06-17 |
+| `router.refresh()` nach Mutationen statt eigenem Client-State | Next.js lädt die Server Page neu → immer frische Daten ohne doppelte State-Verwaltung; passt zum bestehenden Muster im Admin-Bereich | 2026-06-17 |
+| Admin-Client für alle Code-Operationen (kein direkter Supabase-Browser-Zugriff) | `invite_codes`-Tabelle hat keine RLS-Policies — nur Admin-Client darf schreiben/löschen; gleiche Sicherheitsarchitektur wie PROJ-12 | 2026-06-17 |
+| shadcn `AlertDialog` für Lösch-Bestätigung | Bereits installiert; blockierender Modal ist das richtige UX-Pattern für destruktive Aktionen | 2026-06-17 |
+| shadcn `Table` + `Badge` für die Code-Übersicht | Beide bereits installiert; keine neuen Abhängigkeiten nötig | 2026-06-17 |
+
+### Neue Abhängigkeiten
+
+Keine — alle benötigten shadcn-Komponenten (Table, Badge, AlertDialog, Button) sind bereits installiert.
