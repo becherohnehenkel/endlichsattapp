@@ -1,6 +1,6 @@
 # PROJ-13: Admin-Dashboard
 
-## Status: Planned
+## Status: Approved
 **Created:** 2026-06-17
 **Last Updated:** 2026-06-17
 
@@ -177,3 +177,68 @@ Die Codes-Seite liest `invite_codes` mit einem JOIN auf `profiles` um die E-Mail
 ### Neue Abhängigkeiten
 
 Keine — alle benötigten shadcn-Komponenten (Table, Badge, AlertDialog, Button) sind bereits installiert.
+
+---
+
+## QA Test Results
+
+**Datum:** 2026-06-17
+**Tester:** QA Engineer (automatisiert)
+**Status: APPROVED — Production-Ready**
+
+### Unit Tests (`npm test`)
+
+11 Tests in 2 Dateien — alle grün:
+
+| Datei | Tests | Ergebnis |
+|---|---|---|
+| `src/app/api/admin/codes/route.test.ts` | 5 | ✅ alle bestanden |
+| `src/app/api/admin/codes/[code]/route.test.ts` | 6 | ✅ alle bestanden |
+
+Abgedeckte Szenarien: 403 unauthenticated, 403 non-admin, Code-Generierung (success), Kollision-Retry, erschöpfte Versuche → 500, Delete success, Delete 409 (already redeemed), Delete 404 (not found).
+
+### E2E Tests (`npm run test:e2e`)
+
+26 Tests (13 Chromium + 13 Mobile Chrome) — alle grün:
+
+| Kategorie | Tests | Ergebnis |
+|---|---|---|
+| Zugriffskontrolle `/admin` | 4 | ✅ |
+| Zugriffskontrolle `/admin/codes` | 4 | ✅ |
+| API Security POST /api/admin/codes | 4 | ✅ |
+| API Security DELETE /api/admin/codes/[code] | 4 | ✅ |
+| Admin-Startseite Navigation | 2 | ✅ |
+| Codes-Seite: Leer-Zustand | 2 | ✅ |
+| Codes-Seite: Tabelle mit Daten | 2 | ✅ |
+| Code generieren (API-Aufruf) | 2 | ✅ |
+| Responsive (403-Seite Mobile) | 2 | ✅ |
+
+### Acceptance Criteria
+
+| Kriterium | Status |
+|---|---|
+| `/admin` Navigation (2 Karten) | ✅ |
+| Unauthenticated → `/login` | ✅ |
+| Nicht-Admin → `/admin/403` | ✅ |
+| Übersicht "X von Y Codes eingelöst" | ✅ manuell verifiziert |
+| Tabelle: Code, Status, E-Mail, Datum | ✅ manuell verifiziert |
+| Leer-Zustand | ✅ |
+| Code generieren → erscheint in Tabelle | ✅ manuell + E2E |
+| Copy-Button "Kopiert ✓"-Feedback | ✅ manuell verifiziert |
+| Löschen nur bei Verfügbar | ✅ manuell + Unit-Test 409 |
+| Bestätigungsdialog vor Löschen | ✅ manuell verifiziert |
+| Kollision-Retry (kein Admin-Fehler) | ✅ Unit-Test |
+| API-Security (403 für Nicht-Admin) | ✅ E2E |
+
+### Security Audit
+
+- Admin-Check via `ADMIN_EMAIL` env var — konsistent in beiden Routen implementiert ✅
+- Admin-Client umgeht RLS bewusst (korrekt für Admin-Use-Case) ✅
+- Kein Nutzer-Input außer URL-Parameter `[code]` — keine SQL-Injection möglich (Supabase parameterisiert) ✅
+- Delete-Route prüft `redeemed_by IS NULL` serverseitig — kein Client-seitiger Bypass möglich ✅
+
+### Bugs gefunden
+
+Keine Critical, High oder Medium Bugs.
+
+**Production-Ready: JA**
