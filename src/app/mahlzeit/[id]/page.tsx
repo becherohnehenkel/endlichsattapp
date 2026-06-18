@@ -20,6 +20,7 @@ export default async function MahlzeitDetailPage({
       free_text,
       created_at,
       photo_fullsize_path,
+      photo_thumbnail_path,
       meal_analyses (
         id,
         refined_ingredients,
@@ -91,12 +92,21 @@ export default async function MahlzeitDetailPage({
   const assumptions: string[] = conversations?.[0]?.assumptions ?? []
 
   let photoUrl: string | null = null
-  const photoPath = (meal as unknown as { photo_fullsize_path: string | null }).photo_fullsize_path
+  const mealRaw = meal as unknown as { photo_fullsize_path: string | null; photo_thumbnail_path: string | null }
+  const photoPath = mealRaw.photo_fullsize_path ?? mealRaw.photo_thumbnail_path
   if (photoPath) {
-    const { data: signed } = await supabase.storage
+    const { data: signed, error: signedError } = await supabase.storage
       .from('meal-photos')
       .createSignedUrl(photoPath, 3600)
-    photoUrl = signed?.signedUrl ?? null
+    if (signedError && mealRaw.photo_thumbnail_path && photoPath !== mealRaw.photo_thumbnail_path) {
+      // Fullsize not found — fall back to thumbnail
+      const { data: thumb } = await supabase.storage
+        .from('meal-photos')
+        .createSignedUrl(mealRaw.photo_thumbnail_path, 3600)
+      photoUrl = thumb?.signedUrl ?? null
+    } else {
+      photoUrl = signed?.signedUrl ?? null
+    }
   }
 
   return <MahlzeitDetail result={result} assumptions={assumptions} analysisId={analysis.id} photoUrl={photoUrl} />

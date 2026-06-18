@@ -238,7 +238,7 @@ export default async function StartPage() {
               ))}
             </div>
 
-            <Link href="/rezepte">
+            <Link href="/rezepte" className="block">
               <Button variant="outline" className="w-full text-sm h-10 rounded-xl">
                 Alle Rezepte ansehen
               </Button>

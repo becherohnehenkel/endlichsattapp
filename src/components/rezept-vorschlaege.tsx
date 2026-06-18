@@ -37,7 +37,7 @@ export default function RezeptVorschlaege({ analysisId }: RezeptVorschlaegeProps
         🍳 Passende Rezepte
       </p>
       <div className="space-y-2">
-        {rezepte.map(r => (
+        {rezepte.slice(0, 4).map(r => (
           <RezeptKarte key={r.id} {...r} />
         ))}
       </div>

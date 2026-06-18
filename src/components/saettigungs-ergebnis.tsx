@@ -132,29 +132,36 @@ export default function SaettigungsErgebnis({ result, assumptions, onReset, anal
   return (
     <main className="px-4 py-6 max-w-sm mx-auto space-y-6">
 
-      {/* Mahlzeit-Foto */}
-      {photoUrl && (
-        <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-border">
-          <Image src={photoUrl} alt="Mahlzeit" fill className="object-cover" unoptimized />
-        </div>
-      )}
-
-      {/* Annahmen — ausklappbar */}
-      {allAssumptions.length > 0 && (
+      {/* Annahmen + optionales Foto — ausklappbar */}
+      {(allAssumptions.length > 0 || photoUrl) && (
         <Collapsible open={assumptionsOpen} onOpenChange={setAssumptionsOpen}>
           <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border border-border bg-muted/40 px-3 py-2.5 text-sm text-muted-foreground hover:bg-muted/60 transition-colors">
-            <span className="font-medium">ℹ️ Basierend auf Annahmen</span>
+            <div className="flex items-center gap-2">
+              {photoUrl && (
+                <div className="relative h-8 w-8 rounded overflow-hidden flex-shrink-0 border border-border/50">
+                  <Image src={photoUrl} alt="Mahlzeit" fill className="object-cover" unoptimized />
+                </div>
+              )}
+              <span className="font-medium">ℹ️ Basierend auf Annahmen</span>
+            </div>
             {assumptionsOpen ? <ChevronUp className="h-4 w-4 flex-shrink-0" /> : <ChevronDown className="h-4 w-4 flex-shrink-0" />}
           </CollapsibleTrigger>
           <CollapsibleContent className="px-3 pt-2 pb-1">
-            <ul className="space-y-1">
-              {allAssumptions.map((a, i) => (
-                <li key={i} className="text-xs text-muted-foreground flex gap-2">
-                  <span className="text-muted-foreground/50 flex-shrink-0">·</span>
-                  <span>{a}</span>
-                </li>
-              ))}
-            </ul>
+            {photoUrl && (
+              <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-border mb-3">
+                <Image src={photoUrl} alt="Mahlzeit" fill className="object-cover" unoptimized />
+              </div>
+            )}
+            {allAssumptions.length > 0 && (
+              <ul className="space-y-1">
+                {allAssumptions.map((a, i) => (
+                  <li key={i} className="text-xs text-muted-foreground flex gap-2">
+                    <span className="text-muted-foreground/50 flex-shrink-0">·</span>
+                    <span>{a}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </CollapsibleContent>
         </Collapsible>
       )}
