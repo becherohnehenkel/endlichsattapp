@@ -17,19 +17,30 @@ export default async function AdminCodesPage() {
 
   const admin = createAdminClient()
 
-  // Load all codes with redeemer email via join
   const { data: rows } = await admin
     .from('invite_codes')
-    .select('code, redeemed_by, redeemed_at, profiles(email)')
+    .select('code, redeemed_by, redeemed_at')
     .order('created_at', { ascending: false })
+
+  // Separately fetch redeemer emails (FK points to auth.users, not profiles,
+  // so PostgREST join syntax doesn't work here)
+  const redeemedIds = (rows ?? []).map(r => r.redeemed_by).filter(Boolean) as string[]
+  let emailMap: Record<string, string> = {}
+  if (redeemedIds.length > 0) {
+    const { data: profiles } = await admin
+      .from('profiles')
+      .select('id, email')
+      .in('id', redeemedIds)
+    for (const p of profiles ?? []) {
+      if (p.id && p.email) emailMap[p.id] = p.email
+    }
+  }
 
   const codes = (rows ?? []).map((r) => ({
     code: r.code,
     redeemed_by: r.redeemed_by,
     redeemed_at: r.redeemed_at,
-    redeemer_email: Array.isArray(r.profiles)
-      ? (r.profiles[0]?.email ?? null)
-      : ((r.profiles as { email?: string } | null)?.email ?? null),
+    redeemer_email: r.redeemed_by ? (emailMap[r.redeemed_by] ?? null) : null,
   }))
 
   return (
