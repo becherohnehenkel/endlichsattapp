@@ -8,9 +8,10 @@ interface MahlzeitDetailProps {
   result: AnalysisResult
   assumptions: string[]
   analysisId?: string
+  photoUrl?: string | null
 }
 
-export default function MahlzeitDetail({ result, assumptions, analysisId }: MahlzeitDetailProps) {
+export default function MahlzeitDetail({ result, assumptions, analysisId, photoUrl }: MahlzeitDetailProps) {
   const router = useRouter()
 
   return (
@@ -31,6 +32,7 @@ export default function MahlzeitDetail({ result, assumptions, analysisId }: Mahl
         assumptions={assumptions}
         onReset={() => router.push('/analyse')}
         analysisId={analysisId}
+        photoUrl={photoUrl}
       />
     </div>
   )

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { ChevronDown, ChevronUp, ChefHat } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -57,6 +58,7 @@ interface SaettigungsErgebnisProps {
   assumptions: string[]
   onReset: () => void
   analysisId?: string
+  photoUrl?: string | null
 }
 
 const PILLAR_ORDER: (keyof BausteineBewertung)[] = [
@@ -112,7 +114,7 @@ function PillarChip({
   )
 }
 
-export default function SaettigungsErgebnis({ result, assumptions, onReset, analysisId }: SaettigungsErgebnisProps) {
+export default function SaettigungsErgebnis({ result, assumptions, onReset, analysisId, photoUrl }: SaettigungsErgebnisProps) {
   const allAssumptions = [...new Set([...assumptions, ...result.annahmen])]
   const [assumptionsOpen, setAssumptionsOpen] = useState(false)
   const gesamt = gesamtConfig(result.vorher.gesamtbewertung)
@@ -129,6 +131,13 @@ export default function SaettigungsErgebnis({ result, assumptions, onReset, anal
 
   return (
     <main className="px-4 py-6 max-w-sm mx-auto space-y-6">
+
+      {/* Mahlzeit-Foto */}
+      {photoUrl && (
+        <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-border">
+          <Image src={photoUrl} alt="Mahlzeit" fill className="object-cover" unoptimized />
+        </div>
+      )}
 
       {/* Annahmen — ausklappbar */}
       {allAssumptions.length > 0 && (

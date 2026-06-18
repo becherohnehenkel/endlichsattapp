@@ -98,7 +98,7 @@ export default async function StartPage() {
       <main className="max-w-sm mx-auto px-4 pb-10 space-y-8">
 
         {/* ── Hero: Analyse CTA ─────────────────────────────── */}
-        <section className="pt-8 space-y-4">
+        <section className="pt-8 space-y-6">
           <div className="space-y-1">
             <h1 className="text-2xl font-semibold tracking-tight text-foreground">
               Wie sättigend ist<br />deine Mahlzeit?
@@ -192,7 +192,7 @@ export default async function StartPage() {
 
         {/* ── Rezeptbibliothek Teaser ───────────────────────── */}
         {recipes.length > 0 && (
-          <section className="space-y-3">
+          <section className="space-y-5">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold text-foreground">Rezeptbibliothek</h2>
               <Link
