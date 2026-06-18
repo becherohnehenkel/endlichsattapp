@@ -3,7 +3,6 @@ import { createClient } from '@/lib/supabase/server'
 import { getAccessStatus } from '@/lib/paywall'
 import Link from 'next/link'
 import { UserRound } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import MahlzeitInput from '@/components/mahlzeit-input'
 
 export default async function AnalysePage() {
@@ -32,29 +31,15 @@ export default async function AnalysePage() {
     redirect('/upgrade')
   }
 
-  async function logout() {
-    'use server'
-    const supabase = await createClient()
-    await supabase.auth.signOut()
-    redirect('/login')
-  }
-
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-10 border-b border-border bg-card/80 backdrop-blur-sm px-4 py-3 flex items-center justify-between">
         <Link href="/" className="font-semibold text-foreground tracking-tight hover:text-[#4A7C59] transition-colors">
           endlichsatt
         </Link>
-        <div className="flex items-center gap-1">
-          <Link href="/konto" className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-md hover:bg-muted">
-            <UserRound className="h-4 w-4" />
-          </Link>
-          <form action={logout}>
-            <Button variant="ghost" size="sm" type="submit" className="text-muted-foreground text-sm h-8">
-              Abmelden
-            </Button>
-          </form>
-        </div>
+        <Link href="/konto" className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-md hover:bg-muted">
+          <UserRound className="h-4 w-4" />
+        </Link>
       </header>
       <MahlzeitInput
         userId={user.id}
