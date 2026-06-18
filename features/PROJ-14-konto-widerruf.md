@@ -274,18 +274,13 @@ Kein neues Datenbankschema nötig — alle Infos kommen aus dem vorhandenen `pro
 
 ### Bugs Found
 
-#### BUG-1: PROJ-2 E2E-Regressionstest schlägt fehl (Abmelden-Button jetzt auf /konto)
+#### BUG-1: PROJ-2 E2E-Regressionstest schlägt fehl (Abmelden-Button jetzt auf /konto) — BEHOBEN
 - **Severity:** Medium
-- **Steps to Reproduce:**
-  1. `npm run test:e2e -- tests/PROJ-2-user-authentication.spec.ts`
-  2. Test `Logout > Abmelden beendet Session und leitet zu /login` schlägt fehl
-- **Ursache:** PROJ-14 verschob den Abmelden-Button bewusst von der Startseite (/) auf /konto. Der bestehende PROJ-2-Test loggt ein, landet auf /, sucht dort "Abmelden" — findet es nicht mehr.
-- **Fix:** In `tests/PROJ-2-user-authentication.spec.ts` vor dem Klick auf Abmelden `await page.goto('/konto')` ergänzen.
-- **Priority:** Fix before deployment
+- **Fix:** `await page.goto('/konto')` in `tests/PROJ-2-user-authentication.spec.ts` vor dem Klick auf Abmelden ergänzt. 18/18 Tests bestehen wieder.
 
 ### Summary
 - **Acceptance Criteria:** 17/17 bestätigt (14 via Tests, 3 via Code Review + conditional E2E)
-- **Bugs Found:** 1 total (0 Critical, 0 High, 1 Medium, 0 Low)
+- **Bugs Found:** 1 total (0 Critical, 0 High, 1 Medium → behoben, 0 Low)
 - **Security:** Pass
-- **Production Ready:** YES (nach Fix von BUG-1)
-- **Recommendation:** BUG-1 (PROJ-2 Regressionstest) beheben, dann deployen
+- **Production Ready:** YES
+- **Recommendation:** Deploy

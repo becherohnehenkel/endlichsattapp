@@ -161,6 +161,7 @@ test.describe('Registrierung', () => {
 test.describe('Logout', () => {
   test('Abmelden beendet Session und leitet zu /login', async ({ page }) => {
     await loginAs(page, TEST_EMAIL, TEST_PASSWORD)
+    await page.goto('/konto') // Abmelden-Button ist seit PROJ-14 auf /konto
     await page.getByRole('button', { name: 'Abmelden' }).click()
     await expect(page).toHaveURL(/\/login/, { timeout: 8000 })
     // Verify session is gone — protected route should redirect again
