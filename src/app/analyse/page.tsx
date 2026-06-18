@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getAccessStatus } from '@/lib/paywall'
 import Link from 'next/link'
+import { UserRound } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import MahlzeitInput from '@/components/mahlzeit-input'
 
@@ -44,11 +45,16 @@ export default async function AnalysePage() {
         <Link href="/" className="font-semibold text-foreground tracking-tight hover:text-[#4A7C59] transition-colors">
           endlichsatt
         </Link>
-        <form action={logout}>
-          <Button variant="ghost" size="sm" type="submit" className="text-muted-foreground text-sm h-8">
-            Abmelden
-          </Button>
-        </form>
+        <div className="flex items-center gap-1">
+          <Link href="/konto" className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-md hover:bg-muted">
+            <UserRound className="h-4 w-4" />
+          </Link>
+          <form action={logout}>
+            <Button variant="ghost" size="sm" type="submit" className="text-muted-foreground text-sm h-8">
+              Abmelden
+            </Button>
+          </form>
+        </div>
       </header>
       <MahlzeitInput
         userId={user.id}

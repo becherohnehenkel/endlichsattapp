@@ -1,6 +1,6 @@
 # PROJ-14: Kontoübersicht & Widerrufsbutton
 
-## Status: Architected
+## Status: In Progress
 **Created:** 2026-06-18
 **Last Updated:** 2026-06-18
 

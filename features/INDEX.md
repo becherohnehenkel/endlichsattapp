@@ -28,7 +28,7 @@
 | PROJ-11 | Paywall | P2 | Deployed | PROJ-1, PROJ-2, PROJ-8, PROJ-10 | [Spec](PROJ-11-paywall.md) |
 | PROJ-12 | Invite-Codes | P2 | Deployed | PROJ-11 | [Spec](PROJ-12-invite-codes.md) |
 | PROJ-13 | Admin-Dashboard | P2 | Deployed | PROJ-8, PROJ-12 | [Spec](PROJ-13-admin-dashboard.md) |
-| PROJ-14 | Kontoübersicht & Widerrufsbutton | P1 | Architected | PROJ-2, PROJ-11 | [Spec](PROJ-14-konto-widerruf.md) |
+| PROJ-14 | Kontoübersicht & Widerrufsbutton | P1 | In Progress | PROJ-2, PROJ-11 | [Spec](PROJ-14-konto-widerruf.md) |
 
 <!-- Add features above this line -->
 

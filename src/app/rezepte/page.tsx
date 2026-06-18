@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, UserRound } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getAccessStatus } from '@/lib/paywall'
 import RezeptBibliothek, { type RezeptListItem } from '@/components/rezept-bibliothek'
@@ -41,7 +41,11 @@ export default async function RezeptePage() {
           Zurück
         </Link>
         <span className="font-semibold text-foreground tracking-tight flex-1 text-center">Rezepte</span>
-        <div className="w-16" />
+        <div className="w-16 flex justify-end">
+          <Link href="/konto" className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-md hover:bg-muted">
+            <UserRound className="h-4 w-4" />
+          </Link>
+        </div>
       </header>
 
       {access.trialDaysRemaining !== null && (
