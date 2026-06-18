@@ -1,8 +1,10 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronLeft, ShieldAlert } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -45,6 +47,8 @@ export default function KontoView({
   isAdmin,
   stripeDetails,
 }: KontoViewProps) {
+  const router = useRouter()
+  const [logoutLoading, setLogoutLoading] = useState(false)
   const [portalLoading, setPortalLoading] = useState(false)
   const [portalError, setPortalError] = useState<string | null>(null)
   const [widerrufOpen, setWiderrufOpen] = useState(false)
@@ -53,6 +57,13 @@ export default function KontoView({
   const [widerrufSuccess, setWiderrufSuccess] = useState(false)
 
   const isSubscribed = subscriptionStatus != null && ACTIVE_STATUSES.includes(subscriptionStatus)
+
+  async function handleLogout() {
+    setLogoutLoading(true)
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.push('/login')
+  }
 
   async function handlePortal() {
     setPortalLoading(true)
@@ -228,6 +239,16 @@ export default function KontoView({
             </Link>
           </div>
         )}
+
+        {/* Abmelden */}
+        <Button
+          variant="ghost"
+          className="w-full text-muted-foreground hover:text-foreground"
+          onClick={handleLogout}
+          disabled={logoutLoading}
+        >
+          {logoutLoading ? 'Wird abgemeldet…' : 'Abmelden'}
+        </Button>
 
       </main>
 
