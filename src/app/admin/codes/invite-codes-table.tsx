@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -106,7 +105,7 @@ function DeleteButton({ code, onDeleted }: { code: string; onDeleted: () => void
 }
 
 export default function InviteCodesTable({ codes: initialCodes }: InviteCodesTableProps) {
-  const router = useRouter()
+  const [codes, setCodes] = useState(initialCodes)
   const [generating, setGenerating] = useState(false)
   const [generateError, setGenerateError] = useState<string | null>(null)
 
@@ -119,14 +118,15 @@ export default function InviteCodesTable({ codes: initialCodes }: InviteCodesTab
         setGenerateError('Fehler beim Generieren. Bitte erneut versuchen.')
         return
       }
-      router.refresh()
+      const { code } = await res.json() as { code: string }
+      setCodes(prev => [{ code, redeemed_by: null, redeemed_at: null, redeemer_email: null }, ...prev])
     } finally {
       setGenerating(false)
     }
   }
 
-  const redeemed = initialCodes.filter(c => c.redeemed_by !== null).length
-  const total = initialCodes.length
+  const redeemed = codes.filter(c => c.redeemed_by !== null).length
+  const total = codes.length
 
   return (
     <div className="space-y-4">
@@ -153,7 +153,7 @@ export default function InviteCodesTable({ codes: initialCodes }: InviteCodesTab
       )}
 
       {/* Tabelle oder Leer-Zustand */}
-      {initialCodes.length === 0 ? (
+      {codes.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">
           <p className="text-sm">Noch keine Codes — generiere deinen ersten Code.</p>
         </div>
@@ -170,7 +170,7 @@ export default function InviteCodesTable({ codes: initialCodes }: InviteCodesTab
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {initialCodes.map((c) => {
+              {codes.map((c) => {
                 const isRedeemed = c.redeemed_by !== null
                 return (
                   <tr key={c.code} className="bg-card">
@@ -200,7 +200,10 @@ export default function InviteCodesTable({ codes: initialCodes }: InviteCodesTab
                       <div className="flex items-center gap-0.5">
                         <CopyButton code={c.code} />
                         {!isRedeemed && (
-                          <DeleteButton code={c.code} onDeleted={() => router.refresh()} />
+                          <DeleteButton
+                            code={c.code}
+                            onDeleted={() => setCodes(prev => prev.filter(x => x.code !== c.code))}
+                          />
                         )}
                       </div>
                     </td>
