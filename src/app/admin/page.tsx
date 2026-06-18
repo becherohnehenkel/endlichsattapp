@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { ChefHat, Ticket } from 'lucide-react'
+import { ChefHat, Ticket, Home } from 'lucide-react'
 
 async function requireAdmin() {
   const supabase = await createClient()
@@ -40,6 +40,16 @@ export default async function AdminPage() {
           <div>
             <p className="font-medium text-sm text-foreground">Invite-Codes</p>
             <p className="text-xs text-muted-foreground">Codes generieren und Zugang verwalten</p>
+          </div>
+        </Link>
+        <Link
+          href="/"
+          className="flex items-center gap-3 p-4 rounded-xl border border-border bg-card hover:bg-muted transition-colors"
+        >
+          <Home className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+          <div>
+            <p className="font-medium text-sm text-foreground">Zur Startseite</p>
+            <p className="text-xs text-muted-foreground">Zurück zur App</p>
           </div>
         </Link>
       </main>
