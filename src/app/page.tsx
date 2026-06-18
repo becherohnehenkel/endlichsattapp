@@ -4,7 +4,7 @@ import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Plus, ChevronRight, Clock, ChefHat, UtensilsCrossed } from 'lucide-react'
+import { Plus, ChevronRight, Clock, ChefHat, UtensilsCrossed, UserRound } from 'lucide-react'
 
 const BEWERTUNG_LABEL: Record<string, string> = {
   sehr_saettigend: 'Sehr sättigend',
@@ -34,13 +34,6 @@ export default async function StartPage() {
   const supabase = await createClient()
   const { data: { session } } = await supabase.auth.getSession()
   if (!session?.user) redirect('/login?redirectTo=/')
-
-  async function logout() {
-    'use server'
-    const supabase = await createClient()
-    await supabase.auth.signOut()
-    redirect('/login')
-  }
 
   // Last 4 completed meals with satiety score
   const { data: recentMeals } = await supabase
@@ -97,11 +90,9 @@ export default async function StartPage() {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-10 border-b border-border bg-card/80 backdrop-blur-sm px-4 py-3 flex items-center justify-between">
         <span className="font-semibold text-foreground tracking-tight">endlichsatt</span>
-        <form action={logout}>
-          <Button variant="ghost" size="sm" type="submit" className="text-muted-foreground text-sm h-8">
-            Abmelden
-          </Button>
-        </form>
+        <Link href="/konto" className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-md hover:bg-muted">
+          <UserRound className="h-4 w-4" />
+        </Link>
       </header>
 
       <main className="max-w-sm mx-auto px-4 pb-10 space-y-8">
