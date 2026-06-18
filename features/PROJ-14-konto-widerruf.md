@@ -4,6 +4,24 @@
 **Created:** 2026-06-18
 **Last Updated:** 2026-06-18
 
+## Implementation Notes
+
+### Frontend (Done)
+- `src/app/konto/page.tsx` — Server Page: lädt Auth-User, `getAccessStatus()`, Stripe-Subscription parallel; leitet zu `/login` weiter wenn nicht eingeloggt
+- `src/components/konto-view.tsx` — Client Component: Status-Badge, Abo-Details (Preis + nächstes Zahlungsdatum), Widerrufsbutton, WiderrufDialog (shadcn AlertDialog), Abo-verwalten-Button (→ Stripe Portal), Abmelden, Admin-Link
+- `src/app/analyse/page.tsx`, `src/app/rezepte/page.tsx`, `src/app/upgrade/page.tsx`, `src/app/page.tsx` — Abmelden-Button in allen Hauptheadern durch `UserRound`-Icon (Lucide) → `/konto` ersetzt
+- Stripe SDK v22: `current_period_end` nicht mehr typisiert — nächster Zahlungstermin wird aus `billing_cycle_anchor` + Monats-Inkrement berechnet
+
+### Backend (Done)
+- `src/app/api/stripe/widerruf/route.ts` — `POST /api/stripe/widerruf`:
+  1. Auth-Check (401 wenn nicht eingeloggt)
+  2. `stripe_customer_id` aus `profiles` laden (404 wenn nicht vorhanden)
+  3. Aktive Subscription suchen via `stripe.subscriptions.list()` (404 wenn keine aktive Sub)
+  4. Subscription sofort stornieren via `stripe.subscriptions.cancel(sub.id)`
+  5. Bestätigungs-E-Mail via Mailjet senden: An Nutzer-E-Mail + BCC an `ADMIN_EMAIL`, Absender `MAILJET_FROM_EMAIL`
+  6. Zeitstempel im E-Mail-Text (Pflicht nach § 356a BGB): `de-DE` Locale, Europe/Berlin Timezone
+- 10 Vitest Unit Tests — alle grün
+
 ## Dependencies
 - PROJ-2 (User Authentication) — Nutzer muss eingeloggt sein; E-Mail-Adresse kommt vom Auth-User
 - PROJ-11 (Paywall) — Abo-Status, Stripe-Subscription-ID, nächster Zahlungstermin kommen von Stripe; `getAccessStatus()` aus `lib/paywall.ts` liefert den aktuellen Zugangsstatus
