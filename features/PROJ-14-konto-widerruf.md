@@ -1,8 +1,10 @@
 # PROJ-14: Kontoübersicht & Widerrufsbutton
 
-## Status: In Review
+## Status: Deployed
 **Created:** 2026-06-18
 **Last Updated:** 2026-06-18
+**Deployed:** 2026-06-18
+**Production URL:** https://satt.mehralsabnehmen.de/konto
 
 ## Implementation Notes
 
