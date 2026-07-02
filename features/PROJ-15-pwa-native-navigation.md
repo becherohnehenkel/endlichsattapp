@@ -1,6 +1,6 @@
 # PROJ-15: PWA & Native Navigation
 
-## Status: Approved
+## Status: Deployed
 **Created:** 2026-07-02
 **Last Updated:** 2026-07-02
 
@@ -269,4 +269,9 @@ Keine neuen Abhängigkeiten. `sharp` (bereits durch Next.js vorhanden) wird einm
 - **Recommendation:** BUG-1 vor Deployment fixen, dann deployen
 
 ## Deployment
-_To be added by /deploy_
+
+**Deployed:** 2026-07-02
+**Commit:** 4be3b1d
+**Branch:** main → Vercel Auto-Deploy
+
+BUG-2 (Low, /rezept/[id] Tab nicht aktiv) bleibt als bekannte Kleinigkeit offen.
