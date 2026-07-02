@@ -29,10 +29,11 @@
 | PROJ-12 | Invite-Codes | P2 | Deployed | PROJ-11 | [Spec](PROJ-12-invite-codes.md) |
 | PROJ-13 | Admin-Dashboard | P2 | Deployed | PROJ-8, PROJ-12 | [Spec](PROJ-13-admin-dashboard.md) |
 | PROJ-14 | Kontoübersicht & Widerrufsbutton | P1 | Deployed | PROJ-2, PROJ-11 | [Spec](PROJ-14-konto-widerruf.md) |
+| PROJ-15 | PWA & Native Navigation | P1 | Approved | PROJ-2, PROJ-13 | [Spec](PROJ-15-pwa-native-navigation.md) |
 
 <!-- Add features above this line -->
 
-## Next Available ID: PROJ-15
+## Next Available ID: PROJ-16
 
 ## Empfohlene Build-Reihenfolge
 
