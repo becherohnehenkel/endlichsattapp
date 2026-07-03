@@ -31,7 +31,7 @@
 | PROJ-14 | Kontoübersicht & Widerrufsbutton | P1 | Deployed | PROJ-2, PROJ-11 | [Spec](PROJ-14-konto-widerruf.md) |
 | PROJ-15 | PWA & Native Navigation | P1 | Deployed | PROJ-2, PROJ-13 | [Spec](PROJ-15-pwa-native-navigation.md) |
 
-| PROJ-16 | Beilagen-Kontext | P1 | In Progress | PROJ-8, PROJ-4, PROJ-5 | [Spec](PROJ-16-beilagen-kontext.md) |
+| PROJ-16 | Beilagen-Kontext | P1 | Approved | PROJ-8, PROJ-4, PROJ-5 | [Spec](PROJ-16-beilagen-kontext.md) |
 
 <!-- Add features above this line -->
 

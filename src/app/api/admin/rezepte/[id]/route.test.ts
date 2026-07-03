@@ -100,10 +100,15 @@ describe('PUT /api/admin/rezepte/[id]', () => {
   it('updates recipe successfully', async () => {
     process.env.ADMIN_EMAIL = 'admin@test.com'
     mockGetUser.mockResolvedValue({ data: { user: { email: 'admin@test.com' } } })
+    // PUT makes 5 adminFrom calls: recipes.update, recipe_ingredients.delete,
+    // recipe_ingredients.insert, bls lookup x1 (one ingredient), recipes.update (macros)
+    const blsMock = { select: vi.fn().mockReturnValue({ ilike: vi.fn().mockReturnValue({ limit: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValue({ data: null }) }) }) }) }
     adminFrom
       .mockReturnValueOnce({ update: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }) })
       .mockReturnValueOnce({ delete: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }) })
       .mockReturnValueOnce({ insert: vi.fn().mockResolvedValue({ error: null }) })
+      .mockReturnValueOnce(blsMock)
+      .mockReturnValueOnce({ update: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }) })
 
     const { PUT } = await import('./route')
     const res = await PUT(
@@ -111,6 +116,49 @@ describe('PUT /api/admin/rezepte/[id]', () => {
       makeParams('recipe-1')
     )
     expect(res.status).toBe(200)
+  })
+
+  it('updates recipe_typ to grundlage', async () => {
+    process.env.ADMIN_EMAIL = 'admin@test.com'
+    mockGetUser.mockResolvedValue({ data: { user: { email: 'admin@test.com' } } })
+
+    const updateMock = vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) })
+    const blsMock = { select: vi.fn().mockReturnValue({ ilike: vi.fn().mockReturnValue({ limit: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValue({ data: null }) }) }) }) }
+    adminFrom
+      .mockReturnValueOnce({ update: updateMock })
+      .mockReturnValueOnce({ delete: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }) })
+      .mockReturnValueOnce({ insert: vi.fn().mockResolvedValue({ error: null }) })
+      .mockReturnValueOnce(blsMock)
+      .mockReturnValueOnce({ update: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }) })
+
+    const { PUT } = await import('./route')
+    const res = await PUT(
+      new Request('http://localhost', { method: 'PUT', body: JSON.stringify({ ...VALID_UPDATE, recipe_typ: 'grundlage' }) }),
+      makeParams('recipe-1')
+    )
+    expect(res.status).toBe(200)
+    const updatePayload = updateMock.mock.calls[0][0]
+    expect(updatePayload.recipe_typ).toBe('grundlage')
+  })
+
+  it('returns recipeTyp in GET response', async () => {
+    process.env.ADMIN_EMAIL = 'admin@test.com'
+    mockGetUser.mockResolvedValue({ data: { user: { email: 'admin@test.com' } } })
+    serverFrom.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
+            data: { ...MOCK_RECIPE, recipe_typ: 'beilage' },
+            error: null,
+          }),
+        }),
+      }),
+    })
+    const { GET } = await import('./route')
+    const res = await GET(new Request('http://localhost'), makeParams('recipe-1'))
+    expect(res.status).toBe(200)
+    const data = await res.json()
+    expect(data.recipeTyp).toBe('beilage')
   })
 })
 

@@ -104,15 +104,25 @@ describe('POST /api/admin/rezepte', () => {
     process.env.ADMIN_EMAIL = 'admin@test.com'
     mockGetUser.mockResolvedValue({ data: { user: { email: 'admin@test.com' } } })
 
-    adminFrom.mockReturnValueOnce({
-      insert: vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({ data: { id: 'new-recipe-id' }, error: null }),
+    // POST makes 5 adminFrom calls: recipes.insert, recipe_ingredients.insert,
+    // bls lookup x2 (one per ingredient), recipes.update (macros)
+    const blsMock = { select: vi.fn().mockReturnValue({ ilike: vi.fn().mockReturnValue({ limit: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValue({ data: null }) }) }) }) }
+    adminFrom
+      .mockReturnValueOnce({
+        insert: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({ data: { id: 'new-recipe-id' }, error: null }),
+          }),
         }),
-      }),
-    }).mockReturnValueOnce({
-      insert: vi.fn().mockResolvedValue({ error: null }),
-    })
+      })
+      .mockReturnValueOnce({
+        insert: vi.fn().mockResolvedValue({ error: null }),
+      })
+      .mockReturnValueOnce(blsMock)
+      .mockReturnValueOnce(blsMock)
+      .mockReturnValueOnce({
+        update: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),
+      })
 
     const { POST } = await import('./route')
     const res = await POST(new Request('http://localhost', {
@@ -122,5 +132,59 @@ describe('POST /api/admin/rezepte', () => {
     expect(res.status).toBe(201)
     const data = await res.json()
     expect(data.id).toBe('new-recipe-id')
+  })
+
+  it('accepts recipe_typ beilage on create', async () => {
+    process.env.ADMIN_EMAIL = 'admin@test.com'
+    mockGetUser.mockResolvedValue({ data: { user: { email: 'admin@test.com' } } })
+
+    const insertMock = vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({ data: { id: 'beilage-recipe-id' }, error: null }),
+      }),
+    })
+    const blsMock = { select: vi.fn().mockReturnValue({ ilike: vi.fn().mockReturnValue({ limit: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValue({ data: null }) }) }) }) }
+    adminFrom
+      .mockReturnValueOnce({ insert: insertMock })
+      .mockReturnValueOnce({ insert: vi.fn().mockResolvedValue({ error: null }) })
+      .mockReturnValueOnce(blsMock)
+      .mockReturnValueOnce(blsMock)
+      .mockReturnValueOnce({ update: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }) })
+
+    const { POST } = await import('./route')
+    const res = await POST(new Request('http://localhost', {
+      method: 'POST',
+      body: JSON.stringify({ ...VALID_RECIPE, recipe_typ: 'beilage' }),
+    }))
+    expect(res.status).toBe(201)
+    const insertCall = insertMock.mock.calls[0][0]
+    expect(insertCall.recipe_typ).toBe('beilage')
+  })
+
+  it('stores recipe_typ null when no type selected', async () => {
+    process.env.ADMIN_EMAIL = 'admin@test.com'
+    mockGetUser.mockResolvedValue({ data: { user: { email: 'admin@test.com' } } })
+
+    const insertMock = vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({ data: { id: 'recipe-id' }, error: null }),
+      }),
+    })
+    const blsMock = { select: vi.fn().mockReturnValue({ ilike: vi.fn().mockReturnValue({ limit: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValue({ data: null }) }) }) }) }
+    adminFrom
+      .mockReturnValueOnce({ insert: insertMock })
+      .mockReturnValueOnce({ insert: vi.fn().mockResolvedValue({ error: null }) })
+      .mockReturnValueOnce(blsMock)
+      .mockReturnValueOnce(blsMock)
+      .mockReturnValueOnce({ update: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }) })
+
+    const { POST } = await import('./route')
+    const res = await POST(new Request('http://localhost', {
+      method: 'POST',
+      body: JSON.stringify(VALID_RECIPE),
+    }))
+    expect(res.status).toBe(201)
+    const insertCall = insertMock.mock.calls[0][0]
+    expect(insertCall.recipe_typ).toBeNull()
   })
 })

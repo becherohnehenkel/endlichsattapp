@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const mockGetUser = vi.fn()
 const mockMealSingle = vi.fn()
+const mockConvSingle = vi.fn()
 const mockInsertSingle = vi.fn()
 const mockMealsUpdate = vi.fn()
 const mockConvUpdate = vi.fn()
@@ -25,6 +26,7 @@ vi.mock('@/lib/supabase/server', () => ({
       }
       if (table === 'meal_conversations') {
         return {
+          select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ single: mockConvSingle }) }),
           update: vi.fn().mockReturnValue({ eq: mockConvUpdate }),
         }
       }
@@ -47,22 +49,36 @@ vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false }))
 
 const validIngredients = [{ name: 'Hähnchenbrust', amount: '200g' }]
 const validAnalysis = {
-  zutatenliste: [{ name: 'Hähnchenbrust', amount: '200g', source: 'usda', sourceName: 'Chicken, raw' }],
+  typ: 'standard',
+  zutatenliste: [{ name: 'Hähnchenbrust', amount: '200g', grams: 200 }],
   annahmen: [],
   vorher: {
     bausteine: { geschmack: 'mittel', biss: 'gut', ballaststoffe: 'schwach', proteine: 'gut', volumen: 'mittel', art_of_eating: 'nicht_bewertet' },
     gesamtbewertung: 'maessig_saettigend',
     erklaerung: 'Gutes Protein, aber wenig Ballaststoffe.',
-    naehrwerte: { kcal: 240, protein_g: 44, kohlenhydrate_g: 0, zucker_g: 0, fett_g: 5, ballaststoffe_g: 0 },
   },
   vorschlaege: [{ aktion: 'Gurken dazugeben', begruendung: 'Mehr Volumen', baustein: 'volumen' }],
   nachher: {
     bausteine: { geschmack: 'mittel', biss: 'gut', ballaststoffe: 'mittel', proteine: 'gut', volumen: 'gut', art_of_eating: 'nicht_bewertet' },
     gesamtbewertung: 'sehr_saettigend',
-    naehrwerte: { kcal: 256, protein_g: 44, kohlenhydrate_g: 4, zucker_g: 2, fett_g: 5, ballaststoffe_g: 1 },
-    deltas: [{ wert: 'volumen', vorher: 0, nachher: 1, veraenderung: 1 }],
   },
   art_of_eating_tipp: 'Probier mal ohne Handy zu essen.',
+}
+
+const validBeilageAnalysis = {
+  typ: 'beilage',
+  zutatenliste: [{ name: 'Blattsalat', amount: '100g', grams: 100 }],
+  annahmen: ['BEILAGE_KONTEXT: Blattsalat wird als vollständige Mahlzeit gegessen.'],
+  beilage: {
+    als_beilage_top: 'Als Beilage bringt der Salat Frische und Volumen.',
+    als_hauptgericht: 'Allein macht er noch keine sättigende Mahlzeit — es fehlt eine Proteinquelle und Energie.',
+    beilage_upgrade: 'Eine Handvoll Sonnenblumenkerne drüber: mehr Biss und sättigende Fette.',
+    pairing: [
+      { empfehlung: '150g Skyr mit Honig', warum: 'Liefert Protein und hält lange satt.' },
+      { empfehlung: '2 weichgekochte Eier', warum: 'Einfach, proteinreich und perfekt zur Frische des Salats.' },
+    ],
+    art_of_eating_tipp: 'Sitz hin und iss ohne Ablenkung — dann merkst du besser wann du satt bist.',
+  },
 }
 
 function makeRequest(body: unknown) {
@@ -74,7 +90,10 @@ function makeRequest(body: unknown) {
 }
 
 describe('POST /api/analyse/confirm', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockConvSingle.mockResolvedValue({ data: { assumptions: [] }, error: null })
+  })
 
   it('returns 401 when not authenticated', async () => {
     mockGetUser.mockResolvedValue({ data: { user: null } })
@@ -175,5 +194,53 @@ describe('POST /api/analyse/confirm', () => {
     const { POST } = await import('./route')
     await POST(makeRequest({ mealId: '550e8400-e29b-41d4-a716-446655440000', ingredients: validIngredients }))
     expect(mockStorageRemove).toHaveBeenCalledWith(['user-1/abc.jpg'])
+  })
+
+  // PROJ-16: Beilagen-Kontext tests
+  it('returns beilage result when BEILAGE_KONTEXT is in assumptions', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
+    mockMealSingle.mockResolvedValue({ data: { id: 'meal-1', user_id: 'user-1', free_text: 'Blattsalat', photo_fullsize_path: null }, error: null })
+    mockConvSingle.mockResolvedValue({
+      data: { assumptions: ['BEILAGE_KONTEXT: Blattsalat wird als vollständige Mahlzeit gegessen.'] },
+      error: null,
+    })
+    mockAnthropicCreate.mockResolvedValue({
+      content: [{ type: 'text', text: JSON.stringify(validBeilageAnalysis) }],
+    })
+    mockInsertSingle.mockResolvedValue({ data: { id: 'beilage-analysis-1' }, error: null })
+    mockMealsUpdate.mockResolvedValue({ error: null })
+    mockConvUpdate.mockResolvedValue({ error: null })
+
+    const { POST } = await import('./route')
+    const res = await POST(makeRequest({ mealId: '550e8400-e29b-41d4-a716-446655440000', ingredients: [{ name: 'Blattsalat', amount: '100g' }] }))
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.result.typ).toBe('beilage')
+    expect(body.result.beilage.als_beilage_top).toBeTruthy()
+    expect(body.result.beilage.pairing).toHaveLength(2)
+    expect(body.result).not.toHaveProperty('vorher')
+    expect(body.result).not.toHaveProperty('vorschlaege')
+  })
+
+  it('skips macro computation for beilage analyses', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
+    mockMealSingle.mockResolvedValue({ data: { id: 'meal-1', user_id: 'user-1', free_text: 'Blattsalat', photo_fullsize_path: null }, error: null })
+    mockConvSingle.mockResolvedValue({
+      data: { assumptions: ['BEILAGE_KONTEXT: Blattsalat wird als vollständige Mahlzeit gegessen.'] },
+      error: null,
+    })
+    mockAnthropicCreate.mockResolvedValue({
+      content: [{ type: 'text', text: JSON.stringify(validBeilageAnalysis) }],
+    })
+    mockInsertSingle.mockResolvedValue({ data: { id: 'beilage-analysis-1' }, error: null })
+    mockMealsUpdate.mockResolvedValue({ error: null })
+    mockConvUpdate.mockResolvedValue({ error: null })
+
+    const { POST } = await import('./route')
+    const res = await POST(makeRequest({ mealId: '550e8400-e29b-41d4-a716-446655440000', ingredients: [{ name: 'Blattsalat', amount: '100g' }] }))
+    expect(res.status).toBe(200)
+    // Beilage result has no macros
+    const body = await res.json()
+    expect(body.result).not.toHaveProperty('nachher')
   })
 })
