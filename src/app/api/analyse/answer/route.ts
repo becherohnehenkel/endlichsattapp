@@ -24,6 +24,8 @@ Wenn du genug weißt, setze needs_clarification auf false.
 
 Bei skipped=true: Mache Annahmen für alle unklaren Punkte und liste sie explizit auf.
 
+BEILAGEN-KONTEXT: Wenn du zuvor gefragt hast ob die Mahlzeit komplett oder eine Beilage ist, und der Nutzer bestätigt dass es seine vollständige Mahlzeit ist: Trage in assumptions ZWINGEND ein: "BEILAGE_KONTEXT: [Gerichtname] wird als vollständige Mahlzeit gegessen." Wenn der Nutzer sagt dass er etwas dazu isst, führe normale Analyse für die Gesamtmahlzeit durch.
+
 Antworte AUSSCHLIESSLICH mit gültigem JSON, ohne Text davor oder danach:
 {"needs_clarification": boolean, "questions": [{"id": "q1", "text": "..."}], "assumptions": ["Annahme 1", ...]}`
 

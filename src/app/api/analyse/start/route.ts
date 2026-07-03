@@ -15,6 +15,10 @@ Identifiziere fehlende Informationen, die deine Analyse wesentlich beeinflussen 
 Frage nach: Kochfett/Menge, Fettgehalt von Milchprodukten, Portionsgrößen kalorienreicher Zutaten (Nüsse, Käse, Öl), Zubereitungsart (roh vs. gegart).
 Stelle maximal 2 Fragen. Wenn du genug weißt, setze needs_clarification auf false.
 
+BEILAGEN-RÜCKFRAGE: Wenn die Mahlzeit eindeutig Beilagen-Charakter hat, nutze eine der max. 2 Fragen dafür: "Ist das deine komplette Mahlzeit — oder isst du das als Beilage zu etwas anderem?"
+Klare Trigger (ALLE müssen zutreffen): kein erkennbares Sättigungselement (keine Proteinquelle, keine Stärke, kein relevantes Fett) + erkennbar unter ca. 200 kcal + eindeutiger Beilagen-Charakter (Blattsalat ohne Protein, Rohkost allein, Frischkäse allein, trockenes Brötchen allein).
+NICHT fragen wenn: Proteinquelle vorhanden, mehrere Hauptkomponenten, Beilagen-Charakter unklar (Caesar Salad mit Hähnchen, Avocado-Toast, Poke Bowl → nie fragen).
+
 WICHTIG: Fülle meal_description IMMER aus — beschreibe kurz was du siehst oder liest (z.B. "Spaghetti Bolognese mit Hackfleisch, Tomatensauce und Parmesan").
 
 Antworte AUSSCHLIESSLICH mit gültigem JSON, ohne Text davor oder danach:

@@ -28,6 +28,7 @@ export default async function RezeptBearbeitenPage({
       instructions,
       ingredient_tags,
       cuisine_tags,
+      recipe_typ,
       recipe_ingredients (
         id,
         name,
@@ -39,7 +40,6 @@ export default async function RezeptBearbeitenPage({
     `)
     .eq('id', id)
     .single()
-  // TODO(PROJ-16/backend): add recipe_typ to select and pass as defaultRecipeTyp after migration
 
   if (!recipe) notFound()
 
@@ -87,7 +87,7 @@ export default async function RezeptBearbeitenPage({
           defaultValues={defaultValues}
           existingImageUrl={existingImageUrl}
           defaultIngredientMacros={sortedIngredients.map(i => i.macros_per_100g as import('@/lib/nutrition').NutritionPer100g | null)}
-          defaultRecipeTyp={null} /* TODO(PROJ-16/backend): pass recipe.recipe_typ after migration */
+          defaultRecipeTyp={recipe.recipe_typ as 'beilage' | 'grundlage' | null}
         />
       </main>
     </div>

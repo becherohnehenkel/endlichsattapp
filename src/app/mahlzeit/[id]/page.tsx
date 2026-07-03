@@ -23,7 +23,9 @@ export default async function MahlzeitDetailPage({
       photo_thumbnail_path,
       meal_analyses (
         id,
+        analysis_typ,
         refined_ingredients,
+        beilage_data,
         macros_before,
         macros_after,
         satiety_scores_before,
@@ -43,7 +45,15 @@ export default async function MahlzeitDetailPage({
 
   type RawAnalysis = {
     id: string
+    analysis_typ: string | null
     refined_ingredients: { ingredients: StandardAnalysisResult['zutatenliste']; assumptions: string[] } | null
+    beilage_data: {
+      als_beilage_top: string
+      als_hauptgericht: string
+      beilage_upgrade: string | null
+      pairing: { empfehlung: string; warum: string }[]
+      art_of_eating_tipp: string | null
+    } | null
     macros_before: StandardAnalysisResult['vorher']['naehrwerte'] | null
     macros_after: StandardAnalysisResult['nachher']['naehrwerte'] | null
     satiety_scores_before: {
@@ -69,23 +79,34 @@ export default async function MahlzeitDetailPage({
   const emptyNaehrwerte = { kcal: 0, protein_g: 0, kohlenhydrate_g: 0, zucker_g: 0, fett_g: 0, ballaststoffe_g: 0 }
   const emptyBausteine = { geschmack: 'nicht_bewertet', biss: 'nicht_bewertet', ballaststoffe: 'nicht_bewertet', proteine: 'nicht_bewertet', volumen: 'nicht_bewertet', art_of_eating: 'nicht_bewertet' } as StandardAnalysisResult['vorher']['bausteine']
 
-  const result: AnalysisResult = {
-    zutatenliste: analysis.refined_ingredients?.ingredients ?? [],
-    annahmen: analysis.refined_ingredients?.assumptions ?? [],
-    vorher: {
-      bausteine: analysis.satiety_scores_before?.pillars ?? emptyBausteine,
-      gesamtbewertung: analysis.satiety_scores_before?.overall ?? 'wenig_saettigend',
-      erklaerung: analysis.satiety_scores_before?.explanation ?? '',
-      naehrwerte: analysis.macros_before ?? emptyNaehrwerte,
-    },
-    vorschlaege: analysis.improvement?.suggestions ?? [],
-    nachher: {
-      bausteine: analysis.satiety_scores_after?.pillars ?? emptyBausteine,
-      gesamtbewertung: analysis.satiety_scores_after?.overall ?? 'wenig_saettigend',
-      naehrwerte: analysis.macros_after ?? emptyNaehrwerte,
-      deltas: analysis.satiety_scores_after?.deltas ?? [],
-    },
-    art_of_eating_tipp: analysis.improvement?.art_of_eating_tip ?? null,
+  let result: AnalysisResult
+
+  if (analysis.analysis_typ === 'beilage' && analysis.beilage_data) {
+    result = {
+      typ: 'beilage',
+      zutatenliste: analysis.refined_ingredients?.ingredients ?? [],
+      annahmen: analysis.refined_ingredients?.assumptions ?? [],
+      beilage: analysis.beilage_data,
+    }
+  } else {
+    result = {
+      zutatenliste: analysis.refined_ingredients?.ingredients ?? [],
+      annahmen: analysis.refined_ingredients?.assumptions ?? [],
+      vorher: {
+        bausteine: analysis.satiety_scores_before?.pillars ?? emptyBausteine,
+        gesamtbewertung: analysis.satiety_scores_before?.overall ?? 'wenig_saettigend',
+        erklaerung: analysis.satiety_scores_before?.explanation ?? '',
+        naehrwerte: analysis.macros_before ?? emptyNaehrwerte,
+      },
+      vorschlaege: analysis.improvement?.suggestions ?? [],
+      nachher: {
+        bausteine: analysis.satiety_scores_after?.pillars ?? emptyBausteine,
+        gesamtbewertung: analysis.satiety_scores_after?.overall ?? 'wenig_saettigend',
+        naehrwerte: analysis.macros_after ?? emptyNaehrwerte,
+        deltas: analysis.satiety_scores_after?.deltas ?? [],
+      },
+      art_of_eating_tipp: analysis.improvement?.art_of_eating_tip ?? null,
+    }
   }
 
   const conversations = meal.meal_conversations as unknown as { assumptions: string[] | null }[]

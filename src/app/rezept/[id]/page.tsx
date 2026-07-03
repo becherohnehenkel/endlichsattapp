@@ -30,6 +30,7 @@ export default async function RezeptDetailPage({
       instructions,
       macros_per_serving,
       saettigungs_matrix,
+      recipe_typ,
       recipe_ingredients (
         id,
         name,
@@ -41,9 +42,6 @@ export default async function RezeptDetailPage({
     .eq('id', id)
     .single()
 
-  // TODO(PROJ-16/backend): fetch recipe_typ from DB once migration ran
-  // const recipeTypRaw = recipe?.recipe_typ as 'beilage' | 'grundlage' | null
-
   if (!recipe) notFound()
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -54,7 +52,7 @@ export default async function RezeptDetailPage({
   type MacrosPerServing = { kcal: number; protein_g: number; kohlenhydrate_g: number; zucker_g: number; fett_g: number; ballaststoffe_g: number }
   const macros = recipe.macros_per_serving as MacrosPerServing | null
   const matrix = recipe.saettigungs_matrix as MatrixType | null
-  const recipeTyp: 'beilage' | 'grundlage' | null = null // TODO(PROJ-16/backend): read from recipe.recipe_typ after migration
+  const recipeTyp = recipe.recipe_typ as 'beilage' | 'grundlage' | null
 
   type Ingredient = { id: string; name: string; amount: number; unit: string; sort_order: number }
   const ingredients = (recipe.recipe_ingredients as unknown as Ingredient[])

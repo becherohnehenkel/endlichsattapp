@@ -17,50 +17,91 @@ export type Database = {
       bls_lebensmittel: {
         Row: {
           bls_code: string
+          bls_version: string
+          carbs_g_100g: number | null
+          fat_g_100g: number | null
+          fiber_g_100g: number | null
+          imported_at: string
+          kcal_100g: number | null
+          naehrwerte: Json | null
           name_de: string
           name_en: string | null
-          kcal_100g: number | null
           protein_g_100g: number | null
-          fat_g_100g: number | null
-          carbs_g_100g: number | null
-          fiber_g_100g: number | null
           sugar_g_100g: number | null
-          naehrwerte: Json | null
-          bls_version: string
-          imported_at: string
         }
         Insert: {
           bls_code: string
+          bls_version?: string
+          carbs_g_100g?: number | null
+          fat_g_100g?: number | null
+          fiber_g_100g?: number | null
+          imported_at?: string
+          kcal_100g?: number | null
+          naehrwerte?: Json | null
           name_de: string
           name_en?: string | null
-          kcal_100g?: number | null
           protein_g_100g?: number | null
-          fat_g_100g?: number | null
-          carbs_g_100g?: number | null
-          fiber_g_100g?: number | null
           sugar_g_100g?: number | null
-          naehrwerte?: Json | null
-          bls_version?: string
-          imported_at?: string
         }
         Update: {
           bls_code?: string
+          bls_version?: string
+          carbs_g_100g?: number | null
+          fat_g_100g?: number | null
+          fiber_g_100g?: number | null
+          imported_at?: string
+          kcal_100g?: number | null
+          naehrwerte?: Json | null
           name_de?: string
           name_en?: string | null
-          kcal_100g?: number | null
           protein_g_100g?: number | null
-          fat_g_100g?: number | null
-          carbs_g_100g?: number | null
-          fiber_g_100g?: number | null
           sugar_g_100g?: number | null
-          naehrwerte?: Json | null
-          bls_version?: string
-          imported_at?: string
+        }
+        Relationships: []
+      }
+      invite_codes: {
+        Row: {
+          code: string
+          created_at: string | null
+          redeemed_at: string | null
+          redeemed_by: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          redeemed_at?: string | null
+          redeemed_by?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          redeemed_at?: string | null
+          redeemed_by?: string | null
+        }
+        Relationships: []
+      }
+      invite_redemption_attempts: {
+        Row: {
+          attempted_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          attempted_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          attempted_at?: string | null
+          id?: string
+          user_id?: string
         }
         Relationships: []
       }
       meal_analyses: {
         Row: {
+          analysis_typ: string | null
+          beilage_data: Json | null
           created_at: string
           data_sources: Json | null
           id: string
@@ -73,6 +114,8 @@ export type Database = {
           satiety_scores_before: Json | null
         }
         Insert: {
+          analysis_typ?: string | null
+          beilage_data?: Json | null
           created_at?: string
           data_sources?: Json | null
           id?: string
@@ -85,6 +128,8 @@ export type Database = {
           satiety_scores_before?: Json | null
         }
         Update: {
+          analysis_typ?: string | null
+          beilage_data?: Json | null
           created_at?: string
           data_sources?: Json | null
           id?: string
@@ -174,33 +219,69 @@ export type Database = {
         }
         Relationships: []
       }
-      recipe_ingredients: {
+      profiles: {
         Row: {
+          created_at: string
+          email: string
           id: string
-          recipe_id: string
-          name: string
-          amount: number
-          unit: string
-          sort_order: number
-          macros_per_100g: Json | null
+          invite_code_redeemed_at: string | null
+          name: string | null
+          photo_scans_remaining: number
+          stripe_customer_id: string | null
+          subscription_status: string | null
+          trial_ends_at: string | null
         }
         Insert: {
-          id?: string
-          recipe_id: string
-          name: string
-          amount: number
-          unit: string
-          sort_order?: number
-          macros_per_100g?: Json | null
+          created_at?: string
+          email: string
+          id: string
+          invite_code_redeemed_at?: string | null
+          name?: string | null
+          photo_scans_remaining?: number
+          stripe_customer_id?: string | null
+          subscription_status?: string | null
+          trial_ends_at?: string | null
         }
         Update: {
+          created_at?: string
+          email?: string
           id?: string
-          recipe_id?: string
-          name?: string
-          amount?: number
-          unit?: string
-          sort_order?: number
+          invite_code_redeemed_at?: string | null
+          name?: string | null
+          photo_scans_remaining?: number
+          stripe_customer_id?: string | null
+          subscription_status?: string | null
+          trial_ends_at?: string | null
+        }
+        Relationships: []
+      }
+      recipe_ingredients: {
+        Row: {
+          amount: number
+          id: string
+          macros_per_100g: Json | null
+          name: string
+          recipe_id: string
+          sort_order: number
+          unit: string
+        }
+        Insert: {
+          amount: number
+          id?: string
           macros_per_100g?: Json | null
+          name: string
+          recipe_id: string
+          sort_order?: number
+          unit: string
+        }
+        Update: {
+          amount?: number
+          id?: string
+          macros_per_100g?: Json | null
+          name?: string
+          recipe_id?: string
+          sort_order?: number
+          unit?: string
         }
         Relationships: [
           {
@@ -214,127 +295,55 @@ export type Database = {
       }
       recipes: {
         Row: {
-          id: string
-          title: string
-          image_path: string | null
-          focal_point: Json | null
-          servings: number
           cook_time_minutes: number
-          total_time_minutes: number
-          instructions: string
-          ingredient_tags: string[]
-          cuisine_tags: string[]
-          macros_per_serving: Json | null
-          saettigungs_matrix: Json | null
           created_at: string
+          cuisine_tags: string[]
+          focal_point: Json | null
+          id: string
+          image_path: string | null
+          ingredient_tags: string[]
+          instructions: string
+          macros_per_serving: Json | null
+          recipe_typ: string | null
+          saettigungs_matrix: Json | null
+          servings: number
+          title: string
+          total_time_minutes: number
           updated_at: string
         }
         Insert: {
-          id?: string
-          title: string
-          image_path?: string | null
-          focal_point?: Json | null
-          servings: number
           cook_time_minutes: number
-          total_time_minutes: number
-          instructions: string
-          ingredient_tags?: string[]
-          cuisine_tags?: string[]
-          macros_per_serving?: Json | null
-          saettigungs_matrix?: Json | null
           created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          title?: string
-          image_path?: string | null
+          cuisine_tags?: string[]
           focal_point?: Json | null
-          servings?: number
-          cook_time_minutes?: number
-          total_time_minutes?: number
-          instructions?: string
+          id?: string
+          image_path?: string | null
           ingredient_tags?: string[]
-          cuisine_tags?: string[]
+          instructions: string
           macros_per_serving?: Json | null
+          recipe_typ?: string | null
           saettigungs_matrix?: Json | null
-          created_at?: string
+          servings: number
+          title: string
+          total_time_minutes: number
           updated_at?: string
         }
-        Relationships: []
-      }
-      invite_codes: {
-        Row: {
-          code: string
-          redeemed_by: string | null
-          redeemed_at: string | null
-          created_at: string
-        }
-        Insert: {
-          code: string
-          redeemed_by?: string | null
-          redeemed_at?: string | null
-          created_at?: string
-        }
         Update: {
-          code?: string
-          redeemed_by?: string | null
-          redeemed_at?: string | null
+          cook_time_minutes?: number
           created_at?: string
-        }
-        Relationships: []
-      }
-      invite_redemption_attempts: {
-        Row: {
-          id: string
-          user_id: string
-          attempted_at: string
-        }
-        Insert: {
+          cuisine_tags?: string[]
+          focal_point?: Json | null
           id?: string
-          user_id: string
-          attempted_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          attempted_at?: string
-        }
-        Relationships: []
-      }
-      profiles: {
-        Row: {
-          created_at: string
-          email: string
-          id: string
-          invite_code_redeemed_at: string | null
-          name: string | null
-          photo_scans_remaining: number
-          trial_ends_at: string | null
-          stripe_customer_id: string | null
-          subscription_status: string | null
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          id: string
-          invite_code_redeemed_at?: string | null
-          name?: string | null
-          photo_scans_remaining?: number
-          trial_ends_at?: string | null
-          stripe_customer_id?: string | null
-          subscription_status?: string | null
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          id?: string
-          invite_code_redeemed_at?: string | null
-          name?: string | null
-          photo_scans_remaining?: number
-          trial_ends_at?: string | null
-          stripe_customer_id?: string | null
-          subscription_status?: string | null
+          image_path?: string | null
+          ingredient_tags?: string[]
+          instructions?: string
+          macros_per_serving?: Json | null
+          recipe_typ?: string | null
+          saettigungs_matrix?: Json | null
+          servings?: number
+          title?: string
+          total_time_minutes?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -343,10 +352,9 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      decrement_photo_scan: {
-        Args: Record<PropertyKey, never>
-        Returns: number | null
-      }
+      decrement_photo_scan: { Args: never; Returns: number }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
       [_ in never]: never
@@ -382,13 +390,13 @@ export type Tables<
     : never
   : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
         DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
-      }
-      ? R
-      : never
+  ? (DefaultSchema["Tables"] &
+      DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+      Row: infer R
+    }
+    ? R
     : never
+  : never
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
@@ -408,12 +416,12 @@ export type TablesInsert<
     ? I
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
-      }
-      ? I
-      : never
+  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+      Insert: infer I
+    }
+    ? I
     : never
+  : never
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
@@ -433,12 +441,12 @@ export type TablesUpdate<
     ? U
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
-      }
-      ? U
-      : never
+  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+      Update: infer U
+    }
+    ? U
     : never
+  : never
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
@@ -454,8 +462,8 @@ export type Enums<
 }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never
+  ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+  : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
@@ -471,8 +479,8 @@ export type CompositeTypes<
 }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
+  ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+  : never
 
 export const Constants = {
   public: {

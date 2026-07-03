@@ -30,6 +30,7 @@ const RecipeSchema = z.object({
   ingredient_tags: z.array(z.string().min(1)).min(1, 'Mindestens ein Zutaten-Tag erforderlich'),
   cuisine_tags: z.array(z.string()).optional().default([]),
   ingredients: z.array(IngredientSchema).min(1, 'Mindestens eine Zutat erforderlich'),
+  recipe_typ: z.enum(['beilage', 'grundlage']).nullable().optional(),
 })
 
 export async function GET() {
@@ -81,6 +82,7 @@ export async function POST(request: Request) {
       instructions: recipeData.instructions,
       ingredient_tags: recipeData.ingredient_tags,
       cuisine_tags: recipeData.cuisine_tags ?? [],
+      recipe_typ: recipeData.recipe_typ ?? null,
     })
     .select('id')
     .single()

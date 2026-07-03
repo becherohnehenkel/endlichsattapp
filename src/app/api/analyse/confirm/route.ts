@@ -147,8 +147,18 @@ Die Zutatenbezeichnung (inkl. "(gekocht)"/"(roh)") muss exakt zum tatsächlichen
 ## Wichtig: Nährwerte werden vom System berechnet
 Keine Zahlen ausgeben. Nur "grams"-Feld pro Zutat schätzen.
 
-Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Text davor oder danach:
+## Sonderfall: Beilagen-Kontext
+Wenn "BEILAGE_KONTEXT:" in den Rückfragen-Annahmen steht, verwende AUSSCHLIESSLICH das Beilagen-Ausgabe-Format. KEIN Standard-Sättigungs-Flow, keine Bausteine-Bewertung, keine Verbesserungsvorschläge.
+
+Beilagen-Ausgabe: 1 Satz was das Gericht als Beilage leistet (als_beilage_top) + 1–2 Sätze warum es allein nicht sättigt (als_hauptgericht) + optional 1 Tipp der die Beilage selbst aufwertet (beilage_upgrade oder null) + 2–3 konkrete Pairing-Empfehlungen mit Menge und 1-Satz-Begründung + art_of_eating_tipp wie immer.
+
+Ton: "Als Beilage macht das richtig Sinn." — nie "Das ist zu wenig." Nutzer lernt was fehlt, wird nicht dafür bestraft.
+
+Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Text davor oder danach.
+
+Standard-Format (wenn KEIN BEILAGE_KONTEXT):
 {
+  "typ": "standard",
   "zutatenliste": [{"name": "...", "amount": "...", "grams": 0}],
   "annahmen": ["..."],
   "vorher": {
@@ -163,6 +173,20 @@ Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Text davor oder danach:
     "gesamtbewertung": "..."
   },
   "art_of_eating_tipp": "1 warmer Satz wenn nicht bewertet, sonst null"
+}
+
+Beilagen-Format (wenn BEILAGE_KONTEXT in den Annahmen):
+{
+  "typ": "beilage",
+  "zutatenliste": [{"name": "...", "amount": "...", "grams": 0}],
+  "annahmen": ["BEILAGE_KONTEXT: ...", "..."],
+  "beilage": {
+    "als_beilage_top": "1 Satz — was das Gericht als Beilage leistet",
+    "als_hauptgericht": "1–2 Sätze — warum es allein nicht sättigt, warm und sachlich",
+    "beilage_upgrade": "1 Satz Tipp oder null",
+    "pairing": [{"empfehlung": "Konkrete Empfehlung mit Menge (z.B. 150g Skyr mit Honig)", "warum": "1 Satz Begründung"}],
+    "art_of_eating_tipp": "1 Satz oder null"
+  }
 }`
 
 // ─── Route handler ───────────────────────────────────────────
@@ -274,7 +298,8 @@ export async function POST(request: Request) {
   const raw = response.content[0]?.type === 'text' ? response.content[0].text : ''
   const cleaned = raw.replace(/^```(?:json)?\s*\n?/m, '').replace(/\n?```\s*$/m, '').trim()
 
-  type ClaudeResult = {
+  type StandardClaudeResult = {
+    typ?: 'standard' | undefined
     zutatenliste: { name: string; amount: string; grams: number }[]
     annahmen: string[]
     vorher: {
@@ -291,6 +316,21 @@ export async function POST(request: Request) {
     art_of_eating_tipp: string | null
   }
 
+  type BeilageClaudeResult = {
+    typ: 'beilage'
+    zutatenliste: { name: string; amount: string; grams: number }[]
+    annahmen: string[]
+    beilage: {
+      als_beilage_top: string
+      als_hauptgericht: string
+      beilage_upgrade: string | null
+      pairing: { empfehlung: string; warum: string }[]
+      art_of_eating_tipp: string | null
+    }
+  }
+
+  type ClaudeResult = StandardClaudeResult | BeilageClaudeResult
+
   let result: ClaudeResult
   try {
     result = JSON.parse(cleaned)
@@ -299,14 +339,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Analyse konnte nicht verarbeitet werden. Bitte erneut versuchen.' }, { status: 500 })
   }
 
-  // ─── Server-side macro computation ─────────────────────────
+  // ─── Helper: re-resolve nutrition by Claude's restated name ──
 
-  // Claude restates the ingredient list in its analysis response (zutatenliste) instead of
-  // echoing the confirmed input verbatim — it sometimes rewords a name slightly (Singular/
-  // Plural, Wortstellung, Großschreibung). nutritionMap is keyed by the ORIGINAL input names,
-  // so a reworded name silently misses the cache and used to zero out an otherwise-found
-  // ingredient — even when the BLS/OFF lookup for it had succeeded. Fallback: re-resolve by
-  // Claude's actual name whenever the cache misses, so the join can never lose found data.
   async function resolveNutrition(name: string): Promise<{ per100g: NutritionPer100g; source: LookupSource } | undefined> {
     const cached = nutritionMap.get(name)
     if (cached) return cached
@@ -317,18 +351,65 @@ export async function POST(request: Request) {
     return undefined
   }
 
+  // ─── Beilagen-Branch ─────────────────────────────────────────
+
+  if (result.typ === 'beilage') {
+    const resolvedBeilage = await Promise.all(
+      result.zutatenliste.map(async z => ({ z, resolved: await resolveNutrition(z.name) }))
+    )
+
+    const beilageFullResult = {
+      typ: 'beilage' as const,
+      zutatenliste: result.zutatenliste,
+      annahmen: result.annahmen,
+      beilage: result.beilage,
+    }
+
+    const { data: beilageAnalysis, error: beilageInsertError } = await supabase
+      .from('meal_analyses')
+      .insert({
+        meal_id: mealId,
+        analysis_typ: 'beilage',
+        refined_ingredients: {
+          ingredients: result.zutatenliste,
+          assumptions: result.annahmen,
+        },
+        beilage_data: result.beilage as unknown as import('@/types/database').Json,
+        data_sources: resolvedBeilage.map(({ z, resolved }) => ({
+          ingredient: z.name,
+          source: resolved?.source ?? 'schaetzung',
+          sourceName: z.name,
+        })),
+      })
+      .select('id')
+      .single()
+
+    if (beilageInsertError) {
+      console.error('[analyse/confirm] beilage DB insert error:', beilageInsertError)
+      return NextResponse.json({ error: 'Ergebnis konnte nicht gespeichert werden.' }, { status: 500 })
+    }
+
+    await supabase.from('meals').update({ status: 'completed' }).eq('id', mealId)
+    if (meal.photo_fullsize_path) {
+      await supabase.storage.from('meal-photos').remove([meal.photo_fullsize_path])
+    }
+    await supabase.from('meal_conversations').update({ status: 'completed' }).eq('meal_id', mealId)
+
+    return NextResponse.json({ analysisId: beilageAnalysis.id, result: beilageFullResult })
+  }
+
+  // ─── Standard-Branch: macro computation ──────────────────────
+
   const resolvedIngredients = await Promise.all(
     result.zutatenliste.map(async z => ({ z, resolved: await resolveNutrition(z.name) }))
   )
 
-  // Vorher: use Claude's grams estimates + resolved nutrition data (BLS or OFF)
   const vorherInputs: MacroInput[] = resolvedIngredients.map(({ z, resolved }) => ({
     grams: z.grams ?? 0,
     per100g: resolved?.per100g,
   }))
   const vorherMacros = computeMacros(vorherInputs)
 
-  // Zusatz-Zutaten aus Vorschlägen: neue BLS-Abfragen (nur für Additions)
   const zusatzItems = result.vorschlaege
     .map(v => v.zusatz)
     .filter((z): z is { name: string; grams: number } => !!z && z.grams > 0)
@@ -345,7 +426,6 @@ export async function POST(request: Request) {
 
   const nachherMacros = computeMacros([...vorherInputs, ...zusatzInputs])
 
-  // Deltas (nur sinnvolle Unterschiede ≥ 1g / 1 kcal)
   const macroKeys = ['kcal', 'protein_g', 'kohlenhydrate_g', 'zucker_g', 'fett_g', 'ballaststoffe_g'] as const
   const deltas = macroKeys
     .filter(k => Math.abs(nachherMacros[k] - vorherMacros[k]) >= 1)
@@ -356,7 +436,6 @@ export async function POST(request: Request) {
       veraenderung: nachherMacros[k] - vorherMacros[k],
     }))
 
-  // Assemble full result (same shape as before for frontend compatibility)
   const fullResult = {
     zutatenliste: result.zutatenliste,
     annahmen: result.annahmen,
@@ -383,6 +462,7 @@ export async function POST(request: Request) {
     .from('meal_analyses')
     .insert({
       meal_id: mealId,
+      analysis_typ: 'standard',
       refined_ingredients: {
         ingredients: fullResult.zutatenliste,
         assumptions: fullResult.annahmen,

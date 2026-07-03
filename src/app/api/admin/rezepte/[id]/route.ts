@@ -30,6 +30,7 @@ const RecipeUpdateSchema = z.object({
   ingredient_tags: z.array(z.string().min(1)).min(1),
   cuisine_tags: z.array(z.string()).optional().default([]),
   ingredients: z.array(IngredientSchema).min(1),
+  recipe_typ: z.enum(['beilage', 'grundlage']).nullable().optional(),
 })
 
 export async function GET(
@@ -64,6 +65,7 @@ export async function GET(
     instructions: recipe.instructions,
     ingredientTags: recipe.ingredient_tags,
     cuisineTags: recipe.cuisine_tags,
+    recipeTyp: recipe.recipe_typ as 'beilage' | 'grundlage' | null,
     ingredients,
   })
 }
@@ -97,6 +99,7 @@ export async function PUT(
       instructions: recipeData.instructions,
       ingredient_tags: recipeData.ingredient_tags,
       cuisine_tags: recipeData.cuisine_tags ?? [],
+      recipe_typ: recipeData.recipe_typ ?? null,
     })
     .eq('id', id)
 
