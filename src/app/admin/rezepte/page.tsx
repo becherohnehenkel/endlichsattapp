@@ -3,7 +3,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
-import { Plus, Pencil, Clock, ChefHat } from 'lucide-react'
+import { Plus, Pencil, Clock, ChefHat, ChevronLeft } from 'lucide-react'
 import AdminDeleteButton from './admin-delete-button'
 
 async function requireAdmin() {
@@ -26,8 +26,11 @@ export default async function AdminRezeptePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card px-4 py-3 flex items-center justify-between">
-        <div>
+      <header className="border-b border-border bg-card px-4 py-3 flex items-center gap-3">
+        <Link href="/admin" className="text-muted-foreground hover:text-foreground transition-colors">
+          <ChevronLeft className="h-5 w-5" />
+        </Link>
+        <div className="flex-1">
           <h1 className="font-semibold text-foreground">Rezepte verwalten</h1>
           <p className="text-xs text-muted-foreground">Admin</p>
         </div>
