@@ -1,6 +1,6 @@
 # PROJ-16: Beilagen-Kontext
 
-## Status: Approved
+## Status: Deployed
 **Created:** 2026-07-03
 **Last Updated:** 2026-07-03
 
@@ -258,4 +258,15 @@ Alle benötigten UI-Komponenten (Badge, RadioGroup, Card) sind in shadcn/ui bere
 Keine kritischen oder hohen Bugs gefunden. PROJ-16 ist production-ready.
 
 ## Deployment
-_To be added by /deploy_
+
+**Deployed:** 2026-07-03
+**Production URL:** https://satt.mehralsabnehmen.de
+**Git Tag:** v1.16.0-PROJ-16
+
+### Was deployed
+- `recipe_typ` Spalte auf `recipes` Tabelle (DB-Migration bereits live)
+- Admin-Formular: Radio-Group für Vollständiges Gericht / Beilage / Grundlage
+- Rezept-Detailseite: Kontext-Hinweis bei `recipe_typ = 'beilage'` oder `'grundlage'`
+- KI-Analyse: Erweiterte Prompts für Beilagen-Rückfrage (start/answer/confirm)
+- Beilagen-Ergebnis-Komponente: Pairing-Vorschläge, upgrade-Tipp, Art of Eating
+- 4 Commits: `0a5cd22`, `403dd74`, `ce0f6d1`, `fe375cc`
