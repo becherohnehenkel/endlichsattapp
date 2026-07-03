@@ -1,6 +1,6 @@
 import { redirect, notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import type { AnalysisResult } from '@/components/saettigungs-ergebnis'
+import type { AnalysisResult, StandardAnalysisResult } from '@/components/saettigungs-ergebnis'
 import MahlzeitDetail from './mahlzeit-detail'
 
 export default async function MahlzeitDetailPage({
@@ -43,21 +43,21 @@ export default async function MahlzeitDetailPage({
 
   type RawAnalysis = {
     id: string
-    refined_ingredients: { ingredients: AnalysisResult['zutatenliste']; assumptions: string[] } | null
-    macros_before: AnalysisResult['vorher']['naehrwerte'] | null
-    macros_after: AnalysisResult['nachher']['naehrwerte'] | null
+    refined_ingredients: { ingredients: StandardAnalysisResult['zutatenliste']; assumptions: string[] } | null
+    macros_before: StandardAnalysisResult['vorher']['naehrwerte'] | null
+    macros_after: StandardAnalysisResult['nachher']['naehrwerte'] | null
     satiety_scores_before: {
-      pillars: AnalysisResult['vorher']['bausteine']
-      overall: AnalysisResult['vorher']['gesamtbewertung']
+      pillars: StandardAnalysisResult['vorher']['bausteine']
+      overall: StandardAnalysisResult['vorher']['gesamtbewertung']
       explanation: string
     } | null
     satiety_scores_after: {
-      pillars: AnalysisResult['nachher']['bausteine']
-      overall: AnalysisResult['nachher']['gesamtbewertung']
-      deltas: AnalysisResult['nachher']['deltas']
+      pillars: StandardAnalysisResult['nachher']['bausteine']
+      overall: StandardAnalysisResult['nachher']['gesamtbewertung']
+      deltas: StandardAnalysisResult['nachher']['deltas']
     } | null
     improvement: {
-      suggestions: AnalysisResult['vorschlaege']
+      suggestions: StandardAnalysisResult['vorschlaege']
       art_of_eating_tip: string | null
     } | null
   }
@@ -67,7 +67,7 @@ export default async function MahlzeitDetailPage({
   if (!analysis) notFound()
 
   const emptyNaehrwerte = { kcal: 0, protein_g: 0, kohlenhydrate_g: 0, zucker_g: 0, fett_g: 0, ballaststoffe_g: 0 }
-  const emptyBausteine = { geschmack: 'nicht_bewertet', biss: 'nicht_bewertet', ballaststoffe: 'nicht_bewertet', proteine: 'nicht_bewertet', volumen: 'nicht_bewertet', art_of_eating: 'nicht_bewertet' } as AnalysisResult['vorher']['bausteine']
+  const emptyBausteine = { geschmack: 'nicht_bewertet', biss: 'nicht_bewertet', ballaststoffe: 'nicht_bewertet', proteine: 'nicht_bewertet', volumen: 'nicht_bewertet', art_of_eating: 'nicht_bewertet' } as StandardAnalysisResult['vorher']['bausteine']
 
   const result: AnalysisResult = {
     zutatenliste: analysis.refined_ingredients?.ingredients ?? [],

@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Plus, Trash2, Upload, ChefHat } from 'lucide-react'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import ZutatInputMitQuelle from '@/components/zutat-input-mit-quelle'
 import BildCropper from '@/components/bild-cropper'
 import type { NutritionPer100g } from '@/lib/nutrition'
@@ -32,11 +33,14 @@ export interface RezeptFormularValues {
   image_path?: string
 }
 
+type RecipeTyp = 'vollstaendig' | 'beilage' | 'grundlage'
+
 interface RezeptFormularProps {
   defaultValues?: Partial<RezeptFormularValues>
   recipeId?: string
   existingImageUrl?: string | null
   defaultIngredientMacros?: (NutritionPer100g | null)[]
+  defaultRecipeTyp?: 'beilage' | 'grundlage' | null
   mode: 'create' | 'edit'
 }
 
@@ -45,11 +49,15 @@ export default function RezeptFormular({
   recipeId,
   existingImageUrl,
   defaultIngredientMacros,
+  defaultRecipeTyp,
   mode,
 }: RezeptFormularProps) {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const [recipeTyp, setRecipeTyp] = useState<RecipeTyp>(
+    defaultRecipeTyp === 'beilage' ? 'beilage' : defaultRecipeTyp === 'grundlage' ? 'grundlage' : 'vollstaendig'
+  )
   const [imagePreview, setImagePreview] = useState<string | null>(existingImageUrl ?? null)
   const [uploadedPath, setUploadedPath] = useState<string | null>(defaultValues?.image_path ?? null)
   // Raw local blob URL shown in the cropper (before upload)
@@ -145,6 +153,7 @@ export default function RezeptFormular({
             macros_per_100g: ingredientMacros[idx] ?? null,
           })),
         image_path: uploadedPath ?? undefined,
+        recipe_typ: recipeTyp === 'vollstaendig' ? null : recipeTyp,
       }
 
       const url = mode === 'edit' ? `/api/admin/rezepte/${recipeId}` : '/api/admin/rezepte'
@@ -385,6 +394,40 @@ export default function RezeptFormular({
         )}
 
         {imageError && <p className="text-xs text-destructive">{imageError}</p>}
+      </div>
+
+      <Separator />
+
+      {/* Rezept-Typ */}
+      <div className="space-y-3">
+        <Label>Rezept-Typ</Label>
+        <RadioGroup
+          value={recipeTyp}
+          onValueChange={(v) => setRecipeTyp(v as RecipeTyp)}
+          className="space-y-2"
+        >
+          {([
+            { value: 'vollstaendig', label: 'Vollständiges Gericht', desc: 'Kann als alleinige Mahlzeit gegessen werden' },
+            { value: 'beilage',      label: 'Beilage',               desc: 'Salat, Rohkost, Gemüsebeilage, Dips' },
+            { value: 'grundlage',    label: 'Grundlagen-Rezept',     desc: 'Brot, Brühe, Sauce, Teig' },
+          ] as { value: RecipeTyp; label: string; desc: string }[]).map(opt => (
+            <label
+              key={opt.value}
+              htmlFor={`typ-${opt.value}`}
+              className={`flex items-start gap-3 rounded-lg border p-3 cursor-pointer transition-colors ${
+                recipeTyp === opt.value
+                  ? 'border-[#4A7C59] bg-[#E8F0EB]'
+                  : 'border-border hover:bg-muted/40'
+              }`}
+            >
+              <RadioGroupItem value={opt.value} id={`typ-${opt.value}`} className="mt-0.5" />
+              <div className="space-y-0.5">
+                <span className="font-medium text-sm block">{opt.label}</span>
+                <span className="text-xs text-muted-foreground">{opt.desc}</span>
+              </div>
+            </label>
+          ))}
+        </RadioGroup>
       </div>
 
       {submitError && (

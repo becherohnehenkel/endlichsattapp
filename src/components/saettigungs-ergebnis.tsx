@@ -12,6 +12,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import RezeptVorschlaege from '@/components/rezept-vorschlaege'
+import BeilagenErgebnis from '@/components/beilagen-ergebnis'
 
 type BausteinRating = 'gut' | 'mittel' | 'schwach' | 'nicht_bewertet'
 
@@ -33,7 +34,8 @@ interface Naehrwerte {
   ballaststoffe_g: number
 }
 
-export interface AnalysisResult {
+export interface StandardAnalysisResult {
+  typ?: 'standard' | undefined
   zutatenliste: { name: string; amount: string; source: string; sourceName: string }[]
   annahmen: string[]
   vorher: {
@@ -52,6 +54,21 @@ export interface AnalysisResult {
   }
   art_of_eating_tipp: string | null
 }
+
+export interface BeilagenAnalysisResult {
+  typ: 'beilage'
+  zutatenliste: { name: string; amount: string; source: string; sourceName: string }[]
+  annahmen: string[]
+  beilage: {
+    als_beilage_top: string
+    als_hauptgericht: string
+    beilage_upgrade: string | null
+    pairing: { empfehlung: string; warum: string }[]
+    art_of_eating_tipp: string | null
+  }
+}
+
+export type AnalysisResult = StandardAnalysisResult | BeilagenAnalysisResult
 
 interface SaettigungsErgebnisProps {
   result: AnalysisResult
@@ -115,8 +132,13 @@ function PillarChip({
 }
 
 export default function SaettigungsErgebnis({ result, assumptions, onReset, analysisId, photoUrl }: SaettigungsErgebnisProps) {
-  const allAssumptions = [...new Set([...assumptions, ...result.annahmen])]
   const [assumptionsOpen, setAssumptionsOpen] = useState(false)
+
+  if (result.typ === 'beilage') {
+    return <BeilagenErgebnis result={result} assumptions={assumptions} onReset={onReset} analysisId={analysisId} photoUrl={photoUrl} />
+  }
+
+  const allAssumptions = [...new Set([...assumptions, ...result.annahmen])]
   const gesamt = gesamtConfig(result.vorher.gesamtbewertung)
   const isSehrSaettigend = result.vorher.gesamtbewertung === 'sehr_saettigend'
   const hasVorschlaege = result.vorschlaege.length > 0

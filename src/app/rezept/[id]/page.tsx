@@ -5,6 +5,7 @@ import { Separator } from '@/components/ui/separator'
 import { createClient } from '@/lib/supabase/server'
 import BackButton from './back-button'
 import RezeptSaettigungsMatrix from '@/components/rezept-saettigungs-matrix'
+import RezeptKontextHinweis from '@/components/rezept-kontext-hinweis'
 import type { RezeptSaettigungsMatrix as MatrixType } from '@/lib/saettigungs-matrix-rezept'
 
 export default async function RezeptDetailPage({
@@ -40,6 +41,9 @@ export default async function RezeptDetailPage({
     .eq('id', id)
     .single()
 
+  // TODO(PROJ-16/backend): fetch recipe_typ from DB once migration ran
+  // const recipeTypRaw = recipe?.recipe_typ as 'beilage' | 'grundlage' | null
+
   if (!recipe) notFound()
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -50,6 +54,7 @@ export default async function RezeptDetailPage({
   type MacrosPerServing = { kcal: number; protein_g: number; kohlenhydrate_g: number; zucker_g: number; fett_g: number; ballaststoffe_g: number }
   const macros = recipe.macros_per_serving as MacrosPerServing | null
   const matrix = recipe.saettigungs_matrix as MatrixType | null
+  const recipeTyp: 'beilage' | 'grundlage' | null = null // TODO(PROJ-16/backend): read from recipe.recipe_typ after migration
 
   type Ingredient = { id: string; name: string; amount: number; unit: string; sort_order: number }
   const ingredients = (recipe.recipe_ingredients as unknown as Ingredient[])
@@ -132,8 +137,13 @@ export default async function RezeptDetailPage({
           </p>
         </div>
 
-        {/* Sättigungs-Bausteine */}
-        {matrix && (
+        {/* Beilagen-/Grundlagen-Hinweis ODER Sättigungs-Bausteine */}
+        {recipeTyp ? (
+          <>
+            <Separator />
+            <RezeptKontextHinweis typ={recipeTyp} />
+          </>
+        ) : matrix ? (
           <>
             <Separator />
             <div className="space-y-3">
@@ -141,7 +151,7 @@ export default async function RezeptDetailPage({
               <RezeptSaettigungsMatrix matrix={matrix} />
             </div>
           </>
-        )}
+        ) : null}
 
         {/* Nährwerte pro Portion */}
         {macros && (
