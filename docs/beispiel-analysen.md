@@ -2,7 +2,7 @@
 
 > Approved Referenz-Analysen für den Sättigungs-Agenten.
 > Dienen als Testgrundlage und Tonalitäts-Referenz.
-> Zuletzt aktualisiert: 2026-06-16
+> Zuletzt aktualisiert: 2026-07-03
 
 ---
 
@@ -496,3 +496,96 @@ Trotz frittierter Panade greift die Portionskalibrierung-Regel hier NICHT — mi
 Kleine Portionen wie diese sind ein guter Moment, kurz zu checken: War das wirklich genug für eine ganze Mahlzeit, oder eher ein Snack zwischendurch? Beides ist okay — nur sollte die nächste Mahlzeit dann nicht zu weit weg sein.
 
 **Nie sagen:** "Du solltest keine Proteinshakes trinken." — das ist Bevormundung, kein Coaching.
+
+---
+
+## Beispiel 7: Beilagen-Kontext — Bunter Blattsalat allein
+
+*Zeigt den neuen Beilagen-Flow: KI erkennt eine klassische Beilage, stellt die Rückfrage, und liefert statt eines Sättigungs-Scores einen Pairing-fokussierten Output. Kein Score, keine Bausteine — stattdessen Einordnung und Pairing-Empfehlungen.*
+
+### Input des Nutzers
+*"Bunter Salat: Rucola, Gurke, Tomate, Paprika, Olivenöl-Dressing."*
+
+### Beilagen-Rückfrage des Agenten
+*"Ist das deine komplette Mahlzeit — oder isst du das als Beilage zu etwas anderem?"*
+
+**Begründung für die Rückfrage:** Keine erkennbare Proteinquelle, kaum Energiebasis, eindeutiger Beilagen-Charakter — alle Trigger-Kriterien erfüllt.
+
+**Antwort des Nutzers:** *"Ja, das ist alles was ich esse."*
+
+### Notierte Annahme
+*"BEILAGE_KONTEXT: Bunter Blattsalat mit Olivenöl-Dressing wird als vollständige Mahlzeit gegessen."*
+
+---
+
+### BEILAGEN-ANALYSE
+
+**als_beilage_top:**
+Als Beilage macht dieser Salat richtig Sinn — viel Volumen, Frische und Ballaststoffe, kaum Kalorien. Ein klassisches Begleitgericht das jede Hauptmahlzeit physisch ergänzt und leichter verdaulich macht.
+
+**als_hauptgericht:**
+Allein macht er noch keine sättigende Mahlzeit — es fehlt eine Proteinquelle und eine Energiebasis. Ohne die wärst du in 60–90 Minuten wieder hungrig, weil weder Sättigungshormone aktiviert werden noch der Magen ausreichend Energie bekommt.
+
+**beilage_upgrade:**
+Eine Handvoll Sonnenblumenkerne oder geröstete Pinienkerne drüber: mehr Biss, etwas sättigende Fette — und der Salat selbst wird runder.
+
+**pairing:**
+
+1. *"150g Skyr oder Magerquark mit Kräutern — direkt als Dip oder als Schicht neben dem Salat"*
+   → Bringt ~15–18g Protein: damit aktivierst du Sättigungshormone die der Salat allein nicht auslöst. Fertig in 30 Sekunden.
+
+2. *"2 weich gekochte Eier dazu"*
+   → Schnell zubereitet, sättigende Kombination aus Protein und Fett. Macht aus der Beilage eine vollständige kleine Mahlzeit.
+
+3. *"Eine Scheibe Vollkornbrot mit Butter + ein Aufstrich (Quark, Hummus)"*
+   → Gibt Energie und Sättigung durch Stärke und Ballaststoffe — der Salat liefert das Volumen, das Brot die Basis.
+
+**art_of_eating_tipp:**
+Salat lädt zum langsamen Essen ein — kau jeden Bissen gut durch. Der Kauaufwand ist einer der wenigen echten Sättigungsmechanismen die dieses Gericht allein mitbringt.
+
+---
+
+### Warum hier kein Sättigungs-Score?
+
+Ein Salat als Beilage bekommt keine schlechte Bewertung — er tut genau was er soll. Den Score "wenig sättigend" zu vergeben wäre irreführend: der Salat "versagt" nicht, er ist einfach für einen anderen Zweck gedacht. Der Nutzer lernt hier was eine vollständige Mahlzeit ausmacht — nicht dass er etwas falsch gemacht hat.
+
+---
+
+## Beispiel 8: Beilagen-Kontext — Körniger Frischkäse allein
+
+*Zeigt einen Grenzfall: Körniger Frischkäse hat tatsächlich Protein (anders als Salat) — aber die Gesamtportion allein reicht nicht für eine sättigende Mahlzeit. Trotzdem klarer Beilagen-Charakter wenn allein gegessen.*
+
+### Input des Nutzers
+*"Ein Becher körniger Frischkäse, 200g."*
+
+### Beilagen-Rückfrage des Agenten
+*"Ist das deine komplette Mahlzeit — oder isst du das als Beilage zu etwas anderem?"*
+
+**Antwort des Nutzers:** *"Ja, das ist alles."*
+
+---
+
+### BEILAGEN-ANALYSE
+
+**als_beilage_top:**
+Körniger Frischkäse ist als Beilage oder Snack-Komponente vielseitig: gutes Protein, mild im Geschmack, lässt sich mit fast allem kombinieren.
+
+**als_hauptgericht:**
+Allein als Mahlzeit fehlt die Energiebasis für anhaltende Sättigung — 200g Körniger Frischkäse liefern ~16g Protein (gut), aber nur ~140 kcal und kaum Kohlenhydrate oder Fett. Du wärst in 60–90 Minuten wieder hungrig, weil der Energiegehalt für eine vollständige Mahlzeit zu niedrig ist.
+
+**beilage_upgrade:**
+Etwas Obst (Beeren, Apfelstücke) oder ein Spritzer Honig drüber: bringt Süße und einen Hauch Energie ohne den Charakter zu verändern.
+
+**pairing:**
+
+1. *"Eine Scheibe Vollkornbrot mit Butter dazu"*
+   → Brot liefert Stärke und Ballaststoffe als Energiebasis — zusammen mit dem Protein aus dem Frischkäse eine vollständige kleine Mahlzeit.
+
+2. *"150g Beeren oder ein Apfel in Stücken reinmischen"*
+   → Volumen, Frische und etwas natürliche Süße — macht aus dem Frischkäse eine vollwertige Zwischenmahlzeit.
+
+3. *"Eine Handvoll Nüsse (20–30g) dazu"*
+   → Biss, sättigende Fette und mehr Kalorien. Körniger Frischkäse + Nüsse + Obst ist ein klassisches vollständiges Snack-Gericht.
+
+**art_of_eating_tipp:**
+Auch eine kleine Mahlzeit verdient einen ruhigen Moment — iss es sitzend statt im Stehen am Kühlschrank. Das ändert wie sättigend es sich anfühlt.
