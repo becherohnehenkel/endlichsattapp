@@ -1,6 +1,6 @@
 # PROJ-17: Wöchentlicher Sättigungs-Recap
 
-## Status: Approved
+## Status: Deployed
 **Created:** 2026-07-07
 **Last Updated:** 2026-07-07
 **Architected:** 2026-07-07
@@ -269,4 +269,10 @@ Keine kritischen oder hohen Bugs gefunden.
 ✅ **JA** — Alle Acceptance Criteria erfüllt, keine kritischen/hohen Bugs, Regression sauber.
 
 ## Deployment
-_To be added by /deploy_
+**Deployed:** 2026-07-07
+**Production URL:** https://satt.mehralsabnehmen.de/historie
+**Deployed by:** `/deploy` skill
+
+- Push auf `main` → Vercel Auto-Deploy getriggert
+- Neue Route `/api/recap/wochen` live
+- Neuer Client-Komponent `WochenRecapSektion` live auf `/historie`
