@@ -34,10 +34,11 @@
 | PROJ-16 | Beilagen-Kontext | P1 | Deployed | PROJ-8, PROJ-4, PROJ-5 | [Spec](PROJ-16-beilagen-kontext.md) |
 | PROJ-17 | Wöchentlicher Sättigungs-Recap | P2 | Deployed | PROJ-4, PROJ-5, PROJ-6 | [Spec](PROJ-17-woechentlicher-saettigungs-recap.md) |
 | PROJ-18 | Token-Optimierung Foto-Analyse | P1 | Deployed | PROJ-3, PROJ-4 | [Spec](PROJ-18-token-optimierung-foto-analyse.md) |
+| PROJ-19 | Gast-Modus (Anonyme Nutzung ohne Account) | P1 | Planned | PROJ-1, PROJ-2, PROJ-10, PROJ-11 | [Spec](PROJ-19-gast-modus.md) |
 
 <!-- Add features above this line -->
 
-## Next Available ID: PROJ-19
+## Next Available ID: PROJ-20
 
 ## Empfohlene Build-Reihenfolge
 
