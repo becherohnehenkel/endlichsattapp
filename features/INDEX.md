@@ -36,10 +36,11 @@
 | PROJ-18 | Token-Optimierung Foto-Analyse | P1 | Deployed | PROJ-3, PROJ-4 | [Spec](PROJ-18-token-optimierung-foto-analyse.md) |
 | PROJ-19 | Gast-Modus (Anonyme Nutzung ohne Account) | P1 | Deployed | PROJ-1, PROJ-2, PROJ-10, PROJ-11 | [Spec](PROJ-19-gast-modus.md) |
 | PROJ-20 | Datenschutzerklärung & Impressum | P1 | Deployed | PROJ-2, PROJ-19 | [Spec](PROJ-20-datenschutz-impressum.md) |
+| PROJ-21 | Foto-Qualität in der App-Anzeige | P1 | Deployed | PROJ-3, PROJ-18 | [Spec](PROJ-21-foto-qualitaet-anzeige.md) |
 
 <!-- Add features above this line -->
 
-## Next Available ID: PROJ-21
+## Next Available ID: PROJ-22
 
 ## Empfohlene Build-Reihenfolge
 

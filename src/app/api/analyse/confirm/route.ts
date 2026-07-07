@@ -391,9 +391,6 @@ export async function POST(request: Request) {
     }
 
     await supabase.from('meals').update({ status: 'completed' }).eq('id', mealId)
-    if (meal.photo_fullsize_path) {
-      await supabase.storage.from('meal-photos').remove([meal.photo_fullsize_path])
-    }
     await supabase.from('meal_conversations').update({ status: 'completed' }).eq('meal_id', mealId)
 
     return NextResponse.json({ analysisId: beilageAnalysis.id, result: beilageFullResult })
@@ -499,10 +496,6 @@ export async function POST(request: Request) {
   }
 
   await supabase.from('meals').update({ status: 'completed' }).eq('id', mealId)
-
-  if (meal.photo_fullsize_path) {
-    await supabase.storage.from('meal-photos').remove([meal.photo_fullsize_path])
-  }
 
   await supabase
     .from('meal_conversations')
