@@ -1,12 +1,8 @@
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
 import ArtOfEatingGuide from '@/components/art-of-eating-guide'
 import BackButton from './back-button'
 
+// PROJ-19: Fully static content — no auth required, guests can read this page.
 export default async function WieEsseIchRichtigPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
 
   return (
     <div className="min-h-screen bg-background">

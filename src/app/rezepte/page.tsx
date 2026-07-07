@@ -8,13 +8,15 @@ import RezeptBibliothek, { type RezeptListItem } from '@/components/rezept-bibli
 export default async function RezeptePage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login?redirectTo=%2Frezepte')
 
-  // PROJ-11: Rezeptbibliothek ist nach Ablauf des 7-Tage-Übergangsfensters ebenfalls
-  // gesperrt, wenn kein Abo aktiv ist.
-  const access = await getAccessStatus(supabase, user.id)
-  if (!access.hasAccess) {
-    redirect('/upgrade')
+  // PROJ-19: Guests (no session or anonymous) can browse recipes.
+  // Registered users go through the paywall check (PROJ-11).
+  const isAnonymous = user?.is_anonymous === true
+  let trialDaysRemaining: number | null = null
+  if (user && !isAnonymous) {
+    const access = await getAccessStatus(supabase, user.id)
+    if (!access.hasAccess) redirect('/upgrade')
+    trialDaysRemaining = access.trialDaysRemaining
   }
 
   const { data: recipes } = await supabase
@@ -48,9 +50,9 @@ export default async function RezeptePage() {
         </div>
       </header>
 
-      {access.trialDaysRemaining !== null && (
+      {trialDaysRemaining !== null && (
         <p className="text-center text-xs text-muted-foreground px-4 pt-3">
-          Noch {access.trialDaysRemaining} {access.trialDaysRemaining === 1 ? 'Tag' : 'Tage'} bis Freitext-Analyse & Rezepte eingeschränkt werden
+          Noch {trialDaysRemaining} {trialDaysRemaining === 1 ? 'Tag' : 'Tage'} bis Freitext-Analyse & Rezepte eingeschränkt werden
         </p>
       )}
 

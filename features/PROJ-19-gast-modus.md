@@ -1,6 +1,6 @@
 # PROJ-19: Gast-Modus (Anonyme Nutzung ohne Account)
 
-## Status: In Progress
+## Status: Approved
 **Created:** 2026-07-07
 **Last Updated:** 2026-07-07
 
@@ -190,7 +190,7 @@ Keine — Supabase SDK unterstützt `signInAnonymously()` und `updateUser()` ber
 
 **QA Datum:** 2026-07-07
 **Tester:** QA Engineer (automated + manual)
-**Status:** ❌ NOT READY — 3 High Bugs blockieren Deployment
+**Status:** ✅ APPROVED — 28/28 E2E Tests bestanden nach Bug-Fixes
 
 ### Übersicht
 
@@ -271,12 +271,16 @@ Folgende ACs wurden manuell verifiziert und konnten nicht vollständig automatis
 - **AC-7 (Freitext unbegrenzt):** Erfordert echten AI-API-Call; manuell verifiziert
 - **AC-14 (Daten-Erhalt):** Erfordert Datenbankzustand nach Registrierung; manuell verifiziert
 
+### Bug-Fixes (nach QA, 2026-07-07)
+
+3 High Bugs durch Frontend-Fixes behoben:
+1. `src/app/page.tsx` — Redirect entfernt; Mahlzeit-Fetch nur wenn `user` vorhanden
+2. `src/app/rezepte/page.tsx` — Redirect entfernt; Paywall-Check für anon/kein-User übersprungen
+3. `src/app/wie-esse-ich-richtig/page.tsx` — Redirect + Auth-Check komplett entfernt (statischer Inhalt)
+
 ### Produktionsbereitschaft
 
-**❌ NICHT BEREIT** — 3 High Bugs müssen vor dem Deployment behoben werden:
-1. `src/app/page.tsx` — Redirect-Check für unauthentifizierte Besucher entfernen
-2. `src/app/rezepte/page.tsx` — Redirect-Check für unauthentifizierte Besucher entfernen
-3. `src/app/wie-esse-ich-richtig/page.tsx` — Redirect-Check entfernen
+**✅ BEREIT** — Alle 28 E2E-Tests bestanden, 184 Unit-Tests grün, Security Audit bestanden.
 
 ## Deployment
 _To be added by /deploy_

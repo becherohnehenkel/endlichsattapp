@@ -1,4 +1,3 @@
-import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
@@ -33,21 +32,9 @@ function formatDate(iso: string): string {
 export default async function StartPage() {
   const supabase = await createClient()
   const { data: { session } } = await supabase.auth.getSession()
-  if (!session?.user) redirect('/login?redirectTo=/')
+  const user = session?.user ?? null
 
-  // Last 4 completed meals with satiety score
-  const { data: recentMeals } = await supabase
-    .from('meals')
-    .select(`
-      id, free_text, photo_thumbnail_path, created_at,
-      meal_analyses ( satiety_scores_before )
-    `)
-    .eq('user_id', session.user.id)
-    .eq('status', 'completed')
-    .order('created_at', { ascending: false })
-    .limit(4)
-
-  // Sign thumbnail URLs (private bucket)
+  // PROJ-19: Guests (no session or anonymous) see the hero CTA but no personal meal history.
   type RawMeal = {
     id: string
     free_text: string | null
@@ -55,19 +42,33 @@ export default async function StartPage() {
     created_at: string
     meal_analyses: { satiety_scores_before: { overall: string } | null }[]
   }
-  const meals = await Promise.all(
-    ((recentMeals ?? []) as unknown as RawMeal[]).map(async (m) => {
-      let thumbnailUrl: string | null = null
-      if (m.photo_thumbnail_path) {
-        const { data } = await supabase.storage
-          .from('meal-photos')
-          .createSignedUrl(m.photo_thumbnail_path, 3600)
-        thumbnailUrl = data?.signedUrl ?? null
-      }
-      const overall = m.meal_analyses?.[0]?.satiety_scores_before?.overall ?? null
-      return { id: m.id, freeText: m.free_text, thumbnailUrl, createdAt: m.created_at, overall }
-    })
-  )
+  let meals: { id: string; freeText: string | null; thumbnailUrl: string | null; createdAt: string; overall: string | null }[] = []
+  if (user) {
+    const { data: recentMeals } = await supabase
+      .from('meals')
+      .select(`
+        id, free_text, photo_thumbnail_path, created_at,
+        meal_analyses ( satiety_scores_before )
+      `)
+      .eq('user_id', user.id)
+      .eq('status', 'completed')
+      .order('created_at', { ascending: false })
+      .limit(4)
+
+    meals = await Promise.all(
+      ((recentMeals ?? []) as unknown as RawMeal[]).map(async (m) => {
+        let thumbnailUrl: string | null = null
+        if (m.photo_thumbnail_path) {
+          const { data } = await supabase.storage
+            .from('meal-photos')
+            .createSignedUrl(m.photo_thumbnail_path, 3600)
+          thumbnailUrl = data?.signedUrl ?? null
+        }
+        const overall = m.meal_analyses?.[0]?.satiety_scores_before?.overall ?? null
+        return { id: m.id, freeText: m.free_text, thumbnailUrl, createdAt: m.created_at, overall }
+      })
+    )
+  }
 
   // Last 4 recipes for teaser
   const { data: recentRecipes } = await supabase
