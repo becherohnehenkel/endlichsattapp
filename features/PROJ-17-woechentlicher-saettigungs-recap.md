@@ -1,6 +1,6 @@
 # PROJ-17: Wöchentlicher Sättigungs-Recap
 
-## Status: In Progress
+## Status: Approved
 **Created:** 2026-07-07
 **Last Updated:** 2026-07-07
 **Architected:** 2026-07-07
@@ -212,7 +212,61 @@ Keine. Alle benötigten Bausteine sind vorhanden:
 **Hinweis:** WochenRecapSektion zeigt `null` solange `/api/recap/wochen` nicht existiert (404 → kein Crash). Wird nach `/backend` aktiv.
 
 ## QA Test Results
-_To be added by /qa_
+**Date:** 2026-07-07
+**Status:** Approved ✅
+
+### Automated Tests
+
+| Suite | Count | Result |
+|-------|-------|--------|
+| Unit Tests (Vitest) — `route.test.ts` | 31 | ✅ Alle bestanden |
+| Gesamt-Unit-Tests (inkl. Regression) | 184 | ✅ Alle bestanden |
+| E2E Tests (Playwright) — `PROJ-17-woechentlicher-saettigungs-recap.spec.ts` | 25 | ✅ Alle bestanden |
+
+### Acceptance Criteria
+
+| Kriterium | Ergebnis |
+|-----------|----------|
+| Aktuelle Woche immer sichtbar (auch mit 0 Analysen) | ✅ Pass |
+| Vergangene Woche < 3 Analysen ausgeblendet | ✅ Pass |
+| Max. 4 Wochen angezeigt | ✅ Pass |
+| Fortschrittshinweis "Noch X Mahlzeiten" bei < 3 Analysen | ✅ Pass |
+| "Noch 3 Mahlzeiten" bei 0 Analysen | ✅ Pass |
+| Gesamtbewertungs-Badge bei ≥ 3 Analysen | ✅ Pass |
+| 6 Bausteine mit Pillar-Dots sichtbar | ✅ Pass |
+| "Blinder Fleck"-Callout zeigt schwächsten Baustein | ✅ Pass |
+| Ø Makros pro Mahlzeit angezeigt | ✅ Pass |
+| Top-5-Zutaten als Tags angezeigt | ✅ Pass |
+| Mahlzeiten-Anzahl mit Beilagen-Hinweis | ✅ Pass |
+| Beilagen aus Pillar/Makro-Durchschnitt herausgerechnet | ✅ Pass (Unit) |
+| Aktuelle Woche standardmäßig aufgeklappt | ✅ Pass |
+| Vergangene Woche standardmäßig eingeklappt | ✅ Pass |
+| Vergangene Woche per Klick aufklappbar | ✅ Pass |
+| Mehrere Wochen gleichzeitig offen möglich | ✅ Pass |
+
+### Security Audit
+
+| Prüfpunkt | Ergebnis |
+|-----------|----------|
+| GET /api/recap/wochen → 401 ohne Auth | ✅ Pass |
+| Daten nur für eigenen Nutzer sichtbar (userId-Filter im Admin-Client) | ✅ Pass |
+| Keine Datenlecks in API-Response | ✅ Pass |
+
+### Regression: PROJ-6 Mahlzeit-Historie
+
+| Prüfpunkt | Ergebnis |
+|-----------|----------|
+| Mahlzeiten-Liste noch sichtbar unter dem Recap | ✅ Pass |
+| FAB-Button "Neue Mahlzeit" vorhanden | ✅ Pass |
+| Leer-Zustand-CTA bei keinen Mahlzeiten | ✅ Pass |
+| Mahlzeit-Link navigiert zur Detailseite | ✅ Pass |
+
+### Bugs
+
+Keine kritischen oder hohen Bugs gefunden.
+
+### Entscheidung: Production-Ready
+✅ **JA** — Alle Acceptance Criteria erfüllt, keine kritischen/hohen Bugs, Regression sauber.
 
 ## Deployment
 _To be added by /deploy_
