@@ -1,6 +1,6 @@
 # PROJ-19: Gast-Modus (Anonyme Nutzung ohne Account)
 
-## Status: Planned
+## Status: In Progress
 **Created:** 2026-07-07
 **Last Updated:** 2026-07-07
 
@@ -96,13 +96,71 @@
 | Gast-Foto-Analysen zählen NICHT gegen neues Free-Limit nach Registrierung | Positiver "Upgrade-Effekt" als Registrierungs-Anreiz; Nutzer fühlt sich belohnt statt bestraft | 2026-07-07 |
 
 ### Technical Decisions
-<!-- Added by /architecture -->
+| Decision | Rationale | Date |
+|----------|-----------|------|
+| Supabase Anonymous Auth (`signInAnonymously()`) | Gibt anonymen Usern eine echte `user_id` — alle bestehenden DB-Flows (RLS, Scan-Limit, Analysen) laufen unverändert | 2026-07-07 |
+| Anon-Session client-seitig anlegen (`AnonSignInInit`) | `signInAnonymously()` setzt Cookies → muss im Browser laufen; Server-Redirect wäre ein Round-Trip zu viel | 2026-07-07 |
+| `/analyse` aus Middleware-Schutz entfernt | Seite muss ohne Session erreichbar sein, damit `AnonSignInInit` greift; Auth-Check passiert im Page-Server-Component | 2026-07-07 |
+| `user.is_anonymous` als Typ-Unterscheidung | Supabase-User-Objekt enthält dieses Flag nativ — keine eigene DB-Spalte nötig | 2026-07-07 |
+| `TOTAL_PHOTO_SCANS` 3 → 5 (eine Konstante) | PROJ-10-Limit-Erhöhung läuft im gleichen Deploy; Konstante muss mit dem DB-Default in `profiles` übereinstimmen | 2026-07-07 |
+| `updateUser({ email, password })` für Upgrade-Flow | Behält dieselbe `user_id` → alle Gast-Analysen automatisch erhalten; `signUp()` würde neuen User anlegen | 2026-07-07 |
+| `/konto`-Page doppelt genutzt (Gast + eingeloggt) | Kein separater Screen nötig; `user.is_anonymous` entscheidet clientseitig, welche View gerendert wird | 2026-07-07 |
+| Paywall-Check für anonyme User übersprungen | Anonyme User haben kein Abo-Status in `profiles` → `getAccessStatus` würde `hasAccess: false` zurückgeben; Gäste brauchen eigene Logik | 2026-07-07 |
 
 ---
 <!-- Sections below are added by subsequent skills -->
 
 ## Tech Design (Solution Architect)
-_To be added by /architecture_
+
+### Komponentenbaum
+
+```
+Middleware (vereinfacht)
+  /analyse → nicht mehr geschützt (Gast darf rein)
+  /historie → unauthentizierter Besucher → /konto?reason=historie
+  /registrieren → anonyme User dürfen rein (kein Redirect zu /)
+
+/analyse (Page)
+  ├─ Kein User: AnonSignInInit (NEU) — ruft signInAnonymously(), dann router.refresh()
+  └─ Mit User (anonym oder registriert):
+       └─ MahlzeitInput (angepasst)
+            ├─ TOTAL_PHOTO_SCANS = 5 (vorher 3)
+            └─ scansRemaining === 0 + isAnonymous → GastFotoLimitBlock (inline)
+                 ├─ Erklärungstext
+                 ├─ Button "Jetzt registrieren" → /registrieren
+                 └─ Link "Einloggen" → /login
+
+/konto (Page — dual mode)
+  ├─ Kein User oder is_anonymous → GastKontoView (NEU)
+  │    ├─ Optionaler Kontext-Banner (reason=historie)
+  │    ├─ 3 Wert-Bausteine (Analysen, Historie, Recap)
+  │    ├─ Button "Kostenlos registrieren" → /registrieren
+  │    └─ Link "Einloggen" → /login
+  └─ Registrierter User → KontoView (unverändert)
+
+/registrieren (Page + Form — angepasst)
+  ├─ Anonyme User: nicht mehr zu / redirectet
+  └─ RegistrierenForm (angepasst)
+       ├─ isAnonymous = false → supabase.auth.signUp() (bisheriger Flow)
+       └─ isAnonymous = true → supabase.auth.updateUser({ email, password })
+            (gleiche user_id → alle Gast-Analysen erhalten)
+```
+
+### Neue Dateien
+- `src/components/gast-konto-view.tsx` — Conversion-Screen für Gäste
+- `src/components/anon-sign-in-init.tsx` — Silent anon sign-in + Skeleton
+
+### Geänderte Dateien
+- `middleware.ts` — /analyse nicht mehr geschützt; /historie → /konto?reason=historie für unauthentizierte
+- `src/app/konto/page.tsx` — GastKontoView für anon/null user
+- `src/app/analyse/page.tsx` — AnonSignInInit für kein User; Paywall-Skip für anon
+- `src/app/historie/page.tsx` — anon user → redirect /konto?reason=historie
+- `src/app/registrieren/page.tsx` — nur nicht-anonyme User zu / redirectet
+- `src/components/registrieren-form.tsx` — updateUser-Upgrade-Pfad für isAnonymousUpgrade
+- `src/components/mahlzeit-input.tsx` — TOTAL_PHOTO_SCANS 3→5; isAnonymous-Prop; Conversion-Block
+
+### Neue Packages
+Keine — Supabase SDK unterstützt `signInAnonymously()` und `updateUser()` bereits.
 
 ## QA Test Results
 _To be added by /qa_

@@ -26,10 +26,12 @@ interface MahlzeitInputProps {
   photoScansRemaining: number
   /** PROJ-11: verbleibende Tage im Übergangsfenster, oder null wenn kein Trial läuft (siehe getAccessStatus()) */
   trialDaysRemaining: number | null
+  /** PROJ-19: true für anonyme Gast-User — zeigt Conversion-Prompt statt Paywall bei Limit */
+  isAnonymous?: boolean
 }
 
-// PROJ-10: muss mit dem DEFAULT in der profiles.photo_scans_remaining-Migration übereinstimmen
-const TOTAL_PHOTO_SCANS = 3
+// PROJ-10 / PROJ-19: muss mit dem DEFAULT in der profiles.photo_scans_remaining-Migration übereinstimmen
+const TOTAL_PHOTO_SCANS = 5
 
 async function generateThumbnail(source: Blob, size: number): Promise<Blob> {
   return new Promise((resolve, reject) => {
@@ -56,7 +58,7 @@ async function generateThumbnail(source: Blob, size: number): Promise<Blob> {
   })
 }
 
-export default function MahlzeitInput({ userId, photoScansRemaining, trialDaysRemaining }: MahlzeitInputProps) {
+export default function MahlzeitInput({ userId, photoScansRemaining, trialDaysRemaining, isAnonymous = false }: MahlzeitInputProps) {
   const [foto, setFoto] = useState<File | null>(null)
   const [fotoPreview, setFotoPreview] = useState<string | null>(null)
   const [freitext, setFreitext] = useState('')
@@ -484,6 +486,25 @@ export default function MahlzeitInput({ userId, photoScansRemaining, trialDaysRe
           <p className="text-xs text-muted-foreground">
             Noch {scansRemaining} von {TOTAL_PHOTO_SCANS} Foto-Scans übrig
           </p>
+        </div>
+      ) : isAnonymous ? (
+        // PROJ-19: Conversion-Prompt für Gäste statt Paywall
+        <div className="rounded-xl border border-[#4A7C59]/20 bg-[#E8F0EB] p-4 space-y-3">
+          <p className="text-sm font-medium text-[#1C1C1C]">
+            📸 Du hast alle {TOTAL_PHOTO_SCANS} Foto-Analysen als Gast genutzt.
+          </p>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Erstelle einen kostenlosen Account — und analysiere weiter. Deine bisherigen Analysen bleiben erhalten.
+          </p>
+          <div className="space-y-2 pt-1">
+            <Button asChild size="sm" className="w-full">
+              <Link href="/registrieren">Jetzt registrieren</Link>
+            </Button>
+            <p className="text-center text-xs text-muted-foreground">
+              Bereits einen Account?{' '}
+              <Link href="/login" className="text-[#4A7C59] hover:underline">Einloggen</Link>
+            </p>
+          </div>
         </div>
       ) : (
         <Alert>

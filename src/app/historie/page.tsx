@@ -6,8 +6,11 @@ import MahlzeitHistorie from '@/components/mahlzeit-historie'
 
 export default async function HistoriePage() {
   const supabase = await createClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session?.user) redirect('/login')
+  const { data: { user } } = await supabase.auth.getUser()
+  // PROJ-19: no user → middleware already redirected; anonymous users see conversion screen
+  if (!user || user.is_anonymous) {
+    redirect('/konto?reason=historie')
+  }
 
   return (
     <div className="min-h-screen bg-background">

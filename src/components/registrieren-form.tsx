@@ -8,7 +8,12 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
-export default function RegistrierenForm() {
+interface RegistrierenFormProps {
+  /** PROJ-19: true wenn der aktuelle User anonym ist und seinen Account upgradet */
+  isAnonymousUpgrade?: boolean
+}
+
+export default function RegistrierenForm({ isAnonymousUpgrade = false }: RegistrierenFormProps) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -28,23 +33,37 @@ export default function RegistrierenForm() {
 
     try {
       const supabase = createClient()
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { name },
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
-      })
 
-      if (error) {
-        if (error.message.toLowerCase().includes('already registered') ||
-            error.message.toLowerCase().includes('user already exists')) {
-          setError('Diese E-Mail-Adresse ist bereits registriert.')
-        } else {
-          setError('Registrierung fehlgeschlagen. Bitte versuche es erneut.')
+      if (isAnonymousUpgrade) {
+        // PROJ-19: Upgrade anonymous account — keeps the same user_id so all guest
+        // analyses are preserved. Supabase sends a confirmation email to activate.
+        const { error } = await supabase.auth.updateUser({
+          email,
+          password,
+          data: { name },
+        })
+        if (error) {
+          setError('Upgrade fehlgeschlagen. Bitte versuche es erneut.')
+          return
         }
-        return
+      } else {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { name },
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
+          },
+        })
+        if (error) {
+          if (error.message.toLowerCase().includes('already registered') ||
+              error.message.toLowerCase().includes('user already exists')) {
+            setError('Diese E-Mail-Adresse ist bereits registriert.')
+          } else {
+            setError('Registrierung fehlgeschlagen. Bitte versuche es erneut.')
+          }
+          return
+        }
       }
 
       window.location.href = '/auth/bestaetigen'

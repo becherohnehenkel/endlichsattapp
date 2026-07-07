@@ -1,13 +1,22 @@
-import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getAccessStatus } from '@/lib/paywall'
 import { stripe } from '@/lib/stripe'
+import GastKontoView from '@/components/gast-konto-view'
 import KontoView, { type StripeDetails } from '@/components/konto-view'
 
-export default async function KontoPage() {
+interface KontoPageProps {
+  searchParams: Promise<{ reason?: string }>
+}
+
+export default async function KontoPage({ searchParams }: KontoPageProps) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login?redirectTo=%2Fkonto')
+  const { reason } = await searchParams
+
+  // PROJ-19: Gäste (kein User oder anonymer User) sehen den Conversion-Screen
+  if (!user || user.is_anonymous) {
+    return <GastKontoView reason={reason} />
+  }
 
   const [access, profileResult] = await Promise.all([
     getAccessStatus(supabase, user.id),
@@ -25,8 +34,6 @@ export default async function KontoPage() {
       const subs = await stripe.subscriptions.list({ customer: stripeCustomerId, limit: 1 })
       const sub = subs.data[0]
       if (sub) {
-        // billing_cycle_anchor = monatlicher Abrechnungstag; nächste Zahlung ist die
-        // erste Zukunft-Occurrence dieses Ankerdatums
         const anchor = new Date(sub.billing_cycle_anchor * 1000)
         const nextPayment = new Date(anchor)
         const now = new Date()
@@ -40,13 +47,13 @@ export default async function KontoPage() {
         }
       }
     } catch {
-      // Stripe nicht erreichbar — Seite ohne Details zeigen
+      // Stripe-Fehler nicht crashen lassen
     }
   }
 
   return (
     <KontoView
-      email={user.email!}
+      email={user.email ?? ''}
       subscriptionStatus={access.subscriptionStatus}
       hasInviteAccess={access.hasInviteAccess}
       trialDaysRemaining={access.trialDaysRemaining}
