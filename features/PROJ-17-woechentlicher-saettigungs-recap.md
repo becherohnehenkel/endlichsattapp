@@ -1,8 +1,9 @@
 # PROJ-17: Wöchentlicher Sättigungs-Recap
 
-## Status: Planned
+## Status: Architected
 **Created:** 2026-07-07
 **Last Updated:** 2026-07-07
+**Architected:** 2026-07-07
 
 ## Dependencies
 - Requires: PROJ-4 (KI-Analyse-Agent) — Analysedaten mit Pillar-Scores und Makros
@@ -67,8 +68,8 @@
 - Mobile-first: Collapsible-Karten vollständig auf 375px nutzbar
 
 ## Open Questions
-- [ ] Soll die Wochenüberschrift das Datum zeigen ("Woche 28. Juni – 4. Juli") oder nur "Diese Woche" / "Letzte Woche" / "Vor 2 Wochen"?
-- [ ] Was gilt als Datumsbasis für Wochenzuordnung: `created_at` der Mahlzeit oder `created_at` der Analyse?
+- [x] Soll die Wochenüberschrift das Datum zeigen? → Relativ ("Diese Woche") + Datums-Spanne als Untertitel; ab Woche 3 nur Datum. Entschieden in /architecture.
+- [x] Datumsbasis: `meals.created_at` (Zeitpunkt der Mahlzeit). Entschieden in /architecture.
 
 ## Decision Log
 
@@ -88,12 +89,79 @@
 <!-- Added by /architecture -->
 | Decision | Rationale | Date |
 |----------|-----------|------|
+| Keine neue DB-Tabelle | Alle Recap-Daten (Pillar-Scores, Makros, Zutaten) liegen bereits in `meal_analyses` — keine Datenduplizierung nötig | 2026-07-07 |
+| Neue API-Route `GET /api/recap/wochen` | Bestehende `/api/mahlzeiten` gibt nur `gesamtbewertung` zurück; eigene Route hält die bestehende API sauber und gibt alle Recap-Felder in einem Request zurück | 2026-07-07 |
+| Server-seitige Berechnung + `unstable_cache` (1h) | Recap ändert sich nur bei neuer Analyse; Caching vermeidet teure DB-Abfrage bei jedem Seitenaufruf | 2026-07-07 |
+| Datumsbasis: `meals.created_at` | Zeitpunkt der Mahlzeit (nicht der Analyse) ist semantisch korrekt für Wochenzuordnung | 2026-07-07 |
+| Wochenüberschrift: relativ + Datums-Spanne | "Diese Woche (28. Juni – 4. Juli)" — gibt Kontext ohne Rätseln; relative Bezeichnung für die letzten 2 Wochen, Datum ab Woche 3 | 2026-07-07 |
+| Pillar-Durchschnitt via Mehrheitsentscheid | 3× schwach + 2× gut = schwach — einfacher und PM-verständlicher als numerische Scores | 2026-07-07 |
+| Shadcn `Collapsible` für Expand/Collapse | Bereits installiert, kein neues Package nötig | 2026-07-07 |
 
 ---
 <!-- Sections below are added by subsequent skills -->
 
 ## Tech Design (Solution Architect)
-_To be added by /architecture_
+
+### Komponentenbaum
+
+```
+/historien (Seite)
+└─ MahlzeitHistorie (bestehend — erweitert)
+     ├─ WochenRecapSektion (NEU — oberhalb der Mahlzeiten-Liste)
+     │    └─ WochenRecapKarte × n (NEU — bis zu 4 Wochen)
+     │         ├─ [Header: Wochenlabel + Anzahl-Badge]
+     │         └─ [Body — einklappbar, shadcn Collapsible]
+     │              ├─ Fortschrittshinweis (wenn < 3 Analysen)
+     │              └─ RecapInhalt (wenn ≥ 3 Analysen)
+     │                   ├─ RecapHeadline (Ø Gesamtbewertung)
+     │                   ├─ RecapBausteine (6 Pillar-Dots)
+     │                   ├─ RecapMakros (Ø kcal/Protein/KH/Fett/Ballaststoffe)
+     │                   └─ RecapZutaten (Top-5 Häufigkeitsliste)
+     └─ [bestehende MahlzeitKarte-Liste]
+```
+
+### Datenmodell
+
+Keine neue Datenbank-Tabelle. Alle Daten kommen aus bereits vorhandenen Feldern:
+
+```
+meals.created_at                              → Wochenzuordnung (Datumsbasis)
+meal_analyses.analysis_typ                    → 'standard' oder 'beilage'
+meal_analyses.satiety_scores_before.overall   → Gesamtbewertung
+meal_analyses.satiety_scores_before.pillars   → 6 Bausteine-Scores
+meal_analyses.macros_before                   → kcal, Protein, KH, Fett, Ballaststoffe
+meal_analyses.refined_ingredients.ingredients[].name → für Top-5-Zutaten
+```
+
+Der berechnete Wochen-Recap wird nicht persistiert — er wird bei jedem API-Aufruf berechnet und via `unstable_cache` (1h TTL) pro Nutzer gecacht.
+
+### API
+
+**Neue Route:** `GET /api/recap/wochen`
+- Auth-geschützt (Supabase, RLS)
+- Gibt bis zu 4 abgeschlossene Wochen + aktuelle Woche zurück
+- Server-seitig gecacht, 1h TTL
+
+**Response-Struktur pro Woche:**
+```
+startDatum, endDatum, label ("Diese Woche" / "Letzte Woche" / Datum)
+anzahlGesamt, anzahlBeilagen, anzahlStandard
+gesamtbewertungAvg (aus Standard-Analysen)
+schwächsterBaustein (Baustein mit häufigsten "schwach"-Scores)
+bausteine { geschmack, biss, ballaststoffe, proteine, volumen, art_of_eating }
+makrosAvg { kcal, protein_g, kohlenhydrate_g, fett_g, ballaststoffe_g }
+topZutaten [ "Hähnchenbrust", "Quinoa", ... ]
+```
+
+### Berechnungslogik (Pillar-Durchschnitt)
+
+Mehrheitsentscheid: Pro Baustein wird über alle Standard-Analysen der häufigste Score gezählt. Bei Gleichstand: schwach > mittel > gut (konservativ).
+
+### Neue Packages
+
+Keine. Alle benötigten Bausteine sind vorhanden:
+- Shadcn `Collapsible` ✓ (bereits installiert)
+- Shadcn `Badge`, `Card`, `Progress` ✓ (bereits installiert)
 
 ## QA Test Results
 _To be added by /qa_
