@@ -187,7 +187,96 @@ Keine — Supabase SDK unterstützt `signInAnonymously()` und `updateUser()` ber
 - **Enable Anonymous Auth in Supabase Dashboard**: Settings → Authentication → Sign In Methods → Enable "Allow anonymous sign-ins" (cannot be done via SQL/API)
 
 ## QA Test Results
-_To be added by /qa_
+
+**QA Datum:** 2026-07-07
+**Tester:** QA Engineer (automated + manual)
+**Status:** ❌ NOT READY — 3 High Bugs blockieren Deployment
+
+### Übersicht
+
+| Kategorie | Ergebnis |
+|-----------|----------|
+| Acceptance Criteria | 12/15 ✅, 3 ❌ (High Bugs) |
+| E2E Tests | 25/28 ✅ (3 Failures = App-Bugs) |
+| Unit Tests | 184/184 ✅ |
+| Security Audit | ✅ Bestanden |
+| Regression | ✅ Bestanden |
+
+### Bugs
+
+#### 🔴 High — Bug 1: Startseite `/` redirectet unauthentifizierte Besucher zu /login
+
+**Datei:** [src/app/page.tsx](src/app/page.tsx) — Zeile 36
+```
+if (!session?.user) redirect('/login?redirectTo=/')
+```
+**Problem:** Neue Besucher, die die App-URL direkt aufrufen, sehen sofort die Login-Seite. Das Kernversprechen von PROJ-19 ("niederschwelliger Einstieg ohne Anmeldung") ist damit für den häufigsten Einstiegspunkt gebrochen.
+**Erwartetes Verhalten:** `/` soll für unauthentifizierte Besucher zugänglich sein (AC-1a).
+**Schritte:** Cookies löschen → `http://localhost:3000/` aufrufen → landet auf `/login` statt Startseite.
+**Fix-Vorschlag:** Redirect-Check entfernen; für `!user`-Fall eine öffentliche Landingpage oder AnonSignInInit rendern.
+
+#### 🔴 High — Bug 2: `/rezepte` redirectet unauthentifizierte Besucher zu /login
+
+**Datei:** [src/app/rezepte/page.tsx](src/app/rezepte/page.tsx) — Zeile 11
+```
+if (!user) redirect('/login?redirectTo=%2Frezepte')
+```
+**Problem:** Gäste können Rezepte nicht browsen, obwohl dies laut Spec ohne Account möglich sein soll.
+**Erwartetes Verhalten:** `/rezepte` soll für Gäste sichtbar sein (AC-1b).
+**Fix-Vorschlag:** Redirect-Check für `!user` entfernen; Paywall-Check für anon user überspringen oder eigene Gast-View zeigen.
+
+#### 🔴 High — Bug 3: `/wie-esse-ich-richtig` redirectet unauthentifizierte Besucher zu /login
+
+**Datei:** [src/app/wie-esse-ich-richtig/page.tsx](src/app/wie-esse-ich-richtig/page.tsx) — Zeile 7
+```
+if (!user) redirect('/login')
+```
+**Problem:** Die Art-of-Eating-Inhalte sind für Gäste nicht zugänglich, obwohl die App-Vision Gäste genau über diese Inhalte konvertieren will.
+**Erwartetes Verhalten:** `/wie-esse-ich-richtig` soll für Gäste zugänglich sein (AC-1c).
+**Fix-Vorschlag:** Redirect-Check für `!user` entfernen; Inhalt ist vollständig statisch, kein Datenbankzugriff nötig.
+
+### Manuell getestete Acceptance Criteria
+
+Folgende ACs wurden manuell verifiziert und konnten nicht vollständig automatisiert werden:
+
+| AC | Ergebnis | Hinweis |
+|----|----------|---------|
+| AC-2: Anon-Session im Hintergrund | ✅ Pass | `/analyse` ohne Session → Skeleton → signInAnonymously() → MahlzeitInput erscheint |
+| AC-3: Session-Persistenz nach Browser-Neustart | ✅ Pass | Supabase-Token in localStorage bleibt erhalten |
+| AC-4/5/6: Foto-Limit-Konversionsblock | ✅ Pass (manuell) | Conversion-Block mit "Jetzt registrieren" + "Einloggen" korrekt gerendert |
+| AC-7: Freitext unbegrenzt | ✅ Pass | Freitext-Analyse läuft ohne Scan-Decrement |
+| AC-14: Daten-Erhalt bei Registrierung | ✅ Pass | updateUser() behält user_id; Gast-Analysen in Historie nach Registrierung sichtbar |
+| AC-15: Gast-Daten bei Login verloren | ✅ Dokumentiert | By design — Supabase Identity-Merge Einschränkung; Nutzer informiert |
+
+### Security Audit
+
+| Angriffsvektor | Ergebnis |
+|----------------|----------|
+| /admin ohne Session | ✅ Gesperrt (401 / Redirect) |
+| POST /api/meal ohne Session | ✅ 401 Unauthorized |
+| GET /api/recap/wochen ohne Session | ✅ 401 Unauthorized |
+| Fremde Analyse-URL | ✅ Kein Datenleck (404 oder Redirect) |
+| Anon User sieht nur eigene Daten (RLS) | ✅ Verifiziert — `user_id`-basierte RLS gilt für anon user identisch wie für reguläre User |
+| XSS via Mahlzeit-Eingabe | ✅ Kein Risiko — Eingaben durch React escaped |
+
+### E2E Tests
+
+28 Tests in `tests/PROJ-19-gast-modus.spec.ts`:
+- **25 passed** — Gast-Konto-Screen, /analyse-Zugang, /konto-Redirect, Nav-Regression, Security, Mobile
+- **3 failed** — AC-1a/1b/1c (App-Bugs: /, /rezepte, /wie-esse-ich-richtig nicht für Gäste geöffnet)
+
+### Nicht-getestete Akzeptanzkriterien
+
+- **AC-3 (Session-Persistenz):** Schwer in E2E zu automatisieren; manuell verifiziert
+- **AC-7 (Freitext unbegrenzt):** Erfordert echten AI-API-Call; manuell verifiziert
+- **AC-14 (Daten-Erhalt):** Erfordert Datenbankzustand nach Registrierung; manuell verifiziert
+
+### Produktionsbereitschaft
+
+**❌ NICHT BEREIT** — 3 High Bugs müssen vor dem Deployment behoben werden:
+1. `src/app/page.tsx` — Redirect-Check für unauthentifizierte Besucher entfernen
+2. `src/app/rezepte/page.tsx` — Redirect-Check für unauthentifizierte Besucher entfernen
+3. `src/app/wie-esse-ich-richtig/page.tsx` — Redirect-Check entfernen
 
 ## Deployment
 _To be added by /deploy_
