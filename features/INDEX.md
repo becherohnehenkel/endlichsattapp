@@ -35,10 +35,11 @@
 | PROJ-17 | Wöchentlicher Sättigungs-Recap | P2 | Deployed | PROJ-4, PROJ-5, PROJ-6 | [Spec](PROJ-17-woechentlicher-saettigungs-recap.md) |
 | PROJ-18 | Token-Optimierung Foto-Analyse | P1 | Deployed | PROJ-3, PROJ-4 | [Spec](PROJ-18-token-optimierung-foto-analyse.md) |
 | PROJ-19 | Gast-Modus (Anonyme Nutzung ohne Account) | P1 | Deployed | PROJ-1, PROJ-2, PROJ-10, PROJ-11 | [Spec](PROJ-19-gast-modus.md) |
+| PROJ-20 | Datenschutzerklärung & Impressum | P1 | In Progress | PROJ-2, PROJ-19 | [Spec](PROJ-20-datenschutz-impressum.md) |
 
 <!-- Add features above this line -->
 
-## Next Available ID: PROJ-20
+## Next Available ID: PROJ-21
 
 ## Empfohlene Build-Reihenfolge
 

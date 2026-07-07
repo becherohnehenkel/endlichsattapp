@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Bookmark, Clock, BarChart3 } from 'lucide-react'
+
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 
@@ -74,6 +75,12 @@ export default function GastKontoView({ reason }: GastKontoViewProps) {
             </div>
           </CardContent>
         </Card>
+
+        <p className="text-center text-xs text-muted-foreground space-x-3">
+          <Link href="/impressum" className="hover:underline">Impressum</Link>
+          <span>·</span>
+          <Link href="/datenschutz" className="hover:underline">Datenschutz</Link>
+        </p>
       </div>
     </main>
   )

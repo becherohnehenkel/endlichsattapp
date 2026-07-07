@@ -130,6 +130,11 @@ export default function RegistrierenForm({ isAnonymousUpgrade = false }: Registr
                 <p className="text-sm text-destructive">{error}</p>
               )}
 
+              <p className="text-xs text-muted-foreground text-center">
+                Mit der Registrierung akzeptierst du unsere{' '}
+                <Link href="/datenschutz" className="text-[#4A7C59] hover:underline">Datenschutzerklärung</Link>.
+              </p>
+
               <Button type="submit" size="lg" className="w-full px-4" disabled={loading}>
                 {loading ? 'Konto wird erstellt…' : 'Konto erstellen'}
               </Button>

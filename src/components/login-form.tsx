@@ -110,6 +110,12 @@ export default function LoginForm() {
             </p>
           </CardContent>
         </Card>
+
+        <p className="text-center text-xs text-muted-foreground mt-4 space-x-3">
+          <Link href="/impressum" className="hover:underline">Impressum</Link>
+          <span>·</span>
+          <Link href="/datenschutz" className="hover:underline">Datenschutz</Link>
+        </p>
       </div>
     </main>
   )

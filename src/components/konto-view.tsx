@@ -250,6 +250,12 @@ export default function KontoView({
           {logoutLoading ? 'Wird abgemeldet…' : 'Abmelden'}
         </Button>
 
+        <p className="text-center text-xs text-muted-foreground pt-2 space-x-3">
+          <Link href="/impressum" className="hover:underline">Impressum</Link>
+          <span>·</span>
+          <Link href="/datenschutz" className="hover:underline">Datenschutz</Link>
+        </p>
+
       </main>
 
       {/* Widerruf-Dialog */}
