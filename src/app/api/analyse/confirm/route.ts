@@ -282,10 +282,11 @@ export async function POST(request: Request) {
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   let response
   try {
+    // FIX-3: cache_control reduces repeat costs ~90% within 5-minute window
     response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 2048,
-      system: ANALYSIS_SYSTEM_PROMPT,
+      system: [{ type: 'text', text: ANALYSIS_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
       messages: [{ role: 'user', content: userMessage }],
     })
   } catch (err) {

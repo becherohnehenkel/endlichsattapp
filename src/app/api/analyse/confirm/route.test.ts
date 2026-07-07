@@ -222,6 +222,28 @@ describe('POST /api/analyse/confirm', () => {
     expect(body.result).not.toHaveProperty('vorschlaege')
   })
 
+  // PROJ-18 FIX-3: system prompt must use prompt caching
+  it('FIX-3: Claude is called with cache_control on system prompt', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
+    mockMealSingle.mockResolvedValue({ data: { id: 'meal-1', user_id: 'user-1', free_text: 'Test', photo_fullsize_path: null }, error: null })
+    mockAnthropicCreate.mockResolvedValue({
+      content: [{ type: 'text', text: JSON.stringify(validAnalysis) }],
+    })
+    mockInsertSingle.mockResolvedValue({ data: { id: 'analysis-1' }, error: null })
+    mockMealsUpdate.mockResolvedValue({ error: null })
+    mockConvUpdate.mockResolvedValue({ error: null })
+
+    const { POST } = await import('./route')
+    await POST(makeRequest({ mealId: '550e8400-e29b-41d4-a716-446655440000', ingredients: validIngredients }))
+
+    const createCall = mockAnthropicCreate.mock.calls[0][0]
+    expect(Array.isArray(createCall.system)).toBe(true)
+    expect(createCall.system[0]).toMatchObject({
+      type: 'text',
+      cache_control: { type: 'ephemeral' },
+    })
+  })
+
   it('skips macro computation for beilage analyses', async () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
     mockMealSingle.mockResolvedValue({ data: { id: 'meal-1', user_id: 'user-1', free_text: 'Blattsalat', photo_fullsize_path: null }, error: null })

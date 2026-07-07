@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import Anthropic from '@anthropic-ai/sdk'
+import sharp from 'sharp'
 import { createClient } from '@/lib/supabase/server'
 
 const schema = z.object({
@@ -64,8 +65,17 @@ export async function POST(request: Request) {
       .download(meal.photo_fullsize_path)
 
     if (!imgError && imageData) {
-      const buffer = await imageData.arrayBuffer()
-      const base64 = Buffer.from(buffer).toString('base64')
+      // FIX-2: resize to max 768px before encoding — reduces vision tokens ~20×
+      let imageBuffer = Buffer.from(await imageData.arrayBuffer())
+      try {
+        imageBuffer = await sharp(imageBuffer)
+          .resize(768, 768, { fit: 'inside', withoutEnlargement: true })
+          .jpeg({ quality: 85 })
+          .toBuffer()
+      } catch {
+        // corrupted image — send original, don't abort analysis
+      }
+      const base64 = imageBuffer.toString('base64')
       userMessageParts.push({
         type: 'image',
         source: { type: 'base64', media_type: 'image/jpeg', data: base64 },
@@ -78,8 +88,9 @@ export async function POST(request: Request) {
     : 'Der Nutzer hat ein Foto hochgeladen ohne Textbeschreibung. Analysiere was du siehst.'
   userMessageParts.push({ type: 'text', text: textPart })
 
+  // FIX-1: store only text in history — never store base64 image data in DB
   const messages: ClaudeMessage[] = [
-    { role: 'user', content: typeof userMessageParts === 'string' ? userMessageParts : JSON.stringify(userMessageParts) },
+    { role: 'user', content: textPart },
   ]
 
   // Call Claude

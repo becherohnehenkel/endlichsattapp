@@ -32,10 +32,12 @@
 | PROJ-15 | PWA & Native Navigation | P1 | Deployed | PROJ-2, PROJ-13 | [Spec](PROJ-15-pwa-native-navigation.md) |
 
 | PROJ-16 | Beilagen-Kontext | P1 | Deployed | PROJ-8, PROJ-4, PROJ-5 | [Spec](PROJ-16-beilagen-kontext.md) |
+| PROJ-17 | Wöchentlicher Sättigungs-Recap | P2 | Planned | PROJ-4, PROJ-5, PROJ-6 | [Spec](PROJ-17-woechentlicher-saettigungs-recap.md) |
+| PROJ-18 | Token-Optimierung Foto-Analyse | P1 | In Progress | PROJ-3, PROJ-4 | [Spec](PROJ-18-token-optimierung-foto-analyse.md) |
 
 <!-- Add features above this line -->
 
-## Next Available ID: PROJ-17
+## Next Available ID: PROJ-19
 
 ## Empfohlene Build-Reihenfolge
 
