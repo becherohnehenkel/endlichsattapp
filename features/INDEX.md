@@ -33,7 +33,7 @@
 
 | PROJ-16 | Beilagen-Kontext | P1 | Deployed | PROJ-8, PROJ-4, PROJ-5 | [Spec](PROJ-16-beilagen-kontext.md) |
 | PROJ-17 | Wöchentlicher Sättigungs-Recap | P2 | Planned | PROJ-4, PROJ-5, PROJ-6 | [Spec](PROJ-17-woechentlicher-saettigungs-recap.md) |
-| PROJ-18 | Token-Optimierung Foto-Analyse | P1 | Approved | PROJ-3, PROJ-4 | [Spec](PROJ-18-token-optimierung-foto-analyse.md) |
+| PROJ-18 | Token-Optimierung Foto-Analyse | P1 | Deployed | PROJ-3, PROJ-4 | [Spec](PROJ-18-token-optimierung-foto-analyse.md) |
 
 <!-- Add features above this line -->
 

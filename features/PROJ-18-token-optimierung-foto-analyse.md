@@ -1,6 +1,6 @@
 # PROJ-18: Token-Optimierung Foto-Analyse
 
-## Status: Approved
+## Status: Deployed
 **Created:** 2026-07-07
 **Last Updated:** 2026-07-07
 
@@ -311,4 +311,8 @@ Alle 141 vorherigen Tests bestehen weiterhin (**153 total = 141 vorher + 12 neue
 | 1 | Low | FIX-3 AC3: kein expliziter Fallback wenn Anthropic `cache_control` mit Fehler ablehnt — existierender catch-Handler gibt 500 zurück | Kein Handlungsbedarf vor Deploy: Anthropic unterstützt `cache_control: ephemeral` als validen Parameter; Risiko praktisch null |
 
 ## Deployment
-_To be added by /deploy_
+
+- **Deployed:** 2026-07-07
+- **URL:** https://satt.mehralsabnehmen.de
+- **Commits:** `0d629ca` (feat), `58b4993` (QA)
+- **Vercel:** auto-deploy via push to `main`
