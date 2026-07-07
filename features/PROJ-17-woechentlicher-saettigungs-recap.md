@@ -163,6 +163,33 @@ Keine. Alle benötigten Bausteine sind vorhanden:
 - Shadcn `Collapsible` ✓ (bereits installiert)
 - Shadcn `Badge`, `Card`, `Progress` ✓ (bereits installiert)
 
+## Implementation Notes (Backend)
+**Date:** 2026-07-07
+
+**Neue Dateien:**
+- `src/app/api/recap/wochen/route.ts` — `GET /api/recap/wochen`; auth via Supabase server client, computation via admin client, 1h TTL via `unstable_cache`
+- `src/app/api/recap/wochen/route.test.ts` — 31 Tests (unit + integration)
+
+**Berechnungslogik:**
+- Meals nach Kalenderwoche (Sonntag–Samstag, UTC) gruppiert
+- Aktuelle Woche wird immer zurückgegeben (auch mit 0 Analysen)
+- Vergangene Wochen mit < 3 Analysen werden gefiltert
+- Max. 4 Wochen in der Response
+- Pillar-Durchschnitt: Mehrheitsentscheid (Gleichstand → schwach wins)
+- Gesamtbewertung-Durchschnitt: Mehrheitsentscheid (Gleichstand → wenig_saettigend wins)
+- Schwächster Baustein: Priorität biss > ballaststoffe > volumen > geschmack > proteine; art_of_eating ausgeschlossen
+- Zutaten: case-insensitive dedupliziert pro Analyse, dann nach Häufigkeit sortiert
+
+**Test-Coverage:**
+- 401 unauthenticated
+- Aktuelle Woche mit 0 Analysen
+- Vollständiger Recap (>= 2 Standard)
+- Beilagen-Ausschluss aus Pillar/Makros
+- Vergangene Woche mit < 3 gefiltert / >= 3 angezeigt
+- Max-4-Wochen-Limit
+- DB-Fehler → leerer Fallback (kein 500)
+- Top-Zutaten-Sortierung
+
 ## Implementation Notes (Frontend)
 **Date:** 2026-07-07
 
