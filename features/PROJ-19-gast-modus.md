@@ -162,6 +162,30 @@ Middleware (vereinfacht)
 ### Neue Packages
 Keine — Supabase SDK unterstützt `signInAnonymously()` und `updateUser()` bereits.
 
+## Backend Implementation Notes
+
+### Database Migrations (applied 2026-07-07)
+
+**Migration 1 — `proj19_anon_profiles_support`**
+- `profiles.email` changed to nullable (`DROP NOT NULL`)
+- `handle_new_user()` trigger updated: `ON CONFLICT (id) DO NOTHING` to handle Supabase's double-fire behaviour for anonymous users
+- `decrement_photo_scan()` updated: trial timer only fires when `email IS NOT NULL` — guests see conversion prompt, not trial countdown
+
+**Migration 2 — `proj19_raise_photo_scan_limit_to_5`**
+- `profiles.photo_scans_remaining` DEFAULT raised from 3 → 5
+- Existing registered users: `SET photo_scans_remaining = LEAST(photo_scans_remaining + 2, 5)` (only email IS NOT NULL users)
+
+**Migration 3 — `proj19_reset_scans_on_anon_upgrade`**
+- New function `reset_scans_on_anon_upgrade()`: resets `photo_scans_remaining = 5` and `trial_ends_at = NULL` when `is_anonymous` changes true → false
+- New trigger `on_anon_user_upgrade` on `auth.users AFTER UPDATE OF is_anonymous`
+- Ensures guests start fresh quota after registering (positive "upgrade effect")
+
+### TypeScript Types (updated 2026-07-07)
+- `src/types/database.ts` → `profiles.email` changed to `string | null` in `Row`, `Insert`, and `Update` types
+
+### Manual Setup Required
+- **Enable Anonymous Auth in Supabase Dashboard**: Settings → Authentication → Sign In Methods → Enable "Allow anonymous sign-ins" (cannot be done via SQL/API)
+
 ## QA Test Results
 _To be added by /qa_
 

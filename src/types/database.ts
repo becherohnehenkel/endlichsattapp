@@ -222,7 +222,7 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
-          email: string
+          email: string | null
           id: string
           invite_code_redeemed_at: string | null
           name: string | null
@@ -233,7 +233,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          email: string
+          email?: string | null
           id: string
           invite_code_redeemed_at?: string | null
           name?: string | null
@@ -244,7 +244,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          email?: string
+          email?: string | null
           id?: string
           invite_code_redeemed_at?: string | null
           name?: string | null
