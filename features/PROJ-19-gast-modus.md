@@ -283,4 +283,21 @@ Folgende ACs wurden manuell verifiziert und konnten nicht vollständig automatis
 **✅ BEREIT** — Alle 28 E2E-Tests bestanden, 184 Unit-Tests grün, Security Audit bestanden.
 
 ## Deployment
-_To be added by /deploy_
+
+**Deployed:** 2026-07-07
+**Production URL:** https://satt.mehralsabnehmen.de
+**Git Tag:** v1.19.0-PROJ-19
+
+### Deployment-Schritte
+1. `npm run build` ✅ — Build erfolgreich
+2. `npm run lint` ✅ — Keine Fehler (1 pre-existing Warning in bild-cropper.tsx)
+3. `git push origin main` → Vercel Auto-Deploy ausgelöst
+4. DB-Migrationen bereits in Supabase applied (proj19_anon_profiles_support, proj19_raise_photo_scan_limit_to_5, proj19_reset_scans_on_anon_upgrade)
+5. Supabase Anonymous Sign-ins manuell aktiviert (Dashboard → Authentication → Settings)
+
+### Post-Deploy-Checkliste
+- [ ] Besucher kann App ohne Account öffnen
+- [ ] /analyse erstellt im Hintergrund eine anonyme Session
+- [ ] 5 Foto-Analysen als Gast möglich
+- [ ] /konto zeigt Conversion-Screen für Gäste
+- [ ] Registrierung erhält Gast-Analysen (updateUser-Upgrade)
