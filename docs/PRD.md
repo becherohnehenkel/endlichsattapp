@@ -25,6 +25,7 @@ endlichsatt ist eine Web-App, die Nutzern hilft zu verstehen, warum bestimmte Ma
 | P0 (MVP) | PROJ-5 | Sättigungs-Einschätzung & Verbesserungsvorschlag | Planned |
 | P1 | PROJ-6 | Mahlzeit-Historie | Planned |
 | P2 | PROJ-7 | Ernährungs-Tagebuch & Inspiration | Roadmap |
+| P2 | PROJ-17 | Wöchentlicher Sättigungs-Recap | Planned |
 
 ## Success Metrics
 
