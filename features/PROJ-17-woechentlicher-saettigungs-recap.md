@@ -1,6 +1,6 @@
 # PROJ-17: Wöchentlicher Sättigungs-Recap
 
-## Status: Architected
+## Status: In Progress
 **Created:** 2026-07-07
 **Last Updated:** 2026-07-07
 **Architected:** 2026-07-07
@@ -162,6 +162,27 @@ Mehrheitsentscheid: Pro Baustein wird über alle Standard-Analysen der häufigst
 Keine. Alle benötigten Bausteine sind vorhanden:
 - Shadcn `Collapsible` ✓ (bereits installiert)
 - Shadcn `Badge`, `Card`, `Progress` ✓ (bereits installiert)
+
+## Implementation Notes (Frontend)
+**Date:** 2026-07-07
+
+**Neue Komponenten:**
+- `src/components/wochen-recap-karte.tsx` — Collapsible-Karte pro Woche; exportiert `WochenRecap`-Typ
+- `src/components/wochen-recap-sektion.tsx` — Container; fetched von `/api/recap/wochen`, rendert Karten
+
+**Geänderte Komponenten:**
+- `src/components/mahlzeit-historie.tsx` — `WochenRecapSektion` an den Anfang des Renders eingefügt; Early Return für Loading-State entfernt (WochenRecap lädt unabhängig)
+
+**UI-Details:**
+- Currentweek defaultOpen=true, vergangene Wochen eingeklappt
+- Header zeigt: Label + Ø-Gesamtbewertungs-Badge + Datum-Spanne + Mahlzeiten-Anzahl
+- Progress-Dots (3× grün/grau) für Wochen mit < 3 Analysen
+- 6 Pillar-Dots (grün/gelb/rot/grau), Mehrheitssieger fett
+- "Blinder Fleck"-Callout für schwächsten Baustein (nicht art_of_eating)
+- Makros: grid-cols-5 mit Kurzlabels (kcal, Prot., KH, Fett, BS)
+- Top-Zutaten als grüne Pill-Tags
+
+**Hinweis:** WochenRecapSektion zeigt `null` solange `/api/recap/wochen` nicht existiert (404 → kein Crash). Wird nach `/backend` aktiv.
 
 ## QA Test Results
 _To be added by /qa_

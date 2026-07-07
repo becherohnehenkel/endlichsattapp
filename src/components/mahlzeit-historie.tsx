@@ -16,6 +16,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import MahlzeitKarte, { type MealEntry } from '@/components/mahlzeit-karte'
+import WochenRecapSektion from '@/components/wochen-recap-sektion'
 import { Plus } from 'lucide-react'
 
 export default function MahlzeitHistorie() {
@@ -79,27 +80,27 @@ export default function MahlzeitHistorie() {
     }
   }
 
-  if (isLoading) {
-    return (
-      <div className="px-4 py-6 space-y-3">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="flex items-center gap-3">
-            <Skeleton className="w-16 h-16 rounded-lg flex-shrink-0" />
-            <div className="flex-1 space-y-2">
-              <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-3 w-1/2" />
-              <Skeleton className="h-5 w-24 rounded-full" />
-            </div>
-          </div>
-        ))}
-      </div>
-    )
-  }
-
   return (
     <div className="relative min-h-[calc(100vh-57px)] pb-28">
+      <WochenRecapSektion />
+
+      {isLoading && (
+        <div className="px-4 py-6 space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex items-center gap-3">
+              <Skeleton className="w-16 h-16 rounded-lg flex-shrink-0" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-3 w-1/2" />
+                <Skeleton className="h-5 w-24 rounded-full" />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Load older entries */}
-      {hasMore && (
+      {!isLoading && hasMore && (
         <div className="flex justify-center pt-4 pb-1">
           <Button
             variant="ghost"
@@ -122,7 +123,7 @@ export default function MahlzeitHistorie() {
       )}
 
       {/* Empty state */}
-      {meals.length === 0 && (
+      {!isLoading && meals.length === 0 && (
         <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
           <div className="text-5xl mb-4">🍽️</div>
           <h2 className="text-xl font-semibold text-foreground mb-2">Deine erste Analyse wartet</h2>
@@ -139,7 +140,7 @@ export default function MahlzeitHistorie() {
       )}
 
       {/* Timeline */}
-      {meals.length > 0 && (
+      {!isLoading && meals.length > 0 && (
         <div className="divide-y divide-border">
           {meals.map((meal) => (
             <MahlzeitKarte key={meal.id} {...meal} onDelete={(id) => setDeleteId(id)} />
@@ -148,7 +149,7 @@ export default function MahlzeitHistorie() {
       )}
 
       {/* Fixed "Neue Mahlzeit" button — only when list has entries */}
-      {meals.length > 0 && (
+      {!isLoading && meals.length > 0 && (
         <div className="fixed bottom-6 right-4 z-10">
           <Link href="/analyse">
             <Button
