@@ -1,8 +1,8 @@
 # PROJ-22: App-Performance & Perceived Speed
 
-## Status: Planned
+## Status: In Progress
 **Created:** 2026-07-07
-**Last Updated:** 2026-07-07
+**Last Updated:** 2026-07-08
 
 ## Dependencies
 - Requires: alle deployed Features (PROJ-1 bis PROJ-21) — reine Optimierung bestehender Seiten, keine neuen Features
@@ -70,8 +70,27 @@
 ---
 <!-- Sections below are added by subsequent skills -->
 
+## Implementierungsnotizen
+
+### Umgesetzte Änderungen
+
+**Parallele Datenbankabfragen:**
+- `src/app/page.tsx` — meals + recipes gleichzeitig via `Promise.all`
+- `src/app/rezepte/page.tsx` — `getAccessStatus()` + Rezepte-Query gleichzeitig via `Promise.all`
+- `src/app/analyse/page.tsx` — doppelte Profil-Abfrage eliminiert: anon → 1 Query, registriert → nur `getAccessStatus()`
+- `src/lib/paywall.ts` — `AccessStatus` um `photoScansRemaining` erweitert, damit `/analyse` keine zweite Profil-Abfrage braucht
+
+**Loading Skeletons (`loading.tsx`):**
+- `src/app/loading.tsx` — Homepage: Meal-Karten + Rezept-Grid Skeleton
+- `src/app/analyse/loading.tsx` — Foto-Upload + Textarea Skeleton
+- `src/app/rezepte/loading.tsx` — Rezept-Kacheln Grid Skeleton
+- `src/app/mahlzeit/[id]/loading.tsx` — Analyse-Ergebnis Skeleton (Bausteine + Nährwerte)
+- `src/app/rezept/[id]/loading.tsx` — Rezept-Detail Skeleton (Bild + Zutaten + Zubereitung)
+- `src/app/konto/loading.tsx` — Konto-Karte Skeleton
+- `src/app/historie/loading.tsx` — Mahlzeit-Liste Skeleton
+
 ## Tech Design (Solution Architect)
-_To be added by /architecture_
+_Übersprungen — keine neue Architektur, reine Next.js-Optimierungspatterns_
 
 ## QA Test Results
 _To be added by /qa_

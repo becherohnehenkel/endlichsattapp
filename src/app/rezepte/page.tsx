@@ -11,18 +11,25 @@ export default async function RezeptePage() {
 
   // PROJ-19: Guests (no session or anonymous) can browse recipes.
   // Registered users go through the paywall check (PROJ-11).
+  // PROJ-22: access check + recipes parallel abfragen
   const isAnonymous = user?.is_anonymous === true
-  let trialDaysRemaining: number | null = null
-  if (user && !isAnonymous) {
-    const access = await getAccessStatus(supabase, user.id)
-    if (!access.hasAccess) redirect('/upgrade')
-    trialDaysRemaining = access.trialDaysRemaining
-  }
 
-  const { data: recipes } = await supabase
+  const accessQuery = (user && !isAnonymous)
+    ? getAccessStatus(supabase, user.id)
+    : Promise.resolve(null)
+
+  const recipesQuery = supabase
     .from('recipes')
     .select('id, title, image_path, total_time_minutes, cuisine_tags')
     .order('created_at', { ascending: false })
+
+  const [access, { data: recipes }] = await Promise.all([accessQuery, recipesQuery])
+
+  let trialDaysRemaining: number | null = null
+  if (access) {
+    if (!access.hasAccess) redirect('/upgrade')
+    trialDaysRemaining = access.trialDaysRemaining
+  }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const rezepte: RezeptListItem[] = (recipes ?? []).map(r => ({

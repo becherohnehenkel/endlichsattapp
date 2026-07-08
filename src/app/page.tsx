@@ -42,19 +42,28 @@ export default async function StartPage() {
     created_at: string
     meal_analyses: { satiety_scores_before: { overall: string } | null }[]
   }
-  let meals: { id: string; freeText: string | null; thumbnailUrl: string | null; createdAt: string; overall: string | null }[] = []
-  if (user) {
-    const { data: recentMeals } = await supabase
-      .from('meals')
-      .select(`
-        id, free_text, photo_thumbnail_path, created_at,
-        meal_analyses ( satiety_scores_before )
-      `)
-      .eq('user_id', user.id)
-      .eq('status', 'completed')
-      .order('created_at', { ascending: false })
-      .limit(4)
 
+  // PROJ-22: meals + recipes parallel abfragen statt sequenziell
+  const mealsQuery = user
+    ? supabase
+        .from('meals')
+        .select(`id, free_text, photo_thumbnail_path, created_at, meal_analyses ( satiety_scores_before )`)
+        .eq('user_id', user.id)
+        .eq('status', 'completed')
+        .order('created_at', { ascending: false })
+        .limit(4)
+    : Promise.resolve({ data: null })
+
+  const recipesQuery = supabase
+    .from('recipes')
+    .select('id, title, image_path, total_time_minutes')
+    .order('created_at', { ascending: false })
+    .limit(4)
+
+  const [{ data: recentMeals }, { data: recentRecipes }] = await Promise.all([mealsQuery, recipesQuery])
+
+  let meals: { id: string; freeText: string | null; thumbnailUrl: string | null; createdAt: string; overall: string | null }[] = []
+  if (user && recentMeals) {
     meals = await Promise.all(
       ((recentMeals ?? []) as unknown as RawMeal[]).map(async (m) => {
         let thumbnailUrl: string | null = null
@@ -69,13 +78,6 @@ export default async function StartPage() {
       })
     )
   }
-
-  // Last 4 recipes for teaser
-  const { data: recentRecipes } = await supabase
-    .from('recipes')
-    .select('id, title, image_path, total_time_minutes')
-    .order('created_at', { ascending: false })
-    .limit(4)
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const recipes = (recentRecipes ?? []).map(r => ({

@@ -9,6 +9,8 @@ export interface AccessStatus {
   subscriptionStatus: string | null
   /** PROJ-12: true wenn der Nutzer einen Invite-Code eingelöst hat */
   hasInviteAccess: boolean
+  /** PROJ-22: verbleibende Foto-Scans — mitgeliefert um doppelte DB-Abfrage auf /analyse zu vermeiden */
+  photoScansRemaining: number
 }
 
 const ACTIVE_SUBSCRIPTION_STATUSES = ['active', 'trialing']
@@ -31,7 +33,7 @@ export async function getAccessStatus(
     .single()
 
   if (!profile) {
-    return { hasAccess: false, trialDaysRemaining: null, subscriptionStatus: null, hasInviteAccess: false }
+    return { hasAccess: false, trialDaysRemaining: null, subscriptionStatus: null, hasInviteAccess: false, photoScansRemaining: 0 }
   }
 
   const isSubscribed = profile.subscription_status != null &&
@@ -52,5 +54,5 @@ export async function getAccessStatus(
     trialDaysRemaining = Math.max(1, Math.min(TRIAL_DAYS, Math.ceil(msRemaining / (1000 * 60 * 60 * 24))))
   }
 
-  return { hasAccess, trialDaysRemaining, subscriptionStatus: profile.subscription_status, hasInviteAccess }
+  return { hasAccess, trialDaysRemaining, subscriptionStatus: profile.subscription_status, hasInviteAccess, photoScansRemaining: profile.photo_scans_remaining }
 }

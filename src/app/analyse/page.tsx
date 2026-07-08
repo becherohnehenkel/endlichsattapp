@@ -29,20 +29,23 @@ export default async function AnalysePage() {
 
   const isAnonymous = user.is_anonymous === true
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('photo_scans_remaining')
-    .eq('id', user.id)
-    .single()
-  const photoScansRemaining = profile?.photo_scans_remaining ?? 5
-
-  // PROJ-19: Anonymous users bypass the paywall entirely.
-  // Registered users go through the existing gate.
+  // PROJ-22: Anon → eine Query (nur photo_scans_remaining).
+  // Registriert → getAccessStatus (enthält bereits photo_scans_remaining, spart zweite Query).
+  let photoScansRemaining = 5
   let trialDaysRemaining: number | null = null
-  if (!isAnonymous) {
+
+  if (isAnonymous) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('photo_scans_remaining')
+      .eq('id', user.id)
+      .single()
+    photoScansRemaining = profile?.photo_scans_remaining ?? 5
+  } else {
     const access = await getAccessStatus(supabase, user.id)
     if (!access.hasAccess) redirect('/upgrade')
     trialDaysRemaining = access.trialDaysRemaining
+    photoScansRemaining = access.photoScansRemaining
   }
 
   return (
