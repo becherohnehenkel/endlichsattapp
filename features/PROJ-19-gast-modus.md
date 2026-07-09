@@ -368,9 +368,19 @@ Zwei neue Gast-Zugänge werden nachträglich ergänzt:
 - `src/components/rezept-bibliothek.tsx` — `is_guest_visible: boolean` zu `RezeptListItem`-Interface; `isGuest`-Prop; gesperrte Rezepte: `opacity-60` + Schloss-Overlay auf dem Bild
 - `src/app/rezept/[id]/page.tsx` — `if (!user) redirect('/login')` entfernt; `is_guest_visible` in SELECT; bei `isGuest && !recipe.is_guest_visible` → Conversion-Screen inline (Schloss-Icon + Titel + "Kostenlos registrieren" + "Einloggen")
 
-**DB-Migration angewendet (2026-07-09):**
+**DB-Migrationen angewendet (2026-07-09):**
 ```sql
+-- Neue Spalte
 ALTER TABLE recipes ADD COLUMN IF NOT EXISTS is_guest_visible BOOLEAN DEFAULT false NOT NULL;
+
+-- RLS: anon-Rolle darf guest-visible Rezepte lesen (ohne Session, vor anonymem Sign-in)
+CREATE POLICY "Anon users can read guest-visible recipes"
+  ON recipes FOR SELECT TO anon USING (is_guest_visible = true);
+
+-- RLS: anon-Rolle darf Zutaten von guest-visible Rezepten lesen
+CREATE POLICY "Anon users can read ingredients of guest-visible recipes"
+  ON recipe_ingredients FOR SELECT TO anon
+  USING (EXISTS (SELECT 1 FROM recipes WHERE recipes.id = recipe_ingredients.recipe_id AND recipes.is_guest_visible = true));
 ```
 
 ### Post-Deploy-Checkliste v2
