@@ -1,6 +1,6 @@
 # PROJ-19: Gast-Modus (Anonyme Nutzung ohne Account)
 
-## Status: Planned
+## Status: In Progress
 **Created:** 2026-07-07
 **Last Updated:** 2026-07-09
 
@@ -354,6 +354,24 @@ Zwei neue Gast-Zugänge werden nachträglich ergänzt:
 | `is_guest_visible` Boolean statt Tag-System | Einfacher, direkt auf dem Rezept-Record, kein Join nötig; Tag-System wäre Overkill für einen einzigen Zustandstyp | 2026-07-09 |
 | Conversion-Screen auf `/rezept/[id]` statt Redirect | URL bleibt erhalten — Gast kann Link teilen; Conversion-Kontext ist direkt am Inhalt-Kontext (welches Rezept) | 2026-07-09 |
 | Sättigungsmatrix komplett offen (kein Teaser, kein Gate) | Reiner Informations-Inhalt; je mehr der Gast das Framework versteht, desto höher seine Motivation zu analysieren | 2026-07-09 |
+
+### Implementierungsnotizen v2 (2026-07-09)
+
+**Geänderte Dateien:**
+- `src/app/saettigungsmatrix/page.tsx` — Auth-Guard (`if (!user) redirect('/login')`) entfernt; Seite ist jetzt eine reine Server-Komponente ohne Auth-Abhängigkeit
+- `src/types/database.ts` — TypeScript-Types neu generiert; `recipes.is_guest_visible: boolean` jetzt typsicher
+- `src/app/api/admin/rezepte/[id]/route.ts` — `is_guest_visible` in `RecipeUpdateSchema` (Zod) + `update()`-Payload
+- `src/app/api/admin/rezepte/route.ts` — `is_guest_visible` in `RecipeSchema` (Zod) + `insert()`-Payload
+- `src/components/rezept-formular.tsx` — `defaultIsGuestVisible`-Prop + `isGuestVisible`-State + `Switch`-Toggle "Für Gäste freischalten" (nach Rezept-Typ-Sektion)
+- `src/app/admin/rezepte/[id]/bearbeiten/page.tsx` — `is_guest_visible` in SELECT-Query + Prop an `RezeptFormular`
+- `src/app/rezepte/page.tsx` — `is_guest_visible` in SELECT-Query; `isGuest`-Flag berechnet; beides an `RezeptBibliothek` weitergegeben
+- `src/components/rezept-bibliothek.tsx` — `is_guest_visible: boolean` zu `RezeptListItem`-Interface; `isGuest`-Prop; gesperrte Rezepte: `opacity-60` + Schloss-Overlay auf dem Bild
+- `src/app/rezept/[id]/page.tsx` — `if (!user) redirect('/login')` entfernt; `is_guest_visible` in SELECT; bei `isGuest && !recipe.is_guest_visible` → Conversion-Screen inline (Schloss-Icon + Titel + "Kostenlos registrieren" + "Einloggen")
+
+**DB-Migration angewendet (2026-07-09):**
+```sql
+ALTER TABLE recipes ADD COLUMN IF NOT EXISTS is_guest_visible BOOLEAN DEFAULT false NOT NULL;
+```
 
 ### Post-Deploy-Checkliste v2
 - [ ] `/saettigungsmatrix` ohne Session aufrufbar
