@@ -34,7 +34,9 @@ export default async function StartPage() {
   const { data: { session } } = await supabase.auth.getSession()
   const user = session?.user ?? null
 
-  // PROJ-19: Guests (no session or anonymous) see the hero CTA but no personal meal history.
+  // PROJ-19: Guests see hero CTA + guest-visible recipes only. No personal meal history.
+  const isGuest = !user || user.is_anonymous === true
+
   type RawMeal = {
     id: string
     free_text: string | null
@@ -54,11 +56,12 @@ export default async function StartPage() {
         .limit(4)
     : Promise.resolve({ data: null })
 
-  const recipesQuery = supabase
+  const recipesBase = supabase
     .from('recipes')
     .select('id, title, image_path, total_time_minutes')
     .order('created_at', { ascending: false })
     .limit(4)
+  const recipesQuery = isGuest ? recipesBase.eq('is_guest_visible', true) : recipesBase
 
   const [{ data: recentMeals }, { data: recentRecipes }] = await Promise.all([mealsQuery, recipesQuery])
 
