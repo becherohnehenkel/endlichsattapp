@@ -34,7 +34,7 @@
 | PROJ-16 | Beilagen-Kontext | P1 | Deployed | PROJ-8, PROJ-4, PROJ-5 | [Spec](PROJ-16-beilagen-kontext.md) |
 | PROJ-17 | Wöchentlicher Sättigungs-Recap | P2 | Deployed | PROJ-4, PROJ-5, PROJ-6 | [Spec](PROJ-17-woechentlicher-saettigungs-recap.md) |
 | PROJ-18 | Token-Optimierung Foto-Analyse | P1 | Deployed | PROJ-3, PROJ-4 | [Spec](PROJ-18-token-optimierung-foto-analyse.md) |
-| PROJ-19 | Gast-Modus (Anonyme Nutzung ohne Account) | P1 | In Progress | PROJ-1, PROJ-2, PROJ-10, PROJ-11 | [Spec](PROJ-19-gast-modus.md) |
+| PROJ-19 | Gast-Modus (Anonyme Nutzung ohne Account) | P1 | Approved | PROJ-1, PROJ-2, PROJ-10, PROJ-11 | [Spec](PROJ-19-gast-modus.md) |
 | PROJ-20 | Datenschutzerklärung & Impressum | P1 | Deployed | PROJ-2, PROJ-19 | [Spec](PROJ-20-datenschutz-impressum.md) |
 | PROJ-21 | Foto-Qualität in der App-Anzeige | P1 | Deployed | PROJ-3, PROJ-18 | [Spec](PROJ-21-foto-qualitaet-anzeige.md) |
 | PROJ-22 | App-Performance & Perceived Speed | P1 | Deployed | PROJ-1–PROJ-21 | [Spec](PROJ-22-app-performance.md) |

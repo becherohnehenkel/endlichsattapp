@@ -440,3 +440,78 @@ test.describe('v2 — Regression: eingeloggte Nutzer sehen alle Rezepte', () => 
     await expect(page.getByText('Kostenlos registrieren')).not.toBeVisible()
   })
 })
+
+// ─── Gruppe 12: v3 — Upsell-Hints auf Startseite ────────────────────────────
+
+test.describe('v3 — Startseite: Upsell-Hint für Gäste', () => {
+  test.beforeEach(async ({ context }) => {
+    await clearSession(context)
+  })
+
+  test('AC-v3-1: Startseite ohne Session zeigt Upsell-Hint mit Rezept-Count', async ({ page }) => {
+    await page.goto('/')
+    await page.waitForLoadState('networkidle', { timeout: 10000 })
+    // Upsell-Hint mit "Anmelden um alle [N] Rezepte zu sehen"
+    await expect(page.getByText(/Anmelden um alle/)).toBeVisible({ timeout: 8000 })
+    // CTA-Link "Jetzt registrieren" daneben
+    await expect(page.getByRole('link', { name: 'Jetzt registrieren' })).toBeVisible()
+  })
+
+  test('AC-v3-2: Startseite eingeloggt — kein Upsell-Hint', async ({ page }) => {
+    await loginAs(page)
+    await page.goto('/')
+    await page.waitForLoadState('networkidle', { timeout: 8000 })
+    await expect(page.getByText(/Anmelden um alle/)).not.toBeVisible()
+  })
+})
+
+// ─── Gruppe 13: v3 — Upsell-Banner auf /rezepte ─────────────────────────────
+
+test.describe('v3 — /rezepte: Upsell-Banner für Gäste', () => {
+  test.beforeEach(async ({ context }) => {
+    await clearSession(context)
+  })
+
+  test('AC-v3-3: /rezepte ohne Session zeigt Gast-Banner mit Rezept-Count', async ({ page }) => {
+    await page.goto('/rezepte')
+    await page.waitForLoadState('networkidle', { timeout: 8000 })
+    // Banner-Überschrift sichtbar
+    await expect(page.getByText('Gastrezepte', { exact: true })).toBeVisible({ timeout: 6000 })
+    // Count-Text sichtbar
+    await expect(page.getByText(/Anmelden um alle/)).toBeVisible()
+    // Registrierungs-Link sichtbar
+    await expect(page.getByRole('link', { name: /Jetzt kostenlos registrieren/ })).toBeVisible()
+  })
+
+  test('AC-v3-4: /rezepte eingeloggt — kein Gast-Banner', async ({ page }) => {
+    await loginAs(page)
+    await page.goto('/rezepte')
+    await page.waitForLoadState('networkidle', { timeout: 8000 })
+    await expect(page.getByText('Gastrezepte', { exact: true })).not.toBeVisible()
+  })
+})
+
+// ─── Gruppe 14: v3 — Art-of-Eating Teaser auf Startseite ────────────────────
+
+test.describe('v3 — Startseite: Art-of-Eating Teaser (alle Nutzer)', () => {
+  test('AC-v3-5: Startseite zeigt Art-of-Eating Teaser-Box', async ({ page }) => {
+    await page.goto('/')
+    await page.waitForLoadState('networkidle', { timeout: 10000 })
+    await expect(page.getByText('Wie du isst entscheidet, wie satt du wirst')).toBeVisible({ timeout: 8000 })
+    await expect(page.getByText('Zur Art of Eating →')).toBeVisible()
+  })
+
+  test('AC-v3-6: Art-of-Eating Teaser navigiert zu /wie-esse-ich-richtig', async ({ page }) => {
+    await page.goto('/')
+    await page.waitForLoadState('networkidle', { timeout: 10000 })
+    await page.getByText('Zur Art of Eating →').click()
+    await expect(page).toHaveURL(/wie-esse-ich-richtig/, { timeout: 5000 })
+  })
+
+  test('AC-v3-5b: Art-of-Eating Teaser auch für eingeloggte Nutzer sichtbar', async ({ page }) => {
+    await loginAs(page)
+    await page.goto('/')
+    await page.waitForLoadState('networkidle', { timeout: 8000 })
+    await expect(page.getByText('Wie du isst entscheidet, wie satt du wirst')).toBeVisible({ timeout: 8000 })
+  })
+})
