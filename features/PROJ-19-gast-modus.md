@@ -1,8 +1,8 @@
 # PROJ-19: Gast-Modus (Anonyme Nutzung ohne Account)
 
-## Status: Approved
+## Status: Planned
 **Created:** 2026-07-07
-**Last Updated:** 2026-07-07
+**Last Updated:** 2026-07-09
 
 ## Dependencies
 - Requires: PROJ-1 (Supabase Infrastructure) — anonyme Auth läuft über Supabase
@@ -295,9 +295,69 @@ Folgende ACs wurden manuell verifiziert und konnten nicht vollständig automatis
 4. DB-Migrationen bereits in Supabase applied (proj19_anon_profiles_support, proj19_raise_photo_scan_limit_to_5, proj19_reset_scans_on_anon_upgrade)
 5. Supabase Anonymous Sign-ins manuell aktiviert (Dashboard → Authentication → Settings)
 
-### Post-Deploy-Checkliste
-- [ ] Besucher kann App ohne Account öffnen
-- [ ] /analyse erstellt im Hintergrund eine anonyme Session
-- [ ] 5 Foto-Analysen als Gast möglich
-- [ ] /konto zeigt Conversion-Screen für Gäste
-- [ ] Registrierung erhält Gast-Analysen (updateUser-Upgrade)
+### Post-Deploy-Checkliste (v1, 2026-07-07)
+- [x] Besucher kann App ohne Account öffnen
+- [x] /analyse erstellt im Hintergrund eine anonyme Session
+- [x] 5 Foto-Analysen als Gast möglich
+- [x] /konto zeigt Conversion-Screen für Gäste
+- [x] Registrierung erhält Gast-Analysen (updateUser-Upgrade)
+
+---
+
+## Erweiterung v2 (2026-07-09)
+
+Zwei neue Gast-Zugänge werden nachträglich ergänzt:
+1. **Sättigungsmatrix** — `/saettigungsmatrix` ohne Account zugänglich
+2. **4 Rezepte freischalten** — ausgewählte Rezepte für Gäste voll lesbar; Rest ausgegraut mit Conversion-CTA
+
+### Neue User Stories
+
+- Als Gast möchte ich die Sättigungsmatrix lesen können, damit ich verstehe nach welchem Prinzip die App Mahlzeiten bewertet — noch bevor ich eine Analyse mache.
+- Als Gast möchte ich einige Rezepte vollständig lesen können, damit ich den Wert der Rezeptbibliothek einschätze bevor ich mich registriere.
+- Als Gast, der ein gesperrtes Rezept sieht, möchte ich einen klaren Hinweis bekommen, was mich nach der Registrierung erwartet — nicht eine harte Fehlermeldung.
+
+### Neue Acceptance Criteria
+
+#### Sättigungsmatrix für Gäste
+
+- [ ] Angenommen ein Besucher ohne Account, wenn er `/saettigungsmatrix` aufruft, dann wird die Seite vollständig angezeigt — kein Redirect zum Login.
+- [ ] Angenommen ein Gast liest die Sättigungsmatrix, wenn er auf den Zurück-Button klickt, dann gelangt er wieder zur vorherigen Seite (kein Auth-Fehler, kein Loop).
+
+#### Rezepte für Gäste (Gast-Rezepte-Freischaltung)
+
+- [ ] Angenommen ein Admin bearbeitet ein Rezept, wenn er die Bearbeitungs-Maske öffnet, dann sieht er einen Toggle "Für Gäste freischalten" — standardmäßig deaktiviert.
+- [ ] Angenommen ein Admin aktiviert den Toggle für ein Rezept, wenn er speichert, dann ist dieses Rezept für Gäste vollständig lesbar.
+- [ ] Angenommen ein Gast öffnet `/rezepte`, wenn er die Liste sieht, dann werden alle Rezepte angezeigt — freigeschaltete normal, gesperrte mit Schloss-Icon und gedimmtem Erscheinungsbild.
+- [ ] Angenommen ein Gast tippt auf ein freigeschaltetes Rezept, wenn er die Detailseite öffnet, dann wird das vollständige Rezept angezeigt.
+- [ ] Angenommen ein Gast tippt auf ein gesperrtes Rezept, wenn er die Detailseite aufrufen will, dann sieht er einen Conversion-Screen: "Dieses Rezept und X weitere warten auf dich. Jetzt kostenlos registrieren."
+- [ ] Angenommen ein registrierter Nutzer, wenn er `/rezepte` aufruft, dann sieht er alle Rezepte ohne Schloss — das `is_guest_visible`-Flag ist für ihn irrelevant.
+
+### Neue Edge Cases
+
+- **Alle Rezepte gesperrt (is_guest_visible überall false):** Gast sieht eine leere freigeschaltete Sektion — kein Fehler, aber schlechte UX. Admin sollte mindestens 1 Rezept freischalten. Kein technischer Schutz dagegen nötig.
+- **Gast ruft gesperrtes Rezept direkt per URL auf:** Zeigt Conversion-Screen (kein 404, kein 403 — verhindert Frustration und nutzt den Moment).
+- **is_guest_visible = true wird nachträglich entfernt:** Bereits besuchte Seiten werden beim nächsten Aufruf korrekt gesperrt (kein Cache-Problem, da Server-Rendering).
+
+### Technische Anforderungen v2
+
+- **Neue DB-Spalte:** `recipes.is_guest_visible BOOLEAN DEFAULT false NOT NULL`
+- **Admin-Editor:** Toggle (shadcn Switch) in der Rezept-Bearbeitungsmaske — kein eigener Screen nötig
+- **`/rezepte` (Page):** Für Gäste: alle Rezepte laden + `is_guest_visible` mitselektieren; gesperrte visuell gedimmt + Schloss-Icon
+- **`/rezept/[id]` (Page):** Für Gäste: wenn `!is_guest_visible` → Conversion-Screen inline rendern (kein Redirect, damit URL erhalten bleibt zum Teilen)
+- **Keine neue DB-Tabelle** — nur eine neue Spalte auf `recipes`
+
+### Entscheidungen v2
+
+| Entscheidung | Begründung | Datum |
+|---|---|---|
+| Alle Rezepte zeigen, gesperrte ausgegraut (statt nur freie) | Zeigt mehr Value der Bibliothek; Neugier auf gesperrte Inhalte ist stärkerer Conversion-Trigger als "es gibt X mehr" | 2026-07-09 |
+| `is_guest_visible` Boolean statt Tag-System | Einfacher, direkt auf dem Rezept-Record, kein Join nötig; Tag-System wäre Overkill für einen einzigen Zustandstyp | 2026-07-09 |
+| Conversion-Screen auf `/rezept/[id]` statt Redirect | URL bleibt erhalten — Gast kann Link teilen; Conversion-Kontext ist direkt am Inhalt-Kontext (welches Rezept) | 2026-07-09 |
+| Sättigungsmatrix komplett offen (kein Teaser, kein Gate) | Reiner Informations-Inhalt; je mehr der Gast das Framework versteht, desto höher seine Motivation zu analysieren | 2026-07-09 |
+
+### Post-Deploy-Checkliste v2
+- [ ] `/saettigungsmatrix` ohne Session aufrufbar
+- [ ] Admin-Toggle "Für Gäste freischalten" in der Rezept-Bearbeitungsmaske sichtbar
+- [ ] Mindestens 1 Rezept als Gast-Rezept markiert und von Gast abrufbar
+- [ ] Gesperrte Rezepte zeigen Conversion-Screen (kein 403/404)
+- [ ] Eingeloggte Nutzer sehen alle Rezepte unverändert (keine Regression)
