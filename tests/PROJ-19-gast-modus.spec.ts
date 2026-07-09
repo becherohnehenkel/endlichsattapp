@@ -312,3 +312,131 @@ test.describe('Mobile: Gast-Modus auf 375px', () => {
     ).toBeVisible()
   })
 })
+
+// ─── Gruppe 8: v2 — Sättigungsmatrix für Gäste ──────────────────────────────
+
+test.describe('v2 — Sättigungsmatrix ohne Session zugänglich', () => {
+  test.beforeEach(async ({ context }) => {
+    await clearSession(context)
+  })
+
+  test('AC-v2-1: /saettigungsmatrix ohne Session erreichbar — kein Redirect zu /login', async ({ page }) => {
+    await page.goto('/saettigungsmatrix')
+    expect(page.url()).not.toContain('/login')
+    await expect(page.getByText('Sättigungs-Matrix')).toBeVisible({ timeout: 6000 })
+  })
+
+  test('AC-v2-2: /saettigungsmatrix zeigt die 6 Säulen für Gäste', async ({ page }) => {
+    await page.goto('/saettigungsmatrix')
+    await expect(page.getByRole('heading', { name: 'Geschmack' })).toBeVisible({ timeout: 6000 })
+    await expect(page.getByRole('heading', { name: 'Proteine' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Ballaststoffe' })).toBeVisible()
+  })
+})
+
+// ─── Gruppe 9: v2 — Gast-Rezepte in der Bibliothek ─────────────────────────
+
+// Bekannte IDs aus der DB (Stand 2026-07-09):
+const GUEST_VISIBLE_ID = 'a0942760-262c-420b-87f5-5d10decb1f28'   // Power Oats — is_guest_visible: true
+const LOCKED_ID        = 'ac634f99-9290-4c47-b5d3-78f3c11744f3'   // Fenchelsalat — is_guest_visible: false
+
+test.describe('v2 — Rezepte für Gäste (is_guest_visible)', () => {
+  test.beforeEach(async ({ context }) => {
+    await clearSession(context)
+  })
+
+  test('AC-v2-3: /rezepte ohne Session zeigt freigeschaltete Rezepte (kein leerer Zustand)', async ({ page }) => {
+    await page.goto('/rezepte')
+    expect(page.url()).not.toContain('/login')
+    // Mindestens ein Rezept-Titel sichtbar (Power Oats oder Shakshuka)
+    const anyTitle = page.getByText(/Power Oats|Shakshuka/i)
+    await expect(anyTitle.first()).toBeVisible({ timeout: 8000 })
+  })
+
+  test('AC-v2-4: /rezepte zeigt gesperrte Rezepte ausgegraut (opacity-60)', async ({ page }) => {
+    await page.goto('/rezepte')
+    await page.waitForLoadState('networkidle', { timeout: 8000 })
+    // Gesperrte Karte hat opacity-60 CSS-Klasse
+    const lockedCard = page.locator('a.opacity-60').first()
+    await expect(lockedCard).toBeVisible({ timeout: 6000 })
+  })
+
+  test('AC-v2-5: Gesperrtes Rezept zeigt Schloss-Icon in der Karten-Liste', async ({ page }) => {
+    await page.goto('/rezepte')
+    await page.waitForLoadState('networkidle', { timeout: 8000 })
+    // lucide-react rendert SVG mit einer title oder aria — prüfe svg in gesperrter Karte
+    const lockedCard = page.locator('a.opacity-60').first()
+    await expect(lockedCard).toBeVisible({ timeout: 6000 })
+    // Schloss-SVG befindet sich im Bild-Overlay der gesperrten Karte
+    const lockSvg = lockedCard.locator('svg').first()
+    await expect(lockSvg).toBeVisible()
+  })
+
+  test('AC-v2-6: Gast kann freigeschaltetes Rezept vollständig lesen', async ({ page }) => {
+    await page.goto(`/rezept/${GUEST_VISIBLE_ID}`)
+    expect(page.url()).not.toContain('/login')
+    // Vollständiges Rezept: Titel + Zutaten-Überschrift vorhanden
+    await expect(page.getByText('Zutaten')).toBeVisible({ timeout: 8000 })
+    // Kein Schloss-Conversion-Screen
+    await expect(page.getByText('Kostenlos registrieren')).not.toBeVisible()
+  })
+
+  test('AC-v2-7: Gast öffnet gesperrtes Rezept — Conversion-Screen (kein 404, kein 403)', async ({ page }) => {
+    await page.goto(`/rezept/${LOCKED_ID}`)
+    expect(page.url()).not.toContain('/login')
+    // Conversion-Screen mit Registrierungs-CTA sichtbar
+    await expect(page.getByText('Kostenlos registrieren')).toBeVisible({ timeout: 8000 })
+    // Kein Zutaten-Abschnitt (Rezept-Inhalt gesperrt)
+    await expect(page.getByText('Zutaten')).not.toBeVisible()
+  })
+
+  test('AC-v2-8: Gesperrtes Rezept zeigt Rezept-Titel im Conversion-Screen', async ({ page }) => {
+    await page.goto(`/rezept/${LOCKED_ID}`)
+    // Titel des gesperrten Rezepts ist im Conversion-Screen sichtbar
+    await expect(page.getByText('Fenchelsalat')).toBeVisible({ timeout: 8000 })
+  })
+})
+
+// ─── Gruppe 10: v2 — Startseite zeigt nur guest-visible Rezepte ─────────────
+
+test.describe('v2 — Startseite: nur freigeschaltete Rezepte für Gäste', () => {
+  test.beforeEach(async ({ context }) => {
+    await clearSession(context)
+  })
+
+  test('AC-v2-9: Startseite ohne Session zeigt freigeschaltete Rezepte', async ({ page }) => {
+    await page.goto('/')
+    await page.waitForLoadState('networkidle', { timeout: 10000 })
+    // Power Oats und/oder Shakshuka sollen sichtbar sein
+    const guestRecipe = page.getByText(/Power Oats|Shakshuka/i)
+    await expect(guestRecipe.first()).toBeVisible({ timeout: 8000 })
+  })
+
+  test('AC-v2-10: Startseite ohne Session zeigt KEINE gesperrten Rezepte', async ({ page }) => {
+    await page.goto('/')
+    await page.waitForLoadState('networkidle', { timeout: 10000 })
+    // Fenchelsalat und Berglinsen Salat dürfen NICHT erscheinen (nicht guest-visible)
+    await expect(page.getByText('Fenchelsalat')).not.toBeVisible()
+    await expect(page.getByText('Berglinsen Salat')).not.toBeVisible()
+  })
+})
+
+// ─── Gruppe 11: v2 — Regression: eingeloggte Nutzer unverändert ─────────────
+
+test.describe('v2 — Regression: eingeloggte Nutzer sehen alle Rezepte', () => {
+  test('AC-v2-11: Eingeloggter Nutzer sieht /rezepte ohne Schloss-Overlay (keine opacity-60)', async ({ page }) => {
+    await loginAs(page)
+    await page.goto('/rezepte')
+    await page.waitForLoadState('networkidle', { timeout: 8000 })
+    // Keine ausgegrauten Karten für eingeloggte Nutzer
+    const lockedCards = page.locator('a.opacity-60')
+    await expect(lockedCards).toHaveCount(0)
+  })
+
+  test('AC-v2-12: Eingeloggter Nutzer kann gesperrtes Rezept direkt aufrufen (kein Conversion-Screen)', async ({ page }) => {
+    await loginAs(page)
+    await page.goto(`/rezept/${LOCKED_ID}`)
+    await expect(page.getByText('Zutaten')).toBeVisible({ timeout: 8000 })
+    await expect(page.getByText('Kostenlos registrieren')).not.toBeVisible()
+  })
+})

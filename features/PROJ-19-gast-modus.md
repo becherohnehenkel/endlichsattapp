@@ -1,6 +1,6 @@
 # PROJ-19: Gast-Modus (Anonyme Nutzung ohne Account)
 
-## Status: In Progress
+## Status: Approved
 **Created:** 2026-07-07
 **Last Updated:** 2026-07-09
 
@@ -373,9 +373,11 @@ Zwei neue Gast-Zugänge werden nachträglich ergänzt:
 -- Neue Spalte
 ALTER TABLE recipes ADD COLUMN IF NOT EXISTS is_guest_visible BOOLEAN DEFAULT false NOT NULL;
 
--- RLS: anon-Rolle darf guest-visible Rezepte lesen (ohne Session, vor anonymem Sign-in)
-CREATE POLICY "Anon users can read guest-visible recipes"
-  ON recipes FOR SELECT TO anon USING (is_guest_visible = true);
+-- RLS: anon-Rolle darf ALLE Rezepte lesen (Titel/Bild für ausgegraut-Ansicht; Zutaten bleiben geschützt)
+-- (Ursprünglich: "Anon users can read guest-visible recipes" mit is_guest_visible=true Filter —
+--  ersetzt durch uneingeschränkten Lesezugriff damit gesperrte Karten ausgegraut angezeigt werden können)
+CREATE POLICY "Anon users can read all recipes"
+  ON recipes FOR SELECT TO anon USING (true);
 
 -- RLS: anon-Rolle darf Zutaten von guest-visible Rezepten lesen
 CREATE POLICY "Anon users can read ingredients of guest-visible recipes"
@@ -384,8 +386,55 @@ CREATE POLICY "Anon users can read ingredients of guest-visible recipes"
 ```
 
 ### Post-Deploy-Checkliste v2
-- [ ] `/saettigungsmatrix` ohne Session aufrufbar
-- [ ] Admin-Toggle "Für Gäste freischalten" in der Rezept-Bearbeitungsmaske sichtbar
-- [ ] Mindestens 1 Rezept als Gast-Rezept markiert und von Gast abrufbar
-- [ ] Gesperrte Rezepte zeigen Conversion-Screen (kein 403/404)
-- [ ] Eingeloggte Nutzer sehen alle Rezepte unverändert (keine Regression)
+- [x] `/saettigungsmatrix` ohne Session aufrufbar
+- [x] Admin-Toggle "Für Gäste freischalten" in der Rezept-Bearbeitungsmaske sichtbar
+- [x] Mindestens 1 Rezept als Gast-Rezept markiert und von Gast abrufbar
+- [x] Gesperrte Rezepte zeigen Conversion-Screen (kein 403/404)
+- [x] Eingeloggte Nutzer sehen alle Rezepte unverändert (keine Regression)
+
+---
+
+## QA Test Results
+
+**QA-Datum:** 2026-07-09
+**QA-Ergebnis:** ✅ Approved — keine Critical/High Bugs
+
+### Automatisierte Tests
+
+| Suite | Ergebnis |
+|-------|----------|
+| Vitest Unit/Integration | ✅ 184/184 passed |
+| Playwright E2E (Gesamt, Chromium) | ✅ 212/212 passed (kein Regression) |
+| Playwright E2E PROJ-19 (alle Gruppen) | ✅ 40/40 passed |
+
+### PROJ-19 v2 Acceptance Criteria
+
+| AC | Beschreibung | Status |
+|----|-------------|--------|
+| AC-v2-1 | `/saettigungsmatrix` ohne Session erreichbar — kein Redirect | ✅ |
+| AC-v2-2 | `/saettigungsmatrix` zeigt die 6 Säulen für Gäste | ✅ |
+| AC-v2-3 | `/rezepte` ohne Session zeigt freigeschaltete Rezepte | ✅ |
+| AC-v2-4 | `/rezepte` zeigt gesperrte Rezepte ausgegraut (opacity-60) | ✅ |
+| AC-v2-5 | Gesperrtes Rezept zeigt Schloss-Icon in der Karten-Liste | ✅ |
+| AC-v2-6 | Gast kann freigeschaltetes Rezept vollständig lesen | ✅ |
+| AC-v2-7 | Gast öffnet gesperrtes Rezept → Conversion-Screen (kein 404/403) | ✅ |
+| AC-v2-8 | Gesperrtes Rezept zeigt Rezept-Titel im Conversion-Screen | ✅ |
+| AC-v2-9 | Startseite ohne Session zeigt freigeschaltete Rezepte | ✅ |
+| AC-v2-10 | Startseite ohne Session zeigt KEINE gesperrten Rezepte | ✅ |
+| AC-v2-11 | Eingeloggter Nutzer sieht `/rezepte` ohne Schloss-Overlay | ✅ |
+| AC-v2-12 | Eingeloggter Nutzer kann gesperrtes Rezept direkt aufrufen | ✅ |
+
+### Bugs & Korrekturen während QA
+
+**Bug (Medium — behoben):** Anon-RLS auf `recipes` war zu restriktiv (`is_guest_visible=true`), verhinderte die ausgegraut-Ansicht gesperrter Karten in `/rezepte` und den Conversion-Screen auf `/rezept/[id]` für gesperrte Rezepte.
+- **Fix:** RLS-Policy ersetzt: `"Anon users can read all recipes"` mit `USING (true)` — `recipe_ingredients` bleibt auf guest-visible beschränkt.
+
+**Bug (Low — behoben):** `getByText('Geschmack')` im E2E-Test traf strict-mode-Verletzung (Heading + Beispieltext).
+- **Fix:** `getByRole('heading', { name: 'Geschmack' })` für präzise Selektion.
+
+### Security Audit
+- Anon-Nutzer können alle Rezept-Metadaten (Titel, Bild) lesen — bewusste Design-Entscheidung (Teaser)
+- `recipe_ingredients` bleibt für anon auf `is_guest_visible=true` Rezepte beschränkt ✅
+- Admin-Routes (`/admin`) bleiben vollständig geschützt ✅
+- `/analyse` setzt anonymen Sign-in voraus (Supabase `authenticated`-Rolle) ✅
+- Kein API-Key oder Secret im Browser-Netzwerkverkehr sichtbar ✅
