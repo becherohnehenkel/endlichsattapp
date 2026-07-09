@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Plus, Trash2, Upload, ChefHat } from 'lucide-react'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Switch } from '@/components/ui/switch'
 import ZutatInputMitQuelle from '@/components/zutat-input-mit-quelle'
 import BildCropper from '@/components/bild-cropper'
 import type { NutritionPer100g } from '@/lib/nutrition'
@@ -41,6 +42,7 @@ interface RezeptFormularProps {
   existingImageUrl?: string | null
   defaultIngredientMacros?: (NutritionPer100g | null)[]
   defaultRecipeTyp?: 'beilage' | 'grundlage' | null
+  defaultIsGuestVisible?: boolean
   mode: 'create' | 'edit'
 }
 
@@ -50,6 +52,7 @@ export default function RezeptFormular({
   existingImageUrl,
   defaultIngredientMacros,
   defaultRecipeTyp,
+  defaultIsGuestVisible = false,
   mode,
 }: RezeptFormularProps) {
   const router = useRouter()
@@ -58,6 +61,7 @@ export default function RezeptFormular({
   const [recipeTyp, setRecipeTyp] = useState<RecipeTyp>(
     defaultRecipeTyp === 'beilage' ? 'beilage' : defaultRecipeTyp === 'grundlage' ? 'grundlage' : 'vollstaendig'
   )
+  const [isGuestVisible, setIsGuestVisible] = useState(defaultIsGuestVisible)
   const [imagePreview, setImagePreview] = useState<string | null>(existingImageUrl ?? null)
   const [uploadedPath, setUploadedPath] = useState<string | null>(defaultValues?.image_path ?? null)
   // Raw local blob URL shown in the cropper (before upload)
@@ -154,6 +158,7 @@ export default function RezeptFormular({
           })),
         image_path: uploadedPath ?? undefined,
         recipe_typ: recipeTyp === 'vollstaendig' ? null : recipeTyp,
+        is_guest_visible: isGuestVisible,
       }
 
       const url = mode === 'edit' ? `/api/admin/rezepte/${recipeId}` : '/api/admin/rezepte'
@@ -428,6 +433,25 @@ export default function RezeptFormular({
             </label>
           ))}
         </RadioGroup>
+      </div>
+
+      <Separator />
+
+      {/* Gast-Freischaltung */}
+      <div className="flex items-center justify-between gap-4 rounded-lg border border-border p-4">
+        <div className="space-y-0.5">
+          <Label htmlFor="is-guest-visible" className="text-sm font-medium cursor-pointer">
+            Für Gäste freischalten
+          </Label>
+          <p className="text-xs text-muted-foreground">
+            Gäste ohne Account können dieses Rezept vollständig lesen
+          </p>
+        </div>
+        <Switch
+          id="is-guest-visible"
+          checked={isGuestVisible}
+          onCheckedChange={setIsGuestVisible}
+        />
       </div>
 
       {submitError && (

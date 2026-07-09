@@ -1,7 +1,9 @@
-import { notFound, redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import Image from 'next/image'
-import { Clock, ChefHat, Users, Flame } from 'lucide-react'
+import Link from 'next/link'
+import { Clock, ChefHat, Users, Flame, Lock } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
+import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/server'
 import BackButton from './back-button'
 import RezeptSaettigungsMatrix from '@/components/rezept-saettigungs-matrix'
@@ -16,7 +18,7 @@ export default async function RezeptDetailPage({
   const { id } = await params
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  const isGuest = !user || user.is_anonymous === true
 
   const { data: recipe } = await supabase
     .from('recipes')
@@ -31,6 +33,7 @@ export default async function RezeptDetailPage({
       macros_per_serving,
       saettigungs_matrix,
       recipe_typ,
+      is_guest_visible,
       recipe_ingredients (
         id,
         name,
@@ -43,6 +46,41 @@ export default async function RezeptDetailPage({
     .single()
 
   if (!recipe) notFound()
+
+  // Gäste dürfen nur freigeschaltete Rezepte lesen
+  if (isGuest && !recipe.is_guest_visible) {
+    return (
+      <div className="min-h-screen bg-background">
+        <header className="sticky top-0 z-10 border-b border-border bg-card/80 backdrop-blur-sm px-4 py-3 flex items-center justify-between">
+          <BackButton />
+          <span className="font-semibold text-foreground tracking-tight">Rezept</span>
+          <div className="w-16" />
+        </header>
+        <main className="max-w-sm mx-auto px-4 py-12 flex flex-col items-center text-center space-y-6">
+          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+            <Lock className="h-7 w-7 text-muted-foreground" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-lg font-semibold tracking-tight">{recipe.title}</h1>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Dieses Rezept und viele weitere warten auf dich — kostenlos mit einem Account.
+            </p>
+          </div>
+          <div className="w-full space-y-3">
+            <Button asChild size="lg" className="w-full bg-[#4A7C59] hover:bg-[#3d6849] text-white">
+              <Link href="/registrieren">Kostenlos registrieren</Link>
+            </Button>
+            <p className="text-sm text-muted-foreground">
+              Bereits einen Account?{' '}
+              <Link href="/login" className="text-[#4A7C59] hover:underline font-medium">
+                Einloggen
+              </Link>
+            </p>
+          </div>
+        </main>
+      </div>
+    )
+  }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const imageUrl = recipe.image_path

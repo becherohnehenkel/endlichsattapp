@@ -29,6 +29,7 @@ export default async function RezeptBearbeitenPage({
       ingredient_tags,
       cuisine_tags,
       recipe_typ,
+      is_guest_visible,
       recipe_ingredients (
         id,
         name,
@@ -88,6 +89,7 @@ export default async function RezeptBearbeitenPage({
           existingImageUrl={existingImageUrl}
           defaultIngredientMacros={sortedIngredients.map(i => i.macros_per_100g as import('@/lib/nutrition').NutritionPer100g | null)}
           defaultRecipeTyp={recipe.recipe_typ as 'beilage' | 'grundlage' | null}
+          defaultIsGuestVisible={recipe.is_guest_visible ?? false}
         />
       </main>
     </div>

@@ -1,6 +1,4 @@
-import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
 import { Separator } from '@/components/ui/separator'
 import BackButton from './back-button'
 
@@ -98,11 +96,7 @@ function ratingConfig(rating: Rating) {
   }
 }
 
-export default async function SaettigungsmatrixPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
+export default function SaettigungsmatrixPage() {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-10 border-b border-border bg-card/80 backdrop-blur-sm px-4 py-3 flex items-center justify-between">

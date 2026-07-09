@@ -31,6 +31,7 @@ const RecipeSchema = z.object({
   cuisine_tags: z.array(z.string()).optional().default([]),
   ingredients: z.array(IngredientSchema).min(1, 'Mindestens eine Zutat erforderlich'),
   recipe_typ: z.enum(['beilage', 'grundlage']).nullable().optional(),
+  is_guest_visible: z.boolean().optional().default(false),
 })
 
 export async function GET() {
@@ -83,6 +84,7 @@ export async function POST(request: Request) {
       ingredient_tags: recipeData.ingredient_tags,
       cuisine_tags: recipeData.cuisine_tags ?? [],
       recipe_typ: recipeData.recipe_typ ?? null,
+      is_guest_visible: recipeData.is_guest_visible ?? false,
     })
     .select('id')
     .single()

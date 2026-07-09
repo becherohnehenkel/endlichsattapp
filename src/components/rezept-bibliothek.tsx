@@ -5,7 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Clock, ChefHat, Search } from 'lucide-react'
+import { Clock, ChefHat, Search, Lock } from 'lucide-react'
 
 export interface RezeptListItem {
   id: string
@@ -13,9 +13,10 @@ export interface RezeptListItem {
   imageUrl: string | null
   total_time_minutes: number
   cuisine_tags: string[]
+  is_guest_visible: boolean
 }
 
-export default function RezeptBibliothek({ rezepte }: { rezepte: RezeptListItem[] }) {
+export default function RezeptBibliothek({ rezepte, isGuest = false }: { rezepte: RezeptListItem[]; isGuest?: boolean }) {
   const [query, setQuery] = useState('')
   const [activeTag, setActiveTag] = useState<string | null>(null)
 
@@ -91,54 +92,66 @@ export default function RezeptBibliothek({ rezepte }: { rezepte: RezeptListItem[
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3">
-          {filtered.map(rezept => (
-            <Link
-              key={rezept.id}
-              href={`/rezept/${rezept.id}`}
-              className="group rounded-xl border border-border bg-card overflow-hidden hover:border-[#4A7C59] transition-colors"
-            >
-              {/* Image */}
-              <div className="aspect-video bg-muted relative overflow-hidden">
-                {rezept.imageUrl ? (
-                  <Image
-                    src={rezept.imageUrl}
-                    alt={rezept.title}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                    unoptimized
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <ChefHat className="h-6 w-6 text-muted-foreground" />
-                  </div>
-                )}
-              </div>
-
-              {/* Info */}
-              <div className="p-2.5 space-y-1.5">
-                <p className="text-xs font-semibold text-foreground leading-snug line-clamp-2">
-                  {rezept.title}
-                </p>
-                <div className="flex items-center gap-1 text-muted-foreground">
-                  <Clock className="h-3 w-3 flex-shrink-0" />
-                  <span className="text-[10px]">{rezept.total_time_minutes} Min.</span>
+          {filtered.map(rezept => {
+            const locked = isGuest && !rezept.is_guest_visible
+            return (
+              <Link
+                key={rezept.id}
+                href={`/rezept/${rezept.id}`}
+                className={`group rounded-xl border bg-card overflow-hidden transition-colors ${
+                  locked
+                    ? 'border-border opacity-60'
+                    : 'border-border hover:border-[#4A7C59]'
+                }`}
+              >
+                {/* Image */}
+                <div className="aspect-video bg-muted relative overflow-hidden">
+                  {rezept.imageUrl ? (
+                    <Image
+                      src={rezept.imageUrl}
+                      alt={rezept.title}
+                      fill
+                      className={`object-cover transition-transform duration-300 ${locked ? '' : 'group-hover:scale-105'}`}
+                      unoptimized
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <ChefHat className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                  )}
+                  {locked && (
+                    <div className="absolute inset-0 bg-background/50 flex items-center justify-center">
+                      <Lock className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                  )}
                 </div>
-                {rezept.cuisine_tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {rezept.cuisine_tags.slice(0, 2).map(tag => (
-                      <Badge
-                        key={tag}
-                        variant="secondary"
-                        className="text-[9px] px-1.5 py-0 capitalize"
-                      >
-                        {tag}
-                      </Badge>
-                    ))}
+
+                {/* Info */}
+                <div className="p-2.5 space-y-1.5">
+                  <p className="text-xs font-semibold text-foreground leading-snug line-clamp-2">
+                    {rezept.title}
+                  </p>
+                  <div className="flex items-center gap-1 text-muted-foreground">
+                    <Clock className="h-3 w-3 flex-shrink-0" />
+                    <span className="text-[10px]">{rezept.total_time_minutes} Min.</span>
                   </div>
-                )}
-              </div>
-            </Link>
-          ))}
+                  {rezept.cuisine_tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {rezept.cuisine_tags.slice(0, 2).map(tag => (
+                        <Badge
+                          key={tag}
+                          variant="secondary"
+                          className="text-[9px] px-1.5 py-0 capitalize"
+                        >
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </Link>
+            )
+          })}
         </div>
       )}
     </div>

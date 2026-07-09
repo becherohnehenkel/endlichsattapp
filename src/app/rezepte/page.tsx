@@ -18,9 +18,11 @@ export default async function RezeptePage() {
     ? getAccessStatus(supabase, user.id)
     : Promise.resolve(null)
 
+  const isGuest = !user || isAnonymous
+
   const recipesQuery = supabase
     .from('recipes')
-    .select('id, title, image_path, total_time_minutes, cuisine_tags')
+    .select('id, title, image_path, total_time_minutes, cuisine_tags, is_guest_visible')
     .order('created_at', { ascending: false })
 
   const [access, { data: recipes }] = await Promise.all([accessQuery, recipesQuery])
@@ -40,6 +42,7 @@ export default async function RezeptePage() {
       : null,
     total_time_minutes: r.total_time_minutes,
     cuisine_tags: r.cuisine_tags ?? [],
+    is_guest_visible: r.is_guest_visible ?? false,
   }))
 
   return (
@@ -63,7 +66,7 @@ export default async function RezeptePage() {
         </p>
       )}
 
-      <RezeptBibliothek rezepte={rezepte} />
+      <RezeptBibliothek rezepte={rezepte} isGuest={isGuest} />
     </div>
   )
 }
