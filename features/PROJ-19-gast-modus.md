@@ -1,6 +1,6 @@
 # PROJ-19: Gast-Modus (Anonyme Nutzung ohne Account)
 
-## Status: Deployed
+## Status: In Progress
 **Created:** 2026-07-07
 **Last Updated:** 2026-07-09
 
@@ -446,3 +446,57 @@ CREATE POLICY "Anon users can read ingredients of guest-visible recipes"
 **Deployed:** 2026-07-09
 **Production URL:** https://app.mehralsabnehmen.de
 **Git Tag:** v1.19.0-PROJ-19
+
+---
+
+## Erweiterung v3 (2026-07-09)
+
+Drei UI-Verbesserungen für Gäste und alle Nutzer:
+
+1. **Startseite Upsell-Hint (Gäste)** — kleiner Hinweis mit dynamischer Rezeptanzahl unter der Rezept-Sektion
+2. **`/rezepte` Upsell-Banner (Gäste)** — Banner über der Rezeptliste mit dynamischer Gesamtanzahl
+3. **Art-of-Eating-Teaser (alle Nutzer)** — Teaser-Box auf der Startseite analog zur Sättigungsmatrix-Box
+
+### Neue User Stories
+
+- Als Gast, der die Startseite besucht und Rezepte sieht, möchte ich einen klaren Hinweis bekommen wie viele Rezepte nach der Registrierung auf mich warten — damit ich einen konkreten Grund zur Anmeldung sehe.
+- Als Gast, der `/rezepte` besucht, möchte ich sofort verstehen dass das nur ein Ausschnitt ist und wie viele Rezepte insgesamt verfügbar sind.
+- Als Nutzer (Gast oder eingeloggt) möchte ich auf der Startseite einen Hinweis auf Art of Eating sehen — damit ich diesen Bereich der App entdecke.
+
+### Neue Acceptance Criteria
+
+#### Startseite — Upsell-Hint für Gäste (AC-v3-1, AC-v3-2)
+
+- [ ] Angenommen ein Besucher ohne Account, wenn er die Startseite aufruft und Rezepte sichtbar sind, dann erscheint unterhalb der Rezept-Karten ein Upsell-Hinweis der Form: "Anmelden um alle [N] Rezepte zu sehen" — wobei [N] die Gesamtzahl aller Rezepte in der DB ist.
+- [ ] Angenommen ein eingeloggter Nutzer, wenn er die Startseite aufruft, dann ist der Upsell-Hint nicht sichtbar (nur für Gäste).
+
+#### `/rezepte` — Upsell-Banner für Gäste (AC-v3-3, AC-v3-4)
+
+- [ ] Angenommen ein Besucher ohne Account, wenn er `/rezepte` aufruft, dann erscheint über der Rezeptliste ein Banner: "Hier siehst du alle Gastrezepte. Anmelden um alle [N] Rezepte zu sehen." — [N] ist dynamisch aus der DB.
+- [ ] Angenommen ein eingeloggter Nutzer, wenn er `/rezepte` aufruft, dann ist der Upsell-Banner nicht sichtbar.
+
+#### Startseite — Art-of-Eating-Teaser (alle Nutzer) (AC-v3-5, AC-v3-6)
+
+- [ ] Angenommen ein beliebiger Besucher (Gast oder eingeloggt), wenn er die Startseite aufruft, dann erscheint nach der Sättigungsmatrix-Box eine Art-of-Eating-Teaser-Box in vergleichbarem visuellen Stil.
+- [ ] Angenommen der Besucher klickt auf die Art-of-Eating-Teaser-Box, dann wird er zu `/wie-esse-ich-richtig` navigiert.
+
+### Edge Cases
+
+- **Keine Rezepte in der DB:** Count = 0 → Upsell-Hint nicht anzeigen (kein "Anmelden um alle 0 Rezepte zu sehen")
+- **Nur 1 Rezept:** Count = 1 → Text bleibt grammatikalisch korrekt ("1 Rezept" statt "1 Rezepte" → Singular beachten)
+- **Gast sieht keinen Rezeptbereich auf Startseite** (keine guest-visible Rezepte): Upsell-Hint trotzdem weglassen, da kein Kontext dafür vorhanden
+
+### Technische Anforderungen v3
+
+- **Rezept-Count:** `supabase.from('recipes').select('id', { count: 'exact', head: true })` — parallel zu bestehenden Queries
+- **Anzeige-Logik:** Upsell-Hint + Banner nur wenn `isGuest === true` UND `totalRecipeCount > 0`
+- **Art-of-Eating-Box:** Statische Komponente (kein DB-Zugriff) — visuell parallel zur bestehenden Sättigungsmatrix-Box; Link zu `/wie-esse-ich-richtig`
+- **Singular/Plural:** Bei `count === 1` → "1 Rezept", sonst "[N] Rezepte"
+
+### Entscheidungen v3
+
+| Entscheidung | Begründung | Datum |
+|---|---|---|
+| Gesamtanzahl aller Rezepte (nicht nur gesperrte) | "Alle 14 Rezepte" ist eindrucksvoller als "8 weitere" — zeigt Umfang der Bibliothek | 2026-07-09 |
+| Art-of-Eating-Box für alle Nutzer (nicht nur Gäste) | AoE ist universell relevant; nicht hinter eine Gast-Bedingung stecken vermeidet Verwirrung | 2026-07-09 |
+| Upsell-Hint auf Startseite nur wenn Rezepte sichtbar | Kein "Anmelden um Rezepte zu sehen" wenn kein einziges Rezept gezeigt wird — wäre inkonsistent | 2026-07-09 |
