@@ -1,6 +1,6 @@
 # PROJ-19: Gast-Modus (Anonyme Nutzung ohne Account)
 
-## Status: Approved
+## Status: Deployed
 **Created:** 2026-07-07
 **Last Updated:** 2026-07-09
 
@@ -535,3 +535,11 @@ Drei UI-Verbesserungen für Gäste und alle Nutzer:
 ### Security Audit
 
 **SEC-1 Test-Hinweis (Low):** `SEC-1: /admin ohne Session nicht zugänglich` schlägt im E2E-Test fehl, weil Next.js Turbopack im Dev-Mode keinen HTTP-307-Redirect sendet, sondern 200 + `<meta http-equiv="refresh" content="1;url=/login"/>`. Der `requireAdmin()`-Schutz funktioniert korrekt — der Admin-Seiteninhalt ist nicht im DOM gerendert, nur eine leere Hülle mit Meta-Redirect. **Kein echtes Sicherheitsproblem.** Test-Methodiik passt nicht zu Next.js-Dev-Verhalten; in Production wird ein regulärer HTTP-307-Redirect ausgeliefert.
+
+---
+
+## Deployment v3
+
+**Deployed:** 2026-07-09
+**Production URL:** https://app.mehralsabnehmen.de
+**Git Tag:** v1.19.1-PROJ-19
