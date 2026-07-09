@@ -88,7 +88,7 @@ Fix: `middleware.ts` auf `/` vereinheitlicht. Diese Spec (Acceptance Criteria + 
 - **Reset-Link-Ablauf:** 1 Stunde (Supabase-Standard)
 
 ## Open Questions
-- [x] Absender der Auth-E-Mails: `endlichsatt <hello@satt.mehralsabnehmen.de>` — Domain `satt.mehralsabnehmen.de` wird bei `/deploy` eingerichtet
+- [x] Absender der Auth-E-Mails: `endlichsatt <hello@app.mehralsabnehmen.de>` — Domain `app.mehralsabnehmen.de` wird bei `/deploy` eingerichtet
 
 ## Decision Log
 

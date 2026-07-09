@@ -260,7 +260,7 @@ Keine kritischen oder hohen Bugs gefunden. PROJ-16 ist production-ready.
 ## Deployment
 
 **Deployed:** 2026-07-03
-**Production URL:** https://satt.mehralsabnehmen.de
+**Production URL:** https://app.mehralsabnehmen.de
 **Git Tag:** v1.16.0-PROJ-16
 
 ### Was deployed

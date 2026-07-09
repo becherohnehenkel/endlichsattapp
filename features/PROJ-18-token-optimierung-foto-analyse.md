@@ -313,6 +313,6 @@ Alle 141 vorherigen Tests bestehen weiterhin (**153 total = 141 vorher + 12 neue
 ## Deployment
 
 - **Deployed:** 2026-07-07
-- **URL:** https://satt.mehralsabnehmen.de
+- **URL:** https://app.mehralsabnehmen.de
 - **Commits:** `0d629ca` (feat), `58b4993` (QA)
 - **Vercel:** auto-deploy via push to `main`

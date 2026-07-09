@@ -137,5 +137,5 @@ Keine Critical, High oder Medium Bugs.
 ## Deployment
 
 **Deployed:** 2026-07-09
-**Production URL:** https://satt.mehralsabnehmen.de
+**Production URL:** https://app.mehralsabnehmen.de
 **Git Tag:** v1.22.0-PROJ-22

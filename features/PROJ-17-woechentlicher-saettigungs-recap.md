@@ -270,7 +270,7 @@ Keine kritischen oder hohen Bugs gefunden.
 
 ## Deployment
 **Deployed:** 2026-07-07
-**Production URL:** https://satt.mehralsabnehmen.de/historie
+**Production URL:** https://app.mehralsabnehmen.de/historie
 **Deployed by:** `/deploy` skill
 
 - Push auf `main` → Vercel Auto-Deploy getriggert

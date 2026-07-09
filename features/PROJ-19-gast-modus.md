@@ -285,7 +285,7 @@ Folgende ACs wurden manuell verifiziert und konnten nicht vollständig automatis
 ## Deployment
 
 **Deployed:** 2026-07-07
-**Production URL:** https://satt.mehralsabnehmen.de
+**Production URL:** https://app.mehralsabnehmen.de
 **Git Tag:** v1.19.0-PROJ-19
 
 ### Deployment-Schritte

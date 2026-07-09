@@ -7,7 +7,7 @@
 
 ## Deployment
 
-- **Production:** satt.mehralsabnehmen.de (Vercel, auto-deploy via GitHub push)
+- **Production:** app.mehralsabnehmen.de (Vercel, auto-deploy via GitHub push)
 - **Neue Routen:** `/admin`, `/admin/codes`, `POST /api/admin/codes`, `DELETE /api/admin/codes/[code]`
 - **Keine DB-Migrationen:** Kein neues Schema — bestehende `invite_codes`-Tabelle aus PROJ-12
 
