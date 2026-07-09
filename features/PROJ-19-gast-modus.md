@@ -1,6 +1,6 @@
 # PROJ-19: Gast-Modus (Anonyme Nutzung ohne Account)
 
-## Status: Approved
+## Status: Deployed
 **Created:** 2026-07-07
 **Last Updated:** 2026-07-09
 
@@ -438,3 +438,11 @@ CREATE POLICY "Anon users can read ingredients of guest-visible recipes"
 - Admin-Routes (`/admin`) bleiben vollständig geschützt ✅
 - `/analyse` setzt anonymen Sign-in voraus (Supabase `authenticated`-Rolle) ✅
 - Kein API-Key oder Secret im Browser-Netzwerkverkehr sichtbar ✅
+
+---
+
+## Deployment
+
+**Deployed:** 2026-07-09
+**Production URL:** https://app.mehralsabnehmen.de
+**Git Tag:** v1.19.0-PROJ-19
