@@ -16,7 +16,7 @@ function mockSupabase(profile: Record<string, unknown> | null) {
 describe('getAccessStatus', () => {
   it('denies access defensively when the profile cannot be read', async () => {
     const result = await getAccessStatus(mockSupabase(null), 'user-1')
-    expect(result).toEqual({ hasAccess: false, trialDaysRemaining: null, subscriptionStatus: null, hasInviteAccess: false })
+    expect(result).toEqual({ hasAccess: false, trialDaysRemaining: null, subscriptionStatus: null, hasInviteAccess: false, photoScansRemaining: 0 })
   })
 
   it('grants access with an active subscription, no trial countdown shown', async () => {

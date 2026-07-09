@@ -180,7 +180,7 @@ describe('POST /api/analyse/confirm', () => {
     expect(body.result.vorher.gesamtbewertung).toBe('maessig_saettigend')
   })
 
-  it('deletes fullsize photo after analysis', async () => {
+  it('keeps fullsize photo after analysis (PROJ-21: photo retained for display)', async () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
     mockMealSingle.mockResolvedValue({ data: { id: 'meal-1', user_id: 'user-1', free_text: 'Test', photo_fullsize_path: 'user-1/abc.jpg' }, error: null })
     mockAnthropicCreate.mockResolvedValue({
@@ -189,11 +189,10 @@ describe('POST /api/analyse/confirm', () => {
     mockInsertSingle.mockResolvedValue({ data: { id: 'analysis-123' }, error: null })
     mockMealsUpdate.mockResolvedValue({ error: null })
     mockConvUpdate.mockResolvedValue({ error: null })
-    mockStorageRemove.mockResolvedValue({ error: null })
 
     const { POST } = await import('./route')
     await POST(makeRequest({ mealId: '550e8400-e29b-41d4-a716-446655440000', ingredients: validIngredients }))
-    expect(mockStorageRemove).toHaveBeenCalledWith(['user-1/abc.jpg'])
+    expect(mockStorageRemove).not.toHaveBeenCalled()
   })
 
   // PROJ-16: Beilagen-Kontext tests
