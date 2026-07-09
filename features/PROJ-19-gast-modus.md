@@ -500,3 +500,9 @@ Drei UI-Verbesserungen für Gäste und alle Nutzer:
 | Gesamtanzahl aller Rezepte (nicht nur gesperrte) | "Alle 14 Rezepte" ist eindrucksvoller als "8 weitere" — zeigt Umfang der Bibliothek | 2026-07-09 |
 | Art-of-Eating-Box für alle Nutzer (nicht nur Gäste) | AoE ist universell relevant; nicht hinter eine Gast-Bedingung stecken vermeidet Verwirrung | 2026-07-09 |
 | Upsell-Hint auf Startseite nur wenn Rezepte sichtbar | Kein "Anmelden um Rezepte zu sehen" wenn kein einziges Rezept gezeigt wird — wäre inkonsistent | 2026-07-09 |
+
+### Implementierungsnotizen v3 (2026-07-09)
+
+**Geänderte Dateien:**
+- `src/app/page.tsx` — `formatRecipeCount(n)` Helper; `countQuery` parallel in `Promise.all`; Art-of-Eating-Teaser-Box nach Sättigungsmatrix-Box; Upsell-Hint für Gäste nach "Alle Rezepte ansehen"-Button (konditionell: `isGuest && totalRecipeCount > 0`)
+- `src/app/rezepte/page.tsx` — `formatRecipeCount(n)` Helper; `countQuery` parallel in `Promise.all`; Upsell-Banner mit grüner Box für Gäste über `RezeptBibliothek` (konditionell: `isGuest && totalRecipeCount > 0`)

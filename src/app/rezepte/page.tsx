@@ -5,6 +5,10 @@ import { createClient } from '@/lib/supabase/server'
 import { getAccessStatus } from '@/lib/paywall'
 import RezeptBibliothek, { type RezeptListItem } from '@/components/rezept-bibliothek'
 
+function formatRecipeCount(n: number): string {
+  return n === 1 ? '1 Rezept' : `${n} Rezepte`
+}
+
 export default async function RezeptePage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -25,7 +29,9 @@ export default async function RezeptePage() {
     .select('id, title, image_path, total_time_minutes, cuisine_tags, is_guest_visible')
     .order('created_at', { ascending: false })
 
-  const [access, { data: recipes }] = await Promise.all([accessQuery, recipesQuery])
+  const countQuery = supabase.from('recipes').select('*', { count: 'exact', head: true })
+
+  const [access, { data: recipes }, { count: totalRecipeCount }] = await Promise.all([accessQuery, recipesQuery, countQuery])
 
   let trialDaysRemaining: number | null = null
   if (access) {
@@ -64,6 +70,25 @@ export default async function RezeptePage() {
         <p className="text-center text-xs text-muted-foreground px-4 pt-3">
           Noch {trialDaysRemaining} {trialDaysRemaining === 1 ? 'Tag' : 'Tage'} bis Freitext-Analyse & Rezepte eingeschränkt werden
         </p>
+      )}
+
+      {isGuest && totalRecipeCount != null && totalRecipeCount > 0 && (
+        <div className="max-w-sm mx-auto px-4 pt-4">
+          <div className="rounded-xl border border-[#4A7C59]/30 bg-[#E8F0EB] px-4 py-3 space-y-1">
+            <p className="text-sm font-semibold text-[#2D5016]">
+              Gastrezepte
+            </p>
+            <p className="text-xs text-[#4A7C59] leading-relaxed">
+              Hier siehst du alle Gastrezepte. Anmelden um alle {formatRecipeCount(totalRecipeCount)} zu sehen.
+            </p>
+            <Link
+              href="/registrieren"
+              className="inline-block text-xs font-medium text-[#4A7C59] hover:underline mt-0.5"
+            >
+              Jetzt kostenlos registrieren →
+            </Link>
+          </div>
+        </div>
       )}
 
       <RezeptBibliothek rezepte={rezepte} isGuest={isGuest} />

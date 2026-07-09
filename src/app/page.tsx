@@ -5,6 +5,10 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Plus, ChevronRight, Clock, ChefHat, UtensilsCrossed, UserRound } from 'lucide-react'
 
+function formatRecipeCount(n: number): string {
+  return n === 1 ? '1 Rezept' : `${n} Rezepte`
+}
+
 const BEWERTUNG_LABEL: Record<string, string> = {
   sehr_saettigend: 'Sehr sättigend',
   maessig_saettigend: 'Mäßig sättigend',
@@ -62,8 +66,9 @@ export default async function StartPage() {
     .order('created_at', { ascending: false })
     .limit(4)
   const recipesQuery = isGuest ? recipesBase.eq('is_guest_visible', true) : recipesBase
+  const countQuery = supabase.from('recipes').select('*', { count: 'exact', head: true })
 
-  const [{ data: recentMeals }, { data: recentRecipes }] = await Promise.all([mealsQuery, recipesQuery])
+  const [{ data: recentMeals }, { data: recentRecipes }, { count: totalRecipeCount }] = await Promise.all([mealsQuery, recipesQuery, countQuery])
 
   let meals: { id: string; freeText: string | null; thumbnailUrl: string | null; createdAt: string; overall: string | null }[] = []
   if (user && recentMeals) {
@@ -196,6 +201,23 @@ export default async function StartPage() {
           </Link>
         </section>
 
+        {/* ── Art of Eating Teaser ──────────────────────────── */}
+        <section>
+          <Link href="/wie-esse-ich-richtig">
+            <div className="rounded-2xl border border-[#4A7C59]/30 bg-[#E8F0EB] p-4 flex items-center gap-4 hover:border-[#4A7C59] transition-colors cursor-pointer">
+              <span className="text-3xl flex-shrink-0">🧘</span>
+              <div className="space-y-0.5 min-w-0">
+                <p className="text-sm font-semibold text-[#2D5016] leading-snug">
+                  Wie du isst entscheidet, wie satt du wirst
+                </p>
+                <p className="text-xs text-[#4A7C59] font-medium">
+                  Zur Art of Eating →
+                </p>
+              </div>
+            </div>
+          </Link>
+        </section>
+
         {/* ── Rezeptbibliothek Teaser ───────────────────────── */}
         {recipes.length > 0 && (
           <section className="space-y-5">
@@ -249,6 +271,15 @@ export default async function StartPage() {
                 Alle Rezepte ansehen
               </Button>
             </Link>
+
+            {isGuest && totalRecipeCount != null && totalRecipeCount > 0 && (
+              <p className="text-center text-xs text-muted-foreground">
+                Anmelden um alle {formatRecipeCount(totalRecipeCount)} zu sehen —{' '}
+                <Link href="/registrieren" className="text-[#4A7C59] hover:underline font-medium">
+                  Jetzt registrieren
+                </Link>
+              </p>
+            )}
           </section>
         )}
 
