@@ -1,8 +1,8 @@
 # PROJ-22: App-Performance & Perceived Speed
 
-## Status: Approved
+## Status: Deployed
 **Created:** 2026-07-07
-**Last Updated:** 2026-07-08
+**Last Updated:** 2026-07-09
 
 ## Dependencies
 - Requires: alle deployed Features (PROJ-1 bis PROJ-21) — reine Optimierung bestehender Seiten, keine neuen Features
@@ -135,4 +135,7 @@ Keine Critical, High oder Medium Bugs.
 ✅ **JA** — Alle Acceptance Criteria erfüllt, keine Bugs.
 
 ## Deployment
-_To be added by /deploy_
+
+**Deployed:** 2026-07-09
+**Production URL:** https://satt.mehralsabnehmen.de
+**Git Tag:** v1.22.0-PROJ-22
