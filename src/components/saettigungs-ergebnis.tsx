@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/collapsible'
 import RezeptVorschlaege from '@/components/rezept-vorschlaege'
 import BeilagenErgebnis from '@/components/beilagen-ergebnis'
+import RatingRing from '@/components/rating-ring'
 
 type BausteinRating = 'gut' | 'mittel' | 'schwach' | 'nicht_bewertet'
 
@@ -212,7 +213,10 @@ export default function SaettigungsErgebnis({ result, assumptions, onReset, anal
                 key={pillar}
                 className={`flex flex-col items-center gap-1 p-2.5 rounded-xl border text-center ${cfg.bg} ${cfg.border}`}
               >
-                <span className="text-xl">{meta.emoji}</span>
+                <div className={`relative w-11 h-11 flex items-center justify-center ${cfg.text}`}>
+                  <RatingRing rating={rating} size={44} />
+                  <span className="text-xl">{meta.emoji}</span>
+                </div>
                 <span className="text-xs font-medium text-foreground leading-tight">{meta.label}</span>
                 <span className={`text-xs font-semibold ${cfg.text}`}>{cfg.label}</span>
               </div>

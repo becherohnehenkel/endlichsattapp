@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { ChevronDown, ChevronUp } from 'lucide-react'
+import RatingRing from '@/components/rating-ring'
 import type { RezeptSaettigungsMatrix, BausteinRating } from '@/lib/saettigungs-matrix-rezept'
 
 const PILLAR_ORDER = ['geschmack', 'biss', 'ballaststoffe', 'proteine', 'volumen', 'art_of_eating'] as const
@@ -43,7 +44,10 @@ export default function RezeptSaettigungsMatrix({ matrix }: { matrix: RezeptSaet
               className={`w-full flex items-center gap-2 px-3 py-2.5 text-left ${cfg.bg} transition-colors`}
               onClick={() => setOpen(isOpen ? null : pillar)}
             >
-              <span className="text-base leading-none">{meta.emoji}</span>
+              <div className={`relative w-8 h-8 flex-shrink-0 flex items-center justify-center ${cfg.text}`}>
+                <RatingRing rating={bewertung.rating} size={32} />
+                <span className="text-sm leading-none">{meta.emoji}</span>
+              </div>
               <span className="text-sm font-medium text-foreground flex-1">{meta.label}</span>
               <span className={`text-xs font-semibold ${cfg.text}`}>{cfg.label}</span>
               {isOpen
