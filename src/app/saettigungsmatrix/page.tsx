@@ -89,9 +89,9 @@ const PILLARS: Pillar[] = [
 
 function ratingConfig(rating: Rating) {
   switch (rating) {
-    case 'gut':     return { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Gut' }
-    case 'mittel':  return { bg: 'bg-amber-100',   text: 'text-amber-700',   label: 'Mittel' }
-    case 'schwach': return { bg: 'bg-red-100',     text: 'text-red-700',     label: 'Schwach' }
+    case 'gut':     return { bg: 'bg-emerald-100', text: 'text-emerald-600', label: 'Gut' }
+    case 'mittel':  return { bg: 'bg-amber-100',   text: 'text-[#EAB308]',   label: 'Mittel' }
+    case 'schwach': return { bg: 'bg-red-100',     text: 'text-red-600',     label: 'Schwach' }
     default:        return { bg: 'bg-muted',        text: 'text-muted-foreground', label: 'Nicht bewertet' }
   }
 }
@@ -173,7 +173,7 @@ export default function SaettigungsmatrixPage() {
           <div className="rounded-2xl border border-[#2E9E6B]/30 bg-[#DFF0F2] p-4 space-y-1 hover:border-[#2E9E6B] transition-colors cursor-pointer">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-[#0E7C86]">Das Vollrezept ansehen</p>
-              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-600">
                 Sehr sättigend
               </span>
             </div>

@@ -19,9 +19,9 @@ const PILLAR_META: Record<string, { label: string; emoji: string }> = {
 
 function ratingConfig(rating: BausteinRating) {
   switch (rating) {
-    case 'gut':    return { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', label: 'Gut' }
-    case 'mittel': return { bg: 'bg-amber-50',   border: 'border-amber-200',   text: 'text-amber-700',   label: 'Mittel' }
-    case 'schwach':return { bg: 'bg-red-50',     border: 'border-red-200',     text: 'text-red-700',     label: 'Schwach' }
+    case 'gut':    return { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-600', label: 'Gut' }
+    case 'mittel': return { bg: 'bg-amber-50',   border: 'border-amber-200',   text: 'text-[#EAB308]',   label: 'Mittel' }
+    case 'schwach':return { bg: 'bg-red-50',     border: 'border-red-200',     text: 'text-red-600',     label: 'Schwach' }
     default:       return { bg: 'bg-muted',      border: 'border-border',      text: 'text-muted-foreground', label: '–' }
   }
 }

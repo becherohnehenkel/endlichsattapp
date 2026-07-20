@@ -45,16 +45,16 @@ const PILLAR_LABELS: Record<string, string> = {
 const PILLAR_ORDER = ['geschmack', 'biss', 'ballaststoffe', 'proteine', 'volumen', 'art_of_eating'] as const
 
 const SCORE_DOT: Record<PillarScore, string> = {
-  gut: 'bg-emerald-500',
-  mittel: 'bg-amber-400',
-  schwach: 'bg-red-400',
+  gut: 'bg-emerald-600',
+  mittel: 'bg-[#EAB308]',
+  schwach: 'bg-red-600',
   nicht_bewertet: 'bg-gray-200',
 }
 
 const BEWERTUNG_BADGE: Record<GesamtBewertung, { label: string; className: string }> = {
-  sehr_saettigend: { label: 'Sehr sättigend', className: 'bg-emerald-100 text-emerald-800 border-0 hover:bg-emerald-100' },
-  maessig_saettigend: { label: 'Mäßig sättigend', className: 'bg-amber-100 text-amber-700 border-0 hover:bg-amber-100' },
-  wenig_saettigend: { label: 'Wenig sättigend', className: 'bg-red-100 text-red-700 border-0 hover:bg-red-100' },
+  sehr_saettigend: { label: 'Sehr sättigend', className: 'bg-emerald-100 text-emerald-600 border-0 hover:bg-emerald-100' },
+  maessig_saettigend: { label: 'Mäßig sättigend', className: 'bg-amber-100 text-[#EAB308] border-0 hover:bg-amber-100' },
+  wenig_saettigend: { label: 'Wenig sättigend', className: 'bg-red-100 text-red-600 border-0 hover:bg-red-100' },
 }
 
 function formatDateRange(start: string, end: string): string {

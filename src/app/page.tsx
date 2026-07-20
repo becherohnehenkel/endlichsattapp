@@ -16,8 +16,8 @@ const BEWERTUNG_LABEL: Record<string, string> = {
 }
 const BEWERTUNG_COLOR: Record<string, string> = {
   sehr_saettigend: 'bg-[#DFF0F2] text-[#2E9E6B] border-[#2E9E6B]/20',
-  maessig_saettigend: 'bg-amber-50 text-amber-700 border-amber-200',
-  wenig_saettigend: 'bg-red-50 text-red-700 border-red-200',
+  maessig_saettigend: 'bg-amber-50 text-[#EAB308] border-amber-200',
+  wenig_saettigend: 'bg-red-50 text-red-600 border-red-200',
 }
 
 function formatDate(iso: string): string {

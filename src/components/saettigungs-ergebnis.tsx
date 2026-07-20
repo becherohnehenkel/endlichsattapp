@@ -94,17 +94,17 @@ const PILLAR_META: Record<keyof BausteineBewertung, { label: string; emoji: stri
 
 function ratingConfig(rating: BausteinRating) {
   switch (rating) {
-    case 'gut':    return { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', label: 'Gut' }
-    case 'mittel': return { bg: 'bg-amber-50',   border: 'border-amber-200',   text: 'text-amber-700',   label: 'Mittel' }
-    case 'schwach':return { bg: 'bg-red-50',     border: 'border-red-200',     text: 'text-red-700',     label: 'Schwach' }
+    case 'gut':    return { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-600', label: 'Gut' }
+    case 'mittel': return { bg: 'bg-amber-50',   border: 'border-amber-200',   text: 'text-[#EAB308]',   label: 'Mittel' }
+    case 'schwach':return { bg: 'bg-red-50',     border: 'border-red-200',     text: 'text-red-600',     label: 'Schwach' }
     default:       return { bg: 'bg-muted',      border: 'border-border',      text: 'text-muted-foreground', label: '–' }
   }
 }
 
 function gesamtConfig(g: string) {
-  if (g === 'sehr_saettigend')    return { label: 'Sehr sättigend',  color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200' }
-  if (g === 'maessig_saettigend') return { label: 'Mäßig sättigend', color: 'text-amber-700',   bg: 'bg-amber-50',   border: 'border-amber-200'   }
-  return                                 { label: 'Wenig sättigend', color: 'text-red-700',     bg: 'bg-red-50',     border: 'border-red-200'     }
+  if (g === 'sehr_saettigend')    return { label: 'Sehr sättigend',  color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200' }
+  if (g === 'maessig_saettigend') return { label: 'Mäßig sättigend', color: 'text-[#EAB308]',   bg: 'bg-amber-50',   border: 'border-amber-200'   }
+  return                                 { label: 'Wenig sättigend', color: 'text-red-600',     bg: 'bg-red-50',     border: 'border-red-200'     }
 }
 
 function PillarChip({
@@ -231,7 +231,7 @@ export default function SaettigungsErgebnis({ result, assumptions, onReset, anal
           <Separator />
           <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-center space-y-1">
             <p className="text-2xl">🎉</p>
-            <p className="text-sm font-semibold text-emerald-700">Das machst du bereits richtig gut!</p>
+            <p className="text-sm font-semibold text-emerald-600">Das machst du bereits richtig gut!</p>
             <p className="text-sm text-emerald-600/80">Diese Mahlzeit ist schon sehr gut aufgestellt — kein konstruierter Verbesserungsvorschlag nötig.</p>
           </div>
         </>
