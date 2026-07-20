@@ -36,7 +36,7 @@ export default function ImpressumPage() {
             E-Mail:{' '}
             <a
               href="mailto:lukas@onlineernaehrungsberater.de"
-              className="text-[#4A7C59] hover:underline"
+              className="text-[#2E9E6B] hover:underline"
             >
               lukas@onlineernaehrungsberater.de
             </a>
@@ -65,7 +65,7 @@ export default function ImpressumPage() {
               href="https://ec.europa.eu/consumers/odr"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[#4A7C59] hover:underline"
+              className="text-[#2E9E6B] hover:underline"
             >
               https://ec.europa.eu/consumers/odr
             </a>
@@ -76,7 +76,7 @@ export default function ImpressumPage() {
         </section>
 
         <div className="pt-4 border-t border-border">
-          <Link href="/datenschutz" className="text-[#4A7C59] hover:underline text-xs">
+          <Link href="/datenschutz" className="text-[#2E9E6B] hover:underline text-xs">
             → Datenschutzerklärung
           </Link>
         </div>

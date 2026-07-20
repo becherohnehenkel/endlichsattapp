@@ -23,9 +23,9 @@ export default async function AdminPage() {
       <main className="max-w-sm mx-auto px-4 py-8 space-y-3">
         <Link
           href="/admin/rezepte"
-          className="flex items-center gap-3 p-4 rounded-xl border border-border bg-card hover:bg-[#E8F0EB] transition-colors"
+          className="flex items-center gap-3 p-4 rounded-xl border border-border bg-card hover:bg-[#DFF0F2] transition-colors"
         >
-          <ChefHat className="h-5 w-5 text-[#4A7C59] flex-shrink-0" />
+          <ChefHat className="h-5 w-5 text-[#2E9E6B] flex-shrink-0" />
           <div>
             <p className="font-medium text-sm text-foreground">Rezepte verwalten</p>
             <p className="text-xs text-muted-foreground">Rezepte anlegen und bearbeiten</p>
@@ -34,9 +34,9 @@ export default async function AdminPage() {
 
         <Link
           href="/admin/codes"
-          className="flex items-center gap-3 p-4 rounded-xl border border-border bg-card hover:bg-[#E8F0EB] transition-colors"
+          className="flex items-center gap-3 p-4 rounded-xl border border-border bg-card hover:bg-[#DFF0F2] transition-colors"
         >
-          <Ticket className="h-5 w-5 text-[#4A7C59] flex-shrink-0" />
+          <Ticket className="h-5 w-5 text-[#2E9E6B] flex-shrink-0" />
           <div>
             <p className="font-medium text-sm text-foreground">Invite-Codes</p>
             <p className="text-xs text-muted-foreground">Codes generieren und Zugang verwalten</p>

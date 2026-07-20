@@ -86,28 +86,28 @@ export default function DatenschutzPage() {
               <p className="font-medium">Supabase Inc.</p>
               <p className="text-muted-foreground text-xs">970 Titus Ave Suite 151, Rochester NY 14623, USA</p>
               <p className="text-muted-foreground">Datenbank, Authentifizierung, Datei-Speicher. Deine Account-Daten, Analysen und Fotos werden bei Supabase gespeichert.</p>
-              <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" className="text-[#4A7C59] hover:underline text-xs">Datenschutz Supabase →</a>
+              <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" className="text-[#2E9E6B] hover:underline text-xs">Datenschutz Supabase →</a>
             </div>
 
             <div className="rounded-lg border border-border p-3 space-y-1">
               <p className="font-medium">Anthropic PBC</p>
               <p className="text-muted-foreground text-xs">548 Market St PMB 90375, San Francisco CA 94104, USA</p>
               <p className="text-muted-foreground">KI-gestützte Analyse deiner Mahlzeiten. Deine Mahlzeit-Beschreibungen und Fotos werden zur Verarbeitung an Anthropic übertragen. Anthropic nutzt diese Daten nicht zum Trainieren von Modellen (API-Nutzungsbedingungen).</p>
-              <a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener noreferrer" className="text-[#4A7C59] hover:underline text-xs">Datenschutz Anthropic →</a>
+              <a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener noreferrer" className="text-[#2E9E6B] hover:underline text-xs">Datenschutz Anthropic →</a>
             </div>
 
             <div className="rounded-lg border border-border p-3 space-y-1">
               <p className="font-medium">Stripe Inc.</p>
               <p className="text-muted-foreground text-xs">354 Oyster Point Blvd, South San Francisco CA 94080, USA</p>
               <p className="text-muted-foreground">Zahlungsabwicklung für kostenpflichtige Abonnements.</p>
-              <a href="https://stripe.com/de/privacy" target="_blank" rel="noopener noreferrer" className="text-[#4A7C59] hover:underline text-xs">Datenschutz Stripe →</a>
+              <a href="https://stripe.com/de/privacy" target="_blank" rel="noopener noreferrer" className="text-[#2E9E6B] hover:underline text-xs">Datenschutz Stripe →</a>
             </div>
 
             <div className="rounded-lg border border-border p-3 space-y-1">
               <p className="font-medium">Vercel Inc.</p>
               <p className="text-muted-foreground text-xs">440 N Barranca Ave #4133, Covina CA 91723, USA</p>
               <p className="text-muted-foreground">Hosting und Auslieferung der Web-App.</p>
-              <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-[#4A7C59] hover:underline text-xs">Datenschutz Vercel →</a>
+              <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-[#2E9E6B] hover:underline text-xs">Datenschutz Vercel →</a>
             </div>
           </div>
         </section>
@@ -148,7 +148,7 @@ export default function DatenschutzPage() {
           <h2 className="font-semibold">7. Beschwerderecht</h2>
           <p className="text-muted-foreground leading-relaxed">
             Du hast das Recht, dich bei einer Datenschutz-Aufsichtsbehörde zu beschweren. Die zuständige Behörde für Hamburg ist der Hamburgische Beauftragte für Datenschutz und Informationsfreiheit (HmbBfDI), Ludwig-Erhard-Str. 22, 20459 Hamburg,{' '}
-            <a href="https://www.datenschutz.hamburg.de" target="_blank" rel="noopener noreferrer" className="text-[#4A7C59] hover:underline">
+            <a href="https://www.datenschutz.hamburg.de" target="_blank" rel="noopener noreferrer" className="text-[#2E9E6B] hover:underline">
               www.datenschutz.hamburg.de
             </a>.
           </p>
@@ -162,7 +162,7 @@ export default function DatenschutzPage() {
         </section>
 
         <div className="pt-4 border-t border-border">
-          <Link href="/impressum" className="text-[#4A7C59] hover:underline text-xs">
+          <Link href="/impressum" className="text-[#2E9E6B] hover:underline text-xs">
             → Impressum
           </Link>
         </div>

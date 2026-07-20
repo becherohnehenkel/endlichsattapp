@@ -36,8 +36,8 @@ export default function GastKontoView({ reason }: GastKontoViewProps) {
         </div>
 
         {reason === 'historie' && (
-          <div className="rounded-xl bg-[#E8F0EB] px-4 py-3 text-center">
-            <p className="text-sm text-[#4A7C59] font-medium">
+          <div className="rounded-xl bg-[#DFF0F2] px-4 py-3 text-center">
+            <p className="text-sm text-[#2E9E6B] font-medium">
               Erstelle einen kostenlosen Account um deine Analyse-Historie zu sehen.
             </p>
           </div>
@@ -50,8 +50,8 @@ export default function GastKontoView({ reason }: GastKontoViewProps) {
               <div className="space-y-4">
                 {VORTEILE.map(({ icon: Icon, title, sub }) => (
                   <div key={title} className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full bg-[#E8F0EB] flex items-center justify-center shrink-0 mt-0.5">
-                      <Icon className="h-4 w-4 text-[#4A7C59]" />
+                    <div className="w-8 h-8 rounded-full bg-[#DFF0F2] flex items-center justify-center shrink-0 mt-0.5">
+                      <Icon className="h-4 w-4 text-[#2E9E6B]" />
                     </div>
                     <div>
                       <p className="text-sm font-medium">{title}</p>
@@ -68,7 +68,7 @@ export default function GastKontoView({ reason }: GastKontoViewProps) {
               </Button>
               <p className="text-center text-sm text-muted-foreground">
                 Bereits einen Account?{' '}
-                <Link href="/login" className="text-[#4A7C59] hover:underline font-medium">
+                <Link href="/login" className="text-[#2E9E6B] hover:underline font-medium">
                   Einloggen
                 </Link>
               </p>

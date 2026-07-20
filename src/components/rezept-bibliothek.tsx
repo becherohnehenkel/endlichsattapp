@@ -57,8 +57,8 @@ export default function RezeptBibliothek({ rezepte, isGuest = false }: { rezepte
             onClick={() => setActiveTag(null)}
             className={`text-xs px-3 py-1 rounded-full border transition-colors ${
               !activeTag
-                ? 'bg-[#4A7C59] text-white border-[#4A7C59]'
-                : 'bg-background text-muted-foreground border-border hover:border-[#4A7C59]'
+                ? 'bg-[#2E9E6B] text-white border-[#2E9E6B]'
+                : 'bg-background text-muted-foreground border-border hover:border-[#2E9E6B]'
             }`}
           >
             Alle
@@ -69,8 +69,8 @@ export default function RezeptBibliothek({ rezepte, isGuest = false }: { rezepte
               onClick={() => setActiveTag(activeTag === tag ? null : tag)}
               className={`text-xs px-3 py-1 rounded-full border capitalize transition-colors ${
                 activeTag === tag
-                  ? 'bg-[#4A7C59] text-white border-[#4A7C59]'
-                  : 'bg-background text-muted-foreground border-border hover:border-[#4A7C59]'
+                  ? 'bg-[#2E9E6B] text-white border-[#2E9E6B]'
+                  : 'bg-background text-muted-foreground border-border hover:border-[#2E9E6B]'
               }`}
             >
               {tag}
@@ -101,7 +101,7 @@ export default function RezeptBibliothek({ rezepte, isGuest = false }: { rezepte
                 className={`group rounded-xl border bg-card overflow-hidden transition-colors ${
                   locked
                     ? 'border-border opacity-60'
-                    : 'border-border hover:border-[#4A7C59]'
+                    : 'border-border hover:border-[#2E9E6B]'
                 }`}
               >
                 {/* Image */}

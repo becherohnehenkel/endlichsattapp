@@ -153,7 +153,7 @@ export default function BildCropper({ imageSrc, onConfirm, onCancel }: BildCropp
         </Button>
         <Button
           type="button"
-          className="flex-1 bg-[#4A7C59] hover:bg-[#3d6849] text-white"
+          className="flex-1"
           onClick={handleConfirm}
           disabled={!crop || confirming}
         >

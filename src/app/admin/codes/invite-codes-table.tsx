@@ -44,7 +44,7 @@ function CopyButton({ code }: { code: string }) {
       onClick={handleCopy}
       title="Code kopieren"
     >
-      {copied ? <Check className="h-3.5 w-3.5 text-[#4A7C59]" /> : <Copy className="h-3.5 w-3.5" />}
+      {copied ? <Check className="h-3.5 w-3.5 text-[#2E9E6B]" /> : <Copy className="h-3.5 w-3.5" />}
     </Button>
   )
 }
@@ -141,7 +141,6 @@ export default function InviteCodesTable({ codes: initialCodes }: InviteCodesTab
           size="sm"
           onClick={handleGenerate}
           disabled={generating}
-          className="bg-[#4A7C59] hover:bg-[#3d6849] text-white"
         >
           <Plus className="h-4 w-4 mr-1" />
           {generating ? 'Wird generiert…' : 'Neuen Code generieren'}
@@ -183,7 +182,7 @@ export default function InviteCodesTable({ codes: initialCodes }: InviteCodesTab
                           Eingelöst
                         </Badge>
                       ) : (
-                        <Badge variant="outline" className="text-xs text-[#4A7C59] border-[#4A7C59]/30">
+                        <Badge variant="outline" className="text-xs text-[#2E9E6B] border-[#2E9E6B]/30">
                           Verfügbar
                         </Badge>
                       )}

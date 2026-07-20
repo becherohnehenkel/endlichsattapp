@@ -98,7 +98,7 @@ export default function WochenRecapKarte({ woche, defaultOpen }: Props) {
               )}
             </p>
             {woche.anzahlGesamt < 3 && (
-              <p className="text-xs text-[#4A7C59] font-medium">
+              <p className="text-xs text-[#2E9E6B] font-medium">
                 Noch {fehlendeAnalysen} {fehlendeAnalysen === 1 ? 'Mahlzeit' : 'Mahlzeiten'} bis zu deinem Wochenrückblick
               </p>
             )}
@@ -110,7 +110,7 @@ export default function WochenRecapKarte({ woche, defaultOpen }: Props) {
       </CollapsibleTrigger>
 
       <CollapsibleContent>
-        <div className="bg-[#FAF7F2] border-t border-border px-4 py-4">
+        <div className="bg-[#F2F9FA] border-t border-border px-4 py-4">
 
           {/* < 3 Analysen: Fortschritt */}
           {woche.anzahlGesamt < 3 && (
@@ -119,7 +119,7 @@ export default function WochenRecapKarte({ woche, defaultOpen }: Props) {
                 {[0, 1, 2].map((i) => (
                   <div
                     key={i}
-                    className={`h-2.5 w-2.5 rounded-full ${i < woche.anzahlGesamt ? 'bg-[#4A7C59]' : 'bg-gray-200'}`}
+                    className={`h-2.5 w-2.5 rounded-full ${i < woche.anzahlGesamt ? 'bg-[#2E9E6B]' : 'bg-gray-200'}`}
                   />
                 ))}
               </div>
@@ -213,7 +213,7 @@ export default function WochenRecapKarte({ woche, defaultOpen }: Props) {
                     {woche.topZutaten.map((zutat) => (
                       <span
                         key={zutat}
-                        className="text-xs bg-[#E8F0EB] text-[#4A7C59] px-2.5 py-1 rounded-full font-medium"
+                        className="text-xs bg-[#DFF0F2] text-[#2E9E6B] px-2.5 py-1 rounded-full font-medium"
                       >
                         {zutat}
                       </span>

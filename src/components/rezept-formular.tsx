@@ -619,7 +619,7 @@ export default function RezeptFormular({
               htmlFor={`typ-${opt.value}`}
               className={`flex items-start gap-3 rounded-lg border p-3 cursor-pointer transition-colors ${
                 recipeTyp === opt.value
-                  ? 'border-[#4A7C59] bg-[#E8F0EB]'
+                  ? 'border-[#2E9E6B] bg-[#DFF0F2]'
                   : 'border-border hover:bg-muted/40'
               }`}
             >
@@ -670,7 +670,7 @@ export default function RezeptFormular({
         </Button>
         <Button
           type="submit"
-          className="flex-1 bg-[#4A7C59] hover:bg-[#3d6849] text-white"
+          className="flex-1"
           disabled={submitting || imageUploading || cropMode}
         >
           {submitting ? 'Wird gespeichert…' : mode === 'edit' ? 'Speichern' : 'Rezept anlegen'}

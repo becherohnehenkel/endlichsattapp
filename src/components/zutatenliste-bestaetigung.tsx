@@ -164,7 +164,7 @@ export default function ZutatenlisteBestaetigung({
                 placeholder="Menge (z.B. 50g)"
                 className="h-8 text-sm"
               />
-              <Button size="sm" onClick={addItem} disabled={!newName.trim()} className="shrink-0 bg-[#4A7C59] hover:bg-[#3d6849] text-white">
+              <Button size="sm" onClick={addItem} disabled={!newName.trim()} className="shrink-0">
                 <Check className="h-3.5 w-3.5" />
               </Button>
             </div>
@@ -176,7 +176,7 @@ export default function ZutatenlisteBestaetigung({
       {!adding && (
         <button
           onClick={() => { setEditingIndex(null); setAdding(true) }}
-          className="w-full flex items-center justify-center gap-2 text-sm text-[#4A7C59] hover:text-[#3d6849] border border-dashed border-[#4A7C59]/40 hover:border-[#4A7C59] rounded-xl py-2.5 transition-colors"
+          className="w-full flex items-center justify-center gap-2 text-sm text-[#2E9E6B] hover:text-[#268a5c] border border-dashed border-[#2E9E6B]/40 hover:border-[#2E9E6B] rounded-xl py-2.5 transition-colors"
         >
           <Plus className="h-4 w-4" />
           Zutat hinzufügen
@@ -194,7 +194,7 @@ export default function ZutatenlisteBestaetigung({
 
       <Button
         size="lg"
-        className="w-full bg-[#4A7C59] hover:bg-[#3d6849] text-white"
+        className="w-full"
         disabled={busy || items.length === 0}
         onClick={() => onConfirm(items)}
       >

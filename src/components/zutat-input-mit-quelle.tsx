@@ -240,7 +240,7 @@ export default function ZutatInputMitQuelle({
           {!offOpen && !offLoading && !offError && (
             <button
               type="button"
-              className="w-full text-left px-3 py-2.5 text-xs text-[#4A7C59] font-medium hover:bg-muted/40 transition-colors"
+              className="w-full text-left px-3 py-2.5 text-xs text-[#2E9E6B] font-medium hover:bg-muted/40 transition-colors"
               onMouseDown={(e) => { e.preventDefault(); handleOffSearch() }}
             >
               Nicht im BLS? Open Food Facts durchsuchen →

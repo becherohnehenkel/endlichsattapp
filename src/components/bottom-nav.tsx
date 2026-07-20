@@ -27,7 +27,7 @@ export function BottomNav({ isAdmin }: BottomNavProps) {
   return (
     <nav
       data-testid="bottom-nav"
-      className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white border-t border-[#E5DDD0]"
+      className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white border-t border-[#DCEEF0]"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       <div className="flex items-center justify-around h-16">
@@ -40,7 +40,7 @@ export function BottomNav({ isAdmin }: BottomNavProps) {
               className={cn(
                 'flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg min-w-[48px]',
                 'transition-colors',
-                isActive ? 'text-[#4A7C59]' : 'text-gray-400 hover:text-gray-600'
+                isActive ? 'text-[#2E9E6B]' : 'text-gray-400 hover:text-gray-600'
               )}
             >
               <Icon size={22} strokeWidth={isActive ? 2.2 : 1.8} />

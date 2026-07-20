@@ -95,11 +95,11 @@ export default function ArtOfEatingGuide() {
       <div className="space-y-1.5">
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>{completed.size} von {STEPS.length} abgeschlossen</span>
-          {allDone && <span className="text-[#4A7C59] font-semibold">Alles durch ✓</span>}
+          {allDone && <span className="text-[#2E9E6B] font-semibold">Alles durch ✓</span>}
         </div>
         <div className="h-1.5 bg-muted rounded-full overflow-hidden">
           <div
-            className="h-full bg-[#4A7C59] rounded-full transition-all duration-500 ease-out"
+            className="h-full bg-[#2E9E6B] rounded-full transition-all duration-500 ease-out"
             style={{ width: `${(completed.size / STEPS.length) * 100}%` }}
           />
         </div>
@@ -113,21 +113,21 @@ export default function ArtOfEatingGuide() {
             <div
               key={step.number}
               className={`rounded-2xl border p-4 space-y-3 transition-colors duration-300 ${
-                done ? 'border-[#4A7C59]/30 bg-[#E8F0EB]' : 'border-border bg-card'
+                done ? 'border-[#2E9E6B]/30 bg-[#DFF0F2]' : 'border-border bg-card'
               }`}
             >
               <div className="flex items-start gap-3">
                 {/* Step number / checkmark */}
                 <div
                   className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors duration-300 ${
-                    done ? 'bg-[#4A7C59] text-white' : 'bg-muted text-muted-foreground'
+                    done ? 'bg-[#2E9E6B] text-white' : 'bg-muted text-muted-foreground'
                   }`}
                 >
                   {done ? <Check className="h-3.5 w-3.5" /> : step.number}
                 </div>
 
                 <div className="flex-1 space-y-2.5 min-w-0">
-                  <p className={`font-semibold leading-tight transition-colors duration-300 ${done ? 'text-[#4A7C59]' : 'text-foreground'}`}>
+                  <p className={`font-semibold leading-tight transition-colors duration-300 ${done ? 'text-[#2E9E6B]' : 'text-foreground'}`}>
                     {step.title}
                   </p>
                   <p className="text-sm text-foreground/80 leading-relaxed">{step.body}</p>
@@ -147,8 +147,8 @@ export default function ArtOfEatingGuide() {
                 onClick={() => toggle(step.number)}
                 className={`w-full py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                   done
-                    ? 'bg-[#4A7C59] text-white'
-                    : 'border border-[#4A7C59] text-[#4A7C59] hover:bg-[#4A7C59]/5 active:bg-[#4A7C59]/10'
+                    ? 'bg-[#2E9E6B] text-white'
+                    : 'border border-[#2E9E6B] text-[#2E9E6B] hover:bg-[#2E9E6B]/5 active:bg-[#2E9E6B]/10'
                 }`}
               >
                 {done ? '✓ Verstanden' : 'Verstanden'}
@@ -160,10 +160,10 @@ export default function ArtOfEatingGuide() {
 
       {/* Celebration */}
       {allDone && (
-        <div className="rounded-2xl border border-[#4A7C59]/30 bg-[#E8F0EB] p-5 text-center space-y-2">
+        <div className="rounded-2xl border border-[#2E9E6B]/30 bg-[#DFF0F2] p-5 text-center space-y-2">
           <p className="text-3xl">🧘</p>
-          <p className="font-semibold text-[#4A7C59]">Du weißt jetzt, wie es geht.</p>
-          <p className="text-sm text-[#4A7C59]/80 leading-relaxed">
+          <p className="font-semibold text-[#2E9E6B]">Du weißt jetzt, wie es geht.</p>
+          <p className="text-sm text-[#2E9E6B]/80 leading-relaxed">
             Jetzt ist Übung gefragt — bei jeder Mahlzeit ein kleiner Schritt mehr.
           </p>
         </div>

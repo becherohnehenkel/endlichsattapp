@@ -132,7 +132,7 @@ export default function RegistrierenForm({ isAnonymousUpgrade = false }: Registr
 
               <p className="text-xs text-muted-foreground text-center">
                 Mit der Registrierung akzeptierst du unsere{' '}
-                <Link href="/datenschutz" className="text-[#4A7C59] hover:underline">Datenschutzerklärung</Link>.
+                <Link href="/datenschutz" className="text-[#2E9E6B] hover:underline">Datenschutzerklärung</Link>.
               </p>
 
               <Button type="submit" size="lg" className="w-full px-4" disabled={loading}>

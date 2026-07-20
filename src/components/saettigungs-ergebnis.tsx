@@ -301,7 +301,7 @@ export default function SaettigungsErgebnis({ result, assumptions, onReset, anal
           <p className="text-sm text-foreground">{result.art_of_eating_tipp}</p>
           <Link
             href="/wie-esse-ich-richtig"
-            className="inline-block text-xs font-medium text-[#4A7C59] hover:underline"
+            className="inline-block text-xs font-medium text-[#2E9E6B] hover:underline"
           >
             Wie esse ich richtig? →
           </Link>

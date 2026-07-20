@@ -20,7 +20,7 @@ export default async function UpgradePage({
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-10 border-b border-border bg-card/80 backdrop-blur-sm px-4 py-3 flex items-center justify-between">
-        <Link href="/" className="font-semibold text-foreground tracking-tight hover:text-[#4A7C59] transition-colors">
+        <Link href="/" className="font-semibold text-foreground tracking-tight hover:text-[#2E9E6B] transition-colors">
           endlichsatt
         </Link>
         <Link href="/konto" className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-md hover:bg-muted">

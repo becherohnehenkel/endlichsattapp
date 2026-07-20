@@ -15,7 +15,7 @@ const BEWERTUNG_LABEL: Record<string, string> = {
   wenig_saettigend: 'Wenig sättigend',
 }
 const BEWERTUNG_COLOR: Record<string, string> = {
-  sehr_saettigend: 'bg-[#E8F0EB] text-[#4A7C59] border-[#4A7C59]/20',
+  sehr_saettigend: 'bg-[#DFF0F2] text-[#2E9E6B] border-[#2E9E6B]/20',
   maessig_saettigend: 'bg-amber-50 text-amber-700 border-amber-200',
   wenig_saettigend: 'bg-red-50 text-red-700 border-red-200',
 }
@@ -119,7 +119,7 @@ export default async function StartPage() {
             </p>
           </div>
           <Link href="/analyse">
-            <Button className="w-full bg-[#4A7C59] hover:bg-[#3d6849] text-white h-12 text-base font-medium rounded-xl">
+            <Button className="w-full h-12 text-base font-medium rounded-xl">
               <Plus className="h-5 w-5 mr-2" />
               Mahlzeit analysieren
             </Button>
@@ -133,7 +133,7 @@ export default async function StartPage() {
               <h2 className="text-sm font-semibold text-foreground">Letzte Analysen</h2>
               <Link
                 href="/historie"
-                className="text-xs text-[#4A7C59] hover:underline flex items-center gap-0.5"
+                className="text-xs text-[#2E9E6B] hover:underline flex items-center gap-0.5"
               >
                 Alle <ChevronRight className="h-3 w-3" />
               </Link>
@@ -144,7 +144,7 @@ export default async function StartPage() {
                 <Link
                   key={meal.id}
                   href={`/mahlzeit/${meal.id}`}
-                  className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 hover:border-[#4A7C59] transition-colors"
+                  className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 hover:border-[#2E9E6B] transition-colors"
                 >
                   {/* Thumbnail */}
                   <div className="w-12 h-12 rounded-lg bg-muted flex-shrink-0 overflow-hidden">
@@ -187,13 +187,13 @@ export default async function StartPage() {
         {/* ── Sättigungs-Matrix Teaser ─────────────────────── */}
         <section>
           <Link href="/saettigungsmatrix">
-            <div className="rounded-2xl border border-[#4A7C59]/30 bg-[#E8F0EB] p-4 flex items-center gap-4 hover:border-[#4A7C59] transition-colors cursor-pointer">
+            <div className="rounded-2xl border border-[#2E9E6B]/30 bg-[#DFF0F2] p-4 flex items-center gap-4 hover:border-[#2E9E6B] transition-colors cursor-pointer">
               <span className="text-3xl flex-shrink-0">🧩</span>
               <div className="space-y-0.5 min-w-0">
-                <p className="text-sm font-semibold text-[#2D5016] leading-snug">
+                <p className="text-sm font-semibold text-[#0E7C86] leading-snug">
                   Warum satt werden kein Zufall ist
                 </p>
-                <p className="text-xs text-[#4A7C59] font-medium">
+                <p className="text-xs text-[#2E9E6B] font-medium">
                   Zur Sättigungs-Matrix →
                 </p>
               </div>
@@ -204,13 +204,13 @@ export default async function StartPage() {
         {/* ── Art of Eating Teaser ──────────────────────────── */}
         <section>
           <Link href="/wie-esse-ich-richtig">
-            <div className="rounded-2xl border border-[#4A7C59]/30 bg-[#E8F0EB] p-4 flex items-center gap-4 hover:border-[#4A7C59] transition-colors cursor-pointer">
+            <div className="rounded-2xl border border-[#2E9E6B]/30 bg-[#DFF0F2] p-4 flex items-center gap-4 hover:border-[#2E9E6B] transition-colors cursor-pointer">
               <span className="text-3xl flex-shrink-0">🧘</span>
               <div className="space-y-0.5 min-w-0">
-                <p className="text-sm font-semibold text-[#2D5016] leading-snug">
+                <p className="text-sm font-semibold text-[#0E7C86] leading-snug">
                   Wie du isst entscheidet, wie satt du wirst
                 </p>
-                <p className="text-xs text-[#4A7C59] font-medium">
+                <p className="text-xs text-[#2E9E6B] font-medium">
                   Zur Art of Eating →
                 </p>
               </div>
@@ -225,7 +225,7 @@ export default async function StartPage() {
               <h2 className="text-sm font-semibold text-foreground">Rezeptbibliothek</h2>
               <Link
                 href="/rezepte"
-                className="text-xs text-[#4A7C59] hover:underline flex items-center gap-0.5"
+                className="text-xs text-[#2E9E6B] hover:underline flex items-center gap-0.5"
               >
                 Alle <ChevronRight className="h-3 w-3" />
               </Link>
@@ -236,7 +236,7 @@ export default async function StartPage() {
                 <Link
                   key={recipe.id}
                   href={`/rezept/${recipe.id}`}
-                  className="group rounded-xl border border-border bg-card overflow-hidden hover:border-[#4A7C59] transition-colors"
+                  className="group rounded-xl border border-border bg-card overflow-hidden hover:border-[#2E9E6B] transition-colors"
                 >
                   <div className="aspect-video bg-muted relative overflow-hidden">
                     {recipe.imageUrl ? (
@@ -275,7 +275,7 @@ export default async function StartPage() {
             {isGuest && totalRecipeCount != null && totalRecipeCount > 0 && (
               <p className="text-center text-xs text-muted-foreground">
                 Anmelden um alle {formatRecipeCount(totalRecipeCount)} zu sehen —{' '}
-                <Link href="/registrieren" className="text-[#4A7C59] hover:underline font-medium">
+                <Link href="/registrieren" className="text-[#2E9E6B] hover:underline font-medium">
                   Jetzt registrieren
                 </Link>
               </p>

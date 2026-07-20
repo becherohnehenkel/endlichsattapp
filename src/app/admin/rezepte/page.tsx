@@ -35,7 +35,7 @@ export default async function AdminRezeptePage() {
           <p className="text-xs text-muted-foreground">Admin</p>
         </div>
         <Link href="/admin/rezepte/neu">
-          <Button size="sm" className="bg-[#4A7C59] hover:bg-[#3d6849] text-white">
+          <Button size="sm">
             <Plus className="h-4 w-4 mr-1" />
             Neues Rezept
           </Button>

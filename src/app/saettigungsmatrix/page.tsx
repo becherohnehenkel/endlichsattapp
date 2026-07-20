@@ -126,12 +126,12 @@ export default function SaettigungsmatrixPage() {
               <div key={pillar.key} className="rounded-2xl border border-border bg-card overflow-hidden">
 
                 {/* Pillar header */}
-                <div className="px-4 py-3.5 bg-[#E8F0EB] border-b border-[#4A7C59]/20">
+                <div className="px-4 py-3.5 bg-[#DFF0F2] border-b border-[#2E9E6B]/20">
                   <div className="flex items-center gap-2">
                     <span className="text-xl leading-none">{pillar.emoji}</span>
-                    <h2 className="text-base font-bold text-[#2D5016]">{pillar.name}</h2>
+                    <h2 className="text-base font-bold text-[#0E7C86]">{pillar.name}</h2>
                   </div>
-                  <p className="mt-1.5 text-sm text-[#4A7C59] leading-relaxed">{pillar.warum}</p>
+                  <p className="mt-1.5 text-sm text-[#2E9E6B] leading-relaxed">{pillar.warum}</p>
                 </div>
 
                 {/* Was gehört dazu */}
@@ -154,7 +154,7 @@ export default function SaettigungsmatrixPage() {
                   {pillar.key === 'art_of_eating' && (
                     <Link
                       href="/wie-esse-ich-richtig"
-                      className="inline-block mt-2 text-xs font-medium text-[#4A7C59] hover:underline"
+                      className="inline-block mt-2 text-xs font-medium text-[#2E9E6B] hover:underline"
                     >
                       Wie esse ich richtig? →
                     </Link>
@@ -170,14 +170,14 @@ export default function SaettigungsmatrixPage() {
 
         {/* CTA: Link to the full recipe */}
         <Link href={`/rezept/${POWER_OATS_ID}`}>
-          <div className="rounded-2xl border border-[#4A7C59]/30 bg-[#E8F0EB] p-4 space-y-1 hover:border-[#4A7C59] transition-colors cursor-pointer">
+          <div className="rounded-2xl border border-[#2E9E6B]/30 bg-[#DFF0F2] p-4 space-y-1 hover:border-[#2E9E6B] transition-colors cursor-pointer">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-[#2D5016]">Das Vollrezept ansehen</p>
+              <p className="text-sm font-semibold text-[#0E7C86]">Das Vollrezept ansehen</p>
               <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
                 Sehr sättigend
               </span>
             </div>
-            <p className="text-xs text-[#4A7C59]/80 leading-snug">
+            <p className="text-xs text-[#2E9E6B]/80 leading-snug">
               Lukas&apos; Power Oats — alle 6 Bausteine auf einen Blick
             </p>
           </div>

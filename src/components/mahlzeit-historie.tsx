@@ -131,7 +131,7 @@ export default function MahlzeitHistorie() {
             Was hast du heute gegessen? Foto hochladen oder kurz beschreiben — fertig.
           </p>
           <Link href="/analyse">
-            <Button className="bg-[#4A7C59] hover:bg-[#3d6849] text-white">
+            <Button>
               <Plus className="h-4 w-4 mr-2" />
               Mahlzeit analysieren
             </Button>
@@ -154,7 +154,7 @@ export default function MahlzeitHistorie() {
           <Link href="/analyse">
             <Button
               size="lg"
-              className="rounded-full shadow-lg bg-[#4A7C59] hover:bg-[#3d6849] text-white h-14 px-6"
+              className="rounded-full shadow-lg h-14 px-6"
             >
               <Plus className="h-5 w-5 mr-2" />
               Neue Mahlzeit

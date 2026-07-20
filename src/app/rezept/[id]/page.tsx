@@ -94,12 +94,12 @@ export default async function RezeptDetailPage({
             </p>
           </div>
           <div className="w-full space-y-3">
-            <Button asChild size="lg" className="w-full bg-[#4A7C59] hover:bg-[#3d6849] text-white">
+            <Button asChild size="lg" className="w-full">
               <Link href="/registrieren">Kostenlos registrieren</Link>
             </Button>
             <p className="text-sm text-muted-foreground">
               Bereits einen Account?{' '}
-              <Link href="/login" className="text-[#4A7C59] hover:underline font-medium">
+              <Link href="/login" className="text-[#2E9E6B] hover:underline font-medium">
                 Einloggen
               </Link>
             </p>

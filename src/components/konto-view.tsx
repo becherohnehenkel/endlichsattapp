@@ -99,7 +99,7 @@ export default function KontoView({
       return <Badge variant="outline" className="text-muted-foreground">Kein aktiver Zugang</Badge>
     }
     if (isSubscribed) {
-      return <Badge className="bg-[#4A7C59] text-white hover:bg-[#4A7C59]">Aktives Abo</Badge>
+      return <Badge className="bg-[#2E9E6B] text-white hover:bg-[#2E9E6B]">Aktives Abo</Badge>
     }
     if (hasInviteAccess) {
       return <Badge variant="secondary">Einladungszugang</Badge>
@@ -220,7 +220,7 @@ export default function KontoView({
                 : 'Dein Testzeitraum ist abgelaufen.'}
             </p>
             <Link href="/upgrade">
-              <Button className="w-full bg-[#4A7C59] hover:bg-[#3d6849] text-white">
+              <Button className="w-full">
                 Jetzt freischalten
               </Button>
             </Link>
@@ -232,7 +232,7 @@ export default function KontoView({
           <div className="rounded-2xl border border-border bg-card p-4">
             <Link
               href="/admin"
-              className="flex items-center justify-between text-sm text-[#4A7C59] font-medium hover:text-[#3d6849] transition-colors"
+              className="flex items-center justify-between text-sm text-[#2E9E6B] font-medium hover:text-[#268a5c] transition-colors"
             >
               Admin-Bereich
               <span className="text-muted-foreground">→</span>

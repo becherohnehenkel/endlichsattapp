@@ -74,16 +74,16 @@ export default async function RezeptePage() {
 
       {isGuest && totalRecipeCount != null && totalRecipeCount > 0 && (
         <div className="max-w-sm mx-auto px-4 pt-4">
-          <div className="rounded-xl border border-[#4A7C59]/30 bg-[#E8F0EB] px-4 py-3 space-y-1">
-            <p className="text-sm font-semibold text-[#2D5016]">
+          <div className="rounded-xl border border-[#2E9E6B]/30 bg-[#DFF0F2] px-4 py-3 space-y-1">
+            <p className="text-sm font-semibold text-[#0E7C86]">
               Gastrezepte
             </p>
-            <p className="text-xs text-[#4A7C59] leading-relaxed">
+            <p className="text-xs text-[#2E9E6B] leading-relaxed">
               Hier siehst du alle Gastrezepte. Anmelden um alle {formatRecipeCount(totalRecipeCount)} zu sehen.
             </p>
             <Link
               href="/registrieren"
-              className="inline-block text-xs font-medium text-[#4A7C59] hover:underline mt-0.5"
+              className="inline-block text-xs font-medium text-[#2E9E6B] hover:underline mt-0.5"
             >
               Jetzt kostenlos registrieren →
             </Link>

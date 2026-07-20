@@ -152,7 +152,7 @@ export default function UpgradeView({ subscriptionStatus, hasInviteAccess, sessi
           <Button className="w-full" size="lg" onClick={handlePortal} disabled={actionLoading}>
             {actionLoading ? 'Wird geöffnet…' : 'Abo verwalten'}
           </Button>
-          <Link href="/analyse" className="text-sm text-[#4A7C59] hover:underline block">
+          <Link href="/analyse" className="text-sm text-[#2E9E6B] hover:underline block">
             Zur Mahlzeit-Eingabe →
           </Link>
         </div>
@@ -180,7 +180,7 @@ export default function UpgradeView({ subscriptionStatus, hasInviteAccess, sessi
               <button
                 type="button"
                 onClick={() => setShowCodeForm(true)}
-                className="w-full text-sm text-muted-foreground hover:text-[#4A7C59] transition-colors text-center"
+                className="w-full text-sm text-muted-foreground hover:text-[#2E9E6B] transition-colors text-center"
               >
                 Ich habe einen Einladungscode →
               </button>

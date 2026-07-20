@@ -61,7 +61,7 @@ export default function RezeptSaettigungsMatrix({ matrix }: { matrix: RezeptSaet
                 {pillar === 'art_of_eating' && (
                   <Link
                     href="/wie-esse-ich-richtig"
-                    className="inline-block text-xs font-medium text-[#4A7C59] hover:underline"
+                    className="inline-block text-xs font-medium text-[#2E9E6B] hover:underline"
                   >
                     Wie esse ich richtig? →
                   </Link>

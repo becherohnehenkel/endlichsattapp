@@ -444,7 +444,7 @@ export default function MahlzeitInput({ userId, photoScansRemaining, trialDaysRe
     return (
       <div>
         <div className="px-4 pt-3 pb-0 flex justify-start">
-          <Link href="/" className="text-sm text-[#4A7C59] flex items-center gap-1 hover:underline">
+          <Link href="/" className="text-sm text-[#2E9E6B] flex items-center gap-1 hover:underline">
             ← Zur Übersicht
           </Link>
         </div>
@@ -491,8 +491,8 @@ export default function MahlzeitInput({ userId, photoScansRemaining, trialDaysRe
         </div>
       ) : isAnonymous ? (
         // PROJ-19: Conversion-Prompt für Gäste statt Paywall
-        <div className="rounded-xl border border-[#4A7C59]/20 bg-[#E8F0EB] p-4 space-y-3">
-          <p className="text-sm font-medium text-[#1C1C1C]">
+        <div className="rounded-xl border border-[#2E9E6B]/20 bg-[#DFF0F2] p-4 space-y-3">
+          <p className="text-sm font-medium text-[#0B2C30]">
             📸 Du hast alle {TOTAL_PHOTO_SCANS} Foto-Analysen als Gast genutzt.
           </p>
           <p className="text-sm text-muted-foreground leading-relaxed">
@@ -504,7 +504,7 @@ export default function MahlzeitInput({ userId, photoScansRemaining, trialDaysRe
             </Button>
             <p className="text-center text-xs text-muted-foreground">
               Bereits einen Account?{' '}
-              <Link href="/login" className="text-[#4A7C59] hover:underline">Einloggen</Link>
+              <Link href="/login" className="text-[#2E9E6B] hover:underline">Einloggen</Link>
             </p>
           </div>
         </div>
