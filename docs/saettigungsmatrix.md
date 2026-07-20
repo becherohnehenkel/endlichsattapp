@@ -253,7 +253,7 @@ In diesem Fall gelten besondere Regeln:
 
 3. **Maximal ein optionaler Feinschliff.** Falls es einen 6. Baustein gibt der noch fehlt oder sehr schwach ist, kann dieser leicht erwähnt werden — aber als optionales Extra, nicht als Mangel. Formulierung: *"Falls du noch einen kleinen Schritt machen willst: …"*
 
-4. **Verweis auf die Rezeptbibliothek.** Am Ende der Antwort immer den Hinweis einbauen, dass es in der App ähnlich gut strukturierte Rezepte gibt: *"In der Rezeptbibliothek findest du Gerichte die ähnlich aufgebaut sind — falls du Inspiration für weitere Mahlzeiten suchst."*
+4. **Rezeptbibliothek-Verweis ist automatisch, nicht Teil der LLM-Antwort.** Die Ergebnisseite zeigt unter jeder Analyse — unabhängig von der Gesamtbewertung — deterministisch ein passendes Rezept (Zutaten-Tag-Matching) oder, falls keins passt, einen Hinweis mit Link zur Rezeptbibliothek (`RezeptVorschlaege`-Komponente). Der LLM-Prompt muss dafür nichts setzen und keinen Text dazu formulieren (früher: eigenes Flag `rezeptbibliothek_hinweis`, das nur beim frischen Ergebnis vorhanden war und nach dem Neuladen der Seite verschwand — entfernt zugunsten der konsistenten, immer funktionierenden UI-Lösung).
 
 5. **Keine Liste von Verbesserungsvorschlägen** — diese Sektion bleibt leer oder enthält höchstens einen einzigen optionalen Hinweis.
 

@@ -293,3 +293,16 @@ Bei einer Prüfung der bestehenden 5 Rezepte wurden zwei Datenprobleme gefunden 
 - Bekannt, aber unverändert gelassen: der Tag `granola` bei Lukas' Power Oats entspricht keiner Zutat in `recipe_ingredients` (dort z.B. "Fitness-Mischung", "Sonnenblumenkern"). Auf Wunsch des Product Owners nicht angefasst.
 
 **Bestätigt, kein Bug:** `cuisine_tags` fließen wie in der Spec dokumentiert ("Küchen-Tag-Matching in v1" — Out of Scope) bewusst nicht in die Matching-Logik ein, nur `ingredient_tags`.
+
+## Post-Deployment: Rezeptvorschläge vereinheitlicht (Bugfix + Verhaltensänderung)
+
+**Datum:** 2026-07-20
+
+**Gefundener Bug:** Auf der Analyse-Ergebnisseite gab es zwei getrennte "Rezept"-Hinweise: (1) `RezeptVorschlaege` (Zutaten-Tag-Matching, diese Spec) und (2) eine separate, vom LLM gesteuerte "Zur Rezeptbibliothek"-CTA (Flag `rezeptbibliothek_hinweis`, nur bei `sehr_saettigend`-Bewertungen gesetzt). Flag (2) wurde nie in `meal_analyses` persistiert — nur im frisch von der API zurückgegebenen Ergebnis vorhanden. Beim erneuten Aufruf von `/mahlzeit/[id]` (Server-seitig aus der DB rekonstruiert) fehlte das Feld, die CTA verschwand. Zusätzlich hatte dieser Block keinen `<Separator />` vor sich und hing optisch direkt am "Art of Eating"-Block.
+
+**Fix:** CTA (2) komplett entfernt (Komponente, Typ-Feld, LLM-Prompt-Instruktion in `/api/analyse/confirm`). `RezeptVorschlaege` ist jetzt die einzige Quelle für Rezept-Hinweise auf der Ergebnisseite — lädt live per API, dadurch unabhängig davon ob frisch analysiert oder später erneut aufgerufen, immer konsistent.
+
+**Verhaltensänderung (Product-Owner-Wunsch):**
+- Zeigt jetzt **maximal 1 Rezept** statt bisher bis zu 2 (`/api/rezepte/vorschlaege` cappt serverseitig auf `.slice(0, 1)`)
+- **Neuer Empty-State:** Wenn kein Rezept ≥ 2 Tag-Matches erreicht, zeigt die Komponente jetzt einen kleinen Hinweis-Block mit Link zur Rezeptbibliothek, statt wie vorher gar nichts zu rendern — jede Analyse hat dadurch immer einen Rezept-Touchpoint, unabhängig vom Match-Ergebnis
+- Betrifft nur `src/components/rezept-vorschlaege.tsx` und `src/app/api/rezepte/vorschlaege/route.ts` — Matching-Logik (≥2 Tags, `ingredient_tags`-basiert) selbst unverändert

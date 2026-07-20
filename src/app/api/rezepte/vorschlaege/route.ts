@@ -56,7 +56,7 @@ export async function GET(request: Request) {
     }))
     .filter(r => r.matchCount >= 2)
     .sort((a, b) => b.matchCount - a.matchCount)
-    .slice(0, 2)
+    .slice(0, 1)
 
   return NextResponse.json({
     recipes: scored.map(r => ({

@@ -31,7 +31,6 @@ const MOCK_RESULT = {
     erklaerung: 'Test-Erklärung.',
     naehrwerte: { kcal: 500, protein_g: 40, kohlenhydrate_g: 50, zucker_g: 5, fett_g: 15, ballaststoffe_g: 5 },
   },
-  rezeptbibliothek_hinweis: false,
   vorschlaege: [],
   nachher: {
     bausteine: { geschmack: 'gut', biss: 'gut', ballaststoffe: 'mittel', proteine: 'gut', volumen: 'mittel', art_of_eating: 'nicht_bewertet' },

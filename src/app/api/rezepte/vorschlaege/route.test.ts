@@ -74,20 +74,19 @@ describe('GET /api/rezepte/vorschlaege', () => {
     expect(data.recipes).toHaveLength(0)
   })
 
-  it('returns matched recipes with ≥2 tag overlap', async () => {
+  it('returns the best-matched recipe with ≥2 tag overlap', async () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
     mockAnalysisSingle.mockResolvedValue({ data: MOCK_ANALYSIS })
     mockRecipesSelect.mockResolvedValue({ data: MOCK_RECIPES })
     const { GET } = await import('./route')
     const res = await GET(new Request('http://localhost/api/rezepte/vorschlaege?analysisId=abc'))
     const data = await res.json()
-    // recipe-1 (3 matches) and recipe-3 (2 matches) qualify; recipe-2 (0 matches) does not
-    expect(data.recipes).toHaveLength(2)
+    // recipe-1 (3 matches) beats recipe-3 (2 matches); recipe-2 (0 matches) does not qualify
+    expect(data.recipes).toHaveLength(1)
     expect(data.recipes[0].id).toBe('recipe-1')
-    expect(data.recipes[1].id).toBe('recipe-3')
   })
 
-  it('returns max 2 recipes even if more match', async () => {
+  it('returns max 1 recipe even if more match (PROJ-24)', async () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
     mockAnalysisSingle.mockResolvedValue({ data: MOCK_ANALYSIS })
     const manyRecipes = Array.from({ length: 5 }, (_, i) => ({
@@ -101,7 +100,7 @@ describe('GET /api/rezepte/vorschlaege', () => {
     const { GET } = await import('./route')
     const res = await GET(new Request('http://localhost/api/rezepte/vorschlaege?analysisId=abc'))
     const data = await res.json()
-    expect(data.recipes).toHaveLength(2)
+    expect(data.recipes).toHaveLength(1)
   })
 
   it('returns empty array when no recipe has ≥2 matching tags', async () => {

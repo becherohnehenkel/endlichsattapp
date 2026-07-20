@@ -86,7 +86,6 @@ Das ist echte Leistung — erkenne sie aufrichtig an, ohne herablassend oder üb
 - Die "erklaerung" beginnt mit echter Anerkennung, z.B.: "Das ist eine wirklich gut strukturierte Mahlzeit — du hast fast alle Sättigungsprinzipien intuitiv umgesetzt."
 - Maximal 1 Vorschlag, formuliert als optionaler Feinschliff ("Falls du noch einen kleinen Schritt machen willst…")
 - 0 Vorschläge ist völlig in Ordnung wenn kein echter Mehrwert entsteht.
-- Setze "rezeptbibliothek_hinweis": true — der Nutzer bekommt dann einen Link zu ähnlichen Rezepten.
 
 ## Verbesserungsvorschläge (0–3, bei sehr_saettigend max. 1)
 Priorität: Portionskalibrierung (nur bei Fastfood-Trigger unten) → Biss → Ballaststoffe → Volumen → Geschmack → Proteine → Art of Eating
@@ -166,7 +165,6 @@ Standard-Format (wenn KEIN BEILAGE_KONTEXT):
     "gesamtbewertung": "sehr_saettigend|maessig_saettigend|wenig_saettigend",
     "erklaerung": "2-4 Sätze auf Deutsch, warm. Bei sehr_saettigend: mit echter Anerkennung beginnen."
   },
-  "rezeptbibliothek_hinweis": true,
   "vorschlaege": [{"aktion": "...", "begruendung": "...", "baustein": "biss|ballaststoffe|volumen|geschmack|proteine|art_of_eating", "zusatz": {"name": "...", "grams": 0}}],
   "nachher": {
     "bausteine": {"geschmack": "...", "biss": "...", "ballaststoffe": "...", "proteine": "...", "volumen": "...", "art_of_eating": "..."},
@@ -308,7 +306,6 @@ export async function POST(request: Request) {
       gesamtbewertung: string
       erklaerung: string
     }
-    rezeptbibliothek_hinweis?: boolean
     vorschlaege: { aktion: string; begruendung: string; baustein: string; zusatz?: { name: string; grams: number } | null }[]
     nachher: {
       bausteine: Record<string, string>
@@ -443,7 +440,6 @@ export async function POST(request: Request) {
       erklaerung: result.vorher.erklaerung,
       naehrwerte: vorherMacros,
     },
-    rezeptbibliothek_hinweis: result.rezeptbibliothek_hinweis ?? false,
     vorschlaege: result.vorschlaege,
     nachher: {
       bausteine: result.nachher.bausteine,

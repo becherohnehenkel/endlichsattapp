@@ -106,22 +106,24 @@ async function reachDone(page: Page) {
 // REZEPTVORSCHLÄGE — kein Match
 // ─────────────────────────────────────────────────────────────
 test.describe('Rezeptvorschläge — kein Match', () => {
-  test('Kein Rezeptabschnitt wenn API leere Liste zurückgibt', async ({ page }) => {
+  test('Bibliotheks-Hinweis erscheint wenn API leere Liste zurückgibt (PROJ-24)', async ({ page }) => {
     await loginAs(page)
     page.route('/api/rezepte/vorschlaege**', route =>
       route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ recipes: [] }) })
     )
     await reachDone(page)
-    await expect(page.getByText('🍳 Passende Rezepte')).not.toBeVisible()
+    await expect(page.getByText('🍳 Passendes Rezept')).not.toBeVisible()
+    await expect(page.getByText('Zur Rezeptbibliothek')).toBeVisible({ timeout: 5000 })
   })
 
-  test('Kein Rezeptabschnitt wenn API-Fehler auftritt', async ({ page }) => {
+  test('Bibliotheks-Hinweis erscheint wenn API-Fehler auftritt (PROJ-24)', async ({ page }) => {
     await loginAs(page)
     page.route('/api/rezepte/vorschlaege**', route =>
       route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ error: 'Server error' }) })
     )
     await reachDone(page)
-    await expect(page.getByText('🍳 Passende Rezepte')).not.toBeVisible()
+    await expect(page.getByText('🍳 Passendes Rezept')).not.toBeVisible()
+    await expect(page.getByText('Zur Rezeptbibliothek')).toBeVisible({ timeout: 5000 })
   })
 })
 
@@ -129,23 +131,23 @@ test.describe('Rezeptvorschläge — kein Match', () => {
 // REZEPTVORSCHLÄGE — mit Matches
 // ─────────────────────────────────────────────────────────────
 test.describe('Rezeptvorschläge — mit Matches', () => {
-  test('Rezeptabschnitt mit Überschrift erscheint wenn Rezepte vorhanden', async ({ page }) => {
+  test('Rezeptabschnitt mit Überschrift erscheint wenn Rezept vorhanden', async ({ page }) => {
     await loginAs(page)
     page.route('/api/rezepte/vorschlaege**', route =>
       route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ recipes: MOCK_RECIPES }) })
     )
     await reachDone(page)
-    await expect(page.getByText('🍳 Passende Rezepte')).toBeVisible({ timeout: 5000 })
+    await expect(page.getByText('🍳 Passendes Rezept')).toBeVisible({ timeout: 5000 })
   })
 
-  test('Rezepttitel wird auf der Karte angezeigt', async ({ page }) => {
+  test('Nur das erste (bestpassende) Rezept wird angezeigt (PROJ-24)', async ({ page }) => {
     await loginAs(page)
     page.route('/api/rezepte/vorschlaege**', route =>
       route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ recipes: MOCK_RECIPES }) })
     )
     await reachDone(page)
     await expect(page.getByText('Hähnchen Reis Bowl')).toBeVisible({ timeout: 5000 })
-    await expect(page.getByText('Asiatischer Hähnchensalat')).toBeVisible({ timeout: 5000 })
+    await expect(page.getByText('Asiatischer Hähnchensalat')).not.toBeVisible()
   })
 
   test('Platzhalter-Icon wird angezeigt wenn kein Bild vorhanden', async ({ page }) => {
@@ -154,7 +156,7 @@ test.describe('Rezeptvorschläge — mit Matches', () => {
       route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ recipes: MOCK_RECIPES }) })
     )
     await reachDone(page)
-    await expect(page.getByText('🍳 Passende Rezepte')).toBeVisible({ timeout: 5000 })
+    await expect(page.getByText('🍳 Passendes Rezept')).toBeVisible({ timeout: 5000 })
     // Placeholder icon (ChefHat) is rendered as SVG — verify no <img> with src (no actual image)
     await expect(page.locator('[href="/rezept/recipe-abc"] img')).not.toBeVisible()
   })
