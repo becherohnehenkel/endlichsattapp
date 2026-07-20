@@ -38,11 +38,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Mahlzeit konnte nicht gespeichert werden.' }, { status: 500 })
     }
     if (remaining === null) {
+      const isAnonymous = user.is_anonymous === true
+      const errorMsg = isAnonymous
+        ? 'Deine Foto-Scans sind aufgebraucht. Freitext-Analyse bleibt aber weiterhin unbegrenzt verfügbar.'
+        : 'Deine Foto-Scans für heute sind aufgebraucht. Morgen hast du wieder 5 neue. Freitext-Analyse bleibt weiterhin unbegrenzt verfügbar.'
       return NextResponse.json(
-        {
-          error: 'Deine Foto-Scans sind aufgebraucht. Freitext-Analyse bleibt aber weiterhin unbegrenzt verfügbar.',
-          code: 'PHOTO_SCAN_LIMIT_REACHED',
-        },
+        { error: errorMsg, code: 'PHOTO_SCAN_LIMIT_REACHED' },
         { status: 403 }
       )
     }

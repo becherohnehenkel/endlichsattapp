@@ -227,6 +227,8 @@ export type Database = {
           invite_code_redeemed_at: string | null
           name: string | null
           photo_scans_remaining: number
+          photo_scans_today_count: number
+          photo_scans_today_date: string | null
           stripe_customer_id: string | null
           subscription_status: string | null
           trial_ends_at: string | null
@@ -238,6 +240,8 @@ export type Database = {
           invite_code_redeemed_at?: string | null
           name?: string | null
           photo_scans_remaining?: number
+          photo_scans_today_count?: number
+          photo_scans_today_date?: string | null
           stripe_customer_id?: string | null
           subscription_status?: string | null
           trial_ends_at?: string | null
@@ -249,6 +253,8 @@ export type Database = {
           invite_code_redeemed_at?: string | null
           name?: string | null
           photo_scans_remaining?: number
+          photo_scans_today_count?: number
+          photo_scans_today_date?: string | null
           stripe_customer_id?: string | null
           subscription_status?: string | null
           trial_ends_at?: string | null

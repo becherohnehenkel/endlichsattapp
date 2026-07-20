@@ -484,7 +484,9 @@ export default function MahlzeitInput({ userId, photoScansRemaining, trialDaysRe
             onRemove={handleFotoRemove}
           />
           <p className="text-xs text-muted-foreground">
-            Noch {scansRemaining} von {TOTAL_PHOTO_SCANS} Foto-Scans übrig
+            {isAnonymous
+              ? `Noch ${scansRemaining} von ${TOTAL_PHOTO_SCANS} Foto-Scans übrig`
+              : `Heute noch ${scansRemaining} von ${TOTAL_PHOTO_SCANS} Foto-Scans`}
           </p>
         </div>
       ) : isAnonymous ? (
@@ -509,11 +511,7 @@ export default function MahlzeitInput({ userId, photoScansRemaining, trialDaysRe
       ) : (
         <Alert>
           <AlertDescription>
-            📸 Deine Foto-Scans sind aufgebraucht. Beschreib deine Mahlzeit einfach unten.
-            {trialDaysRemaining !== null && (
-              <> Noch {trialDaysRemaining} {trialDaysRemaining === 1 ? 'Tag' : 'Tage'}, bis Freitext-Analyse & Rezepte eingeschränkt werden.{' '}
-              <a href="/upgrade?showCode=1" className="underline text-[#4A7C59] whitespace-nowrap">Code einlösen →</a></>
-            )}
+            📸 Deine Foto-Scans für heute sind aufgebraucht. Morgen hast du wieder 5 neue. Beschreib deine Mahlzeit einfach unten.
           </AlertDescription>
         </Alert>
       )}

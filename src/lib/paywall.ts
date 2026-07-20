@@ -28,7 +28,7 @@ export async function getAccessStatus(
 ): Promise<AccessStatus> {
   const { data: profile } = await supabase
     .from('profiles')
-    .select('photo_scans_remaining, trial_ends_at, subscription_status, invite_code_redeemed_at')
+    .select('photo_scans_remaining, photo_scans_today_count, photo_scans_today_date, trial_ends_at, subscription_status, invite_code_redeemed_at')
     .eq('id', userId)
     .single()
 
@@ -54,5 +54,11 @@ export async function getAccessStatus(
     trialDaysRemaining = Math.max(1, Math.min(TRIAL_DAYS, Math.ceil(msRemaining / (1000 * 60 * 60 * 24))))
   }
 
-  return { hasAccess, trialDaysRemaining, subscriptionStatus: profile.subscription_status, hasInviteAccess, photoScansRemaining: profile.photo_scans_remaining }
+  // Registered users get 5 photo scans per day (daily counter).
+  // photo_scans_today_date is in UTC (consistent with DB current_date).
+  const todayStr = new Date().toISOString().split('T')[0]
+  const isDailyReset = !profile.photo_scans_today_date || profile.photo_scans_today_date < todayStr
+  const dailyScansRemaining = isDailyReset ? 5 : Math.max(0, 5 - (profile.photo_scans_today_count ?? 0))
+
+  return { hasAccess, trialDaysRemaining, subscriptionStatus: profile.subscription_status, hasInviteAccess, photoScansRemaining: dailyScansRemaining }
 }
