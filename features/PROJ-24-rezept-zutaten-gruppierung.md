@@ -1,6 +1,6 @@
 # PROJ-24: Zutaten-Reihenfolge & Gruppierung im Rezept-Editor
 
-## Status: Approved
+## Status: Deployed
 **Created:** 2026-07-20
 **Last Updated:** 2026-07-20
 
@@ -276,4 +276,23 @@ Der Admin-Editor selbst (Drag-and-Drop, "Gruppe hinzufügen") läuft auf Seiten 
 - **Recommendation:** Deploy. BUG-2 (echtes Touch-Gerät gegenprüfen) und BUG-3 (pre-existing 404-Status) als Nice-to-have/separates Ticket nachverfolgen, beide nicht blockierend.
 
 ## Deployment
-_To be added by /deploy_
+
+**Deployed:** 2026-07-20
+**Tag:** v1.9.0-PROJ-24
+**Production URL:** https://endlichsattapp.vercel.app
+**Commit:** `465ffed` (feat(PROJ-24): Zutaten-Reihenfolge & Gruppierung im Rezept-Editor), vorausgehend `838d11e` (Kohl-Sättigungsbewertung + Rezept-Tag-Korrekturen)
+
+**Pre-Deployment-Checks:**
+- `npm run build` — erfolgreich
+- `npm run lint` — 0 Fehler (1 vorbestehende, unabhängige Warnung in `bild-cropper.tsx`)
+- QA: Approved, 0 Critical/High Bugs
+- Keine neuen Env-Vars nötig
+- `@dnd-kit/*` korrekt in `dependencies` (nicht `devDependencies`)
+- DB-Migration bereits vor `/backend` live angewendet (`recipe_ingredients_add_item_type_and_label`)
+- Keine Secrets im Diff
+
+**Post-Deployment-Verifikation:**
+- Produktions-URL lädt (200), Rezept-Detailseite lädt korrekt (Gast-Sperrbildschirm greift wie erwartet für nicht-freigeschaltete Rezepte)
+- Vercel-Build vom Product Owner im Dashboard als grün bestätigt
+
+**Kein neues Setup nötig** (Vercel-Projekt, Domain, Env-Vars bereits aus vorherigen Deployments vorhanden).
