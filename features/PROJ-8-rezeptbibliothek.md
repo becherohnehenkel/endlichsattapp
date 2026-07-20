@@ -281,3 +281,15 @@ Alles bereits vorhanden: `react-hook-form` + `zod` (Formulare), shadcn/ui (UI), 
 
 **New env var required on Vercel:**
 - `ADMIN_EMAIL` — server-only, no NEXT_PUBLIC_ prefix. Must match the admin's login email to grant access to `/admin/rezepte`.
+
+## Post-Deployment: Matching-Verfeinerung (Datenkorrekturen)
+
+**Datum:** 2026-07-20
+
+Bei einer Prüfung der bestehenden 5 Rezepte wurden zwei Datenprobleme gefunden und direkt in der DB behoben:
+
+- **Fenchelsalat hatte nur einen `ingredient_tag`** (`fenchel`). Da das Matching ≥ 2 übereinstimmende Tags voraussetzt (siehe [Matching-Logik](#matching-logik)), konnte dieses Rezept rechnerisch nie vorgeschlagen werden. Fix: `zwiebel` als zweiten Tag ergänzt (Speisezwiebel ist tatsächlich Bestandteil des Rezepts) → `ingredient_tags: [fenchel, zwiebel]`.
+- **Lukas' Power Oats hatte `gesund` als `cuisine_tag`.** Verstößt gegen die Projekt-Konvention, dass "gesund/ungesund" nicht verwendet wird (Sättigung ist kein Gesundheitsurteil). Fix: Tag entfernt → `cuisine_tags: [frühstück, porridge]`.
+- Bekannt, aber unverändert gelassen: der Tag `granola` bei Lukas' Power Oats entspricht keiner Zutat in `recipe_ingredients` (dort z.B. "Fitness-Mischung", "Sonnenblumenkern"). Auf Wunsch des Product Owners nicht angefasst.
+
+**Bestätigt, kein Bug:** `cuisine_tags` fließen wie in der Spec dokumentiert ("Küchen-Tag-Matching in v1" — Out of Scope) bewusst nicht in die Matching-Logik ein, nur `ingredient_tags`.

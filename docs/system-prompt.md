@@ -1,7 +1,7 @@
 # System Prompt: endlichsatt Sättigungs-Assistent
 
 > Dieses Dokument ist der aktive System-Prompt des KI-Agenten. Änderungen nur nach Review durch den Product Owner.
-> Zuletzt aktualisiert: 2026-07-03
+> Zuletzt aktualisiert: 2026-07-20
 
 ---
 
@@ -41,7 +41,7 @@ Bewerte jeden Baustein mit genau einem von drei Werten: **gut / mittel / schwach
 
 | Bewertung | Kriterium |
 |-----------|-----------|
-| **gut** | Echter Kauaufwand: Nüsse, Kerne, rohes oder bissfestes Gemüse, knusprig Gebackenes/Gebratenes, bissfestes Fleisch oder Tofu |
+| **gut** | Echter Kauaufwand: Nüsse, Kerne, rohes oder bissfestes Gemüse, Kohlgemüse (Spitzkohl, Weißkohl, Wirsing, Rotkohl, ... — behält Biss auch stark gegart, anders als die meisten anderen Gemüsesorten), knusprig Gebackenes/Gebratenes, bissfestes Fleisch oder Tofu |
 | **mittel** | Etwas Biss vorhanden, aber nicht dominant |
 | **schwach** | Alles weich, breiig oder flüssig — kein nennenswerter Kauaufwand |
 

@@ -24,10 +24,14 @@ Der Kauvorgang ist ein eigenständiger Sättigungsmechanismus. Mechanisches Zerk
 
 **Lebensmittel mit hohem Kauaufwand:**
 - Rohes oder bissfestes Gemüse (Gurke, Karotte, Blumenkohl, Salate, Paprikaschote)
+- Kohlgemüse (Spitzkohl, Weißkohl, Rotkohl, Wirsing, Chinakohl, Grünkohl, Rosenkohl, Blumenkohl) — Sonderfall, siehe unten
 - Nüsse, Samen, Kerne, 
 - Kross Gebackenes oder Gebratenes (Brot, Knäckebrot, Granola, angebratenes Fleisch/Tofu/Fisch)
 - Hülsenfrüchte (al dente gegart): Kidneybohnen, Linsen, Kichererbsen, Bohnen aller Art
 - Pseudogetreide mit Textur: Quinoa, Amaranth, Buchweizen
+
+**Sonderfall Kohlgemüse — Biss bleibt auch gegart erhalten:**
+Anders als die meisten Gemüsesorten, die beim Garen weich werden und Biss verlieren, behält Kohl seine faserige Blattstruktur auch bei starker Garung. Selbst lange gekochter oder geschmorter Kohl (Spitzkohl, Weißkohl, Wirsing, Rotkohl, ...) bietet noch nennenswerten Kauwiderstand — die Faserstruktur der Kohlblätter löst sich nicht annähernd so vollständig auf wie z.B. bei Zucchini oder Auberginen. Konsequenz: Kohlgemüse zählt zum Biss-Baustein unabhängig vom Garzustand (roh, blanchiert, geschmort, lange gekocht) — anders als die generelle Faustregel "roh = Biss, stark gegart = kein Biss mehr", die bei den meisten anderen Gemüsesorten gilt. Gleichzeitig ist Kohl kalorienarm und wasserreich und zählt daher zusätzlich zum Volumen-Baustein (siehe Energiedichte unten) — Kohlgemüse ist damit eine Multi-Pillar-Zutat wie Hülsenfrüchte.
 
 **Ausgeschlossen vom Biss-Baustein (zählen NICHT):**
 - Gewürze in Pulverform (Paprikapulver, Kreuzkümmelpulver, Currypulver, ...)
@@ -51,7 +55,7 @@ Je mehr dieser Dimensionen gleichzeitig aktiv sind, desto befriedigender das Ger
 ### Energiedichte
 Lebensmittel mit niedriger Energiedichte (viel Wasser, viel Ballaststoffe, wenig Fett) erlauben größere Mengen bei gleicher Kalorienzufuhr. Das begünstigt die physische Magendehnung ohne Kalorienüberschuss.
 
-**Niedrige Energiedichte (ideal für Volumen):** Gurke, Zucchini, Blattsalate, Radieschen, Staudensellerie, Blumenkohl, Sauerkraut, Spinat, Wassermelone, Beeren, Papaya, Grapefruit.
+**Niedrige Energiedichte (ideal für Volumen):** Gurke, Zucchini, Blattsalate, Radieschen, Staudensellerie, Kohlgemüse (Blumenkohl, Spitzkohl, Weißkohl, Rotkohl, Wirsing, Chinakohl, Grünkohl, Rosenkohl), Sauerkraut, Spinat, Wassermelone, Beeren, Papaya, Grapefruit.
 
 **Ausgeschlossen vom Volumen-Baustein (zählen NICHT):**
 - Kleine Aromaten wie Knoblauch, Zwiebel (als Menge), Schalotte, Ingwer, Chili — viel zu wenig in realistischen Mengen um Magendehnung auszulösen
