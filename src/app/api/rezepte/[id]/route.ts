@@ -17,14 +17,14 @@ export async function GET(
 
   const { data: recipe, error } = await supabase
     .from('recipes')
-    .select('*, recipe_ingredients(id, name, amount, unit, sort_order)')
+    .select('*, recipe_ingredients(id, item_type, name, amount, unit, label, sort_order)')
     .eq('id', id)
     .single()
 
   if (error || !recipe) return NextResponse.json({ error: 'Rezept nicht gefunden' }, { status: 404 })
 
   const ingredients = (recipe.recipe_ingredients as {
-    id: string; name: string; amount: number; unit: string; sort_order: number
+    id: string; item_type: 'zutat' | 'gruppe'; name: string | null; amount: number | null; unit: string | null; label: string | null; sort_order: number
   }[]).sort((a, b) => a.sort_order - b.sort_order)
 
   return NextResponse.json({

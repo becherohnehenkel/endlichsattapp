@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -10,16 +11,10 @@ import RezeptSaettigungsMatrix from '@/components/rezept-saettigungs-matrix'
 import RezeptKontextHinweis from '@/components/rezept-kontext-hinweis'
 import type { RezeptSaettigungsMatrix as MatrixType } from '@/lib/saettigungs-matrix-rezept'
 
-export default async function RezeptDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
-  const { id } = await params
+// React cache() dedupt den Query zwischen generateMetadata() und der Page-Komponente,
+// damit die DB nur einmal pro Request angefragt wird.
+const getRecipe = cache(async (id: string) => {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  const isGuest = !user || user.is_anonymous === true
-
   const { data: recipe } = await supabase
     .from('recipes')
     .select(`
@@ -36,14 +31,46 @@ export default async function RezeptDetailPage({
       is_guest_visible,
       recipe_ingredients (
         id,
+        item_type,
         name,
         amount,
         unit,
+        label,
         sort_order
       )
     `)
     .eq('id', id)
     .single()
+  return recipe
+})
+
+// generateMetadata() wird von Next.js VOR dem Start des Streams aufgelöst — ruft hier
+// notFound() auf, damit der HTTP-Status bei ungültiger ID korrekt 404 ist. Ohne diesen
+// vorgezogenen Check würde die vorhandene `loading.tsx` sofort mit Status 200 streamen,
+// bevor die Page-Komponente asynchron feststellen kann, dass das Rezept nicht existiert
+// (der HTTP-Status lässt sich danach nicht mehr ändern, nur noch der Seiteninhalt).
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}) {
+  const { id } = await params
+  const recipe = await getRecipe(id)
+  if (!recipe) notFound()
+  return { title: recipe.title }
+}
+
+export default async function RezeptDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}) {
+  const { id } = await params
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const isGuest = !user || user.is_anonymous === true
+
+  const recipe = await getRecipe(id)
 
   if (!recipe) notFound()
 
@@ -92,9 +119,30 @@ export default async function RezeptDetailPage({
   const matrix = recipe.saettigungs_matrix as MatrixType | null
   const recipeTyp = recipe.recipe_typ as 'beilage' | 'grundlage' | null
 
-  type Ingredient = { id: string; name: string; amount: number; unit: string; sort_order: number }
+  type Ingredient = {
+    id: string
+    item_type: 'zutat' | 'gruppe'
+    name: string | null
+    amount: number | null
+    unit: string | null
+    label: string | null
+    sort_order: number
+  }
   const ingredients = (recipe.recipe_ingredients as unknown as Ingredient[])
     .sort((a, b) => a.sort_order - b.sort_order)
+
+  // Zutaten unter der jeweils letzten vorangehenden Gruppen-Überschrift gruppieren.
+  // Zutaten vor der ersten Überschrift bleiben ungruppiert (group === null).
+  type ZutatenGruppe = { label: string | null; items: Ingredient[] }
+  const zutatenGruppen = ingredients.reduce<ZutatenGruppe[]>((groups, ing) => {
+    if (ing.item_type === 'gruppe') {
+      groups.push({ label: ing.label, items: [] })
+      return groups
+    }
+    if (groups.length === 0) groups.push({ label: null, items: [] })
+    groups[groups.length - 1].items.push(ing)
+    return groups
+  }, [])
 
   return (
     <div className="min-h-screen bg-background">
@@ -149,18 +197,25 @@ export default async function RezeptDetailPage({
         <Separator />
 
         {/* Zutaten */}
-        <div className="space-y-3">
+        <div className="space-y-4">
           <h2 className="text-sm font-semibold text-foreground">Zutaten</h2>
-          <ul className="space-y-1.5">
-            {ingredients.map((ing) => (
-              <li key={ing.id} className="flex items-baseline justify-between gap-3 text-sm">
-                <span className="text-foreground">{ing.name}</span>
-                <span className="text-muted-foreground flex-shrink-0">
-                  {ing.amount % 1 === 0 ? ing.amount.toFixed(0) : ing.amount} {ing.unit}
-                </span>
-              </li>
-            ))}
-          </ul>
+          {zutatenGruppen.map((gruppe, i) => (
+            <div key={i} className="space-y-1.5">
+              {gruppe.label && (
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{gruppe.label}</p>
+              )}
+              <ul className="space-y-1.5">
+                {gruppe.items.map((ing) => (
+                  <li key={ing.id} className="flex items-baseline justify-between gap-3 text-sm">
+                    <span className="text-foreground">{ing.name}</span>
+                    <span className="text-muted-foreground flex-shrink-0">
+                      {ing.amount !== null && (ing.amount % 1 === 0 ? ing.amount.toFixed(0) : ing.amount)} {ing.unit}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
 
         <Separator />

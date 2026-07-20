@@ -2,24 +2,37 @@
 
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { useForm, useFieldArray, Controller } from 'react-hook-form'
+import { useForm, useFieldArray, Controller, type Control, type UseFormRegister, type FieldErrors } from 'react-hook-form'
 import Image from 'next/image'
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
-import { Plus, Trash2, Upload, ChefHat } from 'lucide-react'
+import { Plus, Trash2, Upload, ChefHat, GripVertical, Heading } from 'lucide-react'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Switch } from '@/components/ui/switch'
 import ZutatInputMitQuelle from '@/components/zutat-input-mit-quelle'
 import BildCropper from '@/components/bild-cropper'
 import type { NutritionPer100g } from '@/lib/nutrition'
 
-interface IngredientRow {
+interface ZutatenZeile {
+  itemType: 'zutat' | 'gruppe'
   name: string
   amount: string
   unit: string
+  groupLabel: string
 }
 
 export interface RezeptFormularValues {
@@ -30,8 +43,159 @@ export interface RezeptFormularValues {
   instructions: string
   ingredient_tags: string
   cuisine_tags: string
-  ingredients: IngredientRow[]
+  ingredients: ZutatenZeile[]
   image_path?: string
+}
+
+/** Eine Gruppen-Überschrift ohne mindestens eine nachfolgende Zutat (bis zur nächsten Überschrift/Listenende) gilt als leer. */
+function findEmptyGroupLabel(items: ZutatenZeile[]): string | null {
+  for (let i = 0; i < items.length; i++) {
+    if (items[i].itemType !== 'gruppe') continue
+    const rest = items.slice(i + 1)
+    const nextHeaderOffset = rest.findIndex(it => it.itemType === 'gruppe')
+    const groupItems = nextHeaderOffset === -1 ? rest : rest.slice(0, nextHeaderOffset)
+    if (!groupItems.some(it => it.itemType === 'zutat')) {
+      return items[i].groupLabel.trim() || '(ohne Titel)'
+    }
+  }
+  return null
+}
+
+function SortableZutatZeile({
+  id,
+  index,
+  control,
+  register,
+  macros,
+  onSelectSource,
+  onClearMacros,
+  onRemove,
+  disableRemove,
+}: {
+  id: string
+  index: number
+  control: Control<RezeptFormularValues>
+  register: UseFormRegister<RezeptFormularValues>
+  macros: NutritionPer100g | null
+  onSelectSource: (per100g: NutritionPer100g) => void
+  onClearMacros: () => void
+  onRemove: () => void
+  disableRemove: boolean
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
+  const style = { transform: CSS.Transform.toString(transform), transition }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex gap-2 items-start ${isDragging ? 'opacity-50 z-10' : ''}`}
+    >
+      <button
+        type="button"
+        aria-label="Zutat verschieben"
+        className="mt-2 flex-shrink-0 touch-none text-muted-foreground/60 hover:text-muted-foreground cursor-grab active:cursor-grabbing"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="h-4 w-4" />
+      </button>
+      <Controller
+        control={control}
+        name={`ingredients.${index}.name`}
+        render={({ field: f }) => (
+          <ZutatInputMitQuelle
+            value={f.value}
+            onChange={f.onChange}
+            onBlur={f.onBlur}
+            onSelectSource={onSelectSource}
+            onClearMacros={onClearMacros}
+            linkedMacros={macros}
+          />
+        )}
+      />
+      <Input
+        placeholder="Menge"
+        className="w-20"
+        type="number"
+        step="0.1"
+        min="0"
+        {...register(`ingredients.${index}.amount`)}
+      />
+      <Input
+        placeholder="Einheit"
+        className="w-20"
+        {...register(`ingredients.${index}.unit`)}
+      />
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="flex-shrink-0 text-muted-foreground hover:text-destructive"
+        onClick={onRemove}
+        disabled={disableRemove}
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </div>
+  )
+}
+
+function SortableGruppenZeile({
+  id,
+  index,
+  register,
+  errors,
+  onRemove,
+}: {
+  id: string
+  index: number
+  register: UseFormRegister<RezeptFormularValues>
+  errors: FieldErrors<RezeptFormularValues>
+  onRemove: () => void
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
+  const style = { transform: CSS.Transform.toString(transform), transition }
+  const errorMessage = errors.ingredients?.[index]?.groupLabel?.message
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex gap-2 items-center rounded-lg border border-dashed border-border bg-muted/30 px-2 py-1.5 ${isDragging ? 'opacity-50 z-10' : ''}`}
+    >
+      <button
+        type="button"
+        aria-label="Gruppe verschieben"
+        className="flex-shrink-0 touch-none text-muted-foreground/60 hover:text-muted-foreground cursor-grab active:cursor-grabbing"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="h-4 w-4" />
+      </button>
+      <div className="flex-1 space-y-1">
+        <Input
+          placeholder="z.B. Für das Dressing"
+          maxLength={40}
+          className="h-8 text-sm font-medium bg-transparent border-none px-1 focus-visible:ring-1"
+          {...register(`ingredients.${index}.groupLabel`, {
+            required: 'Pflichtfeld',
+            maxLength: { value: 40, message: 'Max. 40 Zeichen' },
+          })}
+        />
+        {errorMessage && <p className="text-xs text-destructive">{errorMessage}</p>}
+      </div>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="flex-shrink-0 text-muted-foreground hover:text-destructive"
+        onClick={onRemove}
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </div>
+  )
 }
 
 type RecipeTyp = 'vollstaendig' | 'beilage' | 'grundlage'
@@ -71,9 +235,6 @@ export default function RezeptFormular({
   const [imageError, setImageError] = useState<string | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
-  const [ingredientMacros, setIngredientMacros] = useState<(NutritionPer100g | null)[]>(
-    () => (defaultValues?.ingredients ?? [{ name: '', amount: '', unit: 'g' }]).map((_, i) => defaultIngredientMacros?.[i] ?? null)
-  )
 
   const { register, control, handleSubmit, formState: { errors } } = useForm<RezeptFormularValues>({
     defaultValues: {
@@ -84,12 +245,34 @@ export default function RezeptFormular({
       instructions: '',
       ingredient_tags: '',
       cuisine_tags: '',
-      ingredients: [{ name: '', amount: '', unit: 'g' }],
+      ingredients: [{ itemType: 'zutat', name: '', amount: '', unit: 'g', groupLabel: '' }],
       ...defaultValues,
     },
   })
 
-  const { fields, append, remove } = useFieldArray({ control, name: 'ingredients' })
+  const { fields, append, remove, move } = useFieldArray({ control, name: 'ingredients' })
+
+  // Nährwert-Quelle pro Zutat, verknüpft über die stabile Feld-ID (nicht die Array-Position) —
+  // so bleibt die Verknüpfung beim Umsortieren korrekt an der jeweiligen Zutat.
+  const [ingredientMacros, setIngredientMacros] = useState<Record<string, NutritionPer100g | null>>(
+    () => Object.fromEntries(fields.map((f, i) => [f.id, defaultIngredientMacros?.[i] ?? null]))
+  )
+
+  const zutatCount = fields.filter(f => f.itemType === 'zutat').length
+
+  const dragSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } })
+  )
+
+  function handleIngredientDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const oldIndex = fields.findIndex(f => f.id === active.id)
+    const newIndex = fields.findIndex(f => f.id === over.id)
+    if (oldIndex === -1 || newIndex === -1) return
+    move(oldIndex, newIndex)
+  }
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -131,6 +314,19 @@ export default function RezeptFormular({
 
   async function onSubmit(values: RezeptFormularValues) {
     setSubmitError(null)
+
+    // Leere Zutaten-Zeilen (kein Name eingetragen) rausfiltern, Gruppen-Überschriften immer behalten —
+    // dabei die Zuordnung zur stabilen Feld-ID für die Makro-Verknüpfung mitführen.
+    const filteredItems = values.ingredients
+      .map((item, idx) => ({ item, fieldId: fields[idx]?.id }))
+      .filter(({ item }) => item.itemType === 'gruppe' || item.name.trim())
+
+    const emptyGroupLabel = findEmptyGroupLabel(filteredItems.map(({ item }) => item))
+    if (emptyGroupLabel) {
+      setSubmitError(`Gruppe „${emptyGroupLabel}" hat keine Zutaten`)
+      return
+    }
+
     setSubmitting(true)
     try {
       const payload = {
@@ -147,15 +343,22 @@ export default function RezeptFormular({
           .split(',')
           .map(t => t.trim().toLowerCase())
           .filter(Boolean),
-        ingredients: values.ingredients
-          .filter(i => i.name.trim())
-          .map((i, idx) => ({
-            name: i.name.trim(),
-            amount: parseFloat(i.amount) || 0,
-            unit: i.unit.trim() || 'Stück',
-            sort_order: idx,
-            macros_per_100g: ingredientMacros[idx] ?? null,
-          })),
+        ingredients: filteredItems.map(({ item, fieldId }, idx) =>
+          item.itemType === 'gruppe'
+            ? {
+                item_type: 'gruppe' as const,
+                label: item.groupLabel.trim(),
+                sort_order: idx,
+              }
+            : {
+                item_type: 'zutat' as const,
+                name: item.name.trim(),
+                amount: parseFloat(item.amount) || 0,
+                unit: item.unit.trim() || 'Stück',
+                sort_order: idx,
+                macros_per_100g: (fieldId ? ingredientMacros[fieldId] : null) ?? null,
+              }
+        ),
         image_path: uploadedPath ?? undefined,
         recipe_typ: recipeTyp === 'vollstaendig' ? null : recipeTyp,
         is_guest_visible: isGuestVisible,
@@ -170,7 +373,11 @@ export default function RezeptFormular({
       })
       if (!res.ok) {
         const data = await res.json()
-        throw new Error(data.error ?? 'Speichern fehlgeschlagen')
+        // API liefert bei Zod-Validierungsfehlern ein Objekt (fieldErrors/formErrors) statt eines Strings
+        const message = typeof data.error === 'string'
+          ? data.error
+          : Object.values(data.error?.fieldErrors ?? {}).flat().join(', ') || 'Speichern fehlgeschlagen'
+        throw new Error(message)
       }
       router.push('/admin/rezepte')
       router.refresh()
@@ -216,75 +423,66 @@ export default function RezeptFormular({
       {/* Zutaten */}
       <div className="space-y-3">
         <Label>Zutaten *</Label>
-        {fields.map((field, index) => (
-          <div key={field.id} className="flex gap-2 items-start">
-            <Controller
-              control={control}
-              name={`ingredients.${index}.name`}
-              render={({ field: f }) => (
-                <ZutatInputMitQuelle
-                  value={f.value}
-                  onChange={f.onChange}
-                  onBlur={f.onBlur}
-                  onSelectSource={(per100g) => {
-                    setIngredientMacros(prev => {
-                      const next = [...prev]
-                      next[index] = per100g
-                      return next
-                    })
-                  }}
-                  onClearMacros={() => {
-                    setIngredientMacros(prev => {
-                      const next = [...prev]
-                      next[index] = null
-                      return next
-                    })
-                  }}
-                  linkedMacros={ingredientMacros[index] ?? null}
-                />
+        <DndContext sensors={dragSensors} collisionDetection={closestCenter} onDragEnd={handleIngredientDragEnd}>
+          <SortableContext items={fields.map(f => f.id)} strategy={verticalListSortingStrategy}>
+            <div className="space-y-2">
+              {fields.map((field, index) =>
+                field.itemType === 'gruppe' ? (
+                  <SortableGruppenZeile
+                    key={field.id}
+                    id={field.id}
+                    index={index}
+                    register={register}
+                    errors={errors}
+                    onRemove={() => remove(index)}
+                  />
+                ) : (
+                  <SortableZutatZeile
+                    key={field.id}
+                    id={field.id}
+                    index={index}
+                    control={control}
+                    register={register}
+                    macros={ingredientMacros[field.id] ?? null}
+                    onSelectSource={(per100g) => setIngredientMacros(prev => ({ ...prev, [field.id]: per100g }))}
+                    onClearMacros={() => setIngredientMacros(prev => ({ ...prev, [field.id]: null }))}
+                    onRemove={() => {
+                      remove(index)
+                      setIngredientMacros(prev => {
+                        const next = { ...prev }
+                        delete next[field.id]
+                        return next
+                      })
+                    }}
+                    disableRemove={zutatCount <= 1}
+                  />
+                )
               )}
-            />
-            <Input
-              placeholder="Menge"
-              className="w-20"
-              type="number"
-              step="0.1"
-              min="0"
-              {...register(`ingredients.${index}.amount`)}
-            />
-            <Input
-              placeholder="Einheit"
-              className="w-20"
-              {...register(`ingredients.${index}.unit`)}
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="flex-shrink-0 text-muted-foreground hover:text-destructive"
-              onClick={() => {
-                remove(index)
-                setIngredientMacros(prev => prev.filter((_, i) => i !== index))
-              }}
-              disabled={fields.length === 1}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
-        ))}
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            append({ name: '', amount: '', unit: 'g' })
-            setIngredientMacros(prev => [...prev, null])
-          }}
-          className="w-full"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Zutat hinzufügen
-        </Button>
+            </div>
+          </SortableContext>
+        </DndContext>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => append({ itemType: 'zutat', name: '', amount: '', unit: 'g', groupLabel: '' })}
+            className="flex-1"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Zutat hinzufügen
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => append({ itemType: 'gruppe', name: '', amount: '', unit: '', groupLabel: '' })}
+            className="flex-1"
+          >
+            <Heading className="h-4 w-4 mr-2" />
+            Gruppe hinzufügen
+          </Button>
+        </div>
       </div>
 
       <Separator />

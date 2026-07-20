@@ -5,19 +5,12 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { calculateMacrosPerServing } from '@/lib/nutrition'
 import { calculateRezeptMatrix } from '@/lib/saettigungs-matrix-rezept'
+import { RecipeIngredientsSchema, isZutat } from '@/lib/recipe-ingredients-schema'
 
 function imageUrl(path: string | null): string | null {
   if (!path) return null
   return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/recipe-images/${path}`
 }
-
-const IngredientSchema = z.object({
-  name: z.string().min(1),
-  amount: z.number().positive(),
-  unit: z.string().min(1),
-  sort_order: z.number().int().optional().default(0),
-  macros_per_100g: z.record(z.string(), z.number()).nullable().optional(),
-})
 
 const RecipeSchema = z.object({
   title: z.string().min(1).max(200),
@@ -29,7 +22,7 @@ const RecipeSchema = z.object({
   instructions: z.string().min(1),
   ingredient_tags: z.array(z.string().min(1)).min(1, 'Mindestens ein Zutaten-Tag erforderlich'),
   cuisine_tags: z.array(z.string()).optional().default([]),
-  ingredients: z.array(IngredientSchema).min(1, 'Mindestens eine Zutat erforderlich'),
+  ingredients: RecipeIngredientsSchema,
   recipe_typ: z.enum(['beilage', 'grundlage']).nullable().optional(),
   is_guest_visible: z.boolean().optional().default(false),
 })
@@ -96,14 +89,28 @@ export async function POST(request: Request) {
   const { error: ingredientsError } = await admin
     .from('recipe_ingredients')
     .insert(
-      ingredients.map((ing, i) => ({
-        recipe_id: recipe.id,
-        name: ing.name,
-        amount: ing.amount,
-        unit: ing.unit,
-        sort_order: ing.sort_order ?? i,
-        macros_per_100g: ing.macros_per_100g ?? null,
-      }))
+      ingredients.map((ing, i) =>
+        ing.item_type === 'gruppe'
+          ? {
+              recipe_id: recipe.id,
+              item_type: 'gruppe' as const,
+              label: ing.label,
+              name: null,
+              amount: null,
+              unit: null,
+              sort_order: ing.sort_order ?? i,
+              macros_per_100g: null,
+            }
+          : {
+              recipe_id: recipe.id,
+              item_type: 'zutat' as const,
+              name: ing.name,
+              amount: ing.amount,
+              unit: ing.unit,
+              sort_order: ing.sort_order ?? i,
+              macros_per_100g: ing.macros_per_100g ?? null,
+            }
+      )
     )
 
   if (ingredientsError) {
@@ -111,12 +118,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Fehler beim Speichern der Zutaten' }, { status: 500 })
   }
 
-  // Calculate and save macros synchronously, using stored USDA data where available
+  // Makro-/Matrix-Berechnung nur mit echten Zutaten — Gruppen-Überschriften haben keine Nährwerte
+  const zutaten = ingredients.filter(isZutat)
   const macros = await calculateMacrosPerServing(
-    ingredients.map(ing => ({ ...ing, macros_per_100g: (ing.macros_per_100g ?? null) as unknown as import('@/lib/nutrition').NutritionPer100g | null })),
+    zutaten.map(ing => ({ ...ing, macros_per_100g: (ing.macros_per_100g ?? null) as unknown as import('@/lib/nutrition').NutritionPer100g | null })),
     recipeData.servings
   )
-  const matrix = calculateRezeptMatrix(ingredients, macros as Record<string, number> | null)
+  const matrix = calculateRezeptMatrix(zutaten, macros as Record<string, number> | null)
   await admin.from('recipes').update({
     macros_per_serving: (macros ?? null) as unknown as import('@/types/database').Json,
     saettigungs_matrix: matrix as unknown as import('@/types/database').Json,

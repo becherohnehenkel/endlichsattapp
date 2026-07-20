@@ -32,9 +32,11 @@ export default async function RezeptBearbeitenPage({
       is_guest_visible,
       recipe_ingredients (
         id,
+        item_type,
         name,
         amount,
         unit,
+        label,
         sort_order,
         macros_per_100g
       )
@@ -49,7 +51,16 @@ export default async function RezeptBearbeitenPage({
     ? `${supabaseUrl}/storage/v1/object/public/recipe-images/${recipe.image_path}`
     : null
 
-  type Ingredient = { id: string; name: string; amount: number; unit: string; sort_order: number; macros_per_100g: Record<string, number> | null }
+  type Ingredient = {
+    id: string
+    item_type: 'zutat' | 'gruppe'
+    name: string | null
+    amount: number | null
+    unit: string | null
+    label: string | null
+    sort_order: number
+    macros_per_100g: Record<string, number> | null
+  }
   const sortedIngredients = (recipe.recipe_ingredients as unknown as Ingredient[])
     .sort((a, b) => a.sort_order - b.sort_order)
 
@@ -61,11 +72,11 @@ export default async function RezeptBearbeitenPage({
     instructions: recipe.instructions,
     ingredient_tags: (recipe.ingredient_tags as string[]).join(', '),
     cuisine_tags: (recipe.cuisine_tags as string[]).join(', '),
-    ingredients: sortedIngredients.map(i => ({
-      name: i.name,
-      amount: String(i.amount),
-      unit: i.unit,
-    })),
+    ingredients: sortedIngredients.map(i =>
+      i.item_type === 'gruppe'
+        ? { itemType: 'gruppe' as const, name: '', amount: '', unit: '', groupLabel: i.label ?? '' }
+        : { itemType: 'zutat' as const, name: i.name ?? '', amount: String(i.amount ?? ''), unit: i.unit ?? '', groupLabel: '' }
+    ),
     image_path: recipe.image_path ?? undefined,
   }
 

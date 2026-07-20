@@ -31,7 +31,7 @@ const MOCK_RECIPE = {
   ingredient_tags: ['hähnchen', 'reis'],
   cuisine_tags: [],
   recipe_ingredients: [
-    { id: 'ing-1', name: 'Hähnchen', amount: 200, unit: 'g', sort_order: 0 },
+    { id: 'ing-1', item_type: 'zutat', name: 'Hähnchen', amount: 200, unit: 'g', label: null, sort_order: 0 },
   ],
 }
 
@@ -43,7 +43,7 @@ const VALID_UPDATE = {
   instructions: 'Neue Anleitung.',
   ingredient_tags: ['hähnchen'],
   cuisine_tags: [],
-  ingredients: [{ name: 'Hähnchen', amount: 300, unit: 'g' }],
+  ingredients: [{ item_type: 'zutat', name: 'Hähnchen', amount: 300, unit: 'g' }],
 }
 
 function makeParams(id: string) {
@@ -139,6 +139,61 @@ describe('PUT /api/admin/rezepte/[id]', () => {
     expect(res.status).toBe(200)
     const updatePayload = updateMock.mock.calls[0][0]
     expect(updatePayload.recipe_typ).toBe('grundlage')
+  })
+
+  it('returns 400 when a group header has no following ingredient (PROJ-24)', async () => {
+    process.env.ADMIN_EMAIL = 'admin@test.com'
+    mockGetUser.mockResolvedValue({ data: { user: { email: 'admin@test.com' } } })
+    const { PUT } = await import('./route')
+    const res = await PUT(
+      new Request('http://localhost', {
+        method: 'PUT',
+        body: JSON.stringify({
+          ...VALID_UPDATE,
+          ingredients: [
+            { item_type: 'gruppe', label: 'Leere Gruppe', sort_order: 0 },
+            { item_type: 'gruppe', label: 'Noch eine', sort_order: 1 },
+          ],
+        }),
+      }),
+      makeParams('recipe-1')
+    )
+    expect(res.status).toBe(400)
+  })
+
+  it('updates recipe with a group header and persists item_type/label (PROJ-24)', async () => {
+    process.env.ADMIN_EMAIL = 'admin@test.com'
+    mockGetUser.mockResolvedValue({ data: { user: { email: 'admin@test.com' } } })
+
+    const ingredientsInsertMock = vi.fn().mockResolvedValue({ error: null })
+    const blsMock = { select: vi.fn().mockReturnValue({ ilike: vi.fn().mockReturnValue({ limit: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValue({ data: null }) }) }) }) }
+    adminFrom
+      .mockReturnValueOnce({ update: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }) })
+      .mockReturnValueOnce({ delete: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }) })
+      .mockReturnValueOnce({ insert: ingredientsInsertMock })
+      .mockReturnValueOnce(blsMock)
+      .mockReturnValueOnce({ update: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }) })
+
+    const { PUT } = await import('./route')
+    const res = await PUT(
+      new Request('http://localhost', {
+        method: 'PUT',
+        body: JSON.stringify({
+          ...VALID_UPDATE,
+          ingredients: [
+            { item_type: 'gruppe', label: 'Für das Dressing', sort_order: 0 },
+            { item_type: 'zutat', name: 'Olivenöl', amount: 30, unit: 'g', sort_order: 1 },
+          ],
+        }),
+      }),
+      makeParams('recipe-1')
+    )
+    expect(res.status).toBe(200)
+    const insertedIngredients = ingredientsInsertMock.mock.calls[0][0]
+    expect(insertedIngredients).toEqual([
+      { recipe_id: 'recipe-1', item_type: 'gruppe', label: 'Für das Dressing', name: null, amount: null, unit: null, sort_order: 0, macros_per_100g: null },
+      { recipe_id: 'recipe-1', item_type: 'zutat', name: 'Olivenöl', amount: 30, unit: 'g', sort_order: 1, macros_per_100g: null },
+    ])
   })
 
   it('returns recipeTyp in GET response', async () => {

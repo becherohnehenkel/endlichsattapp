@@ -263,31 +263,37 @@ export type Database = {
       }
       recipe_ingredients: {
         Row: {
-          amount: number
+          amount: number | null
           id: string
+          item_type: string
+          label: string | null
           macros_per_100g: Json | null
-          name: string
+          name: string | null
           recipe_id: string
           sort_order: number
-          unit: string
+          unit: string | null
         }
         Insert: {
-          amount: number
+          amount?: number | null
           id?: string
+          item_type?: string
+          label?: string | null
           macros_per_100g?: Json | null
-          name: string
+          name?: string | null
           recipe_id: string
           sort_order?: number
-          unit: string
+          unit?: string | null
         }
         Update: {
-          amount?: number
+          amount?: number | null
           id?: string
+          item_type?: string
+          label?: string | null
           macros_per_100g?: Json | null
-          name?: string
+          name?: string | null
           recipe_id?: string
           sort_order?: number
-          unit?: string
+          unit?: string | null
         }
         Relationships: [
           {
