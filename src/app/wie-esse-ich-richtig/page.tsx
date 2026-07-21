@@ -6,7 +6,7 @@ export default async function WieEsseIchRichtigPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-10 border-b border-border bg-card/80 backdrop-blur-sm px-4 py-3 flex items-center justify-between">
+      <header className="md:hidden sticky top-0 z-10 border-b border-border bg-card/80 backdrop-blur-sm px-4 py-3 flex items-center justify-between">
         <BackButton />
         <span className="font-semibold text-foreground tracking-tight">Wie esse ich richtig?</span>
         <div className="w-16" />

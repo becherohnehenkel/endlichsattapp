@@ -99,7 +99,7 @@ function ratingConfig(rating: Rating) {
 export default function SaettigungsmatrixPage() {
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-10 border-b border-border bg-card/80 backdrop-blur-sm px-4 py-3 flex items-center justify-between">
+      <header className="md:hidden sticky top-0 z-10 border-b border-border bg-card/80 backdrop-blur-sm px-4 py-3 flex items-center justify-between">
         <BackButton />
         <span className="font-semibold text-foreground tracking-tight">Sättigungs-Matrix</span>
         <div className="w-16" />

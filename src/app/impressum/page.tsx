@@ -4,7 +4,7 @@ import { ChevronLeft } from 'lucide-react'
 export default function ImpressumPage() {
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-10 border-b border-border bg-card/80 backdrop-blur-sm px-4 py-3 flex items-center gap-3">
+      <header className="md:hidden sticky top-0 z-10 border-b border-border bg-card/80 backdrop-blur-sm px-4 py-3 flex items-center gap-3">
         <Link
           href="/"
           className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"

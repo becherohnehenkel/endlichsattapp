@@ -116,7 +116,7 @@ export default function KontoView({
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-10 border-b border-border bg-card/80 backdrop-blur-sm px-4 py-3 flex items-center gap-3">
+      <header className="md:hidden sticky top-0 z-10 border-b border-border bg-card/80 backdrop-blur-sm px-4 py-3 flex items-center gap-3">
         <Link href="/analyse" className="text-muted-foreground hover:text-foreground transition-colors">
           <ChevronLeft className="h-5 w-5" />
         </Link>

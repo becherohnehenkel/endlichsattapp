@@ -31,7 +31,7 @@ test.describe('PWA-Infrastruktur', () => {
     expect(body.name).toBe('endlichsatt')
     expect(body.start_url).toBe('/')
     expect(body.display).toBe('standalone')
-    expect(body.theme_color).toBe('#4A7C59')
+    expect(body.theme_color).toBe('#2E9E6B')
     expect(Array.isArray(body.icons)).toBe(true)
     expect(body.icons.length).toBeGreaterThanOrEqual(2)
   })
@@ -96,14 +96,14 @@ test.describe('Bottom Navigation', () => {
     await loginAs(page)
     await page.goto('/')
     const homeLink = page.locator('[data-testid="bottom-nav"] a[href="/"]')
-    await expect(homeLink).toHaveClass(/text-\[#4A7C59\]/)
+    await expect(homeLink).toHaveClass(/text-\[#2E9E6B\]/)
   })
 
   test('aktiver Tab wechselt beim Navigieren zu /rezepte', async ({ page }) => {
     await loginAs(page)
     await page.goto('/rezepte')
     const rezepteLink = page.locator('[data-testid="bottom-nav"] a[href="/rezepte"]')
-    await expect(rezepteLink).toHaveClass(/text-\[#4A7C59\]/)
+    await expect(rezepteLink).toHaveClass(/text-\[#2E9E6B\]/)
   })
 
   test('Bottom Navigation ist auf Sub-Seite /konto sichtbar', async ({ page }) => {
@@ -173,7 +173,7 @@ test.describe('Top Navigation', () => {
     await loginAs(page)
     await page.goto('/rezepte')
     const rezepteLink = page.locator('[data-testid="top-nav"] a[href="/rezepte"]')
-    await expect(rezepteLink).toHaveClass(/bg-\[#E8F0EB\]/)
+    await expect(rezepteLink).toHaveClass(/bg-\[#DFF0F2\]/)
   })
 
   test('keine Top Navigation auf /login', async ({ page, browserName }) => {

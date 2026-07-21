@@ -4,7 +4,7 @@ import { ChevronLeft } from 'lucide-react'
 export default function HistorieLoading() {
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-10 border-b border-border bg-card/80 backdrop-blur-sm px-4 py-3 flex items-center">
+      <header className="md:hidden sticky top-0 z-10 border-b border-border bg-card/80 backdrop-blur-sm px-4 py-3 flex items-center">
         <div className="flex items-center gap-1 text-sm text-muted-foreground w-16">
           <ChevronLeft className="h-4 w-4" />
           Zurück

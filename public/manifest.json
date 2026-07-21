@@ -4,8 +4,8 @@
   "description": "Verstehe warum du hungrig bleibst — und was du konkret ändern kannst.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#F7F0E6",
-  "theme_color": "#4A7C59",
+  "background_color": "#F2F9FA",
+  "theme_color": "#2E9E6B",
   "lang": "de",
   "icons": [
     {
