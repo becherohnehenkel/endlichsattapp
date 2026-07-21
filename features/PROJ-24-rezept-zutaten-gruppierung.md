@@ -1,6 +1,6 @@
 # PROJ-24: Zutaten-Reihenfolge & Gruppierung im Rezept-Editor
 
-## Status: Approved (Refinement: Markdown-Formatierung in der Zubereitung)
+## Status: Deployed (Refinement: Markdown-Formatierung in der Zubereitung)
 **Created:** 2026-07-20
 **Last Updated:** 2026-07-21
 
@@ -455,3 +455,25 @@ Gleiche Einschränkung wie beim ursprünglichen PROJ-24-QA-Pass: Die Toolbar-But
 - Vercel-Build vom Product Owner im Dashboard als grün bestätigt
 
 **Kein neues Setup nötig** (Vercel-Projekt, Domain, Env-Vars bereits aus vorherigen Deployments vorhanden).
+
+---
+
+## Deployment — Refinement: Markdown-Formatierung (2026-07-21)
+
+**Deployed:** 2026-07-21
+**Tag:** v1.22.1-PROJ-24
+**Production URL:** https://app.mehralsabnehmen.de
+**Commit:** `6680efd` (deploy(PROJ-24): Deploy Markdown-Formatierung (Fett/Kursiv/Unterstrichen) in der Zubereitung), vorausgehend `e3bab9d` (Rahmen + Abstand für Zutaten-Gruppen)
+
+**Pre-Deployment-Checks:**
+- `npm run build` — erfolgreich
+- `npm run lint` — 0 Fehler (1 vorbestehende, unabhängige Warnung in `bild-cropper.tsx`)
+- QA: Approved, 0 Critical/High Bugs (1 Low: BUG-4, nicht blockierend)
+- Keine neuen Env-Vars nötig, kein Backend, keine DB-Migration
+- Keine neuen Dependencies (`package.json` unverändert im Diff)
+- Keine Secrets im Diff
+
+**Post-Deployment-Verifikation:**
+- Produktions-URL lädt (200): `https://app.mehralsabnehmen.de/rezept/fe8e05ab-af68-4e61-b8fd-6ead79b5e4e3`
+
+**Kein neues Setup nötig.**
