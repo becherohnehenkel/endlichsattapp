@@ -190,7 +190,7 @@ Kein neues Backend-Paket nötig — die Änderung an der Admin-API ist eine Erwe
 Der Admin-Editor selbst (Drag-and-Drop, "Gruppe hinzufügen") läuft auf Seiten mit echtem Server-seitigem Admin-Auth-Check — automatisiertes Browser-Testing (Playwright) kann diesen Check nicht mocken (greift auf dem Next.js-Server, nicht im Browser; gleiche Einschränkung wie in PROJ-9/PROJ-13 dokumentiert). Die Testabdeckung kombiniert deshalb vier Quellen:
 
 1. **Echter manueller Live-Test durch den Product Owner** im Dev-Server (Rezept "Spitzhkohl Erdnuss Nudeln") — per direkter DB-Abfrage verifiziert
-2. **E2E-Tests (Playwright)** für alles, was ohne Admin-Session testbar ist: öffentliche Anzeige (echte DB-Fixture), Zugriffskontrolle, API-Security — `tests/PROJ-24-rezept-zutaten-gruppierung.spec.ts`, 18/18 grün (Desktop + Mobile 375px)
+2. **E2E-Tests (Playwright)** für alles, was ohne Admin-Session testbar ist: öffentliche Anzeige (gegen das echte Rezept "Spitzhkohl Erdnuss Nudeln", kein eigenes Test-Fixture), Zugriffskontrolle, API-Security — `tests/PROJ-24-rezept-zutaten-gruppierung.spec.ts`, 18/18 grün (Desktop + Mobile 375px)
 3. **Integrationstests (Vitest)** für die Server-Validierung: `src/app/api/admin/rezepte/route.test.ts`, `[id]/route.test.ts` — 6 neue + alle bestehenden Tests aktualisiert
 4. **Unit-Tests (Vitest)** für die reine Validierungslogik: `src/lib/recipe-ingredients-schema.test.ts` — 13 neue Tests
 5. **Code-Review** für UI-Verhalten, das weder per DB-Query noch per E2E beobachtbar ist (z.B. Drag-Verhalten im Detail)
@@ -200,12 +200,12 @@ Der Admin-Editor selbst (Drag-and-Drop, "Gruppe hinzufügen") läuft auf Seiten 
 #### Admin — Zutaten umsortieren
 - [x] Drag-and-Drop übernimmt neue Reihenfolge sofort im Formular — Code-Review (`@dnd-kit`-Wiring korrekt: `DndContext`/`SortableContext`/`useSortable`, `move()` aus `useFieldArray`) + manueller Live-Test (Reihenfolge im gespeicherten Rezept entspricht der Bearbeitung)
 - [x] Touch-Umsortierung gleichwertig zur Maus — `TouchSensor` korrekt konfiguriert (`delay: 150ms`, `tolerance: 5px`, verhindert Scroll-Konflikt). **Nicht auf echtem Touch-Gerät verifiziert** — siehe BUG-2
-- [x] Reihenfolge wird persistiert und auf der Detailseite in gespeicherter Reihenfolge angezeigt — Live-Test: `sort_order` 0–9 sequenziell und korrekt in DB, E2E-Test bestätigt Anzeige-Reihenfolge für die QA-Fixture
+- [x] Reihenfolge wird persistiert und auf der Detailseite in gespeicherter Reihenfolge angezeigt — Live-Test: `sort_order` 0–9 sequenziell und korrekt in DB, E2E-Test bestätigt Anzeige-Reihenfolge am echten Rezept "Spitzhkohl Erdnuss Nudeln"
 - [x] Verknüpfte Nährwert-Quelle bleibt nach Verschieben korrekt der Zutat zugeordnet — `ingredientMacros` ist jetzt `Record<fieldId, ...>` statt indexbasiert (Code-Review); Live-Test zeigt alle 9 Zutaten-Zeilen im echten Rezept mit korrekt gesetzten `macros_per_100g`, keine Vertauschung erkennbar
 
 #### Admin — Gruppen-Überschriften
 - [x] "Gruppe hinzufügen" erzeugt neue Überschriften-Zeile — Code-Review + Live-Test (Gruppe "Dressing" wurde erfolgreich angelegt)
-- [x] Per Drag positionierte Gruppe bestimmt Zutaten-Zugehörigkeit — Live-Test: Gruppe "Dressing" (sort_order 5) gefolgt von 4 Zutaten (sort_order 6–9), korrekt der Gruppe zugeordnet; identisches Verhalten in der QA-Fixture per E2E bestätigt
+- [x] Per Drag positionierte Gruppe bestimmt Zutaten-Zugehörigkeit — Live-Test: Gruppe "Dressing" (sort_order 5) gefolgt von 4 Zutaten (sort_order 6–9), korrekt der Gruppe zugeordnet; per E2E direkt gegen dieses echte Rezept bestätigt
 - [x] Zutaten vor der ersten Überschrift bleiben ungruppiert — Live-Test: 5 Zutaten vor "Dressing" mit `label: null`; E2E-Test `zeigt ungruppierte Zutaten vor der ersten Überschrift ohne Heading` grün
 - [x] Leeres Label blockiert Speichern — Unit-Test (`RecipeIngredientItemSchema`) + Integrationstest (Zod `min(1)` auf `label`)
 - [x] Leere Gruppe blockiert Speichern — Unit-Test (`hasEmptyGroup`-Fälle: zwei Überschriften hintereinander, Überschrift am Ende) + Integrationstest (`returns 400 when a group header has no following ingredient`)

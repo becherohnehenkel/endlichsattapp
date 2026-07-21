@@ -10,25 +10,27 @@
  *
  * Diese Datei deckt ab:
  *   - Die öffentliche Anzeige gruppierter Zutaten auf der Rezept-Detailseite (echte
- *     DB-Daten, kein Mock — über eine dedizierte QA-Fixture, siehe unten)
+ *     DB-Daten, kein Mock)
  *   - API-Validierung (Backend, Vitest — siehe src/app/api/admin/rezepte/*.test.ts)
  *
  * Der Admin-Editor selbst (Drag-Reorder, Gruppe hinzufügen/löschen, leere-Gruppe-
  * Validierung) wurde manuell vom Product Owner im Dev-Server getestet und per
- * direkter DB-Abfrage verifiziert (Rezept "Spitzhkohl Erdnuss Nudeln" — 5 ungruppierte
- * Zutaten, dann Gruppe "Dressing" mit 4 Zutaten, korrekte sort_order, Makros nur an
- * Zutaten-Zeilen). Siehe QA-Ergebnisse im Feature-Spec für Details je Kriterium.
+ * direkter DB-Abfrage verifiziert. Siehe QA-Ergebnisse im Feature-Spec für Details
+ * je Kriterium.
  *
- * QA-Fixture: Rezept '00000000-0000-4000-8000-000000000024' wurde direkt per SQL
- * angelegt (1 ungruppierte Zutat, 1 Gruppe mit 1 Zutat) — stabil für die permanente
- * Regressionssuite, unabhängig von admin-editierten Live-Daten. Nicht löschen.
+ * Referenz-Rezept: "Spitzhkohl Erdnuss Nudeln" (echtes, admin-editiertes Rezept,
+ * kein eigens angelegtes Test-Fixture) — 5 ungruppierte Zutaten, dann Gruppe
+ * "Dressing" mit 4 Zutaten. Deckt beide Fälle (ungruppiert + gruppiert) in einem
+ * echten Rezept ab.
  */
 
 import { test, expect, type Page } from '@playwright/test'
 
 const TEST_EMAIL = 'qa-test@endlichsatt.dev'
 const TEST_PASSWORD = 'QaTest123!'
-const QA_FIXTURE_RECIPE_ID = '00000000-0000-4000-8000-000000000024'
+// "Spitzhkohl Erdnuss Nudeln" — echtes Rezept mit ungruppierten Zutaten vor der
+// ersten Überschrift und einer "Dressing"-Gruppe danach.
+const GROUPED_RECIPE_ID = 'fe8e05ab-af68-4e61-b8fd-6ead79b5e4e3'
 // Bestehendes PROJ-8-Rezept ohne jegliche Gruppen-Überschrift (Regressions-Referenz)
 const UNGROUPED_RECIPE_ID = 'ac634f99-9290-4c47-b5d3-78f3c11744f3' // Fenchelsalat
 
@@ -45,15 +47,15 @@ async function loginAs(page: Page) {
 test.describe('Rezept-Detailseite: Zutaten-Gruppierung', () => {
   test('zeigt Gruppen-Überschrift über den zugehörigen Zutaten', async ({ page }) => {
     await loginAs(page)
-    await page.goto(`/rezept/${QA_FIXTURE_RECIPE_ID}`)
-    await expect(page.getByText('QA-Testgruppe')).toBeVisible()
-    await expect(page.getByText('Testzutat In Gruppe')).toBeVisible()
+    await page.goto(`/rezept/${GROUPED_RECIPE_ID}`)
+    await expect(page.getByText('Dressing')).toBeVisible()
+    await expect(page.getByText('Honig')).toBeVisible()
   })
 
   test('zeigt ungruppierte Zutaten vor der ersten Überschrift ohne Heading', async ({ page }) => {
     await loginAs(page)
-    await page.goto(`/rezept/${QA_FIXTURE_RECIPE_ID}`)
-    await expect(page.getByText('Testzutat Ungruppiert')).toBeVisible()
+    await page.goto(`/rezept/${GROUPED_RECIPE_ID}`)
+    await expect(page.getByText('Spitzkohl roh')).toBeVisible()
   })
 
   test('Rezept ohne Gruppen zeigt weiterhin die klassische flache Zutatenliste (Regression)', async ({ page }) => {
@@ -74,7 +76,7 @@ test.describe('Admin-Zugriff: Rezept-Editor', () => {
 
   test('nicht-Admin → /admin/403', async ({ page }) => {
     await loginAs(page)
-    await page.goto(`/admin/rezepte/${QA_FIXTURE_RECIPE_ID}/bearbeiten`)
+    await page.goto(`/admin/rezepte/${GROUPED_RECIPE_ID}/bearbeiten`)
     await expect(page).toHaveURL(/\/admin\/403/, { timeout: 5000 })
   })
 })
@@ -93,14 +95,14 @@ test.describe('API Security: /api/admin/rezepte', () => {
     expect(res.status()).toBe(403)
   })
 
-  test(`PUT /${QA_FIXTURE_RECIPE_ID} unauthenticated → 401`, async ({ page }) => {
-    const res = await page.request.put(`/api/admin/rezepte/${QA_FIXTURE_RECIPE_ID}`, { data: {} })
+  test(`PUT /${GROUPED_RECIPE_ID} unauthenticated → 401`, async ({ page }) => {
+    const res = await page.request.put(`/api/admin/rezepte/${GROUPED_RECIPE_ID}`, { data: {} })
     expect(res.status()).toBe(401)
   })
 
-  test(`PUT /${QA_FIXTURE_RECIPE_ID} nicht-Admin → 403`, async ({ page }) => {
+  test(`PUT /${GROUPED_RECIPE_ID} nicht-Admin → 403`, async ({ page }) => {
     await loginAs(page)
-    const res = await page.request.put(`/api/admin/rezepte/${QA_FIXTURE_RECIPE_ID}`, { data: {} })
+    const res = await page.request.put(`/api/admin/rezepte/${GROUPED_RECIPE_ID}`, { data: {} })
     expect(res.status()).toBe(403)
   })
 })
