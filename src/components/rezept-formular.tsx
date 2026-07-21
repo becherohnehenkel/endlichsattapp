@@ -20,7 +20,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
-import { Plus, Trash2, Upload, ChefHat, GripVertical, Heading } from 'lucide-react'
+import { Plus, Trash2, Upload, ChefHat, GripVertical, Heading, Bold, Italic, Underline } from 'lucide-react'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Switch } from '@/components/ui/switch'
 import ZutatInputMitQuelle from '@/components/zutat-input-mit-quelle'
@@ -236,7 +236,9 @@ export default function RezeptFormular({
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
-  const { register, control, handleSubmit, formState: { errors } } = useForm<RezeptFormularValues>({
+  const instructionsRef = useRef<HTMLTextAreaElement | null>(null)
+
+  const { register, control, handleSubmit, setValue, formState: { errors } } = useForm<RezeptFormularValues>({
     defaultValues: {
       title: '',
       servings: '2',
@@ -251,6 +253,8 @@ export default function RezeptFormular({
   })
 
   const { fields, append, remove, move } = useFieldArray({ control, name: 'ingredients' })
+
+  const instructionsField = register('instructions', { required: 'Pflichtfeld' })
 
   // Nährwert-Quelle pro Zutat, verknüpft über die stabile Feld-ID (nicht die Array-Position) —
   // so bleibt die Verknüpfung beim Umsortieren korrekt an der jeweiligen Zutat.
@@ -272,6 +276,22 @@ export default function RezeptFormular({
     const newIndex = fields.findIndex(f => f.id === over.id)
     if (oldIndex === -1 || newIndex === -1) return
     move(oldIndex, newIndex)
+  }
+
+  /** Umschließt die aktuelle Textmarkierung im Zubereitungs-Feld mit dem Formatierungs-Marker
+   *  (z.B. "**"). Ohne Markierung wird der Marker paarig an der Cursor-Position eingefügt. */
+  function applyInstructionsFormat(marker: string) {
+    const el = instructionsRef.current
+    if (!el) return
+    const start = el.selectionStart ?? el.value.length
+    const end = el.selectionEnd ?? el.value.length
+    const selected = el.value.slice(start, end)
+    const newValue = el.value.slice(0, start) + marker + selected + marker + el.value.slice(end)
+    el.value = newValue
+    setValue('instructions', newValue, { shouldDirty: true })
+    el.focus()
+    const cursorStart = start + marker.length
+    el.setSelectionRange(cursorStart, cursorStart + selected.length)
   }
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -521,10 +541,46 @@ export default function RezeptFormular({
       {/* Zubereitung */}
       <div className="space-y-1.5">
         <Label htmlFor="instructions">Zubereitung *</Label>
+        <div className="flex gap-1">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 w-8 p-0"
+            aria-label="Fett"
+            onClick={() => applyInstructionsFormat('**')}
+          >
+            <Bold className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 w-8 p-0"
+            aria-label="Kursiv"
+            onClick={() => applyInstructionsFormat('*')}
+          >
+            <Italic className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 w-8 p-0"
+            aria-label="Unterstrichen"
+            onClick={() => applyInstructionsFormat('__')}
+          >
+            <Underline className="h-4 w-4" />
+          </Button>
+        </div>
         <Textarea
           id="instructions"
           rows={8}
-          {...register('instructions', { required: 'Pflichtfeld' })}
+          {...instructionsField}
+          ref={(el) => {
+            instructionsField.ref(el)
+            instructionsRef.current = el
+          }}
           placeholder="Schritt für Schritt Anleitung…"
           className="resize-none"
         />

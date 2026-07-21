@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/server'
 import BackButton from './back-button'
 import RezeptSaettigungsMatrix from '@/components/rezept-saettigungs-matrix'
 import RezeptKontextHinweis from '@/components/rezept-kontext-hinweis'
+import { formatRezeptText } from '@/lib/format-rezept-text'
 import type { RezeptSaettigungsMatrix as MatrixType } from '@/lib/saettigungs-matrix-rezept'
 
 // React cache() dedupt den Query zwischen generateMetadata() und der Page-Komponente,
@@ -232,7 +233,7 @@ export default async function RezeptDetailPage({
         <div className="space-y-3">
           <h2 className="text-sm font-semibold text-foreground">Zubereitung</h2>
           <p className="text-sm text-foreground leading-relaxed whitespace-pre-line">
-            {recipe.instructions}
+            {formatRezeptText(recipe.instructions)}
           </p>
         </div>
 

@@ -77,6 +77,28 @@ test.describe('Rezept-Detailseite: Zutaten-Gruppierung', () => {
   })
 })
 
+// ─── Öffentliche Anzeige: Markdown-Formatierung in der Zubereitung (PROJ-24 Refinement) ─
+//
+// Bewusst KEIN Test, der sich auf konkrete Formatierungs-Marker im aktuellen Text eines
+// echten Rezepts verlässt: Das Referenz-Rezept wird vom Admin fortlaufend live bearbeitet
+// (siehe QA-Notiz) — ein zuvor dort vorhandenes "*Nudeln*" wurde zwischen /frontend und /qa
+// bereits wieder entfernt. Ein dediziertes QA-Fixture dafür ist ausdrücklich nicht gewünscht
+// (siehe Product Decision zur Entfernung des früheren "QA-Fixture PROJ-24"-Rezepts). Die
+// Parser-Korrektheit (fett/kursiv/unterstrichen inkl. XSS-Sicherheit) ist stattdessen über
+// 7 Unit-Tests in src/lib/format-rezept-text.test.tsx abgedeckt; hier wird nur inhaltsunabhängig
+// geprüft, dass niemals rohe "**"-Marker im gerenderten Text sichtbar bleiben.
+
+test.describe('Rezept-Detailseite: Markdown-Formatierung in der Zubereitung', () => {
+  test('zeigt niemals rohe "**"-Formatierungsmarker im sichtbaren Zubereitungstext', async ({ page }) => {
+    await loginAs(page)
+    await page.goto(`/rezept/${GROUPED_RECIPE_ID}`)
+    const zubereitung = page.locator('h2', { hasText: 'Zubereitung' }).locator('..').locator('p')
+    await expect(zubereitung).toBeVisible()
+    const zubereitungsText = await zubereitung.textContent()
+    expect(zubereitungsText).not.toContain('**')
+  })
+})
+
 // ─── Admin-Zugriffskontrolle (Editor-Seiten) ──────────────────────────────────
 
 test.describe('Admin-Zugriff: Rezept-Editor', () => {
