@@ -197,13 +197,10 @@ export default async function RezeptDetailPage({
         <Separator />
 
         {/* Zutaten */}
-        <div className="space-y-4">
+        <div className="space-y-6">
           <h2 className="text-sm font-semibold text-foreground">Zutaten</h2>
-          {zutatenGruppen.map((gruppe, i) => (
-            <div key={i} className="space-y-1.5">
-              {gruppe.label && (
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{gruppe.label}</p>
-              )}
+          {zutatenGruppen.map((gruppe, i) => {
+            const liste = (
               <ul className="space-y-1.5">
                 {gruppe.items.map((ing) => (
                   <li key={ing.id} className="flex items-baseline justify-between gap-3 text-sm">
@@ -214,8 +211,19 @@ export default async function RezeptDetailPage({
                   </li>
                 ))}
               </ul>
-            </div>
-          ))}
+            )
+
+            // Nur echte Gruppen (mit Überschrift) bekommen einen Rahmen als visuelle Einheit —
+            // ungruppierte Zutaten bleiben eine einfache Liste ohne Box.
+            if (!gruppe.label) return <div key={i}>{liste}</div>
+
+            return (
+              <div key={i} className="rounded-xl border border-border p-3 space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{gruppe.label}</p>
+                {liste}
+              </div>
+            )
+          })}
         </div>
 
         <Separator />

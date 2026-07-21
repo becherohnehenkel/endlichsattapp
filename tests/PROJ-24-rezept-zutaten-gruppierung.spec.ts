@@ -48,8 +48,19 @@ test.describe('Rezept-Detailseite: Zutaten-Gruppierung', () => {
   test('zeigt Gruppen-Überschrift über den zugehörigen Zutaten', async ({ page }) => {
     await loginAs(page)
     await page.goto(`/rezept/${GROUPED_RECIPE_ID}`)
-    await expect(page.getByText('Dressing')).toBeVisible()
+    // Matcht auf die Gruppen-Überschrift-Struktur statt exaktem Text — das Rezept wird vom
+    // Admin weiter bearbeitet, konkrete Gruppennamen sollen die Tests nicht verbindlich machen.
+    const gruppenUeberschriften = page.locator('p.uppercase.tracking-wide')
+    await expect(gruppenUeberschriften.first()).toBeVisible()
+    expect(await gruppenUeberschriften.count()).toBeGreaterThanOrEqual(1)
     await expect(page.getByText('Honig')).toBeVisible()
+  })
+
+  test('umschließt jede Gruppe (Überschrift + Zutaten) mit einem Rahmen (PROJ-24 Refinement)', async ({ page }) => {
+    await loginAs(page)
+    await page.goto(`/rezept/${GROUPED_RECIPE_ID}`)
+    const ersteGruppenBox = page.locator('p.uppercase.tracking-wide').first().locator('..')
+    await expect(ersteGruppenBox).toHaveClass(/border/)
   })
 
   test('zeigt ungruppierte Zutaten vor der ersten Überschrift ohne Heading', async ({ page }) => {

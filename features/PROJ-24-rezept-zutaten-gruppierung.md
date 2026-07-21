@@ -2,7 +2,7 @@
 
 ## Status: Deployed
 **Created:** 2026-07-20
-**Last Updated:** 2026-07-20
+**Last Updated:** 2026-07-21
 
 ## Dependencies
 - Requires: PROJ-8 (Rezeptbibliothek) — Rezept-Editor (`rezept-formular.tsx`) und Datenmodell (`recipe_ingredients` mit `sort_order`) existieren bereits
@@ -41,6 +41,9 @@
 ### Nutzer — Anzeige auf der Rezept-Detailseite
 - [ ] Angenommen ein Rezept hat Gruppen-Überschriften, wenn ein Nutzer die Rezept-Detailseite öffnet, dann werden die Zutaten unter ihrer jeweiligen Überschrift gruppiert angezeigt, in der gespeicherten Reihenfolge.
 - [ ] Angenommen ein Rezept hat keine Gruppen-Überschriften (Altbestand oder bewusst ungruppiert angelegt), wenn ein Nutzer die Rezept-Detailseite öffnet, dann wird die Zutatenliste unverändert als flache Liste ohne Überschriften angezeigt.
+- [ ] Angenommen ein Rezept hat eine oder mehrere Gruppen, wenn ein Nutzer die Rezept-Detailseite öffnet, dann ist jede Gruppe (Überschrift + ihre Zutaten zusammen) optisch von einem Rahmen umschlossen — als klar erkennbare visuelle Einheit.
+- [ ] Angenommen ein Rezept hat mehrere Gruppen, wenn ein Nutzer die Rezept-Detailseite öffnet, dann ist der Abstand zwischen den Gruppen spürbar größer als der Abstand zwischen einzelnen Zutaten innerhalb einer Gruppe.
+- [ ] Angenommen ein Rezept hat ungruppierte Zutaten vor der ersten Überschrift, wenn ein Nutzer die Rezept-Detailseite öffnet, dann bleiben diese Zutaten ohne Rahmen — der Rahmen kennzeichnet ausschließlich echte Gruppen.
 
 ### Bestehende Validierung bleibt bestehen
 - [ ] Angenommen alle echten Zutaten wurden entfernt und nur Gruppen-Überschriften bleiben übrig, wenn der Admin speichert, dann greift weiterhin die bestehende "mindestens eine Zutat"-Regel und das Speichern wird verhindert.
@@ -53,6 +56,7 @@
 - Rezept ohne jegliche Gruppen (aktueller Altbestand: alle 5 Rezepte) → unverändertes Verhalten, keine Datenmigration notwendig, keine Pflicht zur Gruppierung
 - Löschen der einzigen vorhandenen Gruppen-Überschrift → zugehörige Zutaten werden vollständig ungruppiert (da keine vorherige Gruppe existiert)
 - Netzwerkfehler beim Speichern nach Umsortieren/Gruppieren → bestehende Fehlerbehandlung greift, die im Formular vorgenommene Reihenfolge/Gruppierung bleibt erhalten (kein Datenverlust, kein Reset des Formulars)
+- Rezept besteht ausschließlich aus ungruppierten Zutaten (keine einzige Gruppe) → keine Box irgendwo auf der Seite, Darstellung bleibt die bisherige flache Liste ohne jeglichen Rahmen
 
 ## Technical Requirements (optional)
 - Drag-and-Drop muss sowohl Maus- als auch Touch-Eingabe unterstützen (Mobile-first-Vorgabe aus der PRD gilt auch für dieses Admin-Feature)
@@ -76,6 +80,10 @@
 | Löschen einer Gruppen-Überschrift löscht nicht die zugehörigen Zutaten (Merge in vorherige Gruppe statt Cascade-Delete) | Verhindert versehentlichen Datenverlust beim Aufräumen der Gruppenstruktur | 2026-07-20 |
 | Gruppen-Label ist Pflichtfeld, max. 40 Zeichen | Leere Überschriften sind sinnlos (dann eher keine Gruppe anlegen); Zeichenlimit hält die Editor-UI kompakt | 2026-07-20 |
 | Nur einzelne Zeilen sind draggable — kein Block-Move ganzer Gruppen (Überschrift + Zutaten zusammen) | Einfachere Implementierung für MVP, deckt den beschriebenen Use-Case (Dressing von Hauptzutaten trennen) bereits vollständig ab | 2026-07-20 |
+| Rahmen umschließt Gruppen-Titel + Zutaten zusammen als eine Box (nicht nur die Zutatenliste) | Product-Owner-Wunsch nach dem Live-Test — macht jede Gruppe auf einen Blick als zusammengehörige Einheit erkennbar, statt Titel und Liste optisch getrennt wirken zu lassen | 2026-07-21 |
+| Zusätzlicher Abstand nur zwischen Gruppen, nicht zwischen einzelnen Zutaten innerhalb einer Gruppe | Zutaten einer Gruppe sollen kompakt und erkennbar zusammengehörig bleiben; die zusätzliche Luft soll ausschließlich verschiedene Abschnitte voneinander trennen | 2026-07-21 |
+| Ungruppierte Zutaten (vor der ersten Überschrift) bekommen bewusst KEINEN Rahmen | Der Rahmen ist das visuelle Signal für "das ist eine Gruppe" — würden auch ungruppierte Zutaten einen Rahmen bekommen, ginge dieser Unterschied verloren | 2026-07-21 |
+| Admin-Editor bleibt optisch unverändert (kein passender Rahmen um Gruppen-Zeilen im Formular) | Editor-Darstellung ist funktional anders begründet (gestrichelter Rahmen signalisiert dort die einzeln draggable Überschriften-Zeile, nicht eine fertige Gruppe) — reine Anzeige-Politur auf der öffentlichen Seite, keine Änderung an der Gruppierungs-Funktion selbst nötig | 2026-07-21 |
 
 ### Technical Decisions
 <!-- Added by /architecture -->
