@@ -1,6 +1,6 @@
 # PROJ-25: KI-Hinweis auf Ergebnisseiten
 
-## Status: Approved
+## Status: Deployed
 **Created:** 2026-07-21
 **Last Updated:** 2026-07-21
 
@@ -214,4 +214,21 @@ Keine.
 - **Recommendation:** Deploy.
 
 ## Deployment
-_To be added by /deploy_
+
+**Deployed:** 2026-07-21
+**Tag:** v1.23.0-PROJ-25
+**Production URL:** https://app.mehralsabnehmen.de
+**Commit:** `9ba40aa` (deploy(PROJ-25): Deploy KI-Hinweis auf Ergebnisseiten), vorausgehend `4828f7b` (PROJ-24 Post-Deployment-Bookkeeping)
+
+**Pre-Deployment-Checks:**
+- `npm run build` — erfolgreich
+- `npm run lint` — 0 Fehler (1 vorbestehende, unabhängige Warnung in `bild-cropper.tsx`)
+- QA: Approved, 0 Bugs
+- Keine neuen Env-Vars, kein Backend, keine DB-Migration
+- Keine neuen Dependencies (`package.json` unverändert im Diff)
+- Keine Secrets im Diff
+
+**Post-Deployment-Verifikation:**
+- Produktions-URL lädt (200): `https://app.mehralsabnehmen.de/rezept/fe8e05ab-af68-4e61-b8fd-6ead79b5e4e3`
+
+**Kein neues Setup nötig.**
