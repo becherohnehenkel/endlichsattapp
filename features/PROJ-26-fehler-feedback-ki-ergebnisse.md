@@ -1,6 +1,6 @@
 # PROJ-26: Fehler-Feedback zu KI-Ergebnissen
 
-## Status: Approved
+## Status: Deployed
 **Created:** 2026-07-21
 **Last Updated:** 2026-07-21
 
@@ -280,4 +280,24 @@ Keine neuen Pakete — der benötigte `Dialog`-Baustein ist über shadcn/ui bere
 - **Recommendation:** Deploy. BUG-5 (Admin-UI einmal manuell gegenprüfen) und BUG-6 (kosmetischer Edge Case in der Admin-Liste) als Nice-to-have nachverfolgen, beide nicht blockierend.
 
 ## Deployment
-_To be added by /deploy_
+
+**Deployed:** 2026-07-22
+**Tag:** v1.24.0-PROJ-26
+**Production URL:** https://app.mehralsabnehmen.de
+**Commit:** `88bbdc2` (deploy(PROJ-26): Deploy Fehler-Feedback zu KI-Ergebnissen), vorausgehend `4d8fe32` (PROJ-25 Wortlaut-Fix)
+
+**Pre-Deployment-Checks:**
+- `npm run build` — erfolgreich
+- `npm run lint` — 0 Fehler (1 vorbestehende, unabhängige Warnung in `bild-cropper.tsx`)
+- QA: Approved, 0 Critical/High Bugs (2 Low, nicht blockierend)
+- DB-Migration (`create_feedback_table_and_rate_limit`) bereits vor `/frontend` live auf dem Produktions-Supabase-Projekt angewendet (Dev und Prod teilen sich dasselbe Supabase-Projekt)
+- Keine neuen Env-Vars nötig (nutzt bestehende `SUPABASE_SERVICE_ROLE_KEY`/`ADMIN_EMAIL`)
+- Keine neuen Dependencies (`package.json` unverändert im Diff)
+- Keine Secrets im Diff
+
+**Post-Deployment-Verifikation:**
+- Per eingeloggter Playwright-Session gegen Production verifiziert (curl allein reicht bei den auth-geschützten Routen nicht, siehe PROJ-24/25-Erfahrung):
+  - `/rezept/fe8e05ab-af68-4e61-b8fd-6ead79b5e4e3` zeigt den "Feedback geben"-Link
+  - `/admin/feedback` leitet den Nicht-Admin-Testaccount korrekt zu `/admin/403` um
+
+**Kein neues Setup nötig.**
