@@ -41,7 +41,7 @@
 | PROJ-23 | Prompt Caching für Analyse-Routen | P2 | Planned | PROJ-4, PROJ-5 | [Spec](PROJ-23-prompt-caching.md) |
 | PROJ-24 | Zutaten-Reihenfolge & Gruppierung im Rezept-Editor (+ Markdown-Formatierung Zubereitung) | P2 | Deployed | PROJ-8 | [Spec](PROJ-24-rezept-zutaten-gruppierung.md) |
 | PROJ-25 | KI-Hinweis auf Ergebnisseiten | P1 | Deployed | PROJ-4, PROJ-5, PROJ-8 | [Spec](PROJ-25-ki-hinweis-ergebnisseiten.md) |
-| PROJ-26 | Fehler-Feedback zu KI-Ergebnissen | P2 | Planned | PROJ-25, PROJ-4, PROJ-5, PROJ-8, PROJ-19 | [Spec](PROJ-26-fehler-feedback-ki-ergebnisse.md) |
+| PROJ-26 | Fehler-Feedback zu KI-Ergebnissen | P2 | Approved | PROJ-25, PROJ-4, PROJ-5, PROJ-8, PROJ-19 | [Spec](PROJ-26-fehler-feedback-ki-ergebnisse.md) |
 
 <!-- Add features above this line -->
 

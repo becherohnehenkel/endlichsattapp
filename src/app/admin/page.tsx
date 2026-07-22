@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { ChefHat, Ticket, Home } from 'lucide-react'
+import { ChefHat, Ticket, Home, MessageSquareWarning } from 'lucide-react'
 
 async function requireAdmin() {
   const supabase = await createClient()
@@ -42,6 +42,17 @@ export default async function AdminPage() {
             <p className="text-xs text-muted-foreground">Codes generieren und Zugang verwalten</p>
           </div>
         </Link>
+        <Link
+          href="/admin/feedback"
+          className="flex items-center gap-3 p-4 rounded-xl border border-border bg-card hover:bg-[#DFF0F2] transition-colors"
+        >
+          <MessageSquareWarning className="h-5 w-5 text-[#2E9E6B] flex-shrink-0" />
+          <div>
+            <p className="font-medium text-sm text-foreground">Feedback</p>
+            <p className="text-xs text-muted-foreground">Gemeldete Fehler in KI-Ergebnissen</p>
+          </div>
+        </Link>
+
         <Link
           href="/"
           className="flex items-center gap-3 p-4 rounded-xl border border-border bg-card hover:bg-muted transition-colors"

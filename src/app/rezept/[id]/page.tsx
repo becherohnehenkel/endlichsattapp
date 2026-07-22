@@ -11,6 +11,7 @@ import RezeptSaettigungsMatrix from '@/components/rezept-saettigungs-matrix'
 import RezeptKontextHinweis from '@/components/rezept-kontext-hinweis'
 import { formatRezeptText } from '@/lib/format-rezept-text'
 import KIHinweis from '@/components/ki-hinweis'
+import FeedbackDialog from '@/components/feedback-dialog'
 import type { RezeptSaettigungsMatrix as MatrixType } from '@/lib/saettigungs-matrix-rezept'
 
 // React cache() dedupt den Query zwischen generateMetadata() und der Page-Komponente,
@@ -252,6 +253,17 @@ export default async function RezeptDetailPage({
                 <p className="text-sm font-semibold text-foreground">Sättigungs-Bausteine</p>
                 <KIHinweis variante="automatisch" />
                 <KIHinweis variante="rezept-echtheit" />
+                <FeedbackDialog
+                  pageType="rezept"
+                  referenceId={recipe.id}
+                  snapshot={{
+                    zutatenliste: ingredients
+                      .filter(i => i.item_type === 'zutat')
+                      .map(i => ({ name: i.name, amount: i.amount, unit: i.unit })),
+                    matrix,
+                    naehrwerte: macros,
+                  }}
+                />
               </div>
               <RezeptSaettigungsMatrix matrix={matrix} />
             </div>

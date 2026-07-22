@@ -130,5 +130,5 @@ export default async function MahlzeitDetailPage({
     }
   }
 
-  return <MahlzeitDetail result={result} assumptions={assumptions} analysisId={analysis.id} photoUrl={photoUrl} />
+  return <MahlzeitDetail result={result} assumptions={assumptions} analysisId={analysis.id} photoUrl={photoUrl} mealId={id} />
 }

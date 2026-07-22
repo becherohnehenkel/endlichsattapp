@@ -454,6 +454,8 @@ export default function MahlzeitInput({ userId, photoScansRemaining, trialDaysRe
           onReset={resetForm}
           analysisId={analysisId ?? undefined}
           photoUrl={fotoPreview}
+          mealId={mealId ?? undefined}
+          pageType="mahlzeit_analyse"
         />
       </div>
     )

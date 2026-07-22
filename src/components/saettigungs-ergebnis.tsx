@@ -15,6 +15,7 @@ import RezeptVorschlaege from '@/components/rezept-vorschlaege'
 import BeilagenErgebnis from '@/components/beilagen-ergebnis'
 import RatingRing from '@/components/rating-ring'
 import KIHinweis from '@/components/ki-hinweis'
+import FeedbackDialog from '@/components/feedback-dialog'
 
 type BausteinRating = 'gut' | 'mittel' | 'schwach' | 'nicht_bewertet'
 
@@ -77,6 +78,10 @@ interface SaettigungsErgebnisProps {
   onReset: () => void
   analysisId?: string
   photoUrl?: string | null
+  /** meals.id — Ziel-Referenz für das PROJ-26-Feedback (nicht dasselbe wie analysisId/meal_analyses.id) */
+  mealId?: string
+  /** Direkt nach der Analyse oder aus der Historie geöffnet — für den PROJ-26-Feedback-Snapshot */
+  pageType?: 'mahlzeit_analyse' | 'mahlzeit_historie'
 }
 
 const PILLAR_ORDER: (keyof BausteineBewertung)[] = [
@@ -132,7 +137,7 @@ function PillarChip({
   )
 }
 
-export default function SaettigungsErgebnis({ result, assumptions, onReset, analysisId, photoUrl }: SaettigungsErgebnisProps) {
+export default function SaettigungsErgebnis({ result, assumptions, onReset, analysisId, photoUrl, mealId, pageType }: SaettigungsErgebnisProps) {
   const [assumptionsOpen, setAssumptionsOpen] = useState(false)
 
   if (result.typ === 'beilage') {
@@ -206,6 +211,20 @@ export default function SaettigungsErgebnis({ result, assumptions, onReset, anal
         <div className="space-y-1">
           <p className="text-sm font-semibold text-foreground">Die 6 Sättigungs-Bausteine</p>
           <KIHinweis variante="allgemein" />
+          {mealId && pageType && (
+            <FeedbackDialog
+              pageType={pageType}
+              referenceId={mealId}
+              snapshot={{
+                zutatenliste: result.zutatenliste,
+                annahmen: result.annahmen,
+                vorher: result.vorher,
+                vorschlaege: result.vorschlaege,
+                art_of_eating_tipp: result.art_of_eating_tipp,
+                nachher: result.nachher,
+              }}
+            />
+          )}
         </div>
         <div className="grid grid-cols-3 gap-2">
           {PILLAR_ORDER.map(pillar => {

@@ -59,6 +59,39 @@ export type Database = {
         }
         Relationships: []
       }
+      feedback: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          page_type: string
+          reference_id: string | null
+          resolved: boolean
+          snapshot: Json
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          page_type: string
+          reference_id?: string | null
+          resolved?: boolean
+          snapshot: Json
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          page_type?: string
+          reference_id?: string | null
+          resolved?: boolean
+          snapshot?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
       invite_codes: {
         Row: {
           code: string
@@ -223,6 +256,8 @@ export type Database = {
         Row: {
           created_at: string
           email: string | null
+          feedback_today_count: number
+          feedback_today_date: string | null
           id: string
           invite_code_redeemed_at: string | null
           name: string | null
@@ -236,6 +271,8 @@ export type Database = {
         Insert: {
           created_at?: string
           email?: string | null
+          feedback_today_count?: number
+          feedback_today_date?: string | null
           id: string
           invite_code_redeemed_at?: string | null
           name?: string | null
@@ -249,6 +286,8 @@ export type Database = {
         Update: {
           created_at?: string
           email?: string | null
+          feedback_today_count?: number
+          feedback_today_date?: string | null
           id?: string
           invite_code_redeemed_at?: string | null
           name?: string | null
@@ -367,6 +406,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_and_increment_feedback_count: { Args: never; Returns: number }
       decrement_photo_scan: { Args: never; Returns: number }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
