@@ -250,7 +250,7 @@ export default async function RezeptDetailPage({
             <div className="space-y-3">
               <div className="space-y-1">
                 <p className="text-sm font-semibold text-foreground">Sättigungs-Bausteine</p>
-                <KIHinweis variante="allgemein" />
+                <KIHinweis variante="automatisch" />
                 <KIHinweis variante="rezept-echtheit" />
               </div>
               <RezeptSaettigungsMatrix matrix={matrix} />

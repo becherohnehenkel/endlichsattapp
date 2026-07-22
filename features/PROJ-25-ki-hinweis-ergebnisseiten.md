@@ -1,6 +1,6 @@
 # PROJ-25: KI-Hinweis auf Ergebnisseiten
 
-## Status: Deployed
+## Status: Deployed (Korrektur: Wortlaut nach Genauigkeit getrennt)
 **Created:** 2026-07-21
 **Last Updated:** 2026-07-21
 
@@ -11,7 +11,8 @@
 ## User Stories
 - Als Nutzer (registriert oder Gast) möchte ich beim Betrachten einer Sättigungs-Einschätzung erkennen, dass diese von einer KI erstellt wurde und Fehler enthalten kann, damit ich die Ergebnisse mit angemessener Skepsis einordnen kann.
 - Als Nutzer möchte ich diesen Hinweis konsistent an jeder Stelle sehen, an der eine KI-berechnete Sättigungsmatrix angezeigt wird, damit das Vertrauens-Signal nicht willkürlich wirkt.
-- Als Nutzer möchte ich verstehen, dass ein angezeigtes Rezept echt und redaktionell geprüft ist, und nur die Sättigungs-Analyse dieses Rezepts sowie seine Zuordnung zu meiner Mahlzeit KI-gestützt sind, damit ich nicht denke, das Rezept selbst könnte von einer KI erfunden worden sein.
+- Als Nutzer möchte ich verstehen, dass ein angezeigtes Rezept echt und redaktionell geprüft ist und nicht von einer KI erfunden wurde, damit ich Rezeptinhalte vertraue, auch wenn ich weiß, dass anderswo KI im Spiel ist.
+- Als Nutzer möchte ich, dass mir nur dort "KI-gestützt" angezeigt wird, wo tatsächlich eine KI zur Laufzeit beteiligt ist, damit der Hinweis nicht ungenau oder irreführend wird.
 - Als Product Owner möchte ich Nutzer transparent über die Grenzen der KI-Analyse informieren, damit Erwartungen realistisch bleiben und Vertrauen in die App langfristig gestärkt wird.
 
 ## Out of Scope
@@ -30,18 +31,19 @@
 ### Anzeige des Hinweises
 - [ ] Angenommen ein Nutzer schließt eine Mahlzeit-Analyse ab, wenn das Ergebnis (Sättigungs-Matrix) angezeigt wird, dann erscheint direkt dabei der Hinweis "KI-gestützte Einschätzung — kann Fehler enthalten" mit einem kleinen Icon.
 - [ ] Angenommen ein Nutzer öffnet eine bereits analysierte Mahlzeit aus der Historie (`/mahlzeit/[id]`), dann wird derselbe Hinweis ebenfalls angezeigt.
-- [ ] Angenommen ein Nutzer öffnet die Detailseite eines Rezepts mit Sättigungs-Matrix (kein Beilagen-/Grundlagen-Rezept), dann wird derselbe Hinweis bei den Sättigungs-Bausteinen angezeigt.
+- [ ] Angenommen ein Nutzer öffnet die Detailseite eines Rezepts mit Sättigungs-Matrix (kein Beilagen-/Grundlagen-Rezept), dann wird bei den Sättigungs-Bausteinen der Hinweis "Automatisch berechnete Einschätzung — kann Fehler enthalten" angezeigt (nicht der KI-Hinweis, da diese Matrix regelbasiert berechnet wird, siehe Decision Log "Korrektur" vom 2026-07-21).
 - [ ] Angenommen ein Rezept ist als Beilage oder Grundlage markiert (zeigt den `RezeptKontextHinweis` statt der Matrix), dann wird kein KI-Hinweis angezeigt.
 - [ ] Angenommen ein Nutzer ist nicht eingeloggt (Gast-Modus, PROJ-19), dann wird der Hinweis identisch zu registrierten Nutzern angezeigt.
 - [ ] Angenommen der Hinweis wird angezeigt, dann gibt es keine Möglichkeit, ihn wegzuklicken oder dauerhaft auszublenden.
 
 ### Konsistenz & Darstellung
-- [ ] Angenommen der Hinweis erscheint auf einer der drei Ergebnis-Oberflächen (Mahlzeit-Analyse, Mahlzeit-Historie, Rezept-Detailseite), dann ist der Wortlaut auf allen drei identisch.
+- [ ] Angenommen der Hinweis erscheint auf dem Mahlzeit-Analyse-Ergebnis oder der Mahlzeit-Historie (beides eine echte KI-Analyse zur Laufzeit), dann ist der Wortlaut auf beiden identisch ("KI-gestützte Einschätzung — kann Fehler enthalten").
+- [ ] Angenommen der Hinweis erscheint auf der Rezept-Detailseite (regelbasierte, nicht KI-gestützte Berechnung), dann lautet er "Automatisch berechnete Einschätzung — kann Fehler enthalten" — bewusst ohne den Begriff "KI", da zur Laufzeit keine KI beteiligt ist.
 - [ ] Angenommen der Hinweis wird dargestellt, dann nutzt er eine dezente, neutrale Text-Farbe passend zum Design-System — keine Warn- oder Fehlerfarbe (kein Rot/Orange).
 - [ ] Angenommen ein Screenreader-Nutzer navigiert zum Hinweis, dann wird der vollständige Text vorgelesen und das Icon ist entsprechend als dekorativ markiert oder mit passendem Label versehen.
 
 ### Rezept-Echtheit-Klarstellung
-- [ ] Angenommen ein Nutzer öffnet eine Rezept-Detailseite mit Sättigungs-Matrix, dann erscheint zusätzlich zum allgemeinen KI-Hinweis ein zweiter, eigener Hinweis: "Rezept ist echt — nur die Analyse und Zuordnung zu deiner Mahlzeit sind KI-gestützt."
+- [ ] Angenommen ein Nutzer öffnet eine Rezept-Detailseite mit Sättigungs-Matrix, dann erscheint zusätzlich zum "Automatisch berechnet"-Hinweis ein zweiter, eigener Hinweis: "Rezept ist echt — nicht KI-generiert."
 - [ ] Angenommen im Mahlzeit-Ergebnis (direkt nach der Analyse oder in der Historie) wird unter "Rezeptvorschläge" ein konkretes, passendes Rezept angezeigt, dann erscheint direkt bei diesem Vorschlag derselbe Rezept-Echtheit-Hinweis.
 - [ ] Angenommen im Mahlzeit-Ergebnis wurde kein passendes Rezept gefunden (Fallback-Verweis auf die Rezeptbibliothek statt einer konkreten Rezeptkarte), dann erscheint der Rezept-Echtheit-Hinweis nicht, da kein konkretes Rezept angezeigt wird.
 - [ ] Angenommen ein Rezept ist als Beilage oder Grundlage markiert (zeigt den `RezeptKontextHinweis` statt der Matrix), dann erscheint auch kein Rezept-Echtheit-Hinweis, konsistent zum Verzicht auf den allgemeinen KI-Hinweis auf dieser Seite.
@@ -79,6 +81,14 @@
 | Rezept-Echtheit-Hinweis erscheint sowohl auf der Rezept-Detailseite als auch bei einem konkret angezeigten Rezeptvorschlag im Mahlzeit-Ergebnis | Beides sind Stellen, an denen ein echtes, redaktionelles Rezept neben einer KI-Analyse auftaucht — die Verwechslungsgefahr ("ist das Rezept von der KI erfunden?") besteht an beiden Stellen gleichermaßen | 2026-07-21 |
 | Kein Rezept-Echtheit-Hinweis beim Rezeptvorschläge-Fallback (kein Match gefunden) | Der Fallback zeigt kein konkretes Rezept, sondern nur einen Verweis auf die Bibliothek — es gibt dort nichts, dessen Echtheit geklärt werden müsste | 2026-07-21 |
 
+#### Korrektur nach Deployment (2026-07-21, im Rahmen der PROJ-26-Spezifikation entdeckt)
+| Decision | Rationale | Date |
+|----------|-----------|------|
+| Wortlaut nach tatsächlicher KI-Beteiligung getrennt: Mahlzeit-Ergebnis bleibt "KI-gestützte Einschätzung", Rezept-Detailseite wird zu "Automatisch berechnete Einschätzung" | Entdeckt beim Schreiben der PROJ-26-Spec: `src/lib/saettigungs-matrix-rezept.ts` berechnet die Rezept-Matrix **regelbasiert** (Makro-Schwellenwerte, Zutaten-Keywords) — es läuft dort keine KI zur Laufzeit, im Gegensatz zur echten Claude-API-Analyse bei der Mahlzeit-Analyse. Der ursprüngliche, überall identische Wortlaut war für die Rezeptseite sachlich falsch. Auf ausdrücklichen Wunsch des Product Owners sofort korrigiert, nicht erst mit PROJ-26 mitgezogen. | 2026-07-21 |
+| Rezept-Echtheit-Text vereinfacht zu "Rezept ist echt — nicht KI-generiert" (statt "...nur Analyse und Zuordnung zu deiner Mahlzeit sind KI-gestützt") | Der alte Text war zusätzlich ungenau: Auf der eigenständigen Rezept-Detailseite gibt es gar keine "Zuordnung zu einer Mahlzeit" (das passiert nur im Rezeptvorschläge-Kontext); und auch dort ist die Zuordnung selbst tag-basiertes Matching, keine KI zur Laufzeit. Der neue, kürzere Text ist in beiden Einbau-Kontexten (Rezeptseite und Rezeptvorschlag) ohne Einschränkung korrekt. | 2026-07-21 |
+| Neue dritte Variante `automatisch` in der `KIHinweis`-Komponente statt die bestehende `allgemein`-Variante auf der Rezeptseite wiederzuverwenden | Andere Aussage (kein "KI"-Begriff) braucht einen eigenen, separat gepflegten Text — Wiederverwendung derselben Variante mit unterschiedlichem Text an unterschiedlichen Stellen hätte die "ein Text pro Variante"-Garantie der Komponente unterlaufen | 2026-07-21 |
+| Eigenes Icon (`Settings2`/Zahnrad) für die `automatisch`-Variante statt des Sparkle-Icons | Visuelle Unterscheidung passend zur inhaltlichen Trennung — Sparkle bleibt reserviert für "hier war wirklich eine KI beteiligt" | 2026-07-21 |
+
 ### Technical Decisions
 <!-- Added by /architecture -->
 | Decision | Rationale | Date |
@@ -96,12 +106,13 @@
 
 ### A) Component-Struktur
 
-**Neue, wiederverwendbare Komponente `KIHinweis`** — kein Formular, keine Interaktion, reiner Anzeige-Baustein mit zwei Varianten (Text ist fest hinterlegt, nicht von außen frei editierbar):
+**Neue, wiederverwendbare Komponente `KIHinweis`** — kein Formular, keine Interaktion, reiner Anzeige-Baustein mit drei Varianten (Text ist fest hinterlegt, nicht von außen frei editierbar; Stand nach der Korrektur vom 2026-07-21):
 
 ```
 KIHinweis
-  ├── Variante "allgemein" → "KI-gestützte Einschätzung — kann Fehler enthalten"
-  └── Variante "rezept-echtheit" → "Rezept ist echt — nur die Analyse und Zuordnung zu deiner Mahlzeit sind KI-gestützt"
+  ├── Variante "allgemein" → "KI-gestützte Einschätzung — kann Fehler enthalten" (echte KI-Analyse, Mahlzeit-Ergebnis)
+  ├── Variante "automatisch" → "Automatisch berechnete Einschätzung — kann Fehler enthalten" (regelbasiert, Rezept-Detailseite)
+  └── Variante "rezept-echtheit" → "Rezept ist echt — nicht KI-generiert"
 ```
 
 Eine einzige Komponente mit zwei Varianten statt zwei getrennter Komponenten — so gibt es nur eine Stelle im Code, an der der Wortlaut gepflegt wird, und die Spec-Vorgabe "Wortlaut auf allen Oberflächen identisch" ist strukturell garantiert statt manuell einzuhalten.
@@ -119,7 +130,7 @@ Mahlzeit-Analyse-Ergebnis + Mahlzeit-Historie (teilen sich dieselbe Ergebnis-Ans
 
 Rezept-Detailseite
   └── Sättigungs-Bausteine-Bereich (nur wenn Matrix vorhanden, kein Beilagen-/Grundlagen-Rezept)
-       ├── KIHinweis [allgemein] ── NEU
+       ├── KIHinweis [automatisch] ── NEU (nicht "allgemein", da regelbasiert statt KI-gestützt)
        └── KIHinweis [rezept-echtheit] ── NEU, direkt darunter
 ```
 
@@ -155,6 +166,16 @@ Keine neuen Pakete — nutzt das bereits im Projekt vorhandene `lucide-react` f�
 - `npm run build`: erfolgreich
 - Live-Screenshot der Rezept-Detailseite (`/rezept/fe8e05ab-af68-4e61-b8fd-6ead79b5e4e3`) bestätigt: beide Hinweise erscheinen korrekt unter "Sättigungs-Bausteine", dezente graue Farbe, kein Umbruch-/Abschneide-Problem in der schmalen Spalte (`max-w-sm`-Container, entspricht Mobile-Breite)
 - Platzierung in `saettigungs-ergebnis.tsx`/`rezept-vorschlaege.tsx` (Mahlzeit-Ergebnis) **nicht live verifiziert** — kein Testkonto mit vorhandener Mahlzeit-Analyse in der DB, eine neue Analyse auszulösen hätte reale Claude-API-Kosten verursacht. Strukturell identisch zur visuell bestätigten Rezeptseite (dieselbe Komponente, dieselbe Einbau-Logik), daher als niedriges Risiko eingeschätzt — siehe QA-Hinweis.
+
+### Korrektur nach Deployment (2026-07-21)
+
+Beim Schreiben der PROJ-26-Spec (Fehler-Feedback) fiel auf, dass die Rezept-Detailseiten-Matrix laut `src/lib/saettigungs-matrix-rezept.ts` **regelbasiert**, nicht KI-gestützt berechnet wird — der ursprüngliche, überall identische "KI-gestützt"-Wortlaut war dort sachlich falsch (siehe Decision Log). Sofort behoben, noch vor PROJ-26:
+
+- `src/components/ki-hinweis.tsx` — dritte Variante `automatisch` ergänzt ("Automatisch berechnete Einschätzung — kann Fehler enthalten", eigenes `Settings2`-Icon statt `Sparkles`). `rezept-echtheit`-Text vereinfacht zu "Rezept ist echt — nicht KI-generiert" (der alte Text behauptete fälschlich eine "Zuordnung zu deiner Mahlzeit" auch auf der eigenständigen Rezeptseite, wo das nicht zutrifft).
+- `src/app/rezept/[id]/page.tsx` — nutzt jetzt `variante="automatisch"` statt `variante="allgemein"` bei den Sättigungs-Bausteinen.
+- `src/components/saettigungs-ergebnis.tsx` / `rezept-vorschlaege.tsx` — unverändert (`allgemein`-Variante bleibt dort korrekt, da echte Claude-API-Analyse).
+- `tests/PROJ-25-ki-hinweis-ergebnisseiten.spec.ts` — Text-Konstanten aktualisiert, 8/8 weiterhin grün.
+- `tsc`, ESLint, Vitest (209/209), Build: alle weiterhin fehlerfrei.
 
 ## QA Test Results
 
@@ -212,6 +233,8 @@ Keine.
 - **Security:** Pass — kein Angriffsvektor vorhanden (rein statischer Text)
 - **Production Ready:** YES
 - **Recommendation:** Deploy.
+
+**Nachtrag (2026-07-21, nach Deployment):** Wortlaut-Korrektur (siehe Decision Log "Korrektur" + Implementation Notes) erneut geprüft — E2E-Suite mit aktualisierten Text-Erwartungen läuft weiterhin 8/8 grün, vollständiger Regressionslauf (Vitest 209/209, `tsc`, ESLint, Build) unverändert grün. Keine neuen Bugs, Struktur der Komponente unverändert (nur Text-Inhalt + eine zusätzliche Variante). QA-Einschätzung bleibt: Production Ready.
 
 ## Deployment
 
