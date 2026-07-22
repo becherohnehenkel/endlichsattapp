@@ -10,6 +10,7 @@ import BackButton from './back-button'
 import RezeptSaettigungsMatrix from '@/components/rezept-saettigungs-matrix'
 import RezeptKontextHinweis from '@/components/rezept-kontext-hinweis'
 import { formatRezeptText } from '@/lib/format-rezept-text'
+import KIHinweis from '@/components/ki-hinweis'
 import type { RezeptSaettigungsMatrix as MatrixType } from '@/lib/saettigungs-matrix-rezept'
 
 // React cache() dedupt den Query zwischen generateMetadata() und der Page-Komponente,
@@ -247,7 +248,11 @@ export default async function RezeptDetailPage({
           <>
             <Separator />
             <div className="space-y-3">
-              <p className="text-sm font-semibold text-foreground">Sättigungs-Bausteine</p>
+              <div className="space-y-1">
+                <p className="text-sm font-semibold text-foreground">Sättigungs-Bausteine</p>
+                <KIHinweis variante="allgemein" />
+                <KIHinweis variante="rezept-echtheit" />
+              </div>
               <RezeptSaettigungsMatrix matrix={matrix} />
             </div>
           </>

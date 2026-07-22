@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ChefHat } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import RezeptKarte, { type RezeptKarteData } from '@/components/rezept-karte'
+import KIHinweis from '@/components/ki-hinweis'
 
 interface RezeptVorschlaegeProps {
   analysisId: string
@@ -50,9 +51,12 @@ export default function RezeptVorschlaege({ analysisId }: RezeptVorschlaegeProps
 
   return (
     <div className="space-y-3">
-      <p className="text-sm font-semibold text-foreground">
-        🍳 Passendes Rezept
-      </p>
+      <div className="space-y-1">
+        <p className="text-sm font-semibold text-foreground">
+          🍳 Passendes Rezept
+        </p>
+        <KIHinweis variante="rezept-echtheit" />
+      </div>
       <RezeptKarte {...rezepte[0]} />
     </div>
   )

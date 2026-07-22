@@ -14,6 +14,7 @@ import {
 import RezeptVorschlaege from '@/components/rezept-vorschlaege'
 import BeilagenErgebnis from '@/components/beilagen-ergebnis'
 import RatingRing from '@/components/rating-ring'
+import KIHinweis from '@/components/ki-hinweis'
 
 type BausteinRating = 'gut' | 'mittel' | 'schwach' | 'nicht_bewertet'
 
@@ -202,7 +203,10 @@ export default function SaettigungsErgebnis({ result, assumptions, onReset, anal
 
       {/* ── 2. Die 6 Bausteine ── */}
       <div className="space-y-3">
-        <p className="text-sm font-semibold text-foreground">Die 6 Sättigungs-Bausteine</p>
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-foreground">Die 6 Sättigungs-Bausteine</p>
+          <KIHinweis variante="allgemein" />
+        </div>
         <div className="grid grid-cols-3 gap-2">
           {PILLAR_ORDER.map(pillar => {
             const meta = PILLAR_META[pillar]
