@@ -566,3 +566,32 @@ Reine Logik-/Daten-Änderung an bereits vorhandenen Feldern und Komponenten — 
 
 ### Hinweis
 Kein Erst-Deployment — Vercel/GitHub-Anbindung bestand bereits seit dem MVP. Production-Ready-Essentials (Error Tracking, Security Headers etc.) wurden dort bereits eingerichtet, nicht erneut für dieses Feature wiederholt.
+
+---
+
+### Refinement-Deployment (2026-07-24): Trial-Trigger-Fix + Rückfall-Modell + BUG-2-Fix
+
+**Deployed:** 2026-07-24
+**Production URL:** https://endlichsattapp.vercel.app
+**Tag:** `v1.12.0-PROJ-11`
+**Commit:** `011f78e`
+
+#### Pre-Deployment Checks
+- [x] `next build` erfolgreich
+- [x] `eslint .` — 0 Fehler (1 vorbestehende Warnung in `bild-cropper.tsx`, unberührt von PROJ-11)
+- [x] QA approved (siehe `## QA Test Results` oben, 14/14 AC, BUG-2 gefixt + verifiziert, keine offenen Critical/High Bugs)
+- [x] Keine Secrets im Diff (geprüft: kein `sk_test`/`sk_live`/`whsec_`/`SUPABASE_SERVICE_ROLE`/`ANTHROPIC_API_KEY`)
+- [x] Keine neuen Env-Variablen, keine neuen Pakete — nichts an Vercel-Konfiguration zu ändern
+- [x] DB-Migration (`proj11_fix_trial_trigger_and_photo_scan_fallback`) bereits während `/backend` live auf das Produktions-Supabase-Projekt angewendet, inkl. Backfill für Bestandskonten
+- [x] Alle Commits gepusht (`011f78e` auf `main`)
+
+#### Post-Deployment Verification
+- [x] Produktions-URL lädt, kein Build-Fehler in Vercel
+- [x] `/analyse` und `/rezepte` laden für einen eingeloggten Testnutzer ohne Fehler, kein Redirect mehr zu `/upgrade`
+- [x] `/upgrade` zeigt live die neue Feature-Vergleichstabelle ("Aktuell"/"Mit Pro", inkl. "5 einmalig" und "Nur Gast-Auswahl") für ein Konto mit reduziertem Zugriff — per temporärem DB-Seed auf dem qa-test-Konto verifiziert, danach zurückgesetzt
+- [x] **BUG-2-Fix live verifiziert:** exakte Reproduktion aus dem QA-Bericht gegen die Produktions-URL wiederholt (anonyme Session über `/analyse` etablieren → `/rezept/[id]` zeigt Sperrbildschirm → direkter Aufruf von `GET /api/rezepte/[id]`) → liefert jetzt `403 {"error":"Kein Zugriff auf dieses Rezept"}` statt der vollen Rezeptdaten
+- [x] Keine neuen Browser-Konsolenfehler durch PROJ-11 (ein vorbestehender `404` für eine Ressource wurde beobachtet, unabhängig von PROJ-11, nicht weiter untersucht — kein Zusammenhang mit den geänderten Routen/Komponenten)
+- [x] Auth-Flow funktioniert (Login mit Testkonto erfolgreich)
+
+#### Hinweis
+Reines Code-Deployment (Bugfix + UI-Refinement), keine Datenbank-Änderung in diesem Schritt (Migration lief bereits vorher). Kein neuer Stripe-Webhook/Env-Setup nötig.
