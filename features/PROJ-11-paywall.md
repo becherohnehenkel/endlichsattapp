@@ -573,7 +573,7 @@ Kein Erst-Deployment — Vercel/GitHub-Anbindung bestand bereits seit dem MVP. P
 
 **Deployed:** 2026-07-24
 **Production URL:** https://endlichsattapp.vercel.app
-**Tag:** `v1.12.0-PROJ-11`
+**Tag:** `v1.11.1-PROJ-11`
 **Commit:** `011f78e`
 
 #### Pre-Deployment Checks
