@@ -2,26 +2,39 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
 
 export interface AccessStatus {
-  /** Darf der Nutzer Freitext-Analyse + Rezeptbibliothek nutzen? */
+  /**
+   * "Volle Ausstattung": tägliche Foto-Analysen (5/Tag) + vollständige Rezeptbibliothek.
+   * Freitext-Analyse ist davon NICHT betroffen — die ist immer und für jeden unbegrenzt.
+   * Ist dieses Flag false, fällt der Nutzer auf ein reduziertes, aber nutzbares Niveau
+   * zurück (Lifetime-Foto-Kontingent + gast-sichtbare Rezepte) — kein Rauswurf.
+   */
   hasAccess: boolean
-  /** Verbleibende Tage im 7-Tage-Übergangsfenster, oder null wenn kein Trial läuft (noch nicht gestartet, abgelaufen, oder Abo aktiv) */
+  /** Verbleibende Tage im 7-Tage-Trial, oder null wenn kein Trial läuft (abgelaufen, oder Abo/Invite aktiv) */
   trialDaysRemaining: number | null
   subscriptionStatus: string | null
   /** PROJ-12: true wenn der Nutzer einen Invite-Code eingelöst hat */
   hasInviteAccess: boolean
-  /** PROJ-22: verbleibende Foto-Scans — mitgeliefert um doppelte DB-Abfrage auf /analyse zu vermeiden */
+  /** PROJ-22: verbleibende Foto-Scans — mitgeliefert um doppelte DB-Abfrage auf /analyse zu vermeiden.
+   *  Bedeutung hängt von hasAccess ab: bei true = heute noch übrig (täglicher Reset),
+   *  bei false = insgesamt noch übrig (Lifetime-Kontingent, kein Reset). */
   photoScansRemaining: number
 }
 
 const ACTIVE_SUBSCRIPTION_STATUSES = ['active', 'trialing']
 const TRIAL_DAYS = 7
 
-// Bestimmt ob ein Nutzer Zugriff auf Freitext-Analyse + Rezeptbibliothek hat.
-// Zugriff ist erlaubt wenn EINES zutrifft:
+// Bestimmt, ob ein Nutzer "volle Ausstattung" hat (tägliche Foto-Scans + komplette
+// Rezeptbibliothek). Freitext-Analyse ist davon unabhängig, immer unbegrenzt — taucht
+// hier bewusst nicht auf (siehe PROJ-11-Refinement, 2026-07-23).
+//
+// Volle Ausstattung liegt vor, wenn EINES zutrifft:
 //   - aktives Abo (subscription_status active/trialing)         — PROJ-11
-//   - Invite-Code eingelöst (invite_code_redeemed_at != null)  — PROJ-12
-//   - noch Foto-Scans übrig (PROJ-10) — trial_ends_at ist dann immer noch null
-//   - Übergangsfenster läuft noch (trial_ends_at in der Zukunft)
+//   - Invite-Code eingelöst (invite_code_redeemed_at != null)   — PROJ-12
+//   - 7-Tage-Trial läuft noch (trial_ends_at in der Zukunft) — wird bei der
+//     Registrierung gesetzt (reset_scans_on_anon_upgrade-Trigger), nicht mehr am
+//     Scan-Verbrauch. Ein fehlender Wert (trial_ends_at = null) zählt bewusst NICHT
+//     als aktiv (sicherer Default) — nach der Backfill-Migration sollte das bei
+//     keinem registrierten Bestandskonto mehr vorkommen.
 export async function getAccessStatus(
   supabase: SupabaseClient<Database>,
   userId: string
@@ -41,24 +54,28 @@ export async function getAccessStatus(
 
   const hasInviteAccess = profile.invite_code_redeemed_at != null
 
-  const stillHasFreeScans = profile.photo_scans_remaining > 0
-
   const trialEndsAt = profile.trial_ends_at ? new Date(profile.trial_ends_at) : null
-  const trialActive = trialEndsAt === null || trialEndsAt.getTime() > Date.now()
+  const trialActive = trialEndsAt !== null && trialEndsAt.getTime() > Date.now()
 
-  const hasAccess = isSubscribed || hasInviteAccess || stillHasFreeScans || trialActive
+  const hasAccess = isSubscribed || hasInviteAccess || trialActive
 
   let trialDaysRemaining: number | null = null
-  if (!isSubscribed && !hasInviteAccess && trialEndsAt && trialActive) {
+  if (!isSubscribed && !hasInviteAccess && trialActive && trialEndsAt) {
     const msRemaining = trialEndsAt.getTime() - Date.now()
     trialDaysRemaining = Math.max(1, Math.min(TRIAL_DAYS, Math.ceil(msRemaining / (1000 * 60 * 60 * 24))))
   }
 
-  // Registered users get 5 photo scans per day (daily counter).
-  // photo_scans_today_date is in UTC (consistent with DB current_date).
-  const todayStr = new Date().toISOString().split('T')[0]
-  const isDailyReset = !profile.photo_scans_today_date || profile.photo_scans_today_date < todayStr
-  const dailyScansRemaining = isDailyReset ? 5 : Math.max(0, 5 - (profile.photo_scans_today_count ?? 0))
+  // Foto-Kontingent: bei voller Ausstattung täglicher Zähler (5/Tag, Reset bei neuem
+  // Tag, UTC — konsistent mit DB current_date), sonst Lifetime-Zähler (photo_scans_remaining),
+  // exakt wie bei einem Gast. Muss zu decrement_photo_scan() in der DB passen.
+  let photoScansRemaining: number
+  if (hasAccess) {
+    const todayStr = new Date().toISOString().split('T')[0]
+    const isDailyReset = !profile.photo_scans_today_date || profile.photo_scans_today_date < todayStr
+    photoScansRemaining = isDailyReset ? 5 : Math.max(0, 5 - (profile.photo_scans_today_count ?? 0))
+  } else {
+    photoScansRemaining = Math.max(0, profile.photo_scans_remaining ?? 0)
+  }
 
-  return { hasAccess, trialDaysRemaining, subscriptionStatus: profile.subscription_status, hasInviteAccess, photoScansRemaining: dailyScansRemaining }
+  return { hasAccess, trialDaysRemaining, subscriptionStatus: profile.subscription_status, hasInviteAccess, photoScansRemaining }
 }

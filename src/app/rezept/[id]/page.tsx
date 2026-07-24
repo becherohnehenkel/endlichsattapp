@@ -6,6 +6,7 @@ import { Clock, ChefHat, Users, Flame, Lock } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/server'
+import { getAccessStatus } from '@/lib/paywall'
 import BackButton from './back-button'
 import RezeptSaettigungsMatrix from '@/components/rezept-saettigungs-matrix'
 import RezeptKontextHinweis from '@/components/rezept-kontext-hinweis'
@@ -71,14 +72,19 @@ export default async function RezeptDetailPage({
   const { id } = await params
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  const isGuest = !user || user.is_anonymous === true
+  const isAnonymous = user?.is_anonymous === true
+  const isGuest = !user || isAnonymous
+
+  // PROJ-11 (Refinement): registrierte Nutzer ohne volle Ausstattung (Trial abgelaufen,
+  // kein Abo/Invite) sehen denselben Sperrbildschirm wie ein Gast, nur mit anderem CTA.
+  const access = (user && !isAnonymous) ? await getAccessStatus(supabase, user.id) : null
+  const restricted = isGuest || (access !== null && !access.hasAccess)
 
   const recipe = await getRecipe(id)
 
   if (!recipe) notFound()
 
-  // Gäste dürfen nur freigeschaltete Rezepte lesen
-  if (isGuest && !recipe.is_guest_visible) {
+  if (restricted && !recipe.is_guest_visible) {
     return (
       <div className="min-h-screen bg-background">
         <header className="md:hidden sticky top-0 z-10 border-b border-border bg-card/80 backdrop-blur-sm px-4 py-3 flex items-center justify-between">
@@ -93,19 +99,25 @@ export default async function RezeptDetailPage({
           <div className="space-y-2">
             <h1 className="text-lg font-semibold tracking-tight">{recipe.title}</h1>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Dieses Rezept und viele weitere warten auf dich — kostenlos mit einem Account.
+              {isGuest
+                ? 'Dieses Rezept und viele weitere warten auf dich — kostenlos mit einem Account.'
+                : 'Dein Trial ist abgelaufen — dieses Rezept und viele weitere bekommst du mit Pro wieder.'}
             </p>
           </div>
           <div className="w-full space-y-3">
             <Button asChild size="lg" className="w-full">
-              <Link href="/registrieren">Kostenlos registrieren</Link>
-            </Button>
-            <p className="text-sm text-muted-foreground">
-              Bereits einen Account?{' '}
-              <Link href="/login" className="text-[#2E9E6B] hover:underline font-medium">
-                Einloggen
+              <Link href={isGuest ? '/registrieren' : '/upgrade'}>
+                {isGuest ? 'Kostenlos registrieren' : 'Jetzt Pro werden'}
               </Link>
-            </p>
+            </Button>
+            {isGuest && (
+              <p className="text-sm text-muted-foreground">
+                Bereits einen Account?{' '}
+                <Link href="/login" className="text-[#2E9E6B] hover:underline font-medium">
+                  Einloggen
+                </Link>
+              </p>
+            )}
           </div>
         </main>
       </div>

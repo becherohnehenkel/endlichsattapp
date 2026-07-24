@@ -22,12 +22,17 @@ interface Question {
 
 interface MahlzeitInputProps {
   userId: string
-  /** PROJ-10: verbleibende Foto-Scans des Nutzers — muss serverseitig in profiles.photo_scans_remaining gespiegelt sein */
+  /** PROJ-10: verbleibende Foto-Scans des Nutzers — Bedeutung hängt von hasFullAccess ab
+   *  (bei true: heute noch übrig, täglicher Reset; bei false: insgesamt noch übrig, Lifetime-Kontingent) */
   photoScansRemaining: number
-  /** PROJ-11: verbleibende Tage im Übergangsfenster, oder null wenn kein Trial läuft (siehe getAccessStatus()) */
+  /** PROJ-11: verbleibende Tage im 7-Tage-Trial, oder null wenn kein Trial läuft (siehe getAccessStatus()) */
   trialDaysRemaining: number | null
   /** PROJ-19: true für anonyme Gast-User — zeigt Conversion-Prompt statt Paywall bei Limit */
   isAnonymous?: boolean
+  /** PROJ-11 (Refinement): true = tägliches 5er-Foto-Kontingent (Trial aktiv/Abo/Invite),
+   *  false = Trial abgelaufen, Foto-Kontingent ist ein einmaliges Lifetime-Kontingent wie
+   *  bei einem Gast. Freitext-Analyse ist davon immer unabhängig, immer unbegrenzt. */
+  hasFullAccess?: boolean
 }
 
 // PROJ-10 / PROJ-19: muss mit dem DEFAULT in der profiles.photo_scans_remaining-Migration übereinstimmen
@@ -58,7 +63,7 @@ async function generateThumbnail(source: Blob, size: number): Promise<Blob> {
   })
 }
 
-export default function MahlzeitInput({ userId, photoScansRemaining, trialDaysRemaining, isAnonymous = false }: MahlzeitInputProps) {
+export default function MahlzeitInput({ userId, photoScansRemaining, trialDaysRemaining, isAnonymous = false, hasFullAccess = true }: MahlzeitInputProps) {
   const [foto, setFoto] = useState<File | null>(null)
   const [fotoPreview, setFotoPreview] = useState<string | null>(null)
   const [freitext, setFreitext] = useState('')
@@ -477,6 +482,12 @@ export default function MahlzeitInput({ userId, photoScansRemaining, trialDaysRe
         </p>
       </div>
 
+      {!isAnonymous && hasFullAccess && trialDaysRemaining !== null && (
+        <p className="text-xs text-muted-foreground -mt-2">
+          Noch {trialDaysRemaining} {trialDaysRemaining === 1 ? 'Tag' : 'Tage'} tägliche Foto-Analysen — danach ein einmaliges Kontingent von {TOTAL_PHOTO_SCANS}
+        </p>
+      )}
+
       {scansRemaining > 0 ? (
         <div className="space-y-1.5">
           <FotoUploadZone
@@ -486,7 +497,7 @@ export default function MahlzeitInput({ userId, photoScansRemaining, trialDaysRe
             onRemove={handleFotoRemove}
           />
           <p className="text-xs text-muted-foreground">
-            {isAnonymous
+            {isAnonymous || !hasFullAccess
               ? `Noch ${scansRemaining} von ${TOTAL_PHOTO_SCANS} Foto-Scans übrig`
               : `Heute noch ${scansRemaining} von ${TOTAL_PHOTO_SCANS} Foto-Scans`}
           </p>
@@ -509,6 +520,19 @@ export default function MahlzeitInput({ userId, photoScansRemaining, trialDaysRe
               <Link href="/login" className="text-[#2E9E6B] hover:underline">Einloggen</Link>
             </p>
           </div>
+        </div>
+      ) : !hasFullAccess ? (
+        // PROJ-11 (Refinement): Trial abgelaufen — Upgrade-Prompt statt Paywall-Rauswurf
+        <div className="rounded-xl border border-[#2E9E6B]/20 bg-[#DFF0F2] p-4 space-y-3">
+          <p className="text-sm font-medium text-[#0B2C30]">
+            📸 Dein einmaliges Foto-Kontingent ist aufgebraucht.
+          </p>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Mit Pro bekommst du wieder 5 Foto-Analysen pro Tag. Freitext-Analyse bleibt für dich weiterhin unbegrenzt.
+          </p>
+          <Button asChild size="sm" className="w-full">
+            <Link href="/upgrade">Jetzt Pro werden</Link>
+          </Button>
         </div>
       ) : (
         <Alert>

@@ -36,12 +36,15 @@ describe('getAccessStatus', () => {
     expect(result.hasAccess).toBe(true)
   })
 
-  it('grants access while photo scans remain, even with no trial started yet', async () => {
+  it('denies access when no trial has ever been granted (trial_ends_at null) — remaining lifetime photo scans no longer grant access', async () => {
+    // PROJ-11 Refinement (2026-07-23): photo_scans_remaining used to short-circuit
+    // hasAccess to true, which was the root cause of the trial mechanism never
+    // actually gating anyone. Now trial_ends_at is the only trial-related signal.
     const result = await getAccessStatus(
       mockSupabase({ photo_scans_remaining: 2, trial_ends_at: null, subscription_status: null }),
       'user-1'
     )
-    expect(result.hasAccess).toBe(true)
+    expect(result.hasAccess).toBe(false)
     expect(result.trialDaysRemaining).toBeNull()
   })
 
@@ -72,5 +75,48 @@ describe('getAccessStatus', () => {
       'user-1'
     )
     expect(result.hasAccess).toBe(false)
+  })
+
+  describe('photoScansRemaining — daily vs. lifetime counter depending on hasAccess', () => {
+    it('reports the daily counter (reset today) while full access applies', async () => {
+      const trialEndsAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
+      const result = await getAccessStatus(
+        mockSupabase({ photo_scans_remaining: 1, trial_ends_at: trialEndsAt, subscription_status: null, photo_scans_today_count: 2, photo_scans_today_date: '2000-01-01' }),
+        'user-1'
+      )
+      expect(result.hasAccess).toBe(true)
+      // photo_scans_today_date is stale (year 2000) -> counts as a fresh day -> full 5
+      expect(result.photoScansRemaining).toBe(5)
+    })
+
+    it('reports the daily counter reduced by today\'s usage while full access applies', async () => {
+      const trialEndsAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
+      const todayStr = new Date().toISOString().split('T')[0]
+      const result = await getAccessStatus(
+        mockSupabase({ photo_scans_remaining: 1, trial_ends_at: trialEndsAt, subscription_status: null, photo_scans_today_count: 3, photo_scans_today_date: todayStr }),
+        'user-1'
+      )
+      expect(result.hasAccess).toBe(true)
+      expect(result.photoScansRemaining).toBe(2)
+    })
+
+    it('reports the lifetime counter (photo_scans_remaining), ignoring the daily counter, once full access is lost', async () => {
+      const trialEndsAt = new Date(Date.now() - 60 * 1000).toISOString()
+      const result = await getAccessStatus(
+        mockSupabase({ photo_scans_remaining: 3, trial_ends_at: trialEndsAt, subscription_status: null, photo_scans_today_count: 0, photo_scans_today_date: null }),
+        'user-1'
+      )
+      expect(result.hasAccess).toBe(false)
+      expect(result.photoScansRemaining).toBe(3)
+    })
+
+    it('never returns a negative lifetime count', async () => {
+      const trialEndsAt = new Date(Date.now() - 60 * 1000).toISOString()
+      const result = await getAccessStatus(
+        mockSupabase({ photo_scans_remaining: -1, trial_ends_at: trialEndsAt, subscription_status: null }),
+        'user-1'
+      )
+      expect(result.photoScansRemaining).toBe(0)
+    })
   })
 })

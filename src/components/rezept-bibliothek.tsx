@@ -16,7 +16,7 @@ export interface RezeptListItem {
   is_guest_visible: boolean
 }
 
-export default function RezeptBibliothek({ rezepte, isGuest = false }: { rezepte: RezeptListItem[]; isGuest?: boolean }) {
+export default function RezeptBibliothek({ rezepte, restricted = false }: { rezepte: RezeptListItem[]; restricted?: boolean }) {
   const [query, setQuery] = useState('')
   const [activeTag, setActiveTag] = useState<string | null>(null)
 
@@ -93,7 +93,7 @@ export default function RezeptBibliothek({ rezepte, isGuest = false }: { rezepte
       ) : (
         <div className="grid grid-cols-2 gap-3">
           {filtered.map(rezept => {
-            const locked = isGuest && !rezept.is_guest_visible
+            const locked = restricted && !rezept.is_guest_visible
             return (
               <Link
                 key={rezept.id}

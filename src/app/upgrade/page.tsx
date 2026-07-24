@@ -30,6 +30,8 @@ export default async function UpgradePage({
       <UpgradeView
         subscriptionStatus={access.subscriptionStatus}
         hasInviteAccess={access.hasInviteAccess}
+        hasFullAccess={access.hasAccess}
+        trialDaysRemaining={access.trialDaysRemaining}
         sessionId={session_id ?? null}
         defaultShowCode={showCode === '1'}
       />

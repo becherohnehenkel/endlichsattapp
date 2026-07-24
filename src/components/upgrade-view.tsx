@@ -9,15 +9,47 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 interface UpgradeViewProps {
   subscriptionStatus: string | null
   hasInviteAccess: boolean
+  /** PROJ-11 (Refinement): true = Trial läuft noch (oder Abo/Invite) — steuert, ob die
+   *  Vergleichs-Tabelle als "was passiert nach dem Trial" oder "das hast du gerade" gerahmt wird */
+  hasFullAccess: boolean
+  /** Verbleibende Tage im 7-Tage-Trial, oder null wenn kein Trial läuft */
+  trialDaysRemaining: number | null
   /** Aus dem Rückkehr-Redirect von Stripe Checkout (?session_id=...) — Webhook-Fallback */
   sessionId: string | null
   /** Aus ?showCode=1 — öffnet das Code-Formular direkt */
   defaultShowCode?: boolean
 }
 
+function FeatureComparison({ withoutProLabel }: { withoutProLabel: string }) {
+  const rows = [
+    { label: 'Foto-Analyse', ohnePro: '5 einmalig', mitPro: '5 pro Tag' },
+    { label: 'Rezeptbibliothek', ohnePro: 'Nur Gast-Auswahl', mitPro: 'Alle Rezepte' },
+    { label: 'Freitext-Analyse', ohnePro: 'Unbegrenzt', mitPro: 'Unbegrenzt' },
+  ]
+  return (
+    <div className="rounded-xl border border-border overflow-hidden">
+      <div className="grid grid-cols-[1fr_auto_auto] gap-x-3 px-3 py-2 bg-muted/50 text-xs font-medium text-muted-foreground">
+        <span />
+        <span className="text-right">{withoutProLabel}</span>
+        <span className="text-right text-[#2E9E6B]">Mit Pro</span>
+      </div>
+      {rows.map((row, i) => (
+        <div
+          key={row.label}
+          className={`grid grid-cols-[1fr_auto_auto] gap-x-3 px-3 py-2.5 text-xs ${i > 0 ? 'border-t border-border' : ''}`}
+        >
+          <span className="text-foreground font-medium">{row.label}</span>
+          <span className="text-right text-muted-foreground">{row.ohnePro}</span>
+          <span className="text-right text-[#2E9E6B] font-medium">{row.mitPro}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 const ACTIVE_STATUSES = ['active', 'trialing']
 
-export default function UpgradeView({ subscriptionStatus, hasInviteAccess, sessionId, defaultShowCode }: UpgradeViewProps) {
+export default function UpgradeView({ subscriptionStatus, hasInviteAccess, hasFullAccess, trialDaysRemaining, sessionId, defaultShowCode }: UpgradeViewProps) {
   const [subStatus, setSubStatus] = useState(subscriptionStatus)
   const [syncing, setSyncing] = useState(Boolean(sessionId))
   const [actionLoading, setActionLoading] = useState(false)
@@ -159,11 +191,22 @@ export default function UpgradeView({ subscriptionStatus, hasInviteAccess, sessi
       ) : (
         <div className="space-y-5">
           <div className="text-center space-y-1">
-            <h1 className="text-xl font-semibold text-foreground tracking-tight">Bleib dabei</h1>
+            <h1 className="text-xl font-semibold text-foreground tracking-tight">
+              {hasFullAccess && trialDaysRemaining !== null
+                ? `Noch ${trialDaysRemaining} ${trialDaysRemaining === 1 ? 'Tag' : 'Tage'} voller Zugriff`
+                : 'Bleib dabei'}
+            </h1>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Deine kostenlosen Foto-Scans und dein Übergangsfenster sind aufgebraucht. Schalte Freitext-Analyse und die Rezeptbibliothek wieder frei.
+              {hasFullAccess && trialDaysRemaining !== null
+                ? 'Danach reduziert sich dein Zugriff. Werde jetzt schon Pro, damit sich nichts ändert.'
+                : 'Dein Trial ist abgelaufen. Freitext-Analyse bleibt wie gehabt unbegrenzt — mit Pro bekommst du zusätzlich tägliche Foto-Analysen und die volle Rezeptbibliothek zurück.'}
             </p>
           </div>
+
+          <FeatureComparison
+            withoutProLabel={hasFullAccess && trialDaysRemaining !== null ? 'Nach Trial-Ende' : 'Aktuell'}
+          />
+
           <div className="rounded-xl border border-border bg-card p-4 text-center space-y-1">
             <p className="text-2xl font-semibold text-foreground">
               4,99 € <span className="text-sm text-muted-foreground font-normal">/ Monat</span>

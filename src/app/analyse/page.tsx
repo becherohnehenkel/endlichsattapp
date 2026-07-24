@@ -1,4 +1,3 @@
-import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getAccessStatus } from '@/lib/paywall'
 import Link from 'next/link'
@@ -31,8 +30,12 @@ export default async function AnalysePage() {
 
   // PROJ-22: Anon → eine Query (nur photo_scans_remaining).
   // Registriert → getAccessStatus (enthält bereits photo_scans_remaining, spart zweite Query).
+  // PROJ-11 (Refinement): kein Redirect mehr bei fehlender voller Ausstattung — Freitext-
+  // Analyse ist immer erlaubt, nur das Foto-Kontingent fällt auf ein Lifetime-Kontingent
+  // zurück (siehe hasFullAccess unten).
   let photoScansRemaining = 5
   let trialDaysRemaining: number | null = null
+  let hasFullAccess = true
 
   if (isAnonymous) {
     const { data: profile } = await supabase
@@ -43,7 +46,7 @@ export default async function AnalysePage() {
     photoScansRemaining = profile?.photo_scans_remaining ?? 5
   } else {
     const access = await getAccessStatus(supabase, user.id)
-    if (!access.hasAccess) redirect('/upgrade')
+    hasFullAccess = access.hasAccess
     trialDaysRemaining = access.trialDaysRemaining
     photoScansRemaining = access.photoScansRemaining
   }
@@ -64,6 +67,7 @@ export default async function AnalysePage() {
         photoScansRemaining={photoScansRemaining}
         trialDaysRemaining={trialDaysRemaining}
         isAnonymous={isAnonymous}
+        hasFullAccess={hasFullAccess}
       />
     </div>
   )

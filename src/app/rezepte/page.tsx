@@ -1,4 +1,3 @@
-import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronLeft, UserRound } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
@@ -14,7 +13,8 @@ export default async function RezeptePage() {
   const { data: { user } } = await supabase.auth.getUser()
 
   // PROJ-19: Guests (no session or anonymous) can browse recipes.
-  // Registered users go through the paywall check (PROJ-11).
+  // PROJ-11 (Refinement): Registered users without full access (trial expired, no
+  // sub/invite) fall back to the same reduced view as guests — no redirect anymore.
   // PROJ-22: access check + recipes parallel abfragen
   const isAnonymous = user?.is_anonymous === true
 
@@ -33,11 +33,10 @@ export default async function RezeptePage() {
 
   const [access, { data: recipes }, { count: totalRecipeCount }] = await Promise.all([accessQuery, recipesQuery, countQuery])
 
-  let trialDaysRemaining: number | null = null
-  if (access) {
-    if (!access.hasAccess) redirect('/upgrade')
-    trialDaysRemaining = access.trialDaysRemaining
-  }
+  // "restricted" = sieht nur die gast-sichtbare Teilmenge — trifft auf Gäste UND auf
+  // registrierte Nutzer ohne volle Ausstattung (Trial abgelaufen, kein Abo/Invite) zu.
+  const restricted = isGuest || (access !== null && !access.hasAccess)
+  const trialDaysRemaining = access?.trialDaysRemaining ?? null
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const rezepte: RezeptListItem[] = (recipes ?? []).map(r => ({
@@ -68,30 +67,32 @@ export default async function RezeptePage() {
 
       {trialDaysRemaining !== null && (
         <p className="text-center text-xs text-muted-foreground px-4 pt-3">
-          Noch {trialDaysRemaining} {trialDaysRemaining === 1 ? 'Tag' : 'Tage'} bis Freitext-Analyse & Rezepte eingeschränkt werden
+          Noch {trialDaysRemaining} {trialDaysRemaining === 1 ? 'Tag' : 'Tage'} volle Rezeptbibliothek & tägliche Foto-Analysen — danach reduziert sich dein Zugriff auf die Gast-Auswahl
         </p>
       )}
 
-      {isGuest && totalRecipeCount != null && totalRecipeCount > 0 && (
+      {restricted && totalRecipeCount != null && totalRecipeCount > 0 && (
         <div className="max-w-sm mx-auto px-4 pt-4">
           <div className="rounded-xl border border-[#2E9E6B]/30 bg-[#DFF0F2] px-4 py-3 space-y-1">
             <p className="text-sm font-semibold text-[#0E7C86]">
-              Gastrezepte
+              {isGuest ? 'Gastrezepte' : 'Eingeschränkte Auswahl'}
             </p>
             <p className="text-xs text-[#2E9E6B] leading-relaxed">
-              Hier siehst du alle Gastrezepte. Anmelden um alle {formatRecipeCount(totalRecipeCount)} zu sehen.
+              {isGuest
+                ? `Hier siehst du alle Gastrezepte. Anmelden um alle ${formatRecipeCount(totalRecipeCount)} zu sehen.`
+                : `Dein Trial ist abgelaufen — hier siehst du die Gast-Auswahl. Werde Pro um alle ${formatRecipeCount(totalRecipeCount)} zu sehen.`}
             </p>
             <Link
-              href="/registrieren"
+              href={isGuest ? '/registrieren' : '/upgrade'}
               className="inline-block text-xs font-medium text-[#2E9E6B] hover:underline mt-0.5"
             >
-              Jetzt kostenlos registrieren →
+              {isGuest ? 'Jetzt kostenlos registrieren →' : 'Jetzt Pro werden →'}
             </Link>
           </div>
         </div>
       )}
 
-      <RezeptBibliothek rezepte={rezepte} isGuest={isGuest} />
+      <RezeptBibliothek rezepte={rezepte} restricted={restricted} />
     </div>
   )
 }
