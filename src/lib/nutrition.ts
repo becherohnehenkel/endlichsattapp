@@ -273,40 +273,49 @@ function buildOFFQueries(ingredient: string): string[] {
   return queries
 }
 
+// Bugfix 2026-08-03: die Query-Varianten × Endpoints wurden sequenziell mit je 5s Timeout
+// abgefragt — bei einer Zutat ohne Treffer (bis zu 4 Varianten × 2 Endpoints) macht das im
+// Worst Case ~40s für EINE Zutat. Die confirm-Route wartet auf alle Zutaten (parallel
+// zueinander, aber jede Zutat intern sequenziell) und hat kein maxDuration gesetzt — das
+// reißt locker das Vercel-Timeout und die Anfrage bricht als Netzwerkfehler ab ("Load
+// failed"), bevor überhaupt eine Antwort zurückkommt. Alle Kombinationen jetzt parallel
+// mit kürzerem Timeout, Priorität (Query-Reihenfolge vor Endpoint-Reihenfolge) bleibt erhalten.
 export async function queryOpenFoodFacts(ingredient: string): Promise<NutritionSource | null> {
   const queries = buildOFFQueries(ingredient)
-
   const endpoints = ['https://de.openfoodfacts.org', 'https://world.openfoodfacts.org']
 
-  for (const query of queries) {
-    for (const base of endpoints) {
-      try {
-        const url = `${base}/cgi/search.pl?search_terms=${encodeURIComponent(query)}&json=1&page_size=3&fields=product_name,nutriments`
-        const res = await fetch(url, {
-          headers: { 'User-Agent': 'endlichsatt/1.0 (satiety analysis app)' },
-          signal: AbortSignal.timeout(5000),
-        })
-        if (!res.ok) continue
-        // Rely on JSON.parse failure to detect bot-protection HTML pages
-        const data = await res.json().catch(() => null)
-        if (!data || !Array.isArray(data.products)) continue
-        const product = data.products[0]
-        if (!product?.nutriments) continue
-        const n = product.nutriments
-        return {
-          per100g: {
-            kcal:      Number(n['energy-kcal_100g'] ?? n['energy-kcal'] ?? 0),
-            protein_g: Number(n['proteins_100g'] ?? n['proteins'] ?? 0),
-            carbs_g:   Number(n['carbohydrates_100g'] ?? n['carbohydrates'] ?? 0),
-            sugar_g:   Number(n['sugars_100g'] ?? n['sugars'] ?? 0),
-            fat_g:     Number(n['fat_100g'] ?? n['fat'] ?? 0),
-            fiber_g:   Number(n['fiber_100g'] ?? n['fiber'] ?? 0),
-          },
-        }
-      } catch {
-        continue
+  const attempts = queries.flatMap(query => endpoints.map(base => ({ query, base })))
+
+  const results = await Promise.allSettled(
+    attempts.map(async ({ query, base }) => {
+      const url = `${base}/cgi/search.pl?search_terms=${encodeURIComponent(query)}&json=1&page_size=3&fields=product_name,nutriments`
+      const res = await fetch(url, {
+        headers: { 'User-Agent': 'endlichsatt/1.0 (satiety analysis app)' },
+        signal: AbortSignal.timeout(4000),
+      })
+      if (!res.ok) throw new Error('OFF request not ok')
+      // Rely on JSON.parse failure to detect bot-protection HTML pages
+      const data = await res.json().catch(() => null)
+      if (!data || !Array.isArray(data.products)) throw new Error('OFF response not JSON')
+      const product = data.products[0]
+      if (!product?.nutriments) throw new Error('OFF product has no nutriments')
+      const n = product.nutriments
+      const result: NutritionSource = {
+        per100g: {
+          kcal:      Number(n['energy-kcal_100g'] ?? n['energy-kcal'] ?? 0),
+          protein_g: Number(n['proteins_100g'] ?? n['proteins'] ?? 0),
+          carbs_g:   Number(n['carbohydrates_100g'] ?? n['carbohydrates'] ?? 0),
+          sugar_g:   Number(n['sugars_100g'] ?? n['sugars'] ?? 0),
+          fat_g:     Number(n['fat_100g'] ?? n['fat'] ?? 0),
+          fiber_g:   Number(n['fiber_100g'] ?? n['fiber'] ?? 0),
+        },
       }
-    }
+      return result
+    })
+  )
+
+  for (const result of results) {
+    if (result.status === 'fulfilled') return result.value
   }
   return null
 }
