@@ -30,7 +30,8 @@ export default async function MahlzeitDetailPage({
         macros_after,
         satiety_scores_before,
         satiety_scores_after,
-        improvement
+        improvement,
+        data_sources
       ),
       meal_conversations (
         assumptions
@@ -70,11 +71,24 @@ export default async function MahlzeitDetailPage({
       suggestions: StandardAnalysisResult['vorschlaege']
       art_of_eating_tip: string | null
     } | null
+    data_sources: { ingredient: string; source: string; sourceName: string }[] | null
   }
 
   const analyses = meal.meal_analyses as unknown as RawAnalysis[]
   const analysis = analyses?.[0]
   if (!analysis) notFound()
+
+  // PROJ-4 (Refinement 2026-08-03): data_sources ist seit jeher nur persistiert, nie ausgelesen —
+  // hier erstmals genutzt, um den "nicht schätzbar"-Hinweis auch beim späteren Ansehen aus der
+  // Historie zu zeigen (nicht nur direkt nach der Analyse).
+  const nichtSchaetzbareZutaten = (analysis.data_sources ?? [])
+    .filter(d => d.source === 'nicht_schaetzbar')
+    .map(d => d.ingredient)
+
+  // BUG-4-Fix (2026-08-03): analog für erfolgreich KI-geschätzte Zutaten
+  const kiGeschaetzteZutaten = (analysis.data_sources ?? [])
+    .filter(d => d.source === 'schaetzung')
+    .map(d => d.ingredient)
 
   const emptyNaehrwerte = { kcal: 0, protein_g: 0, kohlenhydrate_g: 0, zucker_g: 0, fett_g: 0, ballaststoffe_g: 0 }
   const emptyBausteine = { geschmack: 'nicht_bewertet', biss: 'nicht_bewertet', ballaststoffe: 'nicht_bewertet', proteine: 'nicht_bewertet', volumen: 'nicht_bewertet', art_of_eating: 'nicht_bewertet' } as StandardAnalysisResult['vorher']['bausteine']
@@ -92,6 +106,8 @@ export default async function MahlzeitDetailPage({
     result = {
       zutatenliste: analysis.refined_ingredients?.ingredients ?? [],
       annahmen: analysis.refined_ingredients?.assumptions ?? [],
+      nichtSchaetzbareZutaten,
+      kiGeschaetzteZutaten,
       vorher: {
         bausteine: analysis.satiety_scores_before?.pillars ?? emptyBausteine,
         gesamtbewertung: analysis.satiety_scores_before?.overall ?? 'wenig_saettigend',

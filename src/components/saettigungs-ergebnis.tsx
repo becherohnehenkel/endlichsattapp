@@ -41,6 +41,13 @@ export interface StandardAnalysisResult {
   typ?: 'standard' | undefined
   zutatenliste: { name: string; amount: string; source: string; sourceName: string }[]
   annahmen: string[]
+  /** PROJ-4 (Refinement 2026-08-03): Zutaten ohne BLS/OFF-Treffer, für die auch die
+   *  KI-Schätzung verworfen wurde (unplausibel) oder fehlte — tragen 0 zu den Nährwerten bei */
+  nichtSchaetzbareZutaten?: string[]
+  /** BUG-4-Fix (2026-08-03): Zutaten, deren Nährwert erfolgreich von der KI geschätzt wurde
+   *  (kein BLS/OFF-Treffer, aber plausibler Wert) — fließen korrekt in die Berechnung ein,
+   *  sollen dem Nutzer aber als KI-geschätzt statt Datenbank-Wert kenntlich gemacht werden */
+  kiGeschaetzteZutaten?: string[]
   vorher: {
     bausteine: BausteineBewertung
     gesamtbewertung: 'sehr_saettigend' | 'maessig_saettigend' | 'wenig_saettigend'
@@ -145,6 +152,8 @@ export default function SaettigungsErgebnis({ result, assumptions, onReset, anal
   }
 
   const allAssumptions = [...new Set([...assumptions, ...result.annahmen])]
+  const nichtSchaetzbareZutaten = result.nichtSchaetzbareZutaten ?? []
+  const kiGeschaetzteZutaten = result.kiGeschaetzteZutaten ?? []
   const gesamt = gesamtConfig(result.vorher.gesamtbewertung)
   const isSehrSaettigend = result.vorher.gesamtbewertung === 'sehr_saettigend'
   const hasVorschlaege = result.vorschlaege.length > 0
@@ -161,7 +170,7 @@ export default function SaettigungsErgebnis({ result, assumptions, onReset, anal
     <main className="px-4 py-6 max-w-sm mx-auto space-y-6">
 
       {/* Annahmen + optionales Foto — ausklappbar */}
-      {(allAssumptions.length > 0 || photoUrl) && (
+      {(allAssumptions.length > 0 || nichtSchaetzbareZutaten.length > 0 || kiGeschaetzteZutaten.length > 0 || photoUrl) && (
         <Collapsible open={assumptionsOpen} onOpenChange={setAssumptionsOpen}>
           <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border border-border bg-muted/40 px-3 py-2.5 text-sm text-muted-foreground hover:bg-muted/60 transition-colors">
             <div className="flex items-center gap-2">
@@ -186,6 +195,26 @@ export default function SaettigungsErgebnis({ result, assumptions, onReset, anal
                   <li key={i} className="text-xs text-muted-foreground flex gap-2">
                     <span className="text-muted-foreground/50 flex-shrink-0">·</span>
                     <span>{a}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {kiGeschaetzteZutaten.length > 0 && (
+              <ul className={`space-y-1 ${allAssumptions.length > 0 ? 'mt-3 pt-3 border-t border-border' : ''}`}>
+                {kiGeschaetzteZutaten.map((name, i) => (
+                  <li key={i} className="text-xs text-muted-foreground flex gap-2">
+                    <span className="flex-shrink-0">≈</span>
+                    <span>Nährwert für „{name}“ ist eine KI-Schätzung (keine Datenbankquelle gefunden).</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {nichtSchaetzbareZutaten.length > 0 && (
+              <ul className={`space-y-1 ${(allAssumptions.length > 0 || kiGeschaetzteZutaten.length > 0) ? 'mt-3 pt-3 border-t border-border' : ''}`}>
+                {nichtSchaetzbareZutaten.map((name, i) => (
+                  <li key={i} className="text-xs text-[#EAB308] flex gap-2">
+                    <span className="flex-shrink-0">⚠️</span>
+                    <span>Nährwert für „{name}“ konnte nicht zuverlässig geschätzt werden — fließt nicht in die Kalorienberechnung ein.</span>
                   </li>
                 ))}
               </ul>

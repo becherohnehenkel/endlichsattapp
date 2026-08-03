@@ -108,7 +108,7 @@ export default function ZutatenlisteBestaetigung({
                     placeholder="Menge (z.B. 200g, 1 EL)"
                     className="h-8 text-sm"
                   />
-                  <Button size="sm" variant="secondary" className="shrink-0" onClick={saveEdit}>
+                  <Button size="sm" variant="secondary" className="shrink-0" onClick={saveEdit} aria-label="Fertig">
                     <Check className="h-3.5 w-3.5" />
                   </Button>
                 </div>
@@ -164,7 +164,7 @@ export default function ZutatenlisteBestaetigung({
                 placeholder="Menge (z.B. 50g)"
                 className="h-8 text-sm"
               />
-              <Button size="sm" onClick={addItem} disabled={!newName.trim()} className="shrink-0">
+              <Button size="sm" onClick={addItem} disabled={!newName.trim()} className="shrink-0" aria-label="Zutat hinzufügen">
                 <Check className="h-3.5 w-3.5" />
               </Button>
             </div>

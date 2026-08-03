@@ -1,4 +1,4 @@
-// Shared nutrition lookup — BLS database + fallback to USDA/OFFs
+// Shared nutrition lookup — BLS database (primary) + Open Food Facts (fallback)
 
 import { createAdminClient } from '@/lib/supabase/admin'
 
@@ -9,6 +9,22 @@ export interface NutritionPer100g {
   sugar_g: number
   fat_g: number
   fiber_g: number
+}
+
+// PROJ-4 (Refinement 2026-08-03): sanity bounds for AI-estimated nutrition values —
+// catches hallucinated outliers before they enter the deterministic macro calculation.
+// 900 kcal/100g ≈ pure fat/oil, the most calorie-dense realistic food; no macro can
+// exceed 100g per 100g of food.
+export function isPlausibleEstimate(n: NutritionPer100g): boolean {
+  const inRange = (v: number, max: number) => Number.isFinite(v) && v >= 0 && v <= max
+  return (
+    inRange(n.kcal, 900) &&
+    inRange(n.protein_g, 100) &&
+    inRange(n.carbs_g, 100) &&
+    inRange(n.sugar_g, 100) &&
+    inRange(n.fat_g, 100) &&
+    inRange(n.fiber_g, 100)
+  )
 }
 
 interface NutritionSource {

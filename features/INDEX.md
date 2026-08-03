@@ -18,7 +18,7 @@
 | PROJ-1 | Supabase Infrastructure Setup | P0 | Deployed | — | [Spec](PROJ-1-supabase-infrastructure.md) |
 | PROJ-2 | User Authentication | P0 | Deployed | PROJ-1 | [Spec](PROJ-2-user-authentication.md) |
 | PROJ-3 | Mahlzeit-Input (Foto & Freitext) | P0 | Deployed | PROJ-1, PROJ-2 | [Spec](PROJ-3-mahlzeit-input.md) |
-| PROJ-4 | KI-Analyse-Agent (Rückfragen + BLS + Makros) | P0 | Deployed | PROJ-3, Sättigungsmatrix verifiziert | [Spec](PROJ-4-ki-analyse-agent.md) |
+| PROJ-4 | KI-Analyse-Agent (Rückfragen + BLS + Makros) (Refinement: KI-Schätzung für unbekannte Zutaten) | P0 | Approved (Grundfeature weiterhin Deployed) | PROJ-3, Sättigungsmatrix verifiziert | [Spec](PROJ-4-ki-analyse-agent.md) |
 | PROJ-5 | Sättigungs-Einschätzung & Verbesserungsvorschlag | P0 | Deployed | PROJ-4 | [Spec](PROJ-5-saettigungs-einschaetzung.md) |
 | PROJ-6 | Mahlzeit-Historie | P1 | Deployed | PROJ-1, PROJ-2, PROJ-4, PROJ-5 | [Spec](PROJ-6-mahlzeit-historie.md) |
 | PROJ-7 | Ernährungs-Tagebuch & Inspiration | P2 | Roadmap | PROJ-6 | — |
@@ -42,10 +42,11 @@
 | PROJ-24 | Zutaten-Reihenfolge & Gruppierung im Rezept-Editor (+ Markdown-Formatierung Zubereitung) | P2 | Deployed | PROJ-8 | [Spec](PROJ-24-rezept-zutaten-gruppierung.md) |
 | PROJ-25 | KI-Hinweis auf Ergebnisseiten | P1 | Deployed | PROJ-4, PROJ-5, PROJ-8 | [Spec](PROJ-25-ki-hinweis-ergebnisseiten.md) |
 | PROJ-26 | Fehler-Feedback zu KI-Ergebnissen | P2 | Deployed | PROJ-25, PROJ-4, PROJ-5, PROJ-8, PROJ-19 | [Spec](PROJ-26-fehler-feedback-ki-ergebnisse.md) |
+| PROJ-27 | Getrennte Test- und Produktions-Landschaften (Staging-Umgebung) | P2 | Planned | PROJ-1, PROJ-11 | [Spec](PROJ-27-staging-umgebung.md) |
 
 <!-- Add features above this line -->
 
-## Next Available ID: PROJ-27
+## Next Available ID: PROJ-28
 
 ## Empfohlene Build-Reihenfolge
 

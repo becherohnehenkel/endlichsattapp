@@ -4,6 +4,7 @@ const mockGetUser = vi.fn()
 const mockMealSingle = vi.fn()
 const mockConvSingle = vi.fn()
 const mockInsertSingle = vi.fn()
+const mockMealAnalysesInsert = vi.fn().mockReturnValue({ select: vi.fn().mockReturnValue({ single: mockInsertSingle }) })
 const mockMealsUpdate = vi.fn()
 const mockConvUpdate = vi.fn()
 const mockStorageRemove = vi.fn()
@@ -20,9 +21,7 @@ vi.mock('@/lib/supabase/server', () => ({
         }
       }
       if (table === 'meal_analyses') {
-        return {
-          insert: vi.fn().mockReturnValue({ select: vi.fn().mockReturnValue({ single: mockInsertSingle }) }),
-        }
+        return { insert: mockMealAnalysesInsert }
       }
       if (table === 'meal_conversations') {
         return {
@@ -241,6 +240,119 @@ describe('POST /api/analyse/confirm', () => {
       type: 'text',
       cache_control: { type: 'ephemeral' },
     })
+  })
+
+  // PROJ-4 (Refinement 2026-08-03): KI-Schätzung für Zutaten ohne BLS/OFF-Treffer
+  it('uses a plausible AI-estimated nutrition value for an unmatched ingredient', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
+    mockMealSingle.mockResolvedValue({ data: { id: 'meal-1', user_id: 'user-1', free_text: 'Yuzu-Paste', photo_fullsize_path: null }, error: null })
+    mockAnthropicCreate.mockResolvedValue({
+      content: [{
+        type: 'text',
+        text: JSON.stringify({
+          ...validAnalysis,
+          zutatenliste: [{
+            name: 'Yuzu-Paste',
+            amount: '20g',
+            grams: 20,
+            naehrwert_geschaetzt: { kcal: 250, protein_g: 1, carbs_g: 60, sugar_g: 55, fat_g: 0, fiber_g: 1 },
+          }],
+        }),
+      }],
+    })
+    mockInsertSingle.mockResolvedValue({ data: { id: 'analysis-1' }, error: null })
+    mockMealsUpdate.mockResolvedValue({ error: null })
+    mockConvUpdate.mockResolvedValue({ error: null })
+
+    const { POST } = await import('./route')
+    const res = await POST(makeRequest({ mealId: '550e8400-e29b-41d4-a716-446655440000', ingredients: [{ name: 'Yuzu-Paste', amount: '20g' }] }))
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    // 20g of 250 kcal/100g = 50 kcal
+    expect(body.result.vorher.naehrwerte.kcal).toBe(50)
+    expect(body.result.nichtSchaetzbareZutaten).toEqual([])
+    // BUG-4-Fix: successful AI estimates are surfaced separately so the UI can label them
+    expect(body.result.kiGeschaetzteZutaten).toEqual(['Yuzu-Paste'])
+  })
+
+  it('discards an implausible AI estimate and lists the ingredient as not estimable', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
+    mockMealSingle.mockResolvedValue({ data: { id: 'meal-1', user_id: 'user-1', free_text: 'Mysteriöse Zutat', photo_fullsize_path: null }, error: null })
+    mockAnthropicCreate.mockResolvedValue({
+      content: [{
+        type: 'text',
+        text: JSON.stringify({
+          ...validAnalysis,
+          zutatenliste: [{
+            name: 'Mysteriöse Zutat',
+            amount: '50g',
+            grams: 50,
+            naehrwert_geschaetzt: { kcal: 5000, protein_g: 1, carbs_g: 1, sugar_g: 1, fat_g: 1, fiber_g: 1 },
+          }],
+        }),
+      }],
+    })
+    mockInsertSingle.mockResolvedValue({ data: { id: 'analysis-2' }, error: null })
+    mockMealsUpdate.mockResolvedValue({ error: null })
+    mockConvUpdate.mockResolvedValue({ error: null })
+
+    const { POST } = await import('./route')
+    const res = await POST(makeRequest({ mealId: '550e8400-e29b-41d4-a716-446655440000', ingredients: [{ name: 'Mysteriöse Zutat', amount: '50g' }] }))
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.result.vorher.naehrwerte.kcal).toBe(0)
+    expect(body.result.nichtSchaetzbareZutaten).toEqual(['Mysteriöse Zutat'])
+    expect(body.result.kiGeschaetzteZutaten).toEqual([])
+  })
+
+  it('lists an ingredient with no AI estimate at all as not estimable', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
+    mockMealSingle.mockResolvedValue({ data: { id: 'meal-1', user_id: 'user-1', free_text: 'Test', photo_fullsize_path: null }, error: null })
+    mockAnthropicCreate.mockResolvedValue({
+      content: [{ type: 'text', text: JSON.stringify(validAnalysis) }],
+    })
+    mockInsertSingle.mockResolvedValue({ data: { id: 'analysis-3' }, error: null })
+    mockMealsUpdate.mockResolvedValue({ error: null })
+    mockConvUpdate.mockResolvedValue({ error: null })
+
+    const { POST } = await import('./route')
+    const res = await POST(makeRequest({ mealId: '550e8400-e29b-41d4-a716-446655440000', ingredients: validIngredients }))
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.result.nichtSchaetzbareZutaten).toEqual(['Hähnchenbrust'])
+    expect(body.result.kiGeschaetzteZutaten).toEqual([])
+  })
+
+  it('marks a resolved AI estimate with source "schaetzung" and a rejected one as "nicht_schaetzbar" in data_sources', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
+    mockMealSingle.mockResolvedValue({ data: { id: 'meal-1', user_id: 'user-1', free_text: 'Test', photo_fullsize_path: null }, error: null })
+    mockAnthropicCreate.mockResolvedValue({
+      content: [{
+        type: 'text',
+        text: JSON.stringify({
+          ...validAnalysis,
+          zutatenliste: [
+            { name: 'Gute Schätzung', amount: '20g', grams: 20, naehrwert_geschaetzt: { kcal: 200, protein_g: 1, carbs_g: 1, sugar_g: 1, fat_g: 1, fiber_g: 1 } },
+            { name: 'Keine Schätzung', amount: '20g', grams: 20 },
+          ],
+        }),
+      }],
+    })
+    mockInsertSingle.mockResolvedValue({ data: { id: 'analysis-4' }, error: null })
+    mockMealsUpdate.mockResolvedValue({ error: null })
+    mockConvUpdate.mockResolvedValue({ error: null })
+
+    const { POST } = await import('./route')
+    const res = await POST(makeRequest({
+      mealId: '550e8400-e29b-41d4-a716-446655440000',
+      ingredients: [{ name: 'Gute Schätzung', amount: '20g' }, { name: 'Keine Schätzung', amount: '20g' }],
+    }))
+    expect(res.status).toBe(200)
+
+    const insertedPayload = mockMealAnalysesInsert.mock.calls[0][0] as { data_sources: { ingredient: string; source: string }[] }
+    const sources = insertedPayload.data_sources
+    expect(sources.find(s => s.ingredient === 'Gute Schätzung')?.source).toBe('schaetzung')
+    expect(sources.find(s => s.ingredient === 'Keine Schätzung')?.source).toBe('nicht_schaetzbar')
   })
 
   it('skips macro computation for beilage analyses', async () => {

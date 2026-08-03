@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@/lib/supabase/server'
-import { queryBLS, queryOpenFoodFacts, type NutritionPer100g } from '@/lib/nutrition'
+import { queryBLS, queryOpenFoodFacts, isPlausibleEstimate, type NutritionPer100g } from '@/lib/nutrition'
 
 const ingredientSchema = z.object({
   name: z.string().min(1).max(200),
@@ -146,6 +146,8 @@ Die Zutatenbezeichnung (inkl. "(gekocht)"/"(roh)") muss exakt zum tatsächlichen
 ## Wichtig: Nährwerte werden vom System berechnet
 Keine Zahlen ausgeben. Nur "grams"-Feld pro Zutat schätzen.
 
+**Ausnahme:** Bei Zutaten, die in der Zutatenliste unten als "Keine Datenbankdaten vorhanden — KI-Schätzung" markiert sind, schätze zusätzlich ihren Nährwert pro 100g in einem eigenen Feld "naehrwert_geschaetzt" (kcal, protein_g, carbs_g, sugar_g, fat_g, fiber_g — alles Zahlen, realistische Werte für dieses Lebensmittel). Für JEDE ANDERE Zutat (mit BLS- oder Open-Food-Facts-Daten) lässt du dieses Feld weg oder setzt es auf null — für diese gilt weiterhin: keine eigenen Zahlen ausgeben.
+
 ## Sonderfall: Beilagen-Kontext
 Wenn "BEILAGE_KONTEXT:" in den Rückfragen-Annahmen steht, verwende AUSSCHLIESSLICH das Beilagen-Ausgabe-Format. KEIN Standard-Sättigungs-Flow, keine Bausteine-Bewertung, keine Verbesserungsvorschläge.
 
@@ -155,10 +157,12 @@ Ton: "Als Beilage macht das richtig Sinn." — nie "Das ist zu wenig." Nutzer le
 
 Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Text davor oder danach.
 
+"naehrwert_geschaetzt" (falls befüllt) hat immer die Form {"kcal": 0, "protein_g": 0, "carbs_g": 0, "sugar_g": 0, "fat_g": 0, "fiber_g": 0} — Werte pro 100g.
+
 Standard-Format (wenn KEIN BEILAGE_KONTEXT):
 {
   "typ": "standard",
-  "zutatenliste": [{"name": "...", "amount": "...", "grams": 0}],
+  "zutatenliste": [{"name": "...", "amount": "...", "grams": 0, "naehrwert_geschaetzt": null}],
   "annahmen": ["..."],
   "vorher": {
     "bausteine": {"geschmack": "gut|mittel|schwach", "biss": "gut|mittel|schwach", "ballaststoffe": "gut|mittel|schwach", "proteine": "gut|mittel|schwach", "volumen": "gut|mittel|schwach", "art_of_eating": "gut|mittel|schwach|nicht_bewertet"},
@@ -221,8 +225,10 @@ export async function POST(request: Request) {
     .eq('meal_id', mealId)
     .single()
 
-  // Query BLS first, fall back to Open Food Facts for branded/convenience products
-  type LookupSource = 'bls' | 'off' | 'schaetzung'
+  // Query BLS first, fall back to Open Food Facts for branded/convenience products.
+  // 'schaetzung' = plausible AI-estimated value used (PROJ-4 Refinement 2026-08-03);
+  // 'nicht_schaetzbar' = no DB match AND no plausible AI estimate — contributes 0, shown to user
+  type LookupSource = 'bls' | 'off' | 'schaetzung' | 'nicht_schaetzbar'
   type LookupResult = { ingredient: typeof ingredients[0]; per100g: NutritionPer100g | undefined; source: LookupSource }
 
   const lookupResults = await Promise.all(
@@ -299,7 +305,7 @@ export async function POST(request: Request) {
 
   type StandardClaudeResult = {
     typ?: 'standard' | undefined
-    zutatenliste: { name: string; amount: string; grams: number }[]
+    zutatenliste: { name: string; amount: string; grams: number; naehrwert_geschaetzt?: NutritionPer100g | null }[]
     annahmen: string[]
     vorher: {
       bausteine: Record<string, string>
@@ -316,7 +322,7 @@ export async function POST(request: Request) {
 
   type BeilageClaudeResult = {
     typ: 'beilage'
-    zutatenliste: { name: string; amount: string; grams: number }[]
+    zutatenliste: { name: string; amount: string; grams: number; naehrwert_geschaetzt?: NutritionPer100g | null }[]
     annahmen: string[]
     beilage: {
       als_beilage_top: string
@@ -338,14 +344,23 @@ export async function POST(request: Request) {
   }
 
   // ─── Helper: re-resolve nutrition by Claude's restated name ──
+  // PROJ-4 (Refinement 2026-08-03): if BLS/OFF have no match, fall back to Claude's own
+  // per-ingredient estimate (only present for ingredients that had no DB match to begin
+  // with) — but only if it passes the plausibility check. Otherwise the ingredient stays
+  // unresolved ('nicht_schaetzbar' downstream) instead of silently contributing 0 kcal
+  // under a generic "Schätzung" label.
 
-  async function resolveNutrition(name: string): Promise<{ per100g: NutritionPer100g; source: LookupSource } | undefined> {
+  async function resolveNutrition(
+    name: string,
+    aiEstimate?: NutritionPer100g | null
+  ): Promise<{ per100g: NutritionPer100g; source: LookupSource } | undefined> {
     const cached = nutritionMap.get(name)
     if (cached) return cached
     const bls = await queryBLS(name)
     if (bls) return { per100g: bls.per100g, source: 'bls' }
     const off = await queryOpenFoodFacts(name)
     if (off) return { per100g: off.per100g, source: 'off' }
+    if (aiEstimate && isPlausibleEstimate(aiEstimate)) return { per100g: aiEstimate, source: 'schaetzung' }
     return undefined
   }
 
@@ -353,7 +368,7 @@ export async function POST(request: Request) {
 
   if (result.typ === 'beilage') {
     const resolvedBeilage = await Promise.all(
-      result.zutatenliste.map(async z => ({ z, resolved: await resolveNutrition(z.name) }))
+      result.zutatenliste.map(async z => ({ z, resolved: await resolveNutrition(z.name, z.naehrwert_geschaetzt) }))
     )
 
     const beilageFullResult = {
@@ -371,11 +386,11 @@ export async function POST(request: Request) {
         refined_ingredients: {
           ingredients: result.zutatenliste,
           assumptions: result.annahmen,
-        },
+        } as unknown as import('@/types/database').Json,
         beilage_data: result.beilage as unknown as import('@/types/database').Json,
         data_sources: resolvedBeilage.map(({ z, resolved }) => ({
           ingredient: z.name,
-          source: resolved?.source ?? 'schaetzung',
+          source: resolved?.source ?? 'nicht_schaetzbar',
           sourceName: z.name,
         })),
       })
@@ -396,8 +411,21 @@ export async function POST(request: Request) {
   // ─── Standard-Branch: macro computation ──────────────────────
 
   const resolvedIngredients = await Promise.all(
-    result.zutatenliste.map(async z => ({ z, resolved: await resolveNutrition(z.name) }))
+    result.zutatenliste.map(async z => ({ z, resolved: await resolveNutrition(z.name, z.naehrwert_geschaetzt) }))
   )
+
+  // PROJ-4 (Refinement 2026-08-03): ingredients with neither a DB match nor a plausible
+  // AI estimate — shown to the user instead of silently contributing 0 kcal
+  const nichtSchaetzbareZutaten = resolvedIngredients
+    .filter(({ resolved }) => !resolved)
+    .map(({ z }) => z.name)
+
+  // BUG-4-Fix (2026-08-03): ingredients whose nutrition came from a plausible AI estimate
+  // (no BLS/OFF match) — shown to the user so a KI-estimated kcal value is distinguishable
+  // from a database-backed one, not just "correct but unlabeled"
+  const kiGeschaetzteZutaten = resolvedIngredients
+    .filter(({ resolved }) => resolved?.source === 'schaetzung')
+    .map(({ z }) => z.name)
 
   const vorherInputs: MacroInput[] = resolvedIngredients.map(({ z, resolved }) => ({
     grams: z.grams ?? 0,
@@ -434,6 +462,8 @@ export async function POST(request: Request) {
   const fullResult = {
     zutatenliste: result.zutatenliste,
     annahmen: result.annahmen,
+    nichtSchaetzbareZutaten,
+    kiGeschaetzteZutaten,
     vorher: {
       bausteine: result.vorher.bausteine,
       gesamtbewertung: result.vorher.gesamtbewertung,
@@ -460,7 +490,7 @@ export async function POST(request: Request) {
       refined_ingredients: {
         ingredients: fullResult.zutatenliste,
         assumptions: fullResult.annahmen,
-      },
+      } as unknown as import('@/types/database').Json,
       macros_before: fullResult.vorher.naehrwerte as unknown as import('@/types/database').Json,
       macros_after: fullResult.nachher.naehrwerte as unknown as import('@/types/database').Json,
       satiety_scores_before: {
@@ -479,7 +509,7 @@ export async function POST(request: Request) {
       },
       data_sources: resolvedIngredients.map(({ z, resolved }) => ({
         ingredient: z.name,
-        source: resolved?.source ?? 'schaetzung',
+        source: resolved?.source ?? 'nicht_schaetzbar',
         sourceName: z.name,
       })),
     })
