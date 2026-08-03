@@ -1,6 +1,6 @@
 # PROJ-28: Zutatenliste-Transparenz auf Ergebnis- und Historie-Seite
 
-## Status: Approved (QA abgeschlossen, 9/9 AC erfüllt, beide gefundenen Bugs behoben und verifiziert, Production Ready)
+## Status: Deployed (live in Produktion seit 2026-08-04, siehe `## Deployment`)
 **Created:** 2026-08-04
 **Last Updated:** 2026-08-04
 
@@ -246,4 +246,24 @@ Keine Migration nötig. Der Stichtag-Vergleich läuft rein zur Anzeigezeit gegen
 - **Empfehlung:** Deployen
 
 ## Deployment
-_To be added by /deploy_
+
+**Deployed:** 2026-08-04
+**Production URL:** https://endlichsattapp.vercel.app
+**Tag:** `v1.25.0-PROJ-28`
+**Commit:** `4d96421`
+
+### Pre-Deployment Checks
+- [x] `next build` erfolgreich
+- [x] `eslint .` — 0 Fehler (1 vorbestehende Warnung in `bild-cropper.tsx`, unberührt von PROJ-28)
+- [x] QA approved (siehe `## QA Test Results` oben, 9/9 AC, beide gefundenen Bugs behoben und verifiziert)
+- [x] Keine Secrets im Diff, keine neuen Env-Variablen, keine Schema-Migration nötig
+- [x] Alle Commits gepusht (`4d96421` auf `main`)
+
+### Post-Deployment Verification
+- [x] Produktions-URL lädt, kein Build-Fehler in Vercel
+- [x] `/analyse` und `/historie` laden fehlerfrei für den Testnutzer (kein neuer Konsolenfehler; ein vorbestehender, unabhängiger `404` erneut beobachtet, bereits bei früheren Deploys in dieser Session notiert)
+- [x] **Feature + BUG-7-Fix gemeinsam live verifiziert:** exakte Reproduktion aus dem QA-Bericht (zwei "Zwiebel"-Zutaten, eine BLS, eine KI-geschätzt) direkt in der Produktionsdatenbank angelegt — `/mahlzeit/[id]` zeigt den neuen "🥗 Zutaten"-Bereich korrekt, nur die richtige Zeile trägt das "≈ KI-geschätzt"-Badge. Testdaten danach vollständig entfernt
+- [x] Auth-Flow funktioniert (Login mit Testkonto erfolgreich)
+
+### Hinweis
+Reines Code-Deployment (neues Feature + Bugfixes), keine Datenbank-Änderung — alle genutzten Felder (`refined_ingredients`, `data_sources`, `meal_analyses.created_at`) existierten bereits.
