@@ -1,6 +1,6 @@
 # PROJ-4: KI-Analyse-Agent (Rückfragen + BLS + Makros)
 
-## Status: Deployed (Refinement: KI-Schätzung für unbekannte Zutaten — QA abgeschlossen, alle 3 gefundenen Bugs behoben, Production Ready, siehe `## QA Test Results`)
+## Status: Deployed (Refinement: KI-Schätzung für unbekannte Zutaten — live in Produktion seit 2026-08-03, siehe `## Deployment`)
 **Created:** 2026-06-10
 **Last Updated:** 2026-08-03
 
@@ -504,3 +504,31 @@ Auf Wunsch des Product Owners direkt im Anschluss an die QA behoben, Schritt fü
 **Production URL:** https://endlichsattapp.vercel.app/
 **Git Tag:** v1.4.0-PROJ-4
 **Neue Env-Variable:** `USDA_API_KEY` in Vercel Dashboard hinterlegt
+
+---
+
+### Refinement-Deployment (2026-08-03): KI-Schätzung für Zutaten ohne BLS/OFF-Treffer
+
+**Deployed:** 2026-08-03
+**Production URL:** https://endlichsattapp.vercel.app
+**Tag:** `v1.4.1-PROJ-4`
+**Commit:** `31d0c30`
+
+#### Pre-Deployment Checks
+- [x] `next build` erfolgreich
+- [x] `eslint .` — 0 Fehler (1 vorbestehende Warnung in `bild-cropper.tsx`, unberührt von PROJ-4)
+- [x] QA approved (siehe `## QA Test Results` oben, 8/8 AC, alle 3 gefundenen Bugs behoben und verifiziert)
+- [x] Keine Secrets im Diff
+- [x] Keine neuen Env-Variablen, keine neuen Pakete, keine Schema-Migration nötig
+- [x] Alle Commits gepusht (`31d0c30` auf `main`)
+
+#### Post-Deployment Verification
+- [x] Produktions-URL lädt, kein Build-Fehler in Vercel
+- [x] `/analyse` lädt fehlerfrei für einen eingeloggten Testnutzer (Formular sichtbar)
+- [x] `/historie` lädt fehlerfrei
+- [x] **`/mahlzeit/[id]` live verifiziert:** synthetische Testmahlzeit mit einer `schaetzung`-markierten Zutat direkt in der Produktionsdatenbank angelegt (qa-test-Konto) — Seite zeigt den neuen "≈ ... ist eine KI-Schätzung"-Hinweis korrekt aus `data_sources` abgeleitet, danach Testdaten vollständig entfernt. Bestätigt sowohl den BUG-4-Fix als auch die neue `data_sources`-Selektion in der Historie-Detailseite live in Produktion
+- [x] Keine neuen Browser-Konsolenfehler durch PROJ-4 (ein vorbestehender, unabhängiger `404` erneut beobachtet — bereits bei früheren Deploys in dieser Session notiert, kein Zusammenhang mit den geänderten Routen)
+- [x] Auth-Flow funktioniert (Login mit Testkonto erfolgreich)
+
+#### Hinweis
+Die eigentliche KI-Schätzung selbst (ein echter Claude-Aufruf mit einer unbekannten Zutat) wurde bewusst nicht live gegen Produktion erzwungen — das würde eine reale Analyse mit echten API-Kosten erfordern. Die Logik dafür ist durch die Unit-/Integrationstests (`nutrition.test.ts`, `confirm/route.test.ts`) und die vorherige QA-Runde bereits umfassend abgedeckt; hier wurde stattdessen gezielt der Rendering-Pfad (aus `data_sources`, unabhängig von einem echten Claude-Aufruf) gegen die echte Produktionsumgebung verifiziert.
