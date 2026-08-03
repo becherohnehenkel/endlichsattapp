@@ -89,7 +89,12 @@ export async function POST(request: Request) {
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   const response = await anthropic.messages.create({
     model: 'claude-sonnet-4-6',
-    max_tokens: 512,
+    // Bugfix 2026-08-04: 512 war real zu knapp — Claude hat mindestens einmal in Produktion bei
+    // der letzten Rückfragen-Runde unaufgefordert eine vollständige Analyse mitgeschickt und wurde
+    // dabei mitten im JSON abgeschnitten. Ein Sicherheitsnetz gegen genau diesen Fall, nicht nur
+    // eine kosmetische Erhöhung — abgeschnittenes JSON verwirft beim Parsen ausnahmslos alles,
+    // inklusive aller bis dahin sauber gesammelten Annahmen.
+    max_tokens: 1024,
     system: SYSTEM_PROMPT,
     messages: claudeMessages,
   })

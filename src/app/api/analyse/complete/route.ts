@@ -71,7 +71,13 @@ export async function POST(request: Request) {
       contextParts.push(`Nutzer-Antwort: ${msg.content}`)
     } else if (msg.role === 'assistant') {
       try {
-        const parsed = JSON.parse(msg.content)
+        // Bugfix 2026-08-04: gespeicherte Claude-Antworten sind oft in ```json-Codeblöcke
+        // eingepackt (wie bei den anderen Analyse-Routen auch) — ohne dieses Stripping wirft
+        // JSON.parse hier IMMER, wodurch Bildbeschreibung + Annahmen aus früheren Runden still
+        // verworfen wurden. Übrig blieben nur die rohen Nutzer-Antworten (z.B. "1 EL"), ohne
+        // jeden Kontext wofür — dadurch produzierte die Extraktion nur noch einen Platzhalter.
+        const cleanedMsg = msg.content.replace(/^```(?:json)?\s*\n?/m, '').replace(/\n?```\s*$/m, '').trim()
+        const parsed = JSON.parse(cleanedMsg)
         if (typeof parsed.meal_description === 'string' && parsed.meal_description) {
           contextParts.push(`Mahlzeitbeschreibung: ${parsed.meal_description}`)
         }

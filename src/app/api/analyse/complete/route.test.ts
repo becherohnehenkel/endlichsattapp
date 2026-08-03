@@ -138,6 +138,60 @@ describe('POST /api/analyse/complete', () => {
     expect(body.ingredients[0].name).toBe('Pasta')
   })
 
+  // Bugfix 2026-08-04: stored assistant messages from earlier Q&A rounds are persisted with
+  // markdown code fences (like every other Claude JSON response in this app) — without
+  // stripping them before JSON.parse, meal_description/assumptions from those rounds were
+  // silently discarded, and only the raw user answers (with no context) reached extraction.
+  it('extracts meal_description and assumptions from fenced assistant messages in history', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
+    mockMealSingle.mockResolvedValue({ data: { id: 'meal-1', user_id: 'user-1', free_text: null }, error: null })
+    mockConvSingle.mockResolvedValue({
+      data: {
+        id: 'conv-1',
+        claude_messages: [
+          { role: 'user', content: 'Der Nutzer hat ein Foto hochgeladen ohne Textbeschreibung.' },
+          {
+            role: 'assistant',
+            content: '```json\n' + JSON.stringify({
+              needs_clarification: true,
+              meal_description: 'Frühstücksteller mit Vollkornbrot, Spiegelei, Käse',
+              questions: [{ id: 'q1', text: 'Wie viel Käse?' }],
+            }) + '\n```',
+          },
+          { role: 'user', content: 'q1: Harzer Käse 100g' },
+          {
+            role: 'assistant',
+            content: '```json\n' + JSON.stringify({
+              needs_clarification: false,
+              questions: [],
+              assumptions: ['Spiegelei: 1 Ei, gebraten mit 1 EL Butter'],
+            }) + '\n```',
+          },
+        ],
+        assumptions: null,
+      },
+      error: null,
+    })
+    mockConvUpdate.mockResolvedValue({ error: null })
+    mockAnthropicCreate.mockResolvedValue({
+      content: [{ type: 'text', text: JSON.stringify({
+        ingredients: [{ name: 'Vollkornbrot', amount: '1 Scheibe', isAssumption: false }],
+        assumptions: [],
+      }) }],
+    })
+
+    const { POST } = await import('./route')
+    const res = await POST(makeRequest({ mealId: '550e8400-e29b-41d4-a716-446655440000' }))
+    expect(res.status).toBe(200)
+
+    // The context sent to the extraction call must contain the photo-derived description and
+    // the assumption from the fenced history messages — not just the raw user answers
+    const extractionCall = mockAnthropicCreate.mock.calls[0][0]
+    const contextSentToClaude = extractionCall.messages[0].content as string
+    expect(contextSentToClaude).toContain('Frühstücksteller mit Vollkornbrot, Spiegelei, Käse')
+    expect(contextSentToClaude).toContain('Spiegelei: 1 Ei, gebraten mit 1 EL Butter')
+  })
+
   it('falls back gracefully when Claude returns non-JSON', async () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
     mockMealSingle.mockResolvedValue({ data: { id: 'meal-1', user_id: 'user-1', free_text: 'Pasta' }, error: null })
