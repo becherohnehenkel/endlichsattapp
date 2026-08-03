@@ -16,6 +16,7 @@ import BeilagenErgebnis from '@/components/beilagen-ergebnis'
 import RatingRing from '@/components/rating-ring'
 import KIHinweis from '@/components/ki-hinweis'
 import FeedbackDialog from '@/components/feedback-dialog'
+import ZutatenBereich from '@/components/zutaten-bereich'
 
 type BausteinRating = 'gut' | 'mittel' | 'schwach' | 'nicht_bewertet'
 
@@ -37,17 +38,21 @@ interface Naehrwerte {
   ballaststoffe_g: number
 }
 
+/** PROJ-4/PROJ-28: Datenquelle pro Zutat — 'bls'/'off' = Datenbank-Treffer (keine Kennzeichnung
+ *  nötig), 'schaetzung' = plausible KI-Schätzung, 'nicht_schaetzbar' = weder Datenbank noch
+ *  plausible Schätzung. Positionsgenau zu `zutatenliste` ausgerichtet (siehe BUG-7-Fix unten). */
+export type ZutatenQuelle = 'bls' | 'off' | 'schaetzung' | 'nicht_schaetzbar'
+
 export interface StandardAnalysisResult {
   typ?: 'standard' | undefined
-  zutatenliste: { name: string; amount: string; source: string; sourceName: string }[]
+  /** PROJ-28: name/amount/grams stammen direkt aus Claudes Analyse-Antwort */
+  zutatenliste: { name: string; amount: string; grams: number }[]
   annahmen: string[]
-  /** PROJ-4 (Refinement 2026-08-03): Zutaten ohne BLS/OFF-Treffer, für die auch die
-   *  KI-Schätzung verworfen wurde (unplausibel) oder fehlte — tragen 0 zu den Nährwerten bei */
-  nichtSchaetzbareZutaten?: string[]
-  /** BUG-4-Fix (2026-08-03): Zutaten, deren Nährwert erfolgreich von der KI geschätzt wurde
-   *  (kein BLS/OFF-Treffer, aber plausibler Wert) — fließen korrekt in die Berechnung ein,
-   *  sollen dem Nutzer aber als KI-geschätzt statt Datenbank-Wert kenntlich gemacht werden */
-  kiGeschaetzteZutaten?: string[]
+  /** PROJ-28 (BUG-7-Fix, 2026-08-04): ein Eintrag pro Zutat, exakt positionsgleich zu
+   *  `zutatenliste` — ersetzt die ursprünglichen namensbasierten Listen `nichtSchaetzbareZutaten`/
+   *  `kiGeschaetzteZutaten` (PROJ-4), die bei zwei gleichnamigen Zutaten mit unterschiedlicher
+   *  Quelle beide fälschlich gleich kennzeichneten. */
+  zutatenQuellen?: ZutatenQuelle[]
   vorher: {
     bausteine: BausteineBewertung
     gesamtbewertung: 'sehr_saettigend' | 'maessig_saettigend' | 'wenig_saettigend'
@@ -66,8 +71,10 @@ export interface StandardAnalysisResult {
 
 export interface BeilagenAnalysisResult {
   typ: 'beilage'
-  zutatenliste: { name: string; amount: string; source: string; sourceName: string }[]
+  zutatenliste: { name: string; amount: string; grams: number }[]
   annahmen: string[]
+  /** PROJ-28 (BUG-7-Fix): analog zu StandardAnalysisResult */
+  zutatenQuellen?: ZutatenQuelle[]
   beilage: {
     als_beilage_top: string
     als_hauptgericht: string
@@ -89,6 +96,8 @@ interface SaettigungsErgebnisProps {
   mealId?: string
   /** Direkt nach der Analyse oder aus der Historie geöffnet — für den PROJ-26-Feedback-Snapshot */
   pageType?: 'mahlzeit_analyse' | 'mahlzeit_historie'
+  /** PROJ-28: Mahlzeit wurde vor dem 3. August 2026 analysiert — Zutatenliste durch Hinweis ersetzen */
+  tooOld?: boolean
 }
 
 const PILLAR_ORDER: (keyof BausteineBewertung)[] = [
@@ -144,16 +153,15 @@ function PillarChip({
   )
 }
 
-export default function SaettigungsErgebnis({ result, assumptions, onReset, analysisId, photoUrl, mealId, pageType }: SaettigungsErgebnisProps) {
+export default function SaettigungsErgebnis({ result, assumptions, onReset, analysisId, photoUrl, mealId, pageType, tooOld }: SaettigungsErgebnisProps) {
   const [assumptionsOpen, setAssumptionsOpen] = useState(false)
 
   if (result.typ === 'beilage') {
-    return <BeilagenErgebnis result={result} assumptions={assumptions} onReset={onReset} analysisId={analysisId} photoUrl={photoUrl} />
+    return <BeilagenErgebnis result={result} assumptions={assumptions} onReset={onReset} analysisId={analysisId} photoUrl={photoUrl} tooOld={tooOld} />
   }
 
   const allAssumptions = [...new Set([...assumptions, ...result.annahmen])]
-  const nichtSchaetzbareZutaten = result.nichtSchaetzbareZutaten ?? []
-  const kiGeschaetzteZutaten = result.kiGeschaetzteZutaten ?? []
+  const zutatenQuellen = result.zutatenQuellen ?? []
   const gesamt = gesamtConfig(result.vorher.gesamtbewertung)
   const isSehrSaettigend = result.vorher.gesamtbewertung === 'sehr_saettigend'
   const hasVorschlaege = result.vorschlaege.length > 0
@@ -170,7 +178,7 @@ export default function SaettigungsErgebnis({ result, assumptions, onReset, anal
     <main className="px-4 py-6 max-w-sm mx-auto space-y-6">
 
       {/* Annahmen + optionales Foto — ausklappbar */}
-      {(allAssumptions.length > 0 || nichtSchaetzbareZutaten.length > 0 || kiGeschaetzteZutaten.length > 0 || photoUrl) && (
+      {(allAssumptions.length > 0 || photoUrl) && (
         <Collapsible open={assumptionsOpen} onOpenChange={setAssumptionsOpen}>
           <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border border-border bg-muted/40 px-3 py-2.5 text-sm text-muted-foreground hover:bg-muted/60 transition-colors">
             <div className="flex items-center gap-2">
@@ -199,29 +207,16 @@ export default function SaettigungsErgebnis({ result, assumptions, onReset, anal
                 ))}
               </ul>
             )}
-            {kiGeschaetzteZutaten.length > 0 && (
-              <ul className={`space-y-1 ${allAssumptions.length > 0 ? 'mt-3 pt-3 border-t border-border' : ''}`}>
-                {kiGeschaetzteZutaten.map((name, i) => (
-                  <li key={i} className="text-xs text-muted-foreground flex gap-2">
-                    <span className="flex-shrink-0">≈</span>
-                    <span>Nährwert für „{name}“ ist eine KI-Schätzung (keine Datenbankquelle gefunden).</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {nichtSchaetzbareZutaten.length > 0 && (
-              <ul className={`space-y-1 ${(allAssumptions.length > 0 || kiGeschaetzteZutaten.length > 0) ? 'mt-3 pt-3 border-t border-border' : ''}`}>
-                {nichtSchaetzbareZutaten.map((name, i) => (
-                  <li key={i} className="text-xs text-[#EAB308] flex gap-2">
-                    <span className="flex-shrink-0">⚠️</span>
-                    <span>Nährwert für „{name}“ konnte nicht zuverlässig geschätzt werden — fließt nicht in die Kalorienberechnung ein.</span>
-                  </li>
-                ))}
-              </ul>
-            )}
           </CollapsibleContent>
         </Collapsible>
       )}
+
+      {/* PROJ-28: Zutatenliste mit Gramm-Schätzungen */}
+      <ZutatenBereich
+        zutatenliste={result.zutatenliste}
+        zutatenQuellen={zutatenQuellen}
+        tooOld={tooOld}
+      />
 
       {/* ── 1. Gesamtbewertung ── */}
       <div className="space-y-3 text-center">

@@ -199,90 +199,13 @@ test.describe('Nährstoffberechnung', () => {
 
 // ─────────────────────────────────────────────────────────────
 // KI-SCHÄTZUNG FÜR UNBEKANNTE ZUTATEN (Refinement 2026-08-03)
+//
+// PROJ-28 (2026-08-04): Die hier getesteten Hinweisblöcke im "Basierend auf
+// Annahmen"-Bereich wurden bewusst entfernt und durch eine pro-Zutat-Kennzeichnung
+// im neuen "🥗 Zutaten"-Bereich ersetzt (siehe Konsolidierung, PROJ-28-Spec AC).
+// Die entsprechenden Tests wurden nach tests/PROJ-28-zutatenliste-transparenz.spec.ts
+// verschoben, wo sie die neue UI-Stelle prüfen.
 // ─────────────────────────────────────────────────────────────
-test.describe('KI-Schätzung für unbekannte Zutaten', () => {
-  test('nicht schätzbare Zutat zeigt sichtbaren Warnhinweis im Annahmen-Bereich', async ({ page }) => {
-    await loginAs(page)
-    page.route('/api/analyse/confirm', route =>
-      route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          ...MOCK_RESULT,
-          result: { ...MOCK_RESULT.result, nichtSchaetzbareZutaten: ['Yuzu-Paste'] },
-        }),
-      })
-    )
-    await reachConfirming(page)
-    await page.getByRole('button', { name: /passt so/i }).click()
-    await expect(page.getByText('Die 6 Sättigungs-Bausteine')).toBeVisible({ timeout: 8000 })
-
-    await page.getByText('Basierend auf Annahmen').click()
-    await expect(page.getByText(/Nährwert für „Yuzu-Paste" konnte nicht zuverlässig geschätzt werden|Nährwert für.*Yuzu-Paste.*konnte nicht zuverlässig geschätzt werden/)).toBeVisible()
-  })
-
-  test('Annahmen-Bereich öffnet sich auch ohne sonstige Annahmen, wenn nur eine nicht schätzbare Zutat vorliegt', async ({ page }) => {
-    await loginAs(page)
-    page.route('/api/analyse/confirm', route =>
-      route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          ...MOCK_RESULT,
-          result: { ...MOCK_RESULT.result, annahmen: [], nichtSchaetzbareZutaten: ['Mysteriöse Zutat'] },
-        }),
-      })
-    )
-    await reachConfirming(page, MOCK_INGREDIENTS, [])
-    await page.getByRole('button', { name: /passt so/i }).click()
-    await expect(page.getByText('Die 6 Sättigungs-Bausteine')).toBeVisible({ timeout: 8000 })
-
-    // Collapsible-Trigger muss sichtbar sein, obwohl keine normalen Annahmen vorliegen
-    await expect(page.getByText('Basierend auf Annahmen')).toBeVisible()
-    await page.getByText('Basierend auf Annahmen').click()
-    await expect(page.getByText(/Mysteriöse Zutat/)).toBeVisible()
-  })
-
-  test('kein Warnhinweis, wenn alle Zutaten erfolgreich zugeordnet wurden', async ({ page }) => {
-    await loginAs(page)
-    page.route('/api/analyse/confirm', route =>
-      route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          ...MOCK_RESULT,
-          result: { ...MOCK_RESULT.result, nichtSchaetzbareZutaten: [] },
-        }),
-      })
-    )
-    await reachConfirming(page, MOCK_INGREDIENTS, [])
-    await page.getByRole('button', { name: /passt so/i }).click()
-    await expect(page.getByText('Die 6 Sättigungs-Bausteine')).toBeVisible({ timeout: 8000 })
-    await expect(page.getByText(/konnte nicht zuverlässig geschätzt werden/)).toHaveCount(0)
-  })
-
-  // BUG-4-Fix (2026-08-03): erfolgreiche KI-Schätzungen sichtbar kennzeichnen
-  test('erfolgreiche KI-Schätzung wird als solche gekennzeichnet, getrennt vom "nicht schätzbar"-Hinweis', async ({ page }) => {
-    await loginAs(page)
-    page.route('/api/analyse/confirm', route =>
-      route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          ...MOCK_RESULT,
-          result: { ...MOCK_RESULT.result, kiGeschaetzteZutaten: ['Yuzu-Paste'], nichtSchaetzbareZutaten: [] },
-        }),
-      })
-    )
-    await reachConfirming(page, MOCK_INGREDIENTS, [])
-    await page.getByRole('button', { name: /passt so/i }).click()
-    await expect(page.getByText('Die 6 Sättigungs-Bausteine')).toBeVisible({ timeout: 8000 })
-
-    await page.getByText('Basierend auf Annahmen').click()
-    await expect(page.getByText(/Nährwert für.*Yuzu-Paste.*ist eine KI-Schätzung/)).toBeVisible()
-    await expect(page.getByText(/konnte nicht zuverlässig geschätzt werden/)).toHaveCount(0)
-  })
-})
 
 // ─────────────────────────────────────────────────────────────
 // FEHLERVERHALTEN

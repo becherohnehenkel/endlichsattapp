@@ -12,6 +12,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import type { BeilagenAnalysisResult } from '@/components/saettigungs-ergebnis'
+import ZutatenBereich from '@/components/zutaten-bereich'
 
 interface BeilagenErgebnisProps {
   result: BeilagenAnalysisResult
@@ -19,9 +20,11 @@ interface BeilagenErgebnisProps {
   onReset: () => void
   analysisId?: string
   photoUrl?: string | null
+  /** PROJ-28: Mahlzeit wurde vor dem 3. August 2026 analysiert */
+  tooOld?: boolean
 }
 
-export default function BeilagenErgebnis({ result, assumptions, onReset, photoUrl }: BeilagenErgebnisProps) {
+export default function BeilagenErgebnis({ result, assumptions, onReset, photoUrl, tooOld }: BeilagenErgebnisProps) {
   const [assumptionsOpen, setAssumptionsOpen] = useState(false)
   const allAssumptions = [...new Set([...assumptions, ...result.annahmen])]
   const b = result.beilage
@@ -62,6 +65,13 @@ export default function BeilagenErgebnis({ result, assumptions, onReset, photoUr
           </CollapsibleContent>
         </Collapsible>
       )}
+
+      {/* PROJ-28: Zutatenliste mit Gramm-Schätzungen */}
+      <ZutatenBereich
+        zutatenliste={result.zutatenliste}
+        zutatenQuellen={result.zutatenQuellen ?? []}
+        tooOld={tooOld}
+      />
 
       {/* Badge */}
       <div className="text-center">

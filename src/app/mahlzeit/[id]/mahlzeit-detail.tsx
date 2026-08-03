@@ -10,9 +10,11 @@ interface MahlzeitDetailProps {
   analysisId?: string
   photoUrl?: string | null
   mealId: string
+  /** PROJ-28: Mahlzeit wurde vor dem 3. August 2026 analysiert */
+  tooOld?: boolean
 }
 
-export default function MahlzeitDetail({ result, assumptions, analysisId, photoUrl, mealId }: MahlzeitDetailProps) {
+export default function MahlzeitDetail({ result, assumptions, analysisId, photoUrl, mealId, tooOld }: MahlzeitDetailProps) {
   const router = useRouter()
 
   return (
@@ -36,6 +38,7 @@ export default function MahlzeitDetail({ result, assumptions, analysisId, photoU
         photoUrl={photoUrl}
         mealId={mealId}
         pageType="mahlzeit_historie"
+        tooOld={tooOld}
       />
     </div>
   )

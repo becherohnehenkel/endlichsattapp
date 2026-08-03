@@ -43,10 +43,11 @@
 | PROJ-25 | KI-Hinweis auf Ergebnisseiten | P1 | Deployed | PROJ-4, PROJ-5, PROJ-8 | [Spec](PROJ-25-ki-hinweis-ergebnisseiten.md) |
 | PROJ-26 | Fehler-Feedback zu KI-Ergebnissen | P2 | Deployed | PROJ-25, PROJ-4, PROJ-5, PROJ-8, PROJ-19 | [Spec](PROJ-26-fehler-feedback-ki-ergebnisse.md) |
 | PROJ-27 | Getrennte Test- und Produktions-Landschaften (Staging-Umgebung) | P2 | Planned | PROJ-1, PROJ-11 | [Spec](PROJ-27-staging-umgebung.md) |
+| PROJ-28 | Zutatenliste-Transparenz auf Ergebnis- und Historie-Seite | P1 | Approved | PROJ-4, PROJ-6 | [Spec](PROJ-28-zutatenliste-transparenz.md) |
 
 <!-- Add features above this line -->
 
-## Next Available ID: PROJ-28
+## Next Available ID: PROJ-29
 
 ## Empfohlene Build-Reihenfolge
 

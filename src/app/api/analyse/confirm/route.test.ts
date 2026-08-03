@@ -220,6 +220,46 @@ describe('POST /api/analyse/confirm', () => {
     expect(body.result).not.toHaveProperty('vorschlaege')
   })
 
+  // PROJ-28: Beilagen-Zweig berechnete die Zutaten-Kennzeichnung bisher nicht
+  it('computes zutatenQuellen for beilage results too', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
+    mockMealSingle.mockResolvedValue({ data: { id: 'meal-1', user_id: 'user-1', free_text: 'Blattsalat mit Yuzu-Paste', photo_fullsize_path: null }, error: null })
+    mockConvSingle.mockResolvedValue({
+      data: { assumptions: ['BEILAGE_KONTEXT: Blattsalat wird als vollständige Mahlzeit gegessen.'] },
+      error: null,
+    })
+    mockAnthropicCreate.mockResolvedValue({
+      content: [{
+        type: 'text',
+        text: JSON.stringify({
+          ...validBeilageAnalysis,
+          zutatenliste: [
+            { name: 'Blattsalat', amount: '100g', grams: 100 },
+            { name: 'Yuzu-Paste', amount: '20g', grams: 20, naehrwert_geschaetzt: { kcal: 250, protein_g: 1, carbs_g: 60, sugar_g: 55, fat_g: 0, fiber_g: 1 } },
+            { name: 'Unbekannte Zutat', amount: '10g', grams: 10 },
+          ],
+        }),
+      }],
+    })
+    mockInsertSingle.mockResolvedValue({ data: { id: 'beilage-analysis-2' }, error: null })
+    mockMealsUpdate.mockResolvedValue({ error: null })
+    mockConvUpdate.mockResolvedValue({ error: null })
+
+    const { POST } = await import('./route')
+    const res = await POST(makeRequest({
+      mealId: '550e8400-e29b-41d4-a716-446655440000',
+      ingredients: [{ name: 'Blattsalat', amount: '100g' }, { name: 'Yuzu-Paste', amount: '20g' }, { name: 'Unbekannte Zutat', amount: '10g' }],
+    }))
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    // Hinweis: BLS/OFF sind in dieser Testumgebung nicht erreichbar (siehe Datei-Kommentar
+    // "Silence external fetch calls"), daher landet auch "Blattsalat" ohne eigene Schätzung
+    // als 'nicht_schaetzbar' — das spiegelt korrekt wider, dass BLS/OFF hier keinen Treffer
+    // liefern können, nicht ein Fehler in der Produktionslogik.
+    // Reihenfolge entspricht zutatenliste: [Blattsalat, Yuzu-Paste, Unbekannte Zutat]
+    expect(body.result.zutatenQuellen).toEqual(['nicht_schaetzbar', 'schaetzung', 'nicht_schaetzbar'])
+  })
+
   // PROJ-18 FIX-3: system prompt must use prompt caching
   it('FIX-3: Claude is called with cache_control on system prompt', async () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
@@ -270,9 +310,8 @@ describe('POST /api/analyse/confirm', () => {
     const body = await res.json()
     // 20g of 250 kcal/100g = 50 kcal
     expect(body.result.vorher.naehrwerte.kcal).toBe(50)
-    expect(body.result.nichtSchaetzbareZutaten).toEqual([])
-    // BUG-4-Fix: successful AI estimates are surfaced separately so the UI can label them
-    expect(body.result.kiGeschaetzteZutaten).toEqual(['Yuzu-Paste'])
+    // BUG-4-Fix: successful AI estimates are surfaced so the UI can label them
+    expect(body.result.zutatenQuellen).toEqual(['schaetzung'])
   })
 
   it('discards an implausible AI estimate and lists the ingredient as not estimable', async () => {
@@ -301,8 +340,7 @@ describe('POST /api/analyse/confirm', () => {
     expect(res.status).toBe(200)
     const body = await res.json()
     expect(body.result.vorher.naehrwerte.kcal).toBe(0)
-    expect(body.result.nichtSchaetzbareZutaten).toEqual(['Mysteriöse Zutat'])
-    expect(body.result.kiGeschaetzteZutaten).toEqual([])
+    expect(body.result.zutatenQuellen).toEqual(['nicht_schaetzbar'])
   })
 
   it('lists an ingredient with no AI estimate at all as not estimable', async () => {
@@ -319,8 +357,40 @@ describe('POST /api/analyse/confirm', () => {
     const res = await POST(makeRequest({ mealId: '550e8400-e29b-41d4-a716-446655440000', ingredients: validIngredients }))
     expect(res.status).toBe(200)
     const body = await res.json()
-    expect(body.result.nichtSchaetzbareZutaten).toEqual(['Hähnchenbrust'])
-    expect(body.result.kiGeschaetzteZutaten).toEqual([])
+    expect(body.result.zutatenQuellen).toEqual(['nicht_schaetzbar'])
+  })
+
+  // PROJ-28 (BUG-7-Fix, 2026-08-04): zwei Zutaten mit identischem Namen, aber unterschiedlicher
+  // Quelle, dürfen nicht dieselbe Kennzeichnung bekommen — Zuordnung muss positionsgenau sein
+  it('correctly distinguishes two ingredients with the same name but different resolution outcomes', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
+    mockMealSingle.mockResolvedValue({ data: { id: 'meal-1', user_id: 'user-1', free_text: 'Zwiebel zweimal', photo_fullsize_path: null }, error: null })
+    mockAnthropicCreate.mockResolvedValue({
+      content: [{
+        type: 'text',
+        text: JSON.stringify({
+          ...validAnalysis,
+          zutatenliste: [
+            { name: 'Zwiebel', amount: '1 Stück', grams: 80, naehrwert_geschaetzt: { kcal: 40, protein_g: 1, carbs_g: 9, sugar_g: 4, fat_g: 0, fiber_g: 2 } },
+            { name: 'Zwiebel', amount: '1 EL geröstet', grams: 15 },
+          ],
+        }),
+      }],
+    })
+    mockInsertSingle.mockResolvedValue({ data: { id: 'analysis-5' }, error: null })
+    mockMealsUpdate.mockResolvedValue({ error: null })
+    mockConvUpdate.mockResolvedValue({ error: null })
+
+    const { POST } = await import('./route')
+    const res = await POST(makeRequest({
+      mealId: '550e8400-e29b-41d4-a716-446655440000',
+      ingredients: [{ name: 'Zwiebel', amount: '1 Stück' }, { name: 'Zwiebel', amount: '1 EL geröstet' }],
+    }))
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    // Erste "Zwiebel" hat eine plausible Schätzung, zweite nicht — trotz identischem Namen
+    // müssen beide Zeilen ihre eigene, korrekte Kennzeichnung behalten
+    expect(body.result.zutatenQuellen).toEqual(['schaetzung', 'nicht_schaetzbar'])
   })
 
   it('marks a resolved AI estimate with source "schaetzung" and a rejected one as "nicht_schaetzbar" in data_sources', async () => {

@@ -1,6 +1,6 @@
 import { redirect, notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import type { AnalysisResult, StandardAnalysisResult } from '@/components/saettigungs-ergebnis'
+import type { AnalysisResult, StandardAnalysisResult, ZutatenQuelle } from '@/components/saettigungs-ergebnis'
 import MahlzeitDetail from './mahlzeit-detail'
 
 export default async function MahlzeitDetailPage({
@@ -31,7 +31,8 @@ export default async function MahlzeitDetailPage({
         satiety_scores_before,
         satiety_scores_after,
         improvement,
-        data_sources
+        data_sources,
+        created_at
       ),
       meal_conversations (
         assumptions
@@ -72,6 +73,7 @@ export default async function MahlzeitDetailPage({
       art_of_eating_tip: string | null
     } | null
     data_sources: { ingredient: string; source: string; sourceName: string }[] | null
+    created_at: string
   }
 
   const analyses = meal.meal_analyses as unknown as RawAnalysis[]
@@ -79,16 +81,21 @@ export default async function MahlzeitDetailPage({
   if (!analysis) notFound()
 
   // PROJ-4 (Refinement 2026-08-03): data_sources ist seit jeher nur persistiert, nie ausgelesen —
-  // hier erstmals genutzt, um den "nicht schätzbar"-Hinweis auch beim späteren Ansehen aus der
+  // hier erstmals genutzt, um die Zutaten-Kennzeichnung auch beim späteren Ansehen aus der
   // Historie zu zeigen (nicht nur direkt nach der Analyse).
-  const nichtSchaetzbareZutaten = (analysis.data_sources ?? [])
-    .filter(d => d.source === 'nicht_schaetzbar')
-    .map(d => d.ingredient)
+  //
+  // PROJ-28 (BUG-7-Fix, 2026-08-04): positionsgenau statt namensbasiert — `data_sources` wird
+  // in `/api/analyse/confirm` per `.map()` über dieselbe geordnete Zutatenliste gebaut, die auch
+  // in `refined_ingredients.ingredients` landet, daher entspricht `data_sources[i]` exakt
+  // `refined_ingredients.ingredients[i]`. Ein Filtern+Sammeln der Namen (wie vorher) verwechselt
+  // zwei gleichnamige Zutaten mit unterschiedlicher Quelle — die Position ist eindeutig, der Name nicht.
+  const zutatenQuellen = (analysis.data_sources ?? []).map(d => d.source as ZutatenQuelle)
 
-  // BUG-4-Fix (2026-08-03): analog für erfolgreich KI-geschätzte Zutaten
-  const kiGeschaetzteZutaten = (analysis.data_sources ?? [])
-    .filter(d => d.source === 'schaetzung')
-    .map(d => d.ingredient)
+  // PROJ-28: Zutatendaten vor diesem Stichtag sind bei "geschätzten" Zutaten unzuverlässig
+  // (stiller 0-kcal-Fallback statt eines echten KI-Werts, siehe PROJ-4-Bugfix) — Zutatenliste
+  // wird für ältere Mahlzeiten durch einen Hinweis ersetzt statt angezeigt
+  const ZUTATENLISTE_CUTOFF = new Date('2026-08-03T00:00:00Z')
+  const tooOld = new Date(analysis.created_at) < ZUTATENLISTE_CUTOFF
 
   const emptyNaehrwerte = { kcal: 0, protein_g: 0, kohlenhydrate_g: 0, zucker_g: 0, fett_g: 0, ballaststoffe_g: 0 }
   const emptyBausteine = { geschmack: 'nicht_bewertet', biss: 'nicht_bewertet', ballaststoffe: 'nicht_bewertet', proteine: 'nicht_bewertet', volumen: 'nicht_bewertet', art_of_eating: 'nicht_bewertet' } as StandardAnalysisResult['vorher']['bausteine']
@@ -100,14 +107,14 @@ export default async function MahlzeitDetailPage({
       typ: 'beilage',
       zutatenliste: analysis.refined_ingredients?.ingredients ?? [],
       annahmen: analysis.refined_ingredients?.assumptions ?? [],
+      zutatenQuellen,
       beilage: analysis.beilage_data,
     }
   } else {
     result = {
       zutatenliste: analysis.refined_ingredients?.ingredients ?? [],
       annahmen: analysis.refined_ingredients?.assumptions ?? [],
-      nichtSchaetzbareZutaten,
-      kiGeschaetzteZutaten,
+      zutatenQuellen,
       vorher: {
         bausteine: analysis.satiety_scores_before?.pillars ?? emptyBausteine,
         gesamtbewertung: analysis.satiety_scores_before?.overall ?? 'wenig_saettigend',
@@ -146,5 +153,5 @@ export default async function MahlzeitDetailPage({
     }
   }
 
-  return <MahlzeitDetail result={result} assumptions={assumptions} analysisId={analysis.id} photoUrl={photoUrl} mealId={id} />
+  return <MahlzeitDetail result={result} assumptions={assumptions} analysisId={analysis.id} photoUrl={photoUrl} mealId={id} tooOld={tooOld} />
 }

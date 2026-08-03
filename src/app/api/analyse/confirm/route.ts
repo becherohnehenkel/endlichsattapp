@@ -371,10 +371,17 @@ export async function POST(request: Request) {
       result.zutatenliste.map(async z => ({ z, resolved: await resolveNutrition(z.name, z.naehrwert_geschaetzt) }))
     )
 
+    // PROJ-28 (BUG-7-Fix, 2026-08-04): positionsgenau statt namensbasiert — zwei Zutaten mit
+    // identischem Namen aber unterschiedlicher Quelle (z.B. "Zwiebel" zweimal) wurden vorher
+    // beide fälschlich gleich gekennzeichnet, weil die Zuordnung über den Namen lief statt über
+    // den Index. `zutatenQuellen[i]` gehört exakt zu `zutatenliste[i]`.
+    const zutatenQuellenBeilage = resolvedBeilage.map(({ resolved }) => resolved?.source ?? 'nicht_schaetzbar')
+
     const beilageFullResult = {
       typ: 'beilage' as const,
       zutatenliste: result.zutatenliste,
       annahmen: result.annahmen,
+      zutatenQuellen: zutatenQuellenBeilage,
       beilage: result.beilage,
     }
 
@@ -414,18 +421,10 @@ export async function POST(request: Request) {
     result.zutatenliste.map(async z => ({ z, resolved: await resolveNutrition(z.name, z.naehrwert_geschaetzt) }))
   )
 
-  // PROJ-4 (Refinement 2026-08-03): ingredients with neither a DB match nor a plausible
-  // AI estimate — shown to the user instead of silently contributing 0 kcal
-  const nichtSchaetzbareZutaten = resolvedIngredients
-    .filter(({ resolved }) => !resolved)
-    .map(({ z }) => z.name)
-
-  // BUG-4-Fix (2026-08-03): ingredients whose nutrition came from a plausible AI estimate
-  // (no BLS/OFF match) — shown to the user so a KI-estimated kcal value is distinguishable
-  // from a database-backed one, not just "correct but unlabeled"
-  const kiGeschaetzteZutaten = resolvedIngredients
-    .filter(({ resolved }) => resolved?.source === 'schaetzung')
-    .map(({ z }) => z.name)
+  // PROJ-28 (BUG-7-Fix, 2026-08-04): positionsgenau statt namensbasiert — siehe Kommentar im
+  // Beilagen-Zweig oben. `zutatenQuellen[i]` gehört exakt zu `zutatenliste[i]`, unabhängig
+  // davon ob mehrere Zutaten denselben Namen tragen.
+  const zutatenQuellen = resolvedIngredients.map(({ resolved }) => resolved?.source ?? 'nicht_schaetzbar')
 
   const vorherInputs: MacroInput[] = resolvedIngredients.map(({ z, resolved }) => ({
     grams: z.grams ?? 0,
@@ -462,8 +461,7 @@ export async function POST(request: Request) {
   const fullResult = {
     zutatenliste: result.zutatenliste,
     annahmen: result.annahmen,
-    nichtSchaetzbareZutaten,
-    kiGeschaetzteZutaten,
+    zutatenQuellen,
     vorher: {
       bausteine: result.vorher.bausteine,
       gesamtbewertung: result.vorher.gesamtbewertung,
