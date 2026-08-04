@@ -24,6 +24,7 @@ import { Plus, Trash2, Upload, ChefHat, GripVertical, Heading, Bold, Italic, Und
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Switch } from '@/components/ui/switch'
 import ZutatInputMitQuelle from '@/components/zutat-input-mit-quelle'
+import NaehrwertCounter from '@/components/naehrwert-counter'
 import BildCropper from '@/components/bild-cropper'
 import type { NutritionPer100g } from '@/lib/nutrition'
 
@@ -238,7 +239,7 @@ export default function RezeptFormular({
 
   const instructionsRef = useRef<HTMLTextAreaElement | null>(null)
 
-  const { register, control, handleSubmit, setValue, formState: { errors } } = useForm<RezeptFormularValues>({
+  const { register, control, handleSubmit, setValue, watch, formState: { errors } } = useForm<RezeptFormularValues>({
     defaultValues: {
       title: '',
       servings: '2',
@@ -263,6 +264,23 @@ export default function RezeptFormular({
   )
 
   const zutatCount = fields.filter(f => f.itemType === 'zutat').length
+
+  // PROJ-29: Live-Nährwert-Counter — liest die aktuellen Formularwerte (nicht erst bei
+  // Submit) und kombiniert sie mit den verknüpften BLS/OFF-Makros pro Zutat.
+  const watchedIngredients = watch('ingredients')
+  const watchedServings = watch('servings')
+  const counterRows = fields
+    .map((field, idx) => ({ field, watched: watchedIngredients[idx] }))
+    .filter((entry): entry is { field: typeof fields[number]; watched: ZutatenZeile } =>
+      entry.watched?.itemType === 'zutat'
+    )
+    .map(({ field, watched }) => ({
+      id: field.id,
+      name: watched.name,
+      amount: watched.amount,
+      unit: watched.unit,
+      linkedMacros: ingredientMacros[field.id] ?? null,
+    }))
 
   const dragSensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -421,6 +439,9 @@ export default function RezeptFormular({
         />
         {errors.title && <p className="text-xs text-destructive">{errors.title.message}</p>}
       </div>
+
+      {/* PROJ-29: Live-Nährwert-Counter */}
+      <NaehrwertCounter rows={counterRows} servings={parseInt(watchedServings) || 0} />
 
       {/* Zeiten + Portionen */}
       <div className="grid grid-cols-3 gap-3">

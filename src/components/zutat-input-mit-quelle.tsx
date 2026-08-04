@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { X } from 'lucide-react'
 import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import type { NutritionPer100g } from '@/lib/nutrition'
 
 interface BlsResult {
@@ -29,10 +30,23 @@ interface ZutatInputMitQuelleProps {
 function MacroLine({ per100g }: { per100g: NutritionPer100g }) {
   return (
     <p className="text-[10px] text-muted-foreground mt-0.5">
-      {per100g.kcal} kcal · {per100g.protein_g}g Protein · {per100g.fat_g}g Fett{' '}
+      {per100g.kcal} kcal · {per100g.protein_g}g Protein · {per100g.fat_g}g Fett · {per100g.fiber_g}g Ballaststoffe{' '}
       <span className="text-muted-foreground/50">pro 100g</span>
     </p>
   )
+}
+
+// Bugfix 2026-08-04 (PROJ-29): Jede Zutat-Zeile hat ihre eigene Instanz dieser Komponente
+// mit eigenem `document`-mousedown-Listener fürs Schließen bei Außerhalb-Klick. Ein simples
+// e.preventDefault() + e.stopPropagation() auf dem Button reicht NICHT, um diese Listener zu
+// stoppen — vermutlich weil Reacts eigener Event-Dispatch am selben Knoten (document) hängt
+// und normales stopPropagation() keine Geschwister-Listener am selben Knoten unterdrückt,
+// nur stopImmediatePropagation() auf dem nativen Event tut das zuverlässig. Ohne diesen Fix
+// schloss ein Klick auf "In Open Food Facts suchen" das Dropdown sofort wieder, bevor die
+// Suche überhaupt sichtbar wurde.
+function stopDropdownClick(e: React.MouseEvent) {
+  e.preventDefault()
+  e.nativeEvent.stopImmediatePropagation()
 }
 
 export default function ZutatInputMitQuelle({
@@ -45,45 +59,51 @@ export default function ZutatInputMitQuelle({
   placeholder = 'Name',
 }: ZutatInputMitQuelleProps) {
   const [blsResults, setBlsResults] = useState<BlsResult[]>([])
-  const [blsOpen, setBlsOpen] = useState(false)
+  const [blsTotal, setBlsTotal] = useState(0)
   const [blsLoading, setBlsLoading] = useState(false)
+  const [blsLoadingMore, setBlsLoadingMore] = useState(false)
+  // Whether the combined dropdown (OFF entry point + BLS results) is currently shown
+  const [dropdownOpen, setDropdownOpen] = useState(false)
 
   const [offResults, setOffResults] = useState<OffResult[]>([])
   const [offOpen, setOffOpen] = useState(false)
   const [offLoading, setOffLoading] = useState(false)
   const [offError, setOffError] = useState<string | null>(null)
-  // Show "Nicht im BLS?" button only after a search that returned 0 BLS results
-  const [showOffButton, setShowOffButton] = useState(false)
 
   const [isPinned, setIsPinned] = useState(() => linkedMacros !== null)
   const [source, setSource] = useState<'bls' | 'off' | null>(null)
 
   const containerRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  // Tracks the query used for the OFF button so it matches what was last searched
+  // Tracks the query the currently visible BLS/OFF results belong to
   const lastQueryRef = useRef<string>('')
 
-  const searchBls = useCallback(async (q: string) => {
+  const searchBls = useCallback(async (q: string, offset: number) => {
     if (q.length < 2) {
       setBlsResults([])
-      setBlsOpen(false)
-      setShowOffButton(false)
+      setBlsTotal(0)
+      setDropdownOpen(false)
       return
     }
-    setBlsLoading(true)
+    if (offset === 0) setBlsLoading(true)
+    else setBlsLoadingMore(true)
     try {
-      const res = await fetch(`/api/admin/bls-search?q=${encodeURIComponent(q)}`)
+      const res = await fetch(`/api/admin/bls-search?q=${encodeURIComponent(q)}&offset=${offset}`)
       const data = await res.json()
       const results: BlsResult[] = data.results ?? []
-      setBlsResults(results)
-      setBlsOpen(results.length > 0)
-      setShowOffButton(results.length === 0)
+      const total: number = data.total ?? 0
+      setBlsResults(prev => (offset === 0 ? results : [...prev, ...results]))
+      setBlsTotal(total)
+      setDropdownOpen(true)
       lastQueryRef.current = q
     } catch {
-      setBlsResults([])
-      setShowOffButton(false)
+      if (offset === 0) {
+        setBlsResults([])
+        setBlsTotal(0)
+      }
     } finally {
-      setBlsLoading(false)
+      if (offset === 0) setBlsLoading(false)
+      else setBlsLoadingMore(false)
     }
   }, [])
 
@@ -108,7 +128,7 @@ export default function ZutatInputMitQuelle({
     setOffError(null)
 
     if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => searchBls(val), 350)
+    debounceRef.current = setTimeout(() => searchBls(val, 0), 350)
   }
 
   function handleSelectBls(result: BlsResult) {
@@ -116,9 +136,8 @@ export default function ZutatInputMitQuelle({
     onSelectSource(result.per100g)
     setIsPinned(true)
     setSource('bls')
-    setBlsOpen(false)
+    setDropdownOpen(false)
     setBlsResults([])
-    setShowOffButton(false)
     setOffOpen(false)
     setOffResults([])
   }
@@ -152,15 +171,14 @@ export default function ZutatInputMitQuelle({
     setSource('off')
     setOffOpen(false)
     setOffResults([])
-    setShowOffButton(false)
-    setBlsOpen(false)
+    setDropdownOpen(false)
   }
 
   function handleClearPin() {
     setIsPinned(false)
     setSource(null)
     onClearMacros()
-    setShowOffButton(false)
+    setDropdownOpen(false)
     setOffOpen(false)
     setOffResults([])
     setOffError(null)
@@ -169,7 +187,7 @@ export default function ZutatInputMitQuelle({
   useEffect(() => {
     function handleOutside(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setBlsOpen(false)
+        setDropdownOpen(false)
         setOffOpen(false)
       }
     }
@@ -208,77 +226,95 @@ export default function ZutatInputMitQuelle({
         </span>
       )}
 
-      {/* BLS-Suchindikator */}
-      {blsLoading && (
-        <div className="absolute z-20 top-full mt-1 left-0 right-0 rounded-lg border border-border bg-card shadow-md px-3 py-2 text-xs text-muted-foreground">
-          Suche…
-        </div>
-      )}
-
-      {/* BLS-Dropdown */}
-      {blsOpen && blsResults.length > 0 && (
-        <ul className="absolute z-20 top-full mt-1 left-0 right-0 rounded-lg border border-border bg-card shadow-md overflow-hidden">
-          {blsResults.map((r) => (
-            <li key={r.bls_code}>
+      {/* Kombiniertes Dropdown: OFF-Einstieg (immer oben) + BLS-Trefferliste */}
+      {dropdownOpen && (
+        <div className="absolute z-20 top-full mt-1 left-0 right-0 rounded-lg border border-border bg-card shadow-md overflow-hidden">
+          {/* OFF-Einstiegspunkt — PROJ-29: jetzt immer sichtbar, nicht mehr nur bei 0 BLS-Treffern */}
+          <div className="border-b border-border/50">
+            {!offOpen && !offLoading && !offError && (
               <button
                 type="button"
-                className="w-full text-left px-3 py-2 hover:bg-muted/60 transition-colors border-b border-border/50 last:border-0"
-                onMouseDown={(e) => { e.preventDefault(); handleSelectBls(r) }}
+                className="w-full text-left px-3 py-2.5 text-xs text-[#2E9E6B] font-medium hover:bg-muted/40 transition-colors"
+                onMouseDown={(e) => { stopDropdownClick(e); handleOffSearch() }}
               >
-                <p className="text-xs font-medium text-foreground line-clamp-1">{r.name_de}</p>
-                <MacroLine per100g={r.per100g} />
+                In Open Food Facts suchen →
               </button>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {/* "Nicht im BLS?"-Button + OFF-Bereich */}
-      {!blsOpen && !blsLoading && showOffButton && (
-        <div className="absolute z-20 top-full mt-1 left-0 right-0 rounded-lg border border-border bg-card shadow-md overflow-hidden">
-          {/* OFF-Button */}
-          {!offOpen && !offLoading && !offError && (
-            <button
-              type="button"
-              className="w-full text-left px-3 py-2.5 text-xs text-[#2E9E6B] font-medium hover:bg-muted/40 transition-colors"
-              onMouseDown={(e) => { e.preventDefault(); handleOffSearch() }}
-            >
-              Nicht im BLS? Open Food Facts durchsuchen →
-            </button>
-          )}
-
-          {/* OFF lädt */}
-          {offLoading && (
-            <div className="px-3 py-2 text-xs text-muted-foreground">
-              Open Food Facts wird durchsucht…
-            </div>
-          )}
-
-          {/* OFF-Ergebnisse */}
-          {offOpen && offResults.length > 0 && (
-            <>
-              <div className="px-3 py-1.5 bg-blue-50 border-b border-blue-100">
-                <span className="text-[10px] font-medium text-blue-600 uppercase tracking-wide">Open Food Facts</span>
+            )}
+            {offLoading && (
+              <div className="px-3 py-2 text-xs text-muted-foreground">
+                Open Food Facts wird durchsucht…
               </div>
-              {offResults.map((r, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  className="w-full text-left px-3 py-2 hover:bg-muted/60 transition-colors border-b border-border/50 last:border-0"
-                  onMouseDown={(e) => { e.preventDefault(); handleSelectOff(r) }}
-                >
-                  <p className="text-xs font-medium text-foreground line-clamp-1">{r.product_name}</p>
-                  <MacroLine per100g={r.per100g} />
-                </button>
-              ))}
-            </>
-          )}
+            )}
+            {offOpen && offResults.length > 0 && (
+              <>
+                <div className="px-3 py-1.5 bg-blue-50 border-b border-blue-100">
+                  <span className="text-[10px] font-medium text-blue-600 uppercase tracking-wide">Open Food Facts</span>
+                </div>
+                {offResults.map((r, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className="w-full text-left px-3 py-2 hover:bg-muted/60 transition-colors border-b border-border/50 last:border-0"
+                    onMouseDown={(e) => { stopDropdownClick(e); handleSelectOff(r) }}
+                  >
+                    <p className="text-xs font-medium text-foreground line-clamp-1">{r.product_name}</p>
+                    <MacroLine per100g={r.per100g} />
+                  </button>
+                ))}
+              </>
+            )}
+            {offError && (
+              <div className="px-3 py-2 text-xs text-muted-foreground">
+                {offError}
+              </div>
+            )}
+          </div>
 
-          {/* OFF: kein Ergebnis */}
-          {offError && (
+          {/* BLS-Bereich */}
+          {blsLoading && (
             <div className="px-3 py-2 text-xs text-muted-foreground">
-              {offError}
+              BLS wird durchsucht…
             </div>
+          )}
+          {!blsLoading && blsResults.length === 0 && (
+            <div className="px-3 py-2 text-xs text-muted-foreground">
+              Keine BLS-Treffer
+            </div>
+          )}
+          {blsResults.length > 0 && (
+            <>
+              <ul className="max-h-72 overflow-y-auto">
+                {blsResults.map((r) => (
+                  <li key={r.bls_code}>
+                    <button
+                      type="button"
+                      className="w-full text-left px-3 py-2 hover:bg-muted/60 transition-colors border-b border-border/50 last:border-0"
+                      onMouseDown={(e) => { stopDropdownClick(e); handleSelectBls(r) }}
+                    >
+                      <p className="text-xs font-medium text-foreground line-clamp-1">{r.name_de}</p>
+                      <MacroLine per100g={r.per100g} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <div className="px-3 py-2 flex items-center justify-between gap-2 bg-muted/20">
+                <span className="text-[10px] text-muted-foreground">
+                  {blsResults.length} von {blsTotal} Treffern
+                </span>
+                {blsResults.length < blsTotal && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 text-[10px] px-2"
+                    disabled={blsLoadingMore}
+                    onMouseDown={(e) => { stopDropdownClick(e); searchBls(lastQueryRef.current, blsResults.length) }}
+                  >
+                    {blsLoadingMore ? 'Lädt…' : 'Weitere 20 laden'}
+                  </Button>
+                )}
+              </div>
+            </>
           )}
         </div>
       )}
