@@ -230,13 +230,14 @@ Keine neuen Pakete — alle benötigten Bausteine (Formular, Bild-Zuschnitt, Zut
   3. Tatsächlich: HTTP 200, aber korrekter 404-Seiteninhalt (kein Datenleck — inhaltlich sicher)
 - **Root Cause:** Identisches Bug-Muster wie in PROJ-30 bereits für `/rezept/[id]` behoben (`notFound()` in einer Route unter einem `loading.tsx`-Suspense-Boundary kann den initialen HTTP-Status nicht mehr ändern). Die PROJ-30-Middleware-Lösung deckt nur den exakten Pfad `/rezept/[id]` ab, nicht das neue `/rezept/[id]/bearbeiten`.
 - **Priority:** Fix vor Deployment empfohlen, um mit dem PROJ-30-Präzedenzfall konsistent zu sein (gleiche Behebung: Middleware-Regex erweitern) — kein Sicherheitsrisiko, da kein Content-Leak
+- **Nutzer-Entscheidung (2026-08-04):** Vor Deployment beheben — zurück an `/backend` zur Umsetzung
 
 ### Summary
 - **Acceptance Criteria:** 12/13 vollständig bestanden, 1 mit dokumentierter Abweichung (BUG-1)
 - **Bugs Found:** 2 total (0 critical, 0 high, 2 medium, 0 low)
 - **Security:** Pass — keine Auth-/Autorisierungs-/XSS-Lücken gefunden
-- **Production Ready:** Ja, im Sinne der Kriterien (kein Critical/High) — beide gefundenen Bugs sind Medium und nicht blockierend, aber vor dem Deploy klärungswürdig
-- **Recommendation:** Nutzer entscheiden lassen, ob BUG-1 (Spec-Klärung) und BUG-2 (Status-Code-Konsistenz mit PROJ-30) vor dem Deploy behoben werden, oder ob bewusst mit offenen Medium-Bugs deployt wird
+- **Production Ready:** Nein (noch) — Nutzer hat entschieden, BUG-2 vor dem Deploy zu beheben; BUG-1 bleibt vorerst offen (keine Nutzer-Entscheidung für sofortige Behebung)
+- **Recommendation:** BUG-2 beheben (Middleware-Regex auf `/rezept/[id]/bearbeiten` erweitern), danach `/qa proj-31` erneut ausführen
 
 ## Deployment
 _To be added by /deploy_
