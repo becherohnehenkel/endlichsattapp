@@ -204,4 +204,9 @@ Wie bei PROJ-24 dokumentiert, ist der Admin-Rezept-Editor über den regulären E
 - **Recommendation:** Deploy. Empfehlung für danach: Der Product Owner sollte bei nächster Gelegenheit einmal gezielt auf die tatsächlichen Live-Counter-Zahlen und die "Weitere 20 laden"-Pagination bei einem wirklich zutatenreichen Suchbegriff (z.B. "Milch") achten, da diese beiden Punkte bisher nur über Code-Review + Unit-Tests abgesichert sind, nicht per Blickkontakt im Browser.
 
 ## Deployment
-_To be added by /deploy_
+
+- **Production URL:** https://app.mehralsabnehmen.de/admin/rezepte/neu (und `/admin/rezepte/[id]/bearbeiten`)
+- **Deployed:** 2026-08-04
+- **Commit:** `b084d4a`
+- **Tag:** `v1.26.0-PROJ-29`
+- **Hinweis:** Deploy per Push auf `main` (Vercel Auto-Deploy). Build-Status konnte nicht direkt über die Vercel-Konsole verifiziert werden (kein CLI-Zugriff in dieser Session) — lokaler Produktions-Build (`next build`) war vor dem Push fehlerfrei. Bitte kurz im Vercel-Dashboard bestätigen, dass der Build durchgelaufen ist, und die zwei offenen Punkte aus den QA-Ergebnissen (Live-Counter-Zahlen, "Weitere 20 laden" bei vielen Treffern) bei Gelegenheit live gegenprüfen.
