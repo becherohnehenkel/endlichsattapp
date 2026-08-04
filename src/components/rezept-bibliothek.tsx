@@ -5,7 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Clock, ChefHat, Search, Lock } from 'lucide-react'
+import { Clock, ChefHat, Search, Lock, Plus } from 'lucide-react'
 
 export interface RezeptListItem {
   id: string
@@ -80,6 +80,19 @@ export default function RezeptBibliothek({
         </div>
       )}
 
+      {/* PROJ-31: Einstiegspunkt für eigene Rezepte — nur im "Eigene Rezepte"-Filter sichtbar.
+          Der Klick führt immer zu /rezept/neu — die Seite selbst entscheidet anhand des
+          5-Rezepte-Limits, ob das Formular oder ein Upgrade-Hinweis angezeigt wird. */}
+      {showEigeneFilter && ownerFilter === 'eigene' && (
+        <Link
+          href="/rezept/neu"
+          className="flex items-center justify-center gap-1.5 w-full text-sm font-medium text-white bg-[#2E9E6B] hover:bg-[#278a5c] rounded-lg px-3 py-2 transition-colors"
+        >
+          <Plus className="h-4 w-4" />
+          Eigenes Rezept anlegen
+        </Link>
+      )}
+
       {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
@@ -132,7 +145,9 @@ export default function RezeptBibliothek({
           {ownerFilter === 'eigene' && !query && !activeTag ? (
             <>
               <p className="text-sm text-muted-foreground">Du hast noch keine eigenen Rezepte</p>
-              <p className="text-xs text-muted-foreground/80">Bald kannst du hier eigene Rezepte anlegen — auch direkt aus einer gescannten Mahlzeit.</p>
+              <Link href="/rezept/neu" className="text-xs text-[#2E9E6B] hover:underline font-medium">
+                Jetzt erstes Rezept anlegen →
+              </Link>
             </>
           ) : (
             <p className="text-sm text-muted-foreground">Keine Rezepte gefunden</p>

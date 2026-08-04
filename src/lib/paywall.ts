@@ -79,3 +79,37 @@ export async function getAccessStatus(
 
   return { hasAccess, trialDaysRemaining, subscriptionStatus: profile.subscription_status, hasInviteAccess, photoScansRemaining }
 }
+
+// PROJ-31: Nutzer ohne volle Ausstattung dürfen bis zu 5 eigene Rezepte anlegen (Slot-Zähler,
+// keine Lifetime-Kontingent — ein gelöschtes Rezept gibt den Platz zurück, siehe PROJ-30/31
+// Decision Log). Nutzer MIT voller Ausstattung sind unbegrenzt. Gekoppelt an denselben
+// hasAccess-Status wie das Foto-Scan-Limit, keine eigene Bezahllogik.
+export const OWN_RECIPE_LIMIT = 5
+
+export interface OwnRecipeLimitStatus {
+  /** true = darf jetzt ein weiteres eigenes Rezept anlegen */
+  allowed: boolean
+  /** Aktuelle Anzahl eigener Rezepte des Nutzers */
+  ownRecipeCount: number
+  /** null = unbegrenzt (voller Zugriff) */
+  limit: number | null
+}
+
+export async function getOwnRecipeLimitStatus(
+  supabase: SupabaseClient<Database>,
+  userId: string
+): Promise<OwnRecipeLimitStatus> {
+  const { hasAccess } = await getAccessStatus(supabase, userId)
+
+  const { count } = await supabase
+    .from('recipes')
+    .select('id', { count: 'exact', head: true })
+    .eq('owner_id', userId)
+
+  const ownRecipeCount = count ?? 0
+
+  if (hasAccess) {
+    return { allowed: true, ownRecipeCount, limit: null }
+  }
+  return { allowed: ownRecipeCount < OWN_RECIPE_LIMIT, ownRecipeCount, limit: OWN_RECIPE_LIMIT }
+}

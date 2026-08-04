@@ -209,6 +209,9 @@ interface RezeptFormularProps {
   defaultRecipeTyp?: 'beilage' | 'grundlage' | null
   defaultIsGuestVisible?: boolean
   mode: 'create' | 'edit'
+  /** PROJ-31: 'user' blendet die Gast-Freischaltung aus und spricht die
+   *  Nutzer-eigenen Endpunkte (/api/rezepte*) statt der Admin-Endpunkte an. */
+  variant?: 'admin' | 'user'
 }
 
 export default function RezeptFormular({
@@ -219,6 +222,7 @@ export default function RezeptFormular({
   defaultRecipeTyp,
   defaultIsGuestVisible = false,
   mode,
+  variant = 'admin',
 }: RezeptFormularProps) {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -329,7 +333,8 @@ export default function RezeptFormular({
     try {
       const formData = new FormData()
       formData.append('file', blob, 'crop.jpg')
-      const res = await fetch('/api/admin/rezepte/bild', { method: 'POST', body: formData })
+      const bildUrl = variant === 'user' ? '/api/rezepte/bild' : '/api/admin/rezepte/bild'
+      const res = await fetch(bildUrl, { method: 'POST', body: formData })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Upload fehlgeschlagen')
       setUploadedPath(data.path)
@@ -399,10 +404,11 @@ export default function RezeptFormular({
         ),
         image_path: uploadedPath ?? undefined,
         recipe_typ: recipeTyp === 'vollstaendig' ? null : recipeTyp,
-        is_guest_visible: isGuestVisible,
+        ...(variant === 'admin' ? { is_guest_visible: isGuestVisible } : {}),
       }
 
-      const url = mode === 'edit' ? `/api/admin/rezepte/${recipeId}` : '/api/admin/rezepte'
+      const base = variant === 'user' ? '/api/rezepte' : '/api/admin/rezepte'
+      const url = mode === 'edit' ? `${base}/${recipeId}` : base
       const method = mode === 'edit' ? 'PUT' : 'POST'
       const res = await fetch(url, {
         method,
@@ -417,7 +423,13 @@ export default function RezeptFormular({
           : Object.values(data.error?.fieldErrors ?? {}).flat().join(', ') || 'Speichern fehlgeschlagen'
         throw new Error(message)
       }
-      router.push('/admin/rezepte')
+
+      if (variant === 'user') {
+        const data = await res.json()
+        router.push(`/rezept/${mode === 'edit' ? recipeId : data.id}`)
+      } else {
+        router.push('/admin/rezepte')
+      }
       router.refresh()
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : 'Ein Fehler ist aufgetreten')
@@ -710,24 +722,28 @@ export default function RezeptFormular({
         </RadioGroup>
       </div>
 
-      <Separator />
+      {variant === 'admin' && (
+        <>
+          <Separator />
 
-      {/* Gast-Freischaltung */}
-      <div className="flex items-center justify-between gap-4 rounded-lg border border-border p-4">
-        <div className="space-y-0.5">
-          <Label htmlFor="is-guest-visible" className="text-sm font-medium cursor-pointer">
-            Für Gäste freischalten
-          </Label>
-          <p className="text-xs text-muted-foreground">
-            Gäste ohne Account können dieses Rezept vollständig lesen
-          </p>
-        </div>
-        <Switch
-          id="is-guest-visible"
-          checked={isGuestVisible}
-          onCheckedChange={setIsGuestVisible}
-        />
-      </div>
+          {/* Gast-Freischaltung */}
+          <div className="flex items-center justify-between gap-4 rounded-lg border border-border p-4">
+            <div className="space-y-0.5">
+              <Label htmlFor="is-guest-visible" className="text-sm font-medium cursor-pointer">
+                Für Gäste freischalten
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Gäste ohne Account können dieses Rezept vollständig lesen
+              </p>
+            </div>
+            <Switch
+              id="is-guest-visible"
+              checked={isGuestVisible}
+              onCheckedChange={setIsGuestVisible}
+            />
+          </div>
+        </>
+      )}
 
       {submitError && (
         <p className="text-sm text-destructive rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2">

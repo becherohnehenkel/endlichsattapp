@@ -23,7 +23,7 @@ export default async function NeuesRezeptPage() {
         <h1 className="font-semibold text-foreground">Neues Rezept</h1>
       </header>
       <main className="max-w-lg mx-auto px-4 py-6">
-        <RezeptFormular mode="create" />
+        <RezeptFormular mode="create" variant="admin" />
       </main>
     </div>
   )

@@ -4,7 +4,7 @@ import { ChevronLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import RezeptFormular, { type RezeptFormularValues } from '@/components/rezept-formular'
 
-export default async function RezeptBearbeitenPage({
+export default async function EigenesRezeptBearbeitenPage({
   params,
 }: {
   params: Promise<{ id: string }>
@@ -12,8 +12,7 @@ export default async function RezeptBearbeitenPage({
   const { id } = await params
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-  if (user.email !== process.env.ADMIN_EMAIL) redirect('/admin/403')
+  if (!user || user.is_anonymous) redirect('/konto?reason=eigenes-rezept')
 
   const { data: recipe } = await supabase
     .from('recipes')
@@ -29,7 +28,7 @@ export default async function RezeptBearbeitenPage({
       ingredient_tags,
       cuisine_tags,
       recipe_typ,
-      is_guest_visible,
+      owner_id,
       recipe_ingredients (
         id,
         item_type,
@@ -45,6 +44,10 @@ export default async function RezeptBearbeitenPage({
     .single()
 
   if (!recipe) notFound()
+
+  // PROJ-31: RLS liefert hier offizielle Rezepte (owner_id NULL) genauso wie das eigene —
+  // lesbar zu sein heißt nicht bearbeitbar zu sein. Nur der tatsächliche Eigentümer darf hier weiter.
+  if (recipe.owner_id !== user.id) notFound()
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const existingImageUrl = recipe.image_path
@@ -84,7 +87,7 @@ export default async function RezeptBearbeitenPage({
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card px-4 py-3 flex items-center gap-3">
         <Link
-          href="/admin/rezepte"
+          href={`/rezept/${id}`}
           className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ChevronLeft className="h-4 w-4" />
@@ -100,8 +103,7 @@ export default async function RezeptBearbeitenPage({
           existingImageUrl={existingImageUrl}
           defaultIngredientMacros={sortedIngredients.map(i => i.macros_per_100g as import('@/lib/nutrition').NutritionPer100g | null)}
           defaultRecipeTyp={recipe.recipe_typ as 'beilage' | 'grundlage' | null}
-          defaultIsGuestVisible={recipe.is_guest_visible ?? false}
-          variant="admin"
+          variant="user"
         />
       </main>
     </div>

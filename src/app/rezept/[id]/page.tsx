@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/server'
 import { getAccessStatus } from '@/lib/paywall'
 import BackButton from './back-button'
+import OwnRecipeActions from './own-recipe-actions'
 import RezeptSaettigungsMatrix from '@/components/rezept-saettigungs-matrix'
 import RezeptKontextHinweis from '@/components/rezept-kontext-hinweis'
 import { formatRezeptText } from '@/lib/format-rezept-text'
@@ -214,6 +215,9 @@ export default async function RezeptDetailPage({
             </div>
           </div>
         </div>
+
+        {/* PROJ-31: Bearbeiten/Löschen nur für den Eigentümer des Rezepts */}
+        {isOwn && <OwnRecipeActions recipeId={recipe.id} title={recipe.title} />}
 
         <Separator />
 

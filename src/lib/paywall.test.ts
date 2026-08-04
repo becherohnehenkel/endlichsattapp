@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { getAccessStatus } from './paywall'
+import { getAccessStatus, getOwnRecipeLimitStatus, OWN_RECIPE_LIMIT } from './paywall'
 
 function mockSupabase(profile: Record<string, unknown> | null) {
   return {
@@ -118,5 +118,68 @@ describe('getAccessStatus', () => {
       )
       expect(result.photoScansRemaining).toBe(0)
     })
+  })
+})
+
+// PROJ-31: 5-Rezepte-Limit für Nutzer ohne volle Ausstattung, gekoppelt an denselben
+// hasAccess-Status wie das Foto-Scan-Limit.
+describe('getOwnRecipeLimitStatus', () => {
+  function mockSupabaseWithRecipeCount(profile: Record<string, unknown> | null, recipeCount: number) {
+    return {
+      from: vi.fn((table: string) => {
+        if (table === 'profiles') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: profile }),
+              }),
+            }),
+          }
+        }
+        if (table === 'recipes') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockResolvedValue({ count: recipeCount }),
+            }),
+          }
+        }
+        throw new Error(`unexpected table: ${table}`)
+      }),
+    } as unknown as Parameters<typeof getOwnRecipeLimitStatus>[0]
+  }
+
+  it('allows creating another recipe when under the limit without full access', async () => {
+    const result = await getOwnRecipeLimitStatus(
+      mockSupabaseWithRecipeCount({ trial_ends_at: null, subscription_status: null }, 3),
+      'user-1'
+    )
+    expect(result).toEqual({ allowed: true, ownRecipeCount: 3, limit: OWN_RECIPE_LIMIT })
+  })
+
+  it('blocks creating another recipe once the limit is reached without full access', async () => {
+    const result = await getOwnRecipeLimitStatus(
+      mockSupabaseWithRecipeCount({ trial_ends_at: null, subscription_status: null }, OWN_RECIPE_LIMIT),
+      'user-1'
+    )
+    expect(result.allowed).toBe(false)
+    expect(result.ownRecipeCount).toBe(OWN_RECIPE_LIMIT)
+  })
+
+  it('is unlimited (limit: null) for a user with full access, even far beyond 5', async () => {
+    const trialEndsAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
+    const result = await getOwnRecipeLimitStatus(
+      mockSupabaseWithRecipeCount({ trial_ends_at: trialEndsAt, subscription_status: null }, 42),
+      'user-1'
+    )
+    expect(result).toEqual({ allowed: true, ownRecipeCount: 42, limit: null })
+  })
+
+  it('treats a missing count as zero recipes', async () => {
+    const result = await getOwnRecipeLimitStatus(
+      mockSupabaseWithRecipeCount({ trial_ends_at: null, subscription_status: null }, undefined as unknown as number),
+      'user-1'
+    )
+    expect(result.ownRecipeCount).toBe(0)
+    expect(result.allowed).toBe(true)
   })
 })
