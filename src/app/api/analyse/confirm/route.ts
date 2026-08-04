@@ -263,11 +263,19 @@ export async function POST(request: Request) {
     ? `Ursprüngliche Beschreibung: ${meal.free_text}`
     : 'Ursprüngliche Eingabe: (nur Foto)'
 
+  // Bugfix 2026-08-04: Die Rückfragen-Annahmen wurden bisher als "WICHTIG — maßgeblich"
+  // markiert und standen VOR der bestätigten Zutatenliste. Wenn der Nutzer auf dem
+  // Bestätigungs-Screen eine Zutat inhaltlich ändert (z.B. Süßkartoffelnudeln → Spaghetti),
+  // widersprach die ältere Annahme ("Süßkartoffelnudeln: ca. 275g") der Korrektur — Claude
+  // hat dann die veraltete, stärker gewichtete Annahme übernommen und die Korrektur des
+  // Nutzers stillschweigend verworfen. Die Annahmen bleiben als Kontext (z.B. für
+  // Portions-Skalierung "Rezept macht 15 Stück, isst 3") wichtig, aber die zuletzt vom
+  // Nutzer bestätigte/korrigierte Zutatenliste muss bei Widersprüchen immer gewinnen.
   const qaAssumptions = (conv?.assumptions ?? []) as string[]
   const assumptionBlock = qaAssumptions.length > 0
     ? [
         '',
-        'Durch Rückfragen geklärte Informationen (WICHTIG — maßgeblich für grams-Berechnung):',
+        'Kontext aus den Rückfragen (z.B. Portionsgrößen-Skalierung). Falls dies der Zutatenliste unten widerspricht, gilt die Zutatenliste — siehe Hinweis dort:',
         ...qaAssumptions.map(a => `- ${a}`),
       ]
     : []
@@ -276,7 +284,7 @@ export async function POST(request: Request) {
     mealContext,
     ...assumptionBlock,
     '',
-    'Bestätigte Zutatenliste mit BLS-Nährwertdaten (pro 100g — nur zur Einschätzung, du musst nichts berechnen):',
+    'FINALE, vom Nutzer zuletzt geprüfte und ggf. korrigierte Zutatenliste (mit BLS-Nährwertdaten pro 100g, nur zur Einschätzung, du musst nichts berechnen). Diese Liste ist maßgeblich für Zutat und Menge — bei Widerspruch zu den Annahmen oben hat sie IMMER Vorrang, der Nutzer hat sie zuletzt geprüft:',
     ...ingredientLines,
     '',
     'Bitte führe die vollständige Sättigungs-Analyse durch.',

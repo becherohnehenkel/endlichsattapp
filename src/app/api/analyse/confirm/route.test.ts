@@ -282,6 +282,39 @@ describe('POST /api/analyse/confirm', () => {
     })
   })
 
+  // Bugfix 2026-08-04: Rückfragen-Annahmen aus früheren Runden wurden bisher als "WICHTIG —
+  // maßgeblich" markiert und standen vor der vom Nutzer zuletzt bestätigten/korrigierten
+  // Zutatenliste. Wenn der Nutzer eine Zutat auf dem Bestätigungs-Screen änderte (z.B.
+  // Süßkartoffelnudeln → Spaghetti), widersprach die ältere Annahme der Korrektur — Claude
+  // übernahm dann die veraltete Annahme statt die Korrektur des Nutzers. Der Prompt muss die
+  // zuletzt bestätigte Liste eindeutig als Vorrang-habend markieren.
+  it('marks the confirmed ingredient list as authoritative over conflicting QA assumptions', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
+    mockMealSingle.mockResolvedValue({ data: { id: 'meal-1', user_id: 'user-1', free_text: null, photo_fullsize_path: null }, error: null })
+    mockConvSingle.mockResolvedValue({
+      data: { assumptions: ['Süßkartoffel-Spiralnudeln: ca. 275g roh angenommen'] },
+      error: null,
+    })
+    mockAnthropicCreate.mockResolvedValue({
+      content: [{ type: 'text', text: JSON.stringify(validAnalysis) }],
+    })
+    mockInsertSingle.mockResolvedValue({ data: { id: 'analysis-6' }, error: null })
+    mockMealsUpdate.mockResolvedValue({ error: null })
+    mockConvUpdate.mockResolvedValue({ error: null })
+
+    const { POST } = await import('./route')
+    await POST(makeRequest({
+      mealId: '550e8400-e29b-41d4-a716-446655440000',
+      ingredients: [{ name: 'Spaghetti', amount: '275g' }],
+    }))
+
+    const createCall = mockAnthropicCreate.mock.calls[0][0]
+    const userMessage = createCall.messages[0].content as string
+    expect(userMessage.indexOf('Süßkartoffel-Spiralnudeln')).toBeGreaterThan(-1)
+    expect(userMessage.indexOf('Spaghetti')).toBeGreaterThan(-1)
+    expect(userMessage).toContain('hat sie IMMER Vorrang')
+  })
+
   // PROJ-4 (Refinement 2026-08-03): KI-Schätzung für Zutaten ohne BLS/OFF-Treffer
   it('uses a plausible AI-estimated nutrition value for an unmatched ingredient', async () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
