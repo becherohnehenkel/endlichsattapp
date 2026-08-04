@@ -315,6 +315,75 @@ describe('POST /api/analyse/confirm', () => {
     expect(userMessage).toContain('hat sie IMMER Vorrang')
   })
 
+  // Bugfix 2026-08-04 (Folgefix): Der Prompt-Hinweis allein reichte nicht — Claude hat trotz
+  // expliziter "hat Vorrang"-Anweisung die vom Nutzer korrigierte Zutat wieder durch die in
+  // den Rückfragen-Annahmen beschriebene Zutat ersetzt. Der Name wird jetzt serverseitig
+  // erzwungen (positionsgenau mit der bestätigten Liste), unabhängig davon was Claude liefert.
+  it('overwrites Claude-returned ingredient names with the user-confirmed names (positional)', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
+    mockMealSingle.mockResolvedValue({ data: { id: 'meal-1', user_id: 'user-1', free_text: null, photo_fullsize_path: null }, error: null })
+    mockConvSingle.mockResolvedValue({
+      data: { assumptions: ['Süßkartoffel-Spiralnudeln: ca. 200g gegart angenommen'] },
+      error: null,
+    })
+    mockAnthropicCreate.mockResolvedValue({
+      content: [{
+        type: 'text',
+        text: JSON.stringify({
+          ...validAnalysis,
+          // Claude "korrigiert" die vom Nutzer bestätigte Zutat zurück — genau der Bug
+          zutatenliste: [{ name: 'Süßkartoffel-Spiralnudeln (gekocht)', amount: 'ca. 200g', grams: 200, naehrwert_geschaetzt: { kcal: 86, protein_g: 1.6, carbs_g: 20, sugar_g: 4.2, fat_g: 0.1, fiber_g: 3 } }],
+        }),
+      }],
+    })
+    mockInsertSingle.mockResolvedValue({ data: { id: 'analysis-7' }, error: null })
+    mockMealsUpdate.mockResolvedValue({ error: null })
+    mockConvUpdate.mockResolvedValue({ error: null })
+
+    const { POST } = await import('./route')
+    const res = await POST(makeRequest({
+      mealId: '550e8400-e29b-41d4-a716-446655440000',
+      ingredients: [{ name: 'Spaghetti', amount: '200g' }],
+    }))
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.result.zutatenliste[0].name).toBe('Spaghetti')
+
+    const insertedPayload = mockMealAnalysesInsert.mock.calls[0][0] as { refined_ingredients: { ingredients: { name: string }[] } }
+    expect(insertedPayload.refined_ingredients.ingredients[0].name).toBe('Spaghetti')
+  })
+
+  it('keeps Claude-returned names when the ingredient count does not match the confirmed list', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
+    mockMealSingle.mockResolvedValue({ data: { id: 'meal-1', user_id: 'user-1', free_text: null, photo_fullsize_path: null }, error: null })
+    mockAnthropicCreate.mockResolvedValue({
+      content: [{
+        type: 'text',
+        text: JSON.stringify({
+          ...validAnalysis,
+          zutatenliste: [
+            { name: 'Spaghetti', amount: '200g', grams: 200 },
+            { name: 'Parmesan', amount: '20g', grams: 20 },
+          ],
+        }),
+      }],
+    })
+    mockInsertSingle.mockResolvedValue({ data: { id: 'analysis-8' }, error: null })
+    mockMealsUpdate.mockResolvedValue({ error: null })
+    mockConvUpdate.mockResolvedValue({ error: null })
+
+    const { POST } = await import('./route')
+    // Nutzer hat nur 1 Zutat bestätigt, Claude liefert 2 zurück — Längen weichen ab
+    const res = await POST(makeRequest({
+      mealId: '550e8400-e29b-41d4-a716-446655440000',
+      ingredients: [{ name: 'Spaghetti', amount: '200g' }],
+    }))
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.result.zutatenliste).toHaveLength(2)
+    expect(body.result.zutatenliste[1].name).toBe('Parmesan')
+  })
+
   // PROJ-4 (Refinement 2026-08-03): KI-Schätzung für Zutaten ohne BLS/OFF-Treffer
   it('uses a plausible AI-estimated nutrition value for an unmatched ingredient', async () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })

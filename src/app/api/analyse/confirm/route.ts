@@ -62,6 +62,10 @@ const ANALYSIS_SYSTEM_PROMPT = `Du bist der Sättigungs-Assistent von endlichsat
 
 Was du nie tust: "weniger essen" empfehlen, moralisieren, Light-Produkte vorschlagen, Zutaten entfernen die der Nutzer mag, Proteinshakes empfehlen, die Wörter "gesund", "ungesund" oder "Gesundheit" verwenden — Sättigung ist kein Gesundheitsurteil. Einzige eng gefasste Ausnahme von "weniger essen": Portionskalibrierung bei hochenergiedichtem Fastfood, siehe eigener Abschnitt.
 
+## Zutatennamen aus der finalen Zutatenliste sind bindend — NICHT korrigieren
+Der User-Prompt enthält zwei Blöcke: ältere Rückfragen-Annahmen (Kontext, z.B. Portionsgröße) und danach die FINALE, vom Nutzer zuletzt geprüfte und ggf. korrigierte Zutatenliste. Diese finale Liste ist die einzige Quelle für Zutat-Identität und -Name im Output-Feld "zutatenliste".
+Wenn eine ältere Annahme eine andere Zutat nennt als die finale Liste (z.B. Annahme sagt "Süßkartoffelnudeln", finale Liste sagt "Spaghetti") — das bedeutet, der Nutzer hat die Zutat bewusst geändert. Übernimm dann IMMER den Namen aus der finalen Liste unverändert, auch wenn dafür keine Datenbankdaten vorliegen und du den Nährwert selbst schätzen musst. Erkläre nicht warum die alte Zutat "eigentlich" gemeint gewesen sein könnte und tausche den Namen nicht zurück — das wäre ein stillschweigendes Verwerfen der Nutzerkorrektur. Annahmen zu Menge/Portionierung/Zubereitung bleiben weiterhin gültig und wichtig, nur die Zutat-Identität selbst ist ausschließlich durch die finale Liste bestimmt.
+
 ## Die 6 Bausteine (bewerte jeden: gut / mittel / schwach)
 
 **Geschmack** — gut: mehrere Geschmacksdimensionen aktiv (Fett, Salz, Süße, Säure, Umami, Röstaromen, Gewürze, Textur, Temperatur) | mittel: 1–2 Dimensionen | schwach: monoton oder geschmacksneutral
@@ -349,6 +353,24 @@ export async function POST(request: Request) {
   } catch {
     console.error('[analyse/confirm] Claude non-JSON:', raw)
     return NextResponse.json({ error: 'Analyse konnte nicht verarbeitet werden. Bitte erneut versuchen.' }, { status: 500 })
+  }
+
+  // ─── Zutatennamen serverseitig erzwingen ──────────────────────
+  // Bugfix 2026-08-04: Ein Prompt-Hinweis allein war nicht zuverlässig genug — Claude hat
+  // trotz expliziter "hat IMMER Vorrang"-Anweisung wiederholt die vom Nutzer korrigierte
+  // Zutat (z.B. "Spaghetti") wieder durch die ältere, in den Rückfragen-Annahmen
+  // beschriebene Zutat ersetzt (z.B. "Süßkartoffel-Spiralnudeln"), inkl. selbst erfundener
+  // Begründung dafür. Statt uns weiter auf Instruction-Following zu verlassen, wird der
+  // Name jetzt serverseitig hart mit der vom Nutzer bestätigten Liste überschrieben
+  // (positionsgenau) — Claude darf weiterhin Menge (grams) und ggf. Nährwert schätzen,
+  // aber nicht mehr entscheiden, WAS die Zutat ist.
+  if (result.zutatenliste.length === ingredients.length) {
+    result.zutatenliste = result.zutatenliste.map((z, i) => ({ ...z, name: ingredients[i].name }))
+  } else {
+    console.warn('[analyse/confirm] Zutatenliste-Länge weicht von der bestätigten Liste ab — Namen werden nicht überschrieben.', {
+      claudeCount: result.zutatenliste.length,
+      confirmedCount: ingredients.length,
+    })
   }
 
   // ─── Helper: re-resolve nutrition by Claude's restated name ──
