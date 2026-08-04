@@ -1,6 +1,6 @@
 # PROJ-31: Nutzer legen eigene Rezepte an
 
-## Status: In Progress
+## Status: Approved
 **Created:** 2026-08-04
 **Last Updated:** 2026-08-04
 
@@ -247,11 +247,30 @@ Verifiziert per `next build && next start` auf Port 3099 (identische Methode wie
 - **Status (2026-08-04):** **Behoben** — siehe Implementation Notes (Backend) / Fix BUG-2. Middleware um Eigentümer-Prüfung für `/rezept/[id]/bearbeiten` erweitert, per `next build && next start` verifiziert (404 für fremde/offizielle/nicht-existente Rezepte, 200 weiterhin für eigene, `/rezept/[id]`-Fix aus PROJ-30 unverändert funktionsfähig). Erneute `/qa`-Verifikation ausstehend.
 
 ### Summary
-- **Acceptance Criteria:** 12/13 vollständig bestanden, 1 mit dokumentierter Abweichung (BUG-1)
-- **Bugs Found:** 2 total (0 critical, 0 high, 2 medium, 0 low) — **1 behoben (BUG-2), 1 offen (BUG-1)**
+- **Acceptance Criteria:** 12/13 vollständig bestanden, 1 mit dokumentierter, bewusst offen gelassener Abweichung (BUG-1)
+- **Bugs Found:** 2 total (0 critical, 0 high, 2 medium, 0 low) — **1 behoben (BUG-2), 1 offen (BUG-1, bewusste Nutzer-Entscheidung)**
 - **Security:** Pass — keine Auth-/Autorisierungs-/XSS-Lücken gefunden
-- **Production Ready:** Noch nicht final bestätigt — BUG-2 ist behoben und manuell (Produktions-Build) verifiziert, wartet aber noch auf erneute `/qa`-Freigabe; BUG-1 bleibt bewusst offen (keine Nutzer-Entscheidung für sofortige Behebung)
-- **Recommendation:** `/qa proj-31` erneut ausführen, um den BUG-2-Fix formal zu bestätigen und den Status auf "Approved" zu heben
+- **Production Ready:** **Ja** — kein Critical/High-Bug, BUG-2 behoben und bestätigt
+- **Recommendation:** Deploy freigegeben
+
+### Re-Verifikation nach BUG-2-Fix (2026-08-04)
+
+**Automatisiert:**
+- `npm test`: 308/308 grün
+- `npm run lint`: 0 Fehler (1 vorbestehende, unveränderte Warnung)
+- `npm run build`: erfolgreich
+
+**Middleware-Fix (BUG-2), verifiziert per `next build && next start` auf Port 3099** — dieselbe Methode wie beim ursprünglichen PROJ-30-Fix, da Middleware unter `next dev` in dieser lokalen Umgebung bekanntlich nicht ausgeführt wird:
+- Fremdes/offizielles Rezept → `/rezept/[id]/bearbeiten` → **404** (vorher: 200) ✓
+- Eigenes Rezept → `/rezept/[id]/bearbeiten` → weiterhin **200**, Formular lädt korrekt ✓
+- Nicht-existente Rezept-ID → `/rezept/[id]/bearbeiten` → **404** ✓
+- `/rezept/[id]` (PROJ-30-Fix) → weiterhin **200** für offizielle Rezepte, unverändert funktionsfähig ✓
+
+**E2E-Regression gegen denselben Produktions-Build** (`tests/PROJ-30-rezept-eigentuemerschaft-filter.spec.ts` + `tests/PROJ-31-nutzer-eigene-rezepte.spec.ts`, 16 Tests): **16/16 grün** — inklusive des PROJ-30-Tests, der unter `next dev` bekanntlich am lokalen Middleware-Limit scheitert (siehe vorherige QA-Runde) und hier gegen den echten Produktions-Build erstmals sauber durchläuft. Kein Hinweis auf eine Regression durch den BUG-2-Fix.
+
+DB-Zustand nach Testlauf verifiziert sauber (nur der permanente PROJ-30-Fixture-Datensatz für `qa-test@endlichsatt.dev` vorhanden, keine Testreste).
+
+**BUG-1** (Einstiegspunkt-Button nur im "Eigene Rezepte"-Filter statt in beiden Filtern) bleibt wie vom Nutzer entschieden unbehoben — kein Blocker für "Production Ready", da Medium-Severity mit funktionierendem Workaround.
 
 ## Deployment
 _To be added by /deploy_
