@@ -1,6 +1,6 @@
 # PROJ-31: Nutzer legen eigene Rezepte an
 
-## Status: Approved
+## Status: Deployed
 **Created:** 2026-08-04
 **Last Updated:** 2026-08-04
 
@@ -273,4 +273,10 @@ DB-Zustand nach Testlauf verifiziert sauber (nur der permanente PROJ-30-Fixture-
 **BUG-1** (Einstiegspunkt-Button nur im "Eigene Rezepte"-Filter statt in beiden Filtern) bleibt wie vom Nutzer entschieden unbehoben — kein Blocker für "Production Ready", da Medium-Severity mit funktionierendem Workaround.
 
 ## Deployment
-_To be added by /deploy_
+
+- **Deployed:** 2026-08-04
+- **Production URL:** https://app.mehralsabnehmen.de/rezepte (neu: `/rezept/neu`, `/rezept/[id]/bearbeiten`)
+- **Commit:** `e231f8a` (inkl. BUG-2-Fix aus der erneuten QA-Runde)
+- **Git Tag:** `v1.28.0-PROJ-31`
+- **Pre-Deployment-Checks:** `npm run build` ✓, `npm run lint` ✓ (nur die vorbestehende, unveränderte Bild-Element-Warnung), QA Approved, keine Critical/High-Bugs, keine neuen Env-Variablen, keine Secrets im Diff, RLS-Migration bereits live angewendet (`proj31_recipe_owner_write_policies`)
+- **Hinweis:** Beim ersten Post-Deploy-Check zeigte `app.mehralsabnehmen.de` kurzzeitig noch die alte Version (404 auf `/rezept/neu`), obwohl Vercel den Build bereits als "Ready" auf `e231f8a` führte — vom Nutzer im Vercel-Dashboard als korrekt (Production-Environment, Domain zugeordnet) bestätigt, vermutlich reine Propagations-/Edge-Verzögerung
