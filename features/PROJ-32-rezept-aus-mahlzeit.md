@@ -1,6 +1,6 @@
 # PROJ-32: Rezept aus gescannter Mahlzeit anlegen ("wie gescannt" / "mit mehr Sättigung")
 
-## Status: Planned
+## Status: Architected
 **Created:** 2026-08-04
 **Last Updated:** 2026-08-04
 
@@ -58,7 +58,7 @@
 - Wiederverwendung von `RezeptFormular` (`variant="user"`) und dem bestehenden Anlegen-Endpunkt aus PROJ-31 — die genaue technische Übergabe der Vorbefüllung an die Formular-Seite legt `/architecture` fest
 
 ## Open Questions
-- [ ] Genaue technische Übergabe der Vorbefüllung an `/rezept/neu` (z.B. Query-Parameter mit Mahlzeit-ID + Variante, oder ein eigener Zwischen-Schritt) — durch `/architecture` zu klären
+- [x] Genaue technische Übergabe der Vorbefüllung an `/rezept/neu` → gelöst durch `/architecture`: Übergabe über die Seiten-Adresse (Query-Parameter mit Mahlzeit-ID + Variante), siehe Tech Design (2026-08-04)
 
 ## Decision Log
 
@@ -80,12 +80,53 @@
 <!-- Added by /architecture -->
 | Decision | Rationale | Date |
 |----------|-----------|------|
+| Mahlzeit-Referenz (welche Mahlzeit, welche Variante) wird über die Seiten-Adresse von der Mahlzeit-Ansicht zur "Rezept anlegen"-Seite übergeben | Einfachster Weg, Kontext über einen Seitenwechsel zu transportieren, ohne neuen Server-Zustand; "Rezept anlegen" bleibt weiterhin ganz normal ohne Mahlzeit-Bezug aufrufbar | 2026-08-04 |
+| Umwandlung "Mahlzeit-Daten → Rezept-Entwurf" passiert einmalig beim Laden der Seite, wird nirgends zwischengespeichert oder mit der Mahlzeit verknüpft | Stellt sicher, dass sich das Formular ab dem ersten Anzeigen exakt wie ein manuell gestartetes Rezept verhält — inkl. spurlosem Verwerfen (AC "keine versteckte Mahlzeit-Referenz") | 2026-08-04 |
+| Wiederverwendung von Rezept-Formular und Speicher-Endpunkt aus PROJ-31 unverändert, nur mit anderen Startwerten | Kein zweiter Anlege-Weg mit doppeltem Pflegeaufwand und doppelter Sicherheits-/Limit-Prüfung | 2026-08-04 |
+| Rezept-Formular bekommt eine zusätzliche Startmöglichkeit: Bild direkt im Zuschneide-Schritt vorschlagen, statt nur "fertiges Bild" oder "leerer Upload" zu kennen | Vermeidet unnötigen erneuten Upload eines bereits vorhandenen Mahlzeit-Fotos | 2026-08-04 |
 
 ---
 <!-- Sections below are added by subsequent skills -->
 
 ## Tech Design (Solution Architect)
-_To be added by /architecture_
+
+### A) Komponenten-Struktur
+
+```
+Mahlzeit-Ergebnisansicht (SaettigungsErgebnis — bestehende Komponente,
+genutzt sowohl direkt nach der Analyse als auch in der Historie)
+├── ... bestehende Abschnitte (Zutatenliste, Sättigungs-Bausteine, Vorschläge, Nährwerte)
+└── NEU: "Rezept speichern"-Leiste
+    ├── Button "Wie gescannt" — immer sichtbar
+    └── Button "Mit mehr Sättigung" — nur bei vollständigen Mahlzeiten (ausgeblendet bei Beilage)
+
+Rezept anlegen (/rezept/neu — bestehende Seite aus PROJ-31)
+├── NEU: erkennt optional eine mitgegebene Mahlzeit-Referenz in der Seiten-Adresse
+│   ├── lädt die Mahlzeit + ihr Analyse-Ergebnis (bestehende Datenquelle, wie in der Historie)
+│   └── baut daraus die Formular-Vorbefüllung (Titel, Zutaten, Tags, Portionen, Rezept-Typ, ggf. Bild)
+└── Bestehendes Rezept-Formular (Verhalten unverändert, startet nur mit anderen Werten)
+    └── NEU (kleine Erweiterung): kann direkt mit einem vorgeschlagenen Bild im
+        Zuschneide-Schritt starten, statt nur mit fertigem Bild oder leerem Upload-Feld
+```
+
+### B) Datenmodell (einfache Sprache)
+
+Kein neues Datenbank-Feld, keine neue Tabelle. Alles, was für die Vorbefüllung gebraucht wird, existiert bereits in den Datensätzen jeder abgeschlossenen Mahlzeit-Analyse (Zutatenliste, Verbesserungsvorschläge, Mahlzeit-Typ, Foto). Diese Daten werden einmalig beim Öffnen von "Rezept anlegen" gelesen und in dieselbe Form gebracht, die das Formular ohnehin für ein manuell gestartetes Rezept erwartet. Nichts davon wird gespeichert oder mit der Mahlzeit verknüpft, solange der Nutzer nicht aktiv auf "Rezept anlegen" klickt — genau wie in der Spec festgelegt, entsteht dadurch keine dauerhafte Verbindung zwischen Rezept und Ursprungs-Mahlzeit.
+
+### C) Tech-Entscheidungen (Begründung)
+
+1. **Die Information "aus welcher Mahlzeit, mit welcher Variante" wird über die Seiten-Adresse (URL) von der Mahlzeit-Ansicht zur "Rezept anlegen"-Seite mitgegeben.** Das ist der einfachste Weg, diesen Kontext über einen Seitenwechsel hinweg zu transportieren, ohne neuen Server-Zustand zu erfinden. Die "Rezept anlegen"-Seite bleibt dadurch weiterhin ganz normal direkt aufrufbar wie bisher (ohne Mahlzeit-Bezug) und bekommt nur zusätzlich die Fähigkeit, mit vorausgefüllten Werten zu starten.
+2. **Die Umwandlung "Mahlzeit-Daten → Rezept-Entwurf" passiert einmalig beim Laden der Seite — nicht rückwirkend gespeichert, nicht mit der Mahlzeit synchronisiert.** Das stellt sicher, dass sich das Formular ab dem Moment, in dem der Nutzer es sieht, exakt so verhält wie ein ganz normal manuell gestartetes Rezept — inklusive der Möglichkeit, alles spurlos zu verwerfen.
+3. **Es wird bewusst dasselbe Rezept-Formular und derselbe Speicher-Endpunkt aus PROJ-31 wiederverwendet — nur die Startwerte unterscheiden sich.** Ein zweiter, eigenständiger Anlege-Weg hätte doppelten Pflegeaufwand bedeutet und ein zweites Sicherheits-/Limit-Prüfungssystem, das dauerhaft identisch zum ersten gehalten werden müsste.
+4. **Das Formular bekommt eine kleine, zusätzliche Startmöglichkeit: ein vorgeschlagenes Bild direkt im Zuschneide-Schritt zu übernehmen**, statt nur zwischen "schon fertiges Bild" und "Nutzer lädt manuell hoch" zu unterscheiden. Das vermeidet einen unnötigen Zwischenschritt (erneutes Hochladen eines Fotos, das bereits vorliegt).
+
+### D) Abhängigkeiten (Pakete)
+
+Keine neuen Pakete — alle nötigen Bausteine existieren bereits (Rezept-Formular, Bild-Zuschnitt, Speicher-Endpunkt, Mahlzeit-Datenmodell).
+
+### Backend-Bedarf
+
+Kein `/backend`-Durchlauf nötig: keine neuen Datenbank-Felder, keine neue Migration, keine neue RLS-Policy, kein neuer API-Endpunkt. Es wird ausschließlich gelesen (bestehende, bereits durch RLS abgesicherte Mahlzeit-Daten des eingeloggten Nutzers) und der bestehende PROJ-31-Speicher-Endpunkt wiederverwendet. `/frontend` deckt die komplette Umsetzung ab.
 
 ## QA Test Results
 _To be added by /qa_
