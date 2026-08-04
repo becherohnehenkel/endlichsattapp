@@ -45,7 +45,7 @@
 | PROJ-27 | Getrennte Test- und Produktions-Landschaften (Staging-Umgebung) | P2 | Planned | PROJ-1, PROJ-11 | [Spec](PROJ-27-staging-umgebung.md) |
 | PROJ-28 | Zutatenliste-Transparenz auf Ergebnis- und Historie-Seite | P1 | Deployed | PROJ-4, PROJ-6 | [Spec](PROJ-28-zutatenliste-transparenz.md) |
 | PROJ-29 | Nährwert-Verbesserungen im Rezept-Editor (Zutatensuche + Live-Counter) | P2 | Deployed | PROJ-8, PROJ-9 | [Spec](PROJ-29-rezept-editor-naehrwerte.md) |
-| PROJ-30 | Rezept-Eigentümerschaft & Filter (offiziell vs. eigene Rezepte) | P1 | Approved | PROJ-8 | [Spec](PROJ-30-rezept-eigentuemerschaft-filter.md) |
+| PROJ-30 | Rezept-Eigentümerschaft & Filter (offiziell vs. eigene Rezepte) | P1 | Deployed | PROJ-8 | [Spec](PROJ-30-rezept-eigentuemerschaft-filter.md) |
 | PROJ-31 | Nutzer legen eigene Rezepte an | P1 | Roadmap | PROJ-30 | — |
 | PROJ-32 | Rezept aus gescannter Mahlzeit anlegen ("wie gescannt" / "mit mehr Sättigung") | P1 | Roadmap | PROJ-30, PROJ-31, PROJ-4, PROJ-5 | — |
 

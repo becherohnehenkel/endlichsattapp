@@ -207,4 +207,9 @@ Anders als der Admin-Rezept-Editor (PROJ-24/PROJ-29) sind `/rezepte` und `/rezep
 - **Recommendation:** Deploy. Separater Hinweis (kein Blocker): lokales `next dev` führt `middleware.ts` nicht aus — bei künftigen Middleware-Änderungen lokal gegen `next build && next start` statt `next dev` verifizieren.
 
 ## Deployment
-_To be added by /deploy_
+
+- **Production URL:** https://app.mehralsabnehmen.de/rezepte (und `/rezept/[id]`)
+- **Deployed:** 2026-08-04
+- **Commit:** `3a3ad36`
+- **Tag:** `v1.27.0-PROJ-30`
+- **Post-Deploy-Verifikation:** Live gegen Produktion geprüft — `/historie` liefert weiterhin korrekt 307 zu `/konto` (Middleware läuft), eine nicht-existierende Rezept-ID liefert jetzt korrekt HTTP 404 (BUG-1-Fix bestätigt live).
