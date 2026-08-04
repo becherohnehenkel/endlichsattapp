@@ -124,4 +124,24 @@ describe('GET /api/rezepte/[id]', () => {
     const res = await GET(new Request('http://localhost'), { params: Promise.resolve({ id: 'recipe-1' }) })
     expect(res.status).toBe(200)
   })
+
+  // PROJ-30: ein eigenes Rezept darf nie hinter der Paywall-Sperre landen, auch wenn es
+  // (wie jedes Nutzer-Rezept) nicht als is_guest_visible markiert ist.
+  it('returns 200 for a registered user with an expired trial when the recipe is their OWN, even if not guest-visible', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1', is_anonymous: false } } })
+    mockGetAccessStatus.mockResolvedValue({ hasAccess: false })
+    mockSelectSingle.mockResolvedValue({ data: { ...MOCK_RECIPE, is_guest_visible: false, owner_id: 'user-1' }, error: null })
+    const { GET } = await import('./route')
+    const res = await GET(new Request('http://localhost'), { params: Promise.resolve({ id: 'recipe-1' }) })
+    expect(res.status).toBe(200)
+  })
+
+  it('returns 403 for a registered user with an expired trial when the recipe belongs to ANOTHER user', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1', is_anonymous: false } } })
+    mockGetAccessStatus.mockResolvedValue({ hasAccess: false })
+    mockSelectSingle.mockResolvedValue({ data: { ...MOCK_RECIPE, is_guest_visible: false, owner_id: 'user-2' }, error: null })
+    const { GET } = await import('./route')
+    const res = await GET(new Request('http://localhost'), { params: Promise.resolve({ id: 'recipe-1' }) })
+    expect(res.status).toBe(403)
+  })
 })

@@ -31,7 +31,11 @@ export async function GET(
 
   if (error || !recipe) return NextResponse.json({ error: 'Rezept nicht gefunden' }, { status: 404 })
 
-  if (restricted && !recipe.is_guest_visible) {
+  // PROJ-30: ein eigenes Rezept darf nie hinter der Paywall-Sperre landen — der Nutzer
+  // hat es selbst angelegt, unabhängig vom Zugriffsstatus.
+  const isOwn = recipe.owner_id === user.id
+
+  if (restricted && !recipe.is_guest_visible && !isOwn) {
     return NextResponse.json({ error: 'Kein Zugriff auf dieses Rezept' }, { status: 403 })
   }
 

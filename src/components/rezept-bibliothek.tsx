@@ -14,11 +14,25 @@ export interface RezeptListItem {
   total_time_minutes: number
   cuisine_tags: string[]
   is_guest_visible: boolean
+  /** PROJ-30: true = eigenes (privates) Rezept des aktuellen Nutzers, false = offizielles Rezept */
+  isOwn: boolean
 }
 
-export default function RezeptBibliothek({ rezepte, restricted = false }: { rezepte: RezeptListItem[]; restricted?: boolean }) {
+type OwnerFilter = 'alle' | 'lukas' | 'eigene'
+
+export default function RezeptBibliothek({
+  rezepte,
+  restricted = false,
+  showEigeneFilter = false,
+}: {
+  rezepte: RezeptListItem[]
+  restricted?: boolean
+  /** PROJ-30: nur für eingeloggte (nicht-anonyme) Nutzer — Gäste können keine eigenen Rezepte haben */
+  showEigeneFilter?: boolean
+}) {
   const [query, setQuery] = useState('')
   const [activeTag, setActiveTag] = useState<string | null>(null)
+  const [ownerFilter, setOwnerFilter] = useState<OwnerFilter>('alle')
 
   // All unique cuisine tags across all recipes
   const allTags = useMemo(() => {
@@ -32,12 +46,39 @@ export default function RezeptBibliothek({ rezepte, restricted = false }: { reze
     return rezepte.filter(r => {
       const matchesQuery = !q || r.title.toLowerCase().includes(q)
       const matchesTag = !activeTag || r.cuisine_tags.includes(activeTag)
-      return matchesQuery && matchesTag
+      const matchesOwner =
+        ownerFilter === 'alle' ? true :
+        ownerFilter === 'lukas' ? !r.isOwn :
+        r.isOwn
+      return matchesQuery && matchesTag && matchesOwner
     })
-  }, [rezepte, query, activeTag])
+  }, [rezepte, query, activeTag, ownerFilter])
 
   return (
     <div className="max-w-sm mx-auto px-4 py-5 space-y-4">
+
+      {/* PROJ-30: Eigentümer-Filter */}
+      {showEigeneFilter && (
+        <div className="flex gap-2">
+          {([
+            ['alle', 'Alle Rezepte'],
+            ['lukas', "Lukas' Rezepte"],
+            ['eigene', 'Eigene Rezepte'],
+          ] as [OwnerFilter, string][]).map(([value, label]) => (
+            <button
+              key={value}
+              onClick={() => setOwnerFilter(value)}
+              className={`flex-1 text-xs px-2 py-1.5 rounded-lg border transition-colors ${
+                ownerFilter === value
+                  ? 'bg-[#2E9E6B] text-white border-[#2E9E6B]'
+                  : 'bg-background text-muted-foreground border-border hover:border-[#2E9E6B]'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Search */}
       <div className="relative">
@@ -88,12 +129,22 @@ export default function RezeptBibliothek({ rezepte, restricted = false }: { reze
       {filtered.length === 0 ? (
         <div className="text-center py-12 space-y-2">
           <ChefHat className="h-8 w-8 text-muted-foreground mx-auto" />
-          <p className="text-sm text-muted-foreground">Keine Rezepte gefunden</p>
+          {ownerFilter === 'eigene' && !query && !activeTag ? (
+            <>
+              <p className="text-sm text-muted-foreground">Du hast noch keine eigenen Rezepte</p>
+              <p className="text-xs text-muted-foreground/80">Bald kannst du hier eigene Rezepte anlegen — auch direkt aus einer gescannten Mahlzeit.</p>
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground">Keine Rezepte gefunden</p>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3">
           {filtered.map(rezept => {
-            const locked = restricted && !rezept.is_guest_visible
+            // PROJ-30: eigene Rezepte dürfen nie gesperrt wirken — der Nutzer hat sie
+            // selbst angelegt, unabhängig vom Zugriffsstatus (is_guest_visible gilt nur
+            // für offizielle Rezepte und ist bei eigenen Rezepten immer false)
+            const locked = restricted && !rezept.is_guest_visible && !rezept.isOwn
             return (
               <Link
                 key={rezept.id}

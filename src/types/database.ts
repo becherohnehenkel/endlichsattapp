@@ -356,6 +356,7 @@ export type Database = {
           instructions: string
           is_guest_visible: boolean
           macros_per_serving: Json | null
+          owner_id: string | null
           recipe_typ: string | null
           saettigungs_matrix: Json | null
           servings: number
@@ -374,6 +375,7 @@ export type Database = {
           instructions: string
           is_guest_visible?: boolean
           macros_per_serving?: Json | null
+          owner_id?: string | null
           recipe_typ?: string | null
           saettigungs_matrix?: Json | null
           servings: number
@@ -392,6 +394,7 @@ export type Database = {
           instructions?: string
           is_guest_visible?: boolean
           macros_per_serving?: Json | null
+          owner_id?: string | null
           recipe_typ?: string | null
           saettigungs_matrix?: Json | null
           servings?: number

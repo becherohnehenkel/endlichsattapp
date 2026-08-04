@@ -24,9 +24,12 @@ export default async function RezeptePage() {
 
   const isGuest = !user || isAnonymous
 
+  // PROJ-30: owner_id mitladen, damit die Rezepte-Seite zwischen offiziellen und
+  // eigenen Rezepten filtern kann. RLS liefert hier ohnehin nur offizielle Rezepte
+  // (owner_id IS NULL) + die eigenen des anfragenden Nutzers — nie fremde private.
   const recipesQuery = supabase
     .from('recipes')
-    .select('id, title, image_path, total_time_minutes, cuisine_tags, is_guest_visible')
+    .select('id, title, image_path, total_time_minutes, cuisine_tags, is_guest_visible, owner_id')
     .order('created_at', { ascending: false })
 
   const countQuery = supabase.from('recipes').select('*', { count: 'exact', head: true })
@@ -48,6 +51,9 @@ export default async function RezeptePage() {
     total_time_minutes: r.total_time_minutes,
     cuisine_tags: r.cuisine_tags ?? [],
     is_guest_visible: r.is_guest_visible ?? false,
+    // PROJ-30: owner_id ist durch RLS bereits auf "eigenes oder offizielles Rezept"
+    // begrenzt — ein gesetzter owner_id-Wert hier kann also nur der eigene sein.
+    isOwn: r.owner_id !== null,
   }))
 
   return (
@@ -92,7 +98,9 @@ export default async function RezeptePage() {
         </div>
       )}
 
-      <RezeptBibliothek rezepte={rezepte} restricted={restricted} />
+      {/* PROJ-30: "Eigene Rezepte" nur für echte (nicht-anonyme) Accounts sinnvoll — Gäste
+          können mangels Login ohnehin keine eigenen Rezepte haben. */}
+      <RezeptBibliothek rezepte={rezepte} restricted={restricted} showEigeneFilter={!isGuest} />
     </div>
   )
 }

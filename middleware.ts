@@ -54,6 +54,27 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // Bugfix 2026-08-04 (gefunden bei PROJ-30-QA): `/rezept/[id]` liegt hinter einem
+  // `loading.tsx` (Suspense-Streaming) — ruft die Seite dort `notFound()` auf (z.B. für ein
+  // fremdes privates Rezept, das RLS korrekt verbirgt), sind die Response-Header inkl.
+  // Status-Code laut Next.js-Doku bereits als 200 verschickt, bevor notFound() greift; der
+  // Seiteninhalt ist korrekt (kein Datenleck), nur der HTTP-Status bleibt fälschlich 200.
+  // Next.js' eigene Doku empfiehlt genau diesen Fall im Proxy zu prüfen (siehe
+  // https://nextjs.org/docs/app/api-reference/file-conventions/loading#status-codes).
+  // Bewusst nur ein leichtgewichtiger Existenz-Check (select('id')) — die Seite selbst lädt
+  // weiterhin die vollen Daten, hier geht es nur um den korrekten Status-Code.
+  const recipeMatch = request.nextUrl.pathname.match(/^\/rezept\/([^/]+)$/)
+  if (recipeMatch) {
+    const recipeId = recipeMatch[1]
+    const isValidUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(recipeId)
+    const recipeExists = isValidUuid && !!(
+      await supabase.from('recipes').select('id').eq('id', recipeId).maybeSingle()
+    ).data
+    if (!recipeExists) {
+      return NextResponse.rewrite(request.url, { status: 404 })
+    }
+  }
+
   return supabaseResponse
 }
 

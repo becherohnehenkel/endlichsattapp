@@ -41,7 +41,10 @@ export async function GET(request: Request) {
 
   if (ingredientNames.length === 0) return NextResponse.json({ recipes: [] })
 
-  // Fetch all recipes (ingredient_tags only for matching)
+  // Fetch all recipes (ingredient_tags only for matching). PROJ-30: bewusst kein
+  // explizites owner_id-Filter hier — die RLS-Policy auf `recipes` liefert über den
+  // nutzer-eigenen Supabase-Client (nicht Admin-Client) bereits nur offizielle Rezepte
+  // + die eigenen des anfragenden Nutzers, nie fremde private Rezepte.
   const { data: recipes } = await supabase
     .from('recipes')
     .select('id, title, image_path, total_time_minutes, ingredient_tags')

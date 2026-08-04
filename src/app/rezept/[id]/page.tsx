@@ -33,6 +33,7 @@ const getRecipe = cache(async (id: string) => {
       saettigungs_matrix,
       recipe_typ,
       is_guest_visible,
+      owner_id,
       recipe_ingredients (
         id,
         item_type,
@@ -84,7 +85,12 @@ export default async function RezeptDetailPage({
 
   if (!recipe) notFound()
 
-  if (restricted && !recipe.is_guest_visible) {
+  // PROJ-30: ein eigenes Rezept darf nie hinter der Paywall-Sperre landen — der Nutzer
+  // hat es selbst angelegt, unabhängig vom Zugriffsstatus. RLS liefert hier ohnehin nur
+  // offizielle Rezepte oder das eigene, ein gesetztes owner_id kann also nur das eigene sein.
+  const isOwn = recipe.owner_id !== null
+
+  if (restricted && !recipe.is_guest_visible && !isOwn) {
     return (
       <div className="min-h-screen bg-background">
         <header className="md:hidden sticky top-0 z-10 border-b border-border bg-card/80 backdrop-blur-sm px-4 py-3 flex items-center justify-between">
