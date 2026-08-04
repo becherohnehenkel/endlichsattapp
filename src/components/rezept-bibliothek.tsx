@@ -80,10 +80,12 @@ export default function RezeptBibliothek({
         </div>
       )}
 
-      {/* PROJ-31: Einstiegspunkt für eigene Rezepte — nur im "Eigene Rezepte"-Filter sichtbar.
-          Der Klick führt immer zu /rezept/neu — die Seite selbst entscheidet anhand des
-          5-Rezepte-Limits, ob das Formular oder ein Upgrade-Hinweis angezeigt wird. */}
-      {showEigeneFilter && ownerFilter === 'eigene' && (
+      {/* PROJ-31 (BUG-1-Fix, 2026-08-04): Einstiegspunkt für eigene Rezepte — sichtbar im
+          "Eigene Rezepte"- UND im "Alle Rezepte"-Filter (so von der Spec-Acceptance-Criteria
+          verlangt), nicht in "Lukas' Rezepte". Der Klick führt immer zu /rezept/neu — die Seite
+          selbst entscheidet anhand des 5-Rezepte-Limits, ob das Formular oder ein
+          Upgrade-Hinweis angezeigt wird. */}
+      {showEigeneFilter && (ownerFilter === 'eigene' || ownerFilter === 'alle') && (
         <Link
           href="/rezept/neu"
           className="flex items-center justify-center gap-1.5 w-full text-sm font-medium text-white bg-[#2E9E6B] hover:bg-[#278a5c] rounded-lg px-3 py-2 transition-colors"

@@ -68,6 +68,18 @@ test.describe('Zugriff & Einstiegspunkt', () => {
     await page.getByRole('button', { name: 'Eigene Rezepte' }).click()
     await expect(page.getByRole('link', { name: 'Eigenes Rezept anlegen' })).toBeVisible()
   })
+
+  // BUG-1-Regressionstest (gefunden bei der PROJ-31-QA, behoben 2026-08-04): der Button war
+  // zunächst nur im "Eigene Rezepte"-Filter sichtbar, obwohl die Acceptance Criteria auch
+  // "Alle Rezepte" verlangt.
+  test('"+ Rezept anlegen" ist auch im "Alle Rezepte"-Filter sichtbar, aber nicht in "Lukas\' Rezepte"', async ({ page }) => {
+    await loginAs(page)
+    await page.goto('/rezepte')
+    await expect(page.getByRole('link', { name: 'Eigenes Rezept anlegen' })).toBeVisible()
+
+    await page.getByRole('button', { name: "Lukas' Rezepte" }).click()
+    await expect(page.getByRole('link', { name: 'Eigenes Rezept anlegen' })).toHaveCount(0)
+  })
 })
 
 test.describe('Anlegen, Bearbeiten, Löschen', () => {

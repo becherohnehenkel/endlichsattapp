@@ -178,7 +178,7 @@ Verifiziert per `next build && next start` auf Port 3099 (identische Methode wie
 
 #### Zugriff & Einstiegspunkt
 - [x] Gast wird bei `/rezept/neu` zur Registrierung aufgefordert (GastKontoView mit passendem Hinweistext, Link zu `/registrieren`)
-- [ ] **BUG-1:** "+ Rezept anlegen"-Einstiegspunkt ist laut AC sowohl im "Eigene Rezepte"- als auch im "Alle Rezepte"-Filter sichtbar sein soll — tatsächlich erscheint er nur im "Eigene Rezepte"-Filter
+- [x] ~~BUG-1: "+ Rezept anlegen"-Einstiegspunkt fehlte im "Alle Rezepte"-Filter~~ — **behoben** (2026-08-04)
 - [x] Leerzustand-Hinweis verlinkt auf `/rezept/neu` (per Code-Review verifiziert — der permanente PROJ-30-Fixture-Datensatz verhindert einen echten 0-Ergebnisse-Zustand für den Testaccount, ohne die PROJ-30-Regressionsdaten zu gefährden)
 
 #### Anlegen, Bearbeiten, Löschen
@@ -234,6 +234,8 @@ Verifiziert per `next build && next start` auf Port 3099 (identische Methode wie
   4. Tatsächlich: Button erscheint erst nach Wechsel zu "Eigene Rezepte"
 - **Hinweis:** In der Decision Log der Spec (write-spec-Interview) wurde "Nur im 'Eigene Rezepte'-Filter" als Produktentscheidung festgehalten — die schriftliche Acceptance Criteria (Zeile 31) verlangt jedoch explizit beide Filter. Das ist ein interner Widerspruch in der Spec selbst, kein reiner Implementierungsfehler. Ein Workaround existiert (ein Klick auf "Eigene Rezepte").
 - **Priority:** Klärung mit Product Owner nötig — entweder AC anpassen (spiegelt die tatsächliche Produktentscheidung) oder Implementierung erweitern
+- **Nutzer-Entscheidung (2026-08-04):** Implementierung erweitern (AC erfüllen) — Button ist jetzt sowohl im "Alle Rezepte"- als auch im "Eigene Rezepte"-Filter sichtbar, weiterhin ausgeblendet in "Lukas' Rezepte"
+- **Status (2026-08-04):** **Behoben** — `rezept-bibliothek.tsx`: Sichtbarkeits-Bedingung von `ownerFilter === 'eigene'` auf `ownerFilter === 'eigene' || ownerFilter === 'alle'` erweitert. Live verifiziert (Button erscheint in "Alle Rezepte" und "Eigene Rezepte", bleibt in "Lukas' Rezepte" ausgeblendet) und als neuer Regressionstest in `tests/PROJ-31-nutzer-eigene-rezepte.spec.ts` festgehalten (9/9 E2E-Tests weiterhin grün, `npm test` 329/329 grün).
 
 #### BUG-2: `/rezept/[id]/bearbeiten` liefert HTTP 200 statt 404 bei fremden Rezepten
 - **Severity:** Medium
@@ -247,10 +249,10 @@ Verifiziert per `next build && next start` auf Port 3099 (identische Methode wie
 - **Status (2026-08-04):** **Behoben** — siehe Implementation Notes (Backend) / Fix BUG-2. Middleware um Eigentümer-Prüfung für `/rezept/[id]/bearbeiten` erweitert, per `next build && next start` verifiziert (404 für fremde/offizielle/nicht-existente Rezepte, 200 weiterhin für eigene, `/rezept/[id]`-Fix aus PROJ-30 unverändert funktionsfähig). Erneute `/qa`-Verifikation ausstehend.
 
 ### Summary
-- **Acceptance Criteria:** 12/13 vollständig bestanden, 1 mit dokumentierter, bewusst offen gelassener Abweichung (BUG-1)
-- **Bugs Found:** 2 total (0 critical, 0 high, 2 medium, 0 low) — **1 behoben (BUG-2), 1 offen (BUG-1, bewusste Nutzer-Entscheidung)**
+- **Acceptance Criteria:** 13/13 vollständig bestanden (nach BUG-1-Fix)
+- **Bugs Found:** 2 total (0 critical, 0 high, 2 medium, 0 low) — **beide behoben (BUG-1, BUG-2)**
 - **Security:** Pass — keine Auth-/Autorisierungs-/XSS-Lücken gefunden
-- **Production Ready:** **Ja** — kein Critical/High-Bug, BUG-2 behoben und bestätigt
+- **Production Ready:** **Ja** — kein Critical/High-Bug, beide Medium-Bugs behoben und bestätigt
 - **Recommendation:** Deploy freigegeben
 
 ### Re-Verifikation nach BUG-2-Fix (2026-08-04)
@@ -270,7 +272,9 @@ Verifiziert per `next build && next start` auf Port 3099 (identische Methode wie
 
 DB-Zustand nach Testlauf verifiziert sauber (nur der permanente PROJ-30-Fixture-Datensatz für `qa-test@endlichsatt.dev` vorhanden, keine Testreste).
 
-**BUG-1** (Einstiegspunkt-Button nur im "Eigene Rezepte"-Filter statt in beiden Filtern) bleibt wie vom Nutzer entschieden unbehoben — kein Blocker für "Production Ready", da Medium-Severity mit funktionierendem Workaround.
+### Re-Verifikation nach BUG-1-Fix (2026-08-04)
+
+`rezept-bibliothek.tsx` erweitert: "+ Rezept anlegen" sichtbar in "Alle Rezepte" UND "Eigene Rezepte", weiterhin ausgeblendet in "Lukas' Rezepte" — live per Playwright-Skript verifiziert (alle drei Filter-Zustände geprüft), zusätzlich als permanenter Regressionstest festgehalten. `npm test` (329/329), `npm run lint` (0 Fehler), `tsc --noEmit` (7 vorbestehende Fehler unverändert) alle grün nach dem Fix. Damit sind beide in dieser QA-Runde gefundenen Bugs behoben — PROJ-31 ist vollständig produktionsbereit.
 
 ## Deployment
 
