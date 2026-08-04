@@ -1,6 +1,6 @@
 # PROJ-32: Rezept aus gescannter Mahlzeit anlegen ("wie gescannt" / "mit mehr Sättigung")
 
-## Status: In Progress
+## Status: Approved
 **Created:** 2026-08-04
 **Last Updated:** 2026-08-04
 
@@ -152,7 +152,61 @@ Beim Testen mit echten Zutatennamen fiel auf, dass `ZutatInputMitQuelle` (Live-S
 **Verifikation (gesamt):** `npm test` (316/316 grün, 8 davon neu), `npm run lint` (0 Fehler), `tsc --noEmit` (7 vorbestehende Fehler unverändert, keine neuen), `npm run build` (erfolgreich, alle neuen Routen registriert). Manuell im Browser verifiziert: beide Varianten ("Wie gescannt"/"Mit mehr Sättigung") für vollständige Mahlzeiten, nur "Wie gescannt" für Beilagen, kein "Mit mehr Sättigung" bei fehlenden Vorschlägen, Rezept-Typ-Übernahme, Bild-Vorschlag im Zuschneide-Dialog, vollständiger Speicher-Durchlauf inkl. Sättigungs-Matrix-Berechnung, sowie der graceful Fallback bei ungültiger/fremder `mealId`.
 
 ## QA Test Results
-_To be added by /qa_
+
+**Tested:** 2026-08-04
+**App URL:** http://localhost:3000 (`next dev`) + `next build && next start` auf Port 3099 für Middleware-abhängige Regressionschecks
+**Tester:** QA Engineer (AI)
+**Testnutzer:** `qa-test@endlichsatt.dev`, mit zwei neuen permanenten Mahlzeit-Fixtures (analog zum PROJ-30-Rezept-Fixture-Muster): `44444444-…` (vollständig, mit 2 Verbesserungsvorschlägen) und `55555555-…` (Beilage)
+
+### Acceptance Criteria Status
+
+**Sichtbarkeit & Zugriff**
+- [x] Vollständige Mahlzeit zeigt beide Buttons
+- [x] Beilage zeigt nur "Wie gescannt"
+- [x] Gast/anonymer Nutzer wird bei Klick zur Registrierung aufgefordert (`/konto?reason=eigenes-rezept`) — auch bei direktem Aufruf mit `mealId` in der URL, der Zugriffs-Check greift vor jeder Mahlzeit-Ladelogik
+- [x] Limit-Hinweis bei 5 eigenen Rezepten greift identisch (Code-Pfad-Inspektion: `limitStatus.allowed` umschließt die komplette Formular-Ausgabe unabhängig von `mealId` — bereits ausführlich in der PROJ-31-QA mit echtem Zugriffs-Flag-Wechsel verifiziert, hier keine erneute Account-Manipulation nötig, da derselbe Codepfad)
+
+**"Wie gescannt"**
+- [x] Titel, Zutatenliste (Name + Gramm), Zutaten-Tags, Portionen=1, Rezept-Typ vorausgefüllt und änderbar
+- [x] Mahlzeit-Foto wird in den Zuschneide-Dialog vorgeladen (verifiziert mit echtem Storage-Objekt: Dialog öffnet sich automatisch mit ladbarem Bild)
+- [x] Ohne Foto bleibt das Bild-Feld leer
+- [x] Unverändertes Speichern übernimmt den Zubereitung-Platzhaltertext, kein Blockieren
+
+**"Mit mehr Sättigung"**
+- [x] Zutatenliste enthält zusätzlich eine leere Zeile pro Verbesserungsvorschlag
+- [x] Speichern ohne ausgefüllte Vorschlags-Menge schlägt fehl (Server-Validierung `amount > 0`), mit ausgefüllter Menge gelingt es
+
+**Allgemein**
+- [x] Gespeichertes Rezept zählt normal gegen das 5-Rezepte-Limit, erscheint unter "Eigene Rezepte"
+- [x] Abbruch ohne Speichern hinterlässt kein Rezept (Formular sendet erst bei explizitem Submit)
+
+### Edge Cases Status
+- [x] Mahlzeit ohne Freitext → Datums-Titel-Fallback (per Unit-Test verifiziert: `buildRezeptVorbefuellung`)
+- [x] Zutat mit KI-geschätzten Nährwerten → wird als normale Zeile übernommen, eigene BLS/OFF-Zuordnung beim Speichern
+- [x] Fremde Mahlzeit (echte mealId eines anderen, realen Nutzers) → stiller Fallback auf leeres Formular, kein Datenleck (Titel leer, Standard-Portionen 2, eine leere Zutaten-Zeile)
+- [x] Mehrere ähnliche Vorschläge → beide als separate Zeilen übernommen (per Unit-Test verifiziert)
+- [x] Formular-Werte nach dem Öffnen komplett verändert → nur die abgeschickten Werte werden gespeichert (bereits aus PROJ-31 bekanntes Verhalten, hier unverändert)
+
+### Security Audit Results
+- [x] Authorization: fremde/ungültige `mealId` → kein Datenleck, leeres Formular (verifiziert mit echter Mahlzeit eines anderen Nutzers, nicht nur einer nicht-existenten ID)
+- [x] Authentication: Gast mit `mealId` in der URL wird trotzdem zur Registrierung geleitet, `mealId` hebelt den Zugriffs-Check nicht aus
+- [x] Input validation: Freitext-Titel und Zutaten-/Vorschlagstexte mit `<img onerror>`/`<script>`-Inhalt werden als Text angezeigt, kein ausgeführtes JavaScript (im Formular UND auf der gespeicherten Rezept-Detailseite geprüft)
+- [x] Rate limiting: nicht implementiert, aber app-weite vorbestehende Lücke, nicht PROJ-32-spezifisch (wie schon in PROJ-31 dokumentiert)
+
+### Regressionstests
+- `npm test`: 329/329 grün (13 neue Unit-Tests für `buildRezeptVorbefuellung`, 8 neue aus dem Bugfix während `/frontend`)
+- `tests/PROJ-30-…`, `tests/PROJ-31-…`, `tests/PROJ-32-…` (insgesamt 25 E2E-Tests) gegen einen echten Produktions-Build (`next build && next start`, Port 3099): **25/25 grün** — inklusive des PROJ-30-Tests, der unter `next dev` durchgehend an der bekannten lokalen Middleware-Einschränkung scheitert
+- Responsive (375px, 768px, 1440px): "Als Rezept speichern"-Buttons und das vorausgefüllte Formular sauber auf allen drei Breiten, kein horizontales Scrollen
+
+### Bugs Found
+Keine neuen Bugs in PROJ-32 selbst gefunden. Ein Bug wurde während der `/frontend`-Umsetzung entdeckt und noch in derselben Session behoben (siehe Implementation Notes → "Bugfix"): die Live-Zutatensuche/Nährwert-Counter sprach seit PROJ-31 admin-exklusive Endpunkte an und war für reguläre Nutzer faktisch wirkungslos — behoben durch zwei neue, nicht-admin-exklusive Endpunkte. Dieser Fix wurde bereits vor dieser QA-Runde committet und ist Teil der hier verifizierten Regression.
+
+### Summary
+- **Acceptance Criteria:** 10/10 vollständig bestanden
+- **Bugs Found:** 0 neue (1 während der Umsetzung gefunden und bereits behoben, siehe oben)
+- **Security:** Pass — kein Datenleck über fremde `mealId`, kein Auth-Bypass, kein XSS
+- **Production Ready:** Ja
+- **Recommendation:** Deploy freigegeben
 
 ## Deployment
 _To be added by /deploy_
