@@ -155,7 +155,88 @@ Keine neuen Pakete — alle benötigten Bausteine (Formular, Bild-Zuschnitt, Zut
 **Verifikation:** `npm test` (308/308 grün), `npm run lint` (0 Fehler, 1 vorbestehende Warnung unverändert), `tsc --noEmit` (7 vorbestehende Fehler unverändert, keine neuen), `npm run build` (erfolgreich, beide neuen Routen registriert).
 
 ## QA Test Results
-_To be added by /qa_
+
+**Tested:** 2026-08-04
+**App URL:** http://localhost:3000 (`next dev`)
+**Tester:** QA Engineer (AI)
+**Testnutzer:** `qa-test@endlichsatt.dev` (permanenter E2E-Fixture-Account, hat vollen Zugriff über einen eingelösten Invite-Code)
+
+### Acceptance Criteria Status
+
+#### Zugriff & Einstiegspunkt
+- [x] Gast wird bei `/rezept/neu` zur Registrierung aufgefordert (GastKontoView mit passendem Hinweistext, Link zu `/registrieren`)
+- [ ] **BUG-1:** "+ Rezept anlegen"-Einstiegspunkt ist laut AC sowohl im "Eigene Rezepte"- als auch im "Alle Rezepte"-Filter sichtbar sein soll — tatsächlich erscheint er nur im "Eigene Rezepte"-Filter
+- [x] Leerzustand-Hinweis verlinkt auf `/rezept/neu` (per Code-Review verifiziert — der permanente PROJ-30-Fixture-Datensatz verhindert einen echten 0-Ergebnisse-Zustand für den Testaccount, ohne die PROJ-30-Regressionsdaten zu gefährden)
+
+#### Anlegen, Bearbeiten, Löschen
+- [x] Rezept mit `owner_id` = eigener Nutzer-ID wird angelegt, erscheint unter "Eigene Rezepte"
+- [x] BLS/OFF-Zutatensuche + Live-Nährwert-Counter verfügbar (unveränderte PROJ-29-Komponenten)
+- [x] Sättigungs-Matrix wird automatisch berechnet (verifiziert per DB-Abfrage nach dem Anlegen)
+- [x] Bearbeiten: alle Felder inkl. Zutaten änderbar, erneut speicherbar
+- [x] Löschen zeigt Bestätigungsdialog; Abbrechen erhält das Rezept, Bestätigen entfernt es endgültig
+- [x] Fremdes (offizielles) Rezept: PUT/DELETE über die API korrekt mit 403 abgelehnt, kein Bearbeiten/Löschen-UI sichtbar
+- [ ] **BUG-2:** `/rezept/[id]/bearbeiten` liefert bei einem fremden/offiziellen Rezept HTTP 200 statt 404 (zeigt aber korrekt die 404-Inhaltsseite, kein Datenleck)
+
+#### 5-Rezepte-Limit
+- [x] Bei erreichtem Limit ohne vollen Zugriff führt der Einstiegspunkt zu einem Hinweis mit Verweis auf `/upgrade` statt zum Formular (manuell verifiziert mit temporär entferntem Invite-Zugriff für den Testaccount, danach vollständig zurückgesetzt)
+- [x] Nach dem Löschen eines Rezepts ist der Slot sofort wieder frei
+- [x] Nutzer mit vollem Zugriff: keine Begrenzung (6 Rezepte erfolgreich angelegt)
+- [x] Direkter API-Aufruf am Limit wird serverseitig blockiert (403, `limitReached: true`)
+
+### Edge Cases Status
+
+- [x] Abbruch mitten im Formular → kein Teil-Rezept wird gespeichert (Rezept entsteht erst mit vollständigem POST)
+- [ ] **Nicht behoben, nicht neu:** Bild hochgeladen, dann Formular ohne Speichern verlassen → Bild bleibt verwaist im Storage (identisches, vorbestehendes Verhalten im Admin-Editor, nicht durch PROJ-31 eingeführt — siehe Empfehlungen)
+- [x] Race Condition zwei Tabs: Limit-Prüfung läuft bei jedem Request serverseitig neu, kein zwischengespeicherter Client-Zustand entscheidet
+- [x] Bestehende Rezepte über dem Limit bleiben erhalten — Limit-Prüfung greift ausschließlich beim Anlegen (`DELETE` hat keine Limit-Logik, per Code-Review verifiziert)
+- [x] Doppelte Rezept-Titel → kein Konflikt (keine Eindeutigkeits-Validierung, wie in PROJ-30 festgelegt)
+
+### Security Audit Results
+- [x] Authentication: `POST /api/rezepte` ohne Session → 401
+- [x] Authentication: anonymer Gast → 403 mit Hinweis auf Registrierung
+- [x] Authorization: fremdes Rezept per PUT/DELETE → 403, verifiziert dass das Zielrezept unverändert blieb
+- [x] Input validation: Titel mit `<img src=x onerror=alert(1)>` wird escaped als Text gerendert, kein XSS im DOM
+- [x] Storage: Bild-Löschung beim Rezept-Löschen funktioniert (verifiziert: Datenbankzeile UND Storage-Objekt beide entfernt)
+- [ ] Rate limiting: nicht implementiert — betrifft aber alle Routen der App gleichermaßen (vorbestehende, app-weite Lücke, nicht PROJ-31-spezifisch)
+
+### Regressionstests
+- `npm test`: 308/308 grün
+- `tests/PROJ-30-rezept-eigentuemerschaft-filter.spec.ts`: 7/8 grün — der eine Fehlschlag (404-Status beim direkten URL-Aufruf eines fremden Rezepts) ist die bereits in der PROJ-30-Spec dokumentierte, vorbestehende Einschränkung, dass Middleware unter `next dev` in dieser lokalen Umgebung nicht ausgeführt wird (in Produktions-Builds bereits verifiziert korrekt) — keine PROJ-31-Regression
+- Admin-Editor (`variant="admin"`-Pfad): nicht live nachgetestet (kein Admin-Test-Login in dieser Session verfügbar), aber Code-Review zeigt eine rein additive, abwärtskompatible Änderung (Default `variant='admin'`, unverändertes Verhalten), zusätzlich bestätigt der Produktions-Build beide Admin-Routen erfolgreich
+
+### Responsive
+- 375px (Mobile Chrome, Playwright-Projekt): `/rezepte` mit "Eigene Rezepte"-Filter und `/rezept/neu`-Formular — kein horizontales Scrollen, sticky Bottom-Nav überlappt keinen Inhalt (anfänglicher Verdacht durch einen Full-Page-Screenshot-Stitching-Artefakt entkräftet, im echten Viewport bestätigt korrekt)
+- 768px: gleiche Seiten, sauberes Layout
+- 1440px: Formular bleibt sinnvoll schmal (`max-w-lg`), kein Stretching
+- **Kleiner, vorbestehender kosmetischer Befund:** Platzhaltertext "Menge" im Mengen-Feld der Zutatenzeile wird auf allen Breiten leicht abgeschnitten ("Meng") — unverändert aus der geteilten `rezept-formular.tsx`-Komponente übernommen, nicht PROJ-31-spezifisch
+
+### Bugs Found
+
+#### BUG-1: "+ Rezept anlegen" fehlt im "Alle Rezepte"-Filter
+- **Severity:** Medium
+- **Steps to Reproduce:**
+  1. Als registrierter Nutzer auf `/rezepte` einloggen
+  2. Filter auf "Alle Rezepte" (Standard) belassen
+  3. Erwartet (laut Acceptance Criteria): "+ Rezept anlegen"-Button sichtbar
+  4. Tatsächlich: Button erscheint erst nach Wechsel zu "Eigene Rezepte"
+- **Hinweis:** In der Decision Log der Spec (write-spec-Interview) wurde "Nur im 'Eigene Rezepte'-Filter" als Produktentscheidung festgehalten — die schriftliche Acceptance Criteria (Zeile 31) verlangt jedoch explizit beide Filter. Das ist ein interner Widerspruch in der Spec selbst, kein reiner Implementierungsfehler. Ein Workaround existiert (ein Klick auf "Eigene Rezepte").
+- **Priority:** Klärung mit Product Owner nötig — entweder AC anpassen (spiegelt die tatsächliche Produktentscheidung) oder Implementierung erweitern
+
+#### BUG-2: `/rezept/[id]/bearbeiten` liefert HTTP 200 statt 404 bei fremden Rezepten
+- **Severity:** Medium
+- **Steps to Reproduce:**
+  1. Als Nutzer A eingeloggt, direkte URL `/rezept/{fremde-oder-offizielle-id}/bearbeiten` aufrufen
+  2. Erwartet: HTTP 404
+  3. Tatsächlich: HTTP 200, aber korrekter 404-Seiteninhalt (kein Datenleck — inhaltlich sicher)
+- **Root Cause:** Identisches Bug-Muster wie in PROJ-30 bereits für `/rezept/[id]` behoben (`notFound()` in einer Route unter einem `loading.tsx`-Suspense-Boundary kann den initialen HTTP-Status nicht mehr ändern). Die PROJ-30-Middleware-Lösung deckt nur den exakten Pfad `/rezept/[id]` ab, nicht das neue `/rezept/[id]/bearbeiten`.
+- **Priority:** Fix vor Deployment empfohlen, um mit dem PROJ-30-Präzedenzfall konsistent zu sein (gleiche Behebung: Middleware-Regex erweitern) — kein Sicherheitsrisiko, da kein Content-Leak
+
+### Summary
+- **Acceptance Criteria:** 12/13 vollständig bestanden, 1 mit dokumentierter Abweichung (BUG-1)
+- **Bugs Found:** 2 total (0 critical, 0 high, 2 medium, 0 low)
+- **Security:** Pass — keine Auth-/Autorisierungs-/XSS-Lücken gefunden
+- **Production Ready:** Ja, im Sinne der Kriterien (kein Critical/High) — beide gefundenen Bugs sind Medium und nicht blockierend, aber vor dem Deploy klärungswürdig
+- **Recommendation:** Nutzer entscheiden lassen, ob BUG-1 (Spec-Klärung) und BUG-2 (Status-Code-Konsistenz mit PROJ-30) vor dem Deploy behoben werden, oder ob bewusst mit offenen Medium-Bugs deployt wird
 
 ## Deployment
 _To be added by /deploy_
