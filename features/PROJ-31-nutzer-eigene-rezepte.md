@@ -144,6 +144,19 @@ Keine neuen Pakete — alle benötigten Bausteine (Formular, Bild-Zuschnitt, Zut
 
 **Tests** — 37 neue/geänderte Vitest-Tests über 4 Dateien (Paywall-Limit-Logik, POST/PUT/DELETE/Bild-Route), alle grün. Für den Bild-Upload-Test musste `request.formData()` direkt gemockt werden statt eine echte `FormData`/`File` zu konstruieren — jsdoms `File`-Implementierung kollidiert mit der Node/undici-basierten `FormData`-Auswertung in echten `Request`-Objekten.
 
+### Fix BUG-2 (2026-08-04, nach QA)
+
+`middleware.ts` um einen zweiten Streaming-Status-Check erweitert, analog zum bestehenden PROJ-30-Fix für `/rezept/[id]`, aber für `/rezept/[id]/bearbeiten`: statt nur Existenz/Sichtbarkeit (wie beim Lese-Pfad ausreichend, da RLS dort bereits auf offiziell+eigen filtert) wird hier explizit die **Eigentümerschaft** geprüft (`owner_id === user.id`), da ein offizielles Rezept zwar sichtbar, aber nicht bearbeitbar ist — eine reine Existenzprüfung hätte den Bug nicht behoben. Der Check greift nur für eingeloggte, nicht-anonyme Nutzer; für Gäste bleibt der bestehende `redirect()` der Seite selbst zuständig (dessen eigener, unabhängiger Status-Code-Quirk war laut QA-Report explizit nicht Teil dieses Fixes).
+
+Verifiziert per `next build && next start` auf Port 3099 (identische Methode wie beim PROJ-30-Fix, da Middleware unter `next dev` in dieser lokalen Umgebung bekanntlich nicht ausgeführt wird):
+- Fremdes/offizielles Rezept → `bearbeiten` → 404 (vorher: 200)
+- Eigenes Rezept → `bearbeiten` → weiterhin 200, Formular lädt korrekt
+- Nicht-existente Rezept-ID → 404
+- `/rezept/[id]` (PROJ-30-Fix) unverändert funktionsfähig
+- Gast → weiterhin korrekter Redirect zu `/konto?reason=eigenes-rezept` (unverändert)
+
+`npm test` (308/308) und `npm run lint` (0 Fehler) erneut grün nach dem Fix.
+
 ## Implementation Notes (Frontend)
 
 - `rezept-formular.tsx` um eine `variant: 'admin' | 'user'`-Prop erweitert (Default `'admin'`, kein Verhaltensbruch für bestehende Admin-Nutzung): blendet die Gast-Freischaltung im Nutzer-Modus aus, spricht `/api/rezepte*` statt `/api/admin/rezepte*` an (Formular-Submit + Bild-Upload) und leitet nach dem Speichern zur Rezept-Detailseite statt zur Admin-Übersicht weiter.
@@ -175,7 +188,7 @@ Keine neuen Pakete — alle benötigten Bausteine (Formular, Bild-Zuschnitt, Zut
 - [x] Bearbeiten: alle Felder inkl. Zutaten änderbar, erneut speicherbar
 - [x] Löschen zeigt Bestätigungsdialog; Abbrechen erhält das Rezept, Bestätigen entfernt es endgültig
 - [x] Fremdes (offizielles) Rezept: PUT/DELETE über die API korrekt mit 403 abgelehnt, kein Bearbeiten/Löschen-UI sichtbar
-- [ ] **BUG-2:** `/rezept/[id]/bearbeiten` liefert bei einem fremden/offiziellen Rezept HTTP 200 statt 404 (zeigt aber korrekt die 404-Inhaltsseite, kein Datenleck)
+- [x] ~~BUG-2: `/rezept/[id]/bearbeiten` liefert bei einem fremden/offiziellen Rezept HTTP 200 statt 404~~ — **behoben** (siehe Implementation Notes (Backend) / Fix BUG-2)
 
 #### 5-Rezepte-Limit
 - [x] Bei erreichtem Limit ohne vollen Zugriff führt der Einstiegspunkt zu einem Hinweis mit Verweis auf `/upgrade` statt zum Formular (manuell verifiziert mit temporär entferntem Invite-Zugriff für den Testaccount, danach vollständig zurückgesetzt)
@@ -231,13 +244,14 @@ Keine neuen Pakete — alle benötigten Bausteine (Formular, Bild-Zuschnitt, Zut
 - **Root Cause:** Identisches Bug-Muster wie in PROJ-30 bereits für `/rezept/[id]` behoben (`notFound()` in einer Route unter einem `loading.tsx`-Suspense-Boundary kann den initialen HTTP-Status nicht mehr ändern). Die PROJ-30-Middleware-Lösung deckt nur den exakten Pfad `/rezept/[id]` ab, nicht das neue `/rezept/[id]/bearbeiten`.
 - **Priority:** Fix vor Deployment empfohlen, um mit dem PROJ-30-Präzedenzfall konsistent zu sein (gleiche Behebung: Middleware-Regex erweitern) — kein Sicherheitsrisiko, da kein Content-Leak
 - **Nutzer-Entscheidung (2026-08-04):** Vor Deployment beheben — zurück an `/backend` zur Umsetzung
+- **Status (2026-08-04):** **Behoben** — siehe Implementation Notes (Backend) / Fix BUG-2. Middleware um Eigentümer-Prüfung für `/rezept/[id]/bearbeiten` erweitert, per `next build && next start` verifiziert (404 für fremde/offizielle/nicht-existente Rezepte, 200 weiterhin für eigene, `/rezept/[id]`-Fix aus PROJ-30 unverändert funktionsfähig). Erneute `/qa`-Verifikation ausstehend.
 
 ### Summary
 - **Acceptance Criteria:** 12/13 vollständig bestanden, 1 mit dokumentierter Abweichung (BUG-1)
-- **Bugs Found:** 2 total (0 critical, 0 high, 2 medium, 0 low)
+- **Bugs Found:** 2 total (0 critical, 0 high, 2 medium, 0 low) — **1 behoben (BUG-2), 1 offen (BUG-1)**
 - **Security:** Pass — keine Auth-/Autorisierungs-/XSS-Lücken gefunden
-- **Production Ready:** Nein (noch) — Nutzer hat entschieden, BUG-2 vor dem Deploy zu beheben; BUG-1 bleibt vorerst offen (keine Nutzer-Entscheidung für sofortige Behebung)
-- **Recommendation:** BUG-2 beheben (Middleware-Regex auf `/rezept/[id]/bearbeiten` erweitern), danach `/qa proj-31` erneut ausführen
+- **Production Ready:** Noch nicht final bestätigt — BUG-2 ist behoben und manuell (Produktions-Build) verifiziert, wartet aber noch auf erneute `/qa`-Freigabe; BUG-1 bleibt bewusst offen (keine Nutzer-Entscheidung für sofortige Behebung)
+- **Recommendation:** `/qa proj-31` erneut ausführen, um den BUG-2-Fix formal zu bestätigen und den Status auf "Approved" zu heben
 
 ## Deployment
 _To be added by /deploy_

@@ -75,6 +75,24 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // Bugfix 2026-08-04 (gefunden bei PROJ-31-QA): dieselbe Ursache wie oben, aber für die
+  // Bearbeiten-Route (`/rezept/[id]/bearbeiten`) — dort reicht eine reine Existenz-/
+  // Sichtbarkeits-Prüfung nicht aus, da ein offizielles Rezept zwar sichtbar (RLS), aber nicht
+  // bearbeitbar ist. Geprüft wird deshalb explizit die Eigentümerschaft, nicht nur die Existenz.
+  // Für Gäste/anonyme Nutzer greift stattdessen weiterhin der bestehende redirect() der Seite
+  // selbst (Aufforderung zur Registrierung) — hier nur der Eigentümer-404-Fall.
+  const recipeEditMatch = request.nextUrl.pathname.match(/^\/rezept\/([^/]+)\/bearbeiten$/)
+  if (recipeEditMatch && user && !isAnonymous) {
+    const recipeId = recipeEditMatch[1]
+    const isValidUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(recipeId)
+    const { data: editableRecipe } = isValidUuid
+      ? await supabase.from('recipes').select('owner_id').eq('id', recipeId).maybeSingle()
+      : { data: null }
+    if (!editableRecipe || editableRecipe.owner_id !== user.id) {
+      return NextResponse.rewrite(request.url, { status: 404 })
+    }
+  }
+
   return supabaseResponse
 }
 
