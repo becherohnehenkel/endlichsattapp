@@ -16,9 +16,11 @@ interface Row {
 
 const DEBOUNCE_MS = 500
 
-async function estimateOne(name: string): Promise<SchaetzResult> {
+async function estimateOne(name: string, variant: 'admin' | 'user'): Promise<SchaetzResult> {
+  const blsSearchUrl = variant === 'user' ? '/api/rezepte/bls-search' : '/api/admin/bls-search'
+  const offSearchUrl = variant === 'user' ? '/api/rezepte/off-search' : '/api/admin/off-search'
   try {
-    const blsRes = await fetch(`/api/admin/bls-search?q=${encodeURIComponent(name)}`)
+    const blsRes = await fetch(`${blsSearchUrl}?q=${encodeURIComponent(name)}`)
     const blsData = await blsRes.json()
     const blsFirst = blsData.results?.[0]
     if (blsFirst) return { per100g: blsFirst.per100g, status: 'found' }
@@ -26,7 +28,7 @@ async function estimateOne(name: string): Promise<SchaetzResult> {
     // fällt durch zu OFF
   }
   try {
-    const offRes = await fetch(`/api/admin/off-search?q=${encodeURIComponent(name)}`)
+    const offRes = await fetch(`${offSearchUrl}?q=${encodeURIComponent(name)}`)
     const offData = await offRes.json()
     const offFirst = offData.results?.[0]
     if (offFirst) return { per100g: offFirst.per100g, status: 'found' }
@@ -43,7 +45,7 @@ async function estimateOne(name: string): Promise<SchaetzResult> {
  * geänderten Zeilen statt pro Zeile einzeln), cached bereits geschätzte Namen, und verwirft
  * veraltete Antworten, wenn sich die Eingabe seither erneut geändert hat.
  */
-export function useLiveNaehrwertSchaetzung(rows: Row[]): Record<string, SchaetzResult> {
+export function useLiveNaehrwertSchaetzung(rows: Row[], variant: 'admin' | 'user' = 'admin'): Record<string, SchaetzResult> {
   const [estimates, setEstimates] = useState<Record<string, SchaetzResult>>({})
   const cacheRef = useRef<Record<string, SchaetzResult>>({})
   const lastEstimatedNameRef = useRef<Record<string, string>>({})
@@ -84,7 +86,7 @@ export function useLiveNaehrwertSchaetzung(rows: Row[]): Record<string, SchaetzR
         targets.map(async (row) => {
           const key = row.name.trim().toLowerCase()
           const cached = cacheRef.current[key]
-          const result = cached ?? await estimateOne(row.name.trim())
+          const result = cached ?? await estimateOne(row.name.trim(), variant)
           cacheRef.current[key] = result
           return { id: row.id, key, result }
         })

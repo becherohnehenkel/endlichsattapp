@@ -25,6 +25,9 @@ interface ZutatInputMitQuelleProps {
   onClearMacros: () => void
   linkedMacros: NutritionPer100g | null
   placeholder?: string
+  /** PROJ-32 (Bugfix): 'user' spricht die nicht-admin-exklusiven Such-Endpunkte an
+   *  (/api/rezepte/bls-search, /api/rezepte/off-search) statt der Admin-Endpunkte. */
+  variant?: 'admin' | 'user'
 }
 
 function MacroLine({ per100g }: { per100g: NutritionPer100g }) {
@@ -57,7 +60,10 @@ export default function ZutatInputMitQuelle({
   onClearMacros,
   linkedMacros,
   placeholder = 'Name',
+  variant = 'admin',
 }: ZutatInputMitQuelleProps) {
+  const blsSearchUrl = variant === 'user' ? '/api/rezepte/bls-search' : '/api/admin/bls-search'
+  const offSearchUrl = variant === 'user' ? '/api/rezepte/off-search' : '/api/admin/off-search'
   const [blsResults, setBlsResults] = useState<BlsResult[]>([])
   const [blsTotal, setBlsTotal] = useState(0)
   const [blsLoading, setBlsLoading] = useState(false)
@@ -88,7 +94,7 @@ export default function ZutatInputMitQuelle({
     if (offset === 0) setBlsLoading(true)
     else setBlsLoadingMore(true)
     try {
-      const res = await fetch(`/api/admin/bls-search?q=${encodeURIComponent(q)}&offset=${offset}`)
+      const res = await fetch(`${blsSearchUrl}?q=${encodeURIComponent(q)}&offset=${offset}`)
       const data = await res.json()
       const results: BlsResult[] = data.results ?? []
       const total: number = data.total ?? 0
@@ -105,7 +111,7 @@ export default function ZutatInputMitQuelle({
       if (offset === 0) setBlsLoading(false)
       else setBlsLoadingMore(false)
     }
-  }, [])
+  }, [blsSearchUrl])
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const val = e.target.value
@@ -151,7 +157,7 @@ export default function ZutatInputMitQuelle({
     setOffOpen(false)
     setOffResults([])
     try {
-      const res = await fetch(`/api/admin/off-search?q=${encodeURIComponent(q)}`)
+      const res = await fetch(`${offSearchUrl}?q=${encodeURIComponent(q)}`)
       const data = await res.json()
       const results: OffResult[] = data.results ?? []
       setOffResults(results)

@@ -15,6 +15,9 @@ interface ZutatRow {
 interface NaehrwertCounterProps {
   rows: ZutatRow[]
   servings: number
+  /** PROJ-32 (Bugfix): 'user' nutzt die nicht-admin-exklusiven Such-Endpunkte für die
+   *  Hintergrund-Schätzung unverknüpfter Zutaten. */
+  variant?: 'admin' | 'user'
 }
 
 interface Totals {
@@ -28,9 +31,10 @@ interface Totals {
 /** PROJ-29: Live-Nährwert-Counter — summiert alle erfassten Zutaten (verknüpft oder per
  *  Hintergrund-Schätzung) und teilt durch die Portionsanzahl. Reine Editor-Vorschau, wird
  *  nirgends gespeichert — maßgeblich bleibt die Berechnung beim Speichern des Rezepts. */
-export default function NaehrwertCounter({ rows, servings }: NaehrwertCounterProps) {
+export default function NaehrwertCounter({ rows, servings, variant = 'admin' }: NaehrwertCounterProps) {
   const estimates = useLiveNaehrwertSchaetzung(
-    rows.map(r => ({ id: r.id, name: r.name, linkedMacros: r.linkedMacros }))
+    rows.map(r => ({ id: r.id, name: r.name, linkedMacros: r.linkedMacros })),
+    variant
   )
 
   const effectiveServings = servings > 0 ? servings : 1

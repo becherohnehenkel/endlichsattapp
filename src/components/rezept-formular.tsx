@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm, useFieldArray, Controller, type Control, type UseFormRegister, type FieldErrors } from 'react-hook-form'
 import Image from 'next/image'
@@ -72,6 +72,7 @@ function SortableZutatZeile({
   onClearMacros,
   onRemove,
   disableRemove,
+  variant,
 }: {
   id: string
   index: number
@@ -82,6 +83,7 @@ function SortableZutatZeile({
   onClearMacros: () => void
   onRemove: () => void
   disableRemove: boolean
+  variant: 'admin' | 'user'
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
   const style = { transform: CSS.Transform.toString(transform), transition }
@@ -112,6 +114,7 @@ function SortableZutatZeile({
             onSelectSource={onSelectSource}
             onClearMacros={onClearMacros}
             linkedMacros={macros}
+            variant={variant}
           />
         )}
       />
@@ -212,6 +215,9 @@ interface RezeptFormularProps {
   /** PROJ-31: 'user' blendet die Gast-Freischaltung aus und spricht die
    *  Nutzer-eigenen Endpunkte (/api/rezepte*) statt der Admin-Endpunkte an. */
   variant?: 'admin' | 'user'
+  /** PROJ-32: Bild-Vorschlag (z.B. Mahlzeit-Foto) — wird beim Mounten direkt in den
+   *  Zuschneide-Dialog geladen, statt dass der Nutzer manuell hochladen muss. */
+  suggestedImageUrl?: string | null
 }
 
 export default function RezeptFormular({
@@ -223,6 +229,7 @@ export default function RezeptFormular({
   defaultIsGuestVisible = false,
   mode,
   variant = 'admin',
+  suggestedImageUrl,
 }: RezeptFormularProps) {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -260,6 +267,28 @@ export default function RezeptFormular({
   const { fields, append, remove, move } = useFieldArray({ control, name: 'ingredients' })
 
   const instructionsField = register('instructions', { required: 'Pflichtfeld' })
+
+  // PROJ-32: Bild-Vorschlag (z.B. Mahlzeit-Foto) direkt in den Zuschneide-Dialog laden, statt
+  // den Nutzer manuell hochladen zu lassen. Läuft über einen client-seitigen fetch() zu einer
+  // lokalen Blob-URL (nicht direkt die Quelladresse) — vermeidet ein "tainted canvas" beim
+  // späteren Zuschneiden, falls die Quelladresse keine passenden CORS-Header setzt. Schlägt der
+  // fetch fehl (Netzwerk/CORS), bleibt das Bild-Feld einfach leer wie ohne Vorschlag.
+  useEffect(() => {
+    if (!suggestedImageUrl || mode !== 'create' || existingImageUrl) return
+    let cancelled = false
+    fetch(suggestedImageUrl)
+      .then(res => res.ok ? res.blob() : Promise.reject(new Error('Bild-Vorschlag nicht abrufbar')))
+      .then(blob => {
+        if (cancelled) return
+        setRawImageSrc(URL.createObjectURL(blob))
+        setCropMode(true)
+      })
+      .catch(() => {
+        // Stiller Fallback — Bild-Feld bleibt leer, kein Blockieren des restlichen Formulars
+      })
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Nährwert-Quelle pro Zutat, verknüpft über die stabile Feld-ID (nicht die Array-Position) —
   // so bleibt die Verknüpfung beim Umsortieren korrekt an der jeweiligen Zutat.
@@ -453,7 +482,7 @@ export default function RezeptFormular({
       </div>
 
       {/* PROJ-29: Live-Nährwert-Counter */}
-      <NaehrwertCounter rows={counterRows} servings={parseInt(watchedServings) || 0} />
+      <NaehrwertCounter rows={counterRows} servings={parseInt(watchedServings) || 0} variant={variant} />
 
       {/* Zeiten + Portionen */}
       <div className="grid grid-cols-3 gap-3">
@@ -508,6 +537,7 @@ export default function RezeptFormular({
                       })
                     }}
                     disableRemove={zutatCount <= 1}
+                    variant={variant}
                   />
                 )
               )}

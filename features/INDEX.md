@@ -47,7 +47,7 @@
 | PROJ-29 | Nährwert-Verbesserungen im Rezept-Editor (Zutatensuche + Live-Counter) | P2 | Deployed | PROJ-8, PROJ-9 | [Spec](PROJ-29-rezept-editor-naehrwerte.md) |
 | PROJ-30 | Rezept-Eigentümerschaft & Filter (offiziell vs. eigene Rezepte) | P1 | Deployed | PROJ-8 | [Spec](PROJ-30-rezept-eigentuemerschaft-filter.md) |
 | PROJ-31 | Nutzer legen eigene Rezepte an | P1 | Deployed | PROJ-30 | [Spec](PROJ-31-nutzer-eigene-rezepte.md) |
-| PROJ-32 | Rezept aus gescannter Mahlzeit anlegen ("wie gescannt" / "mit mehr Sättigung") | P1 | Architected | PROJ-30, PROJ-31, PROJ-4, PROJ-5 | [Spec](PROJ-32-rezept-aus-mahlzeit.md) |
+| PROJ-32 | Rezept aus gescannter Mahlzeit anlegen ("wie gescannt" / "mit mehr Sättigung") | P1 | In Progress | PROJ-30, PROJ-31, PROJ-4, PROJ-5 | [Spec](PROJ-32-rezept-aus-mahlzeit.md) |
 
 <!-- Add features above this line -->
 

@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/collapsible'
 import type { BeilagenAnalysisResult } from '@/components/saettigungs-ergebnis'
 import ZutatenBereich from '@/components/zutaten-bereich'
+import RezeptAusMahlzeitButtons from '@/components/rezept-aus-mahlzeit-buttons'
 
 interface BeilagenErgebnisProps {
   result: BeilagenAnalysisResult
@@ -20,11 +21,13 @@ interface BeilagenErgebnisProps {
   onReset: () => void
   analysisId?: string
   photoUrl?: string | null
+  /** meals.id — PROJ-32: Einstiegspunkt "Wie gescannt" (kein "Mit mehr Sättigung" bei Beilagen) */
+  mealId?: string
   /** PROJ-28: Mahlzeit wurde vor dem 3. August 2026 analysiert */
   tooOld?: boolean
 }
 
-export default function BeilagenErgebnis({ result, assumptions, onReset, photoUrl, tooOld }: BeilagenErgebnisProps) {
+export default function BeilagenErgebnis({ result, assumptions, onReset, photoUrl, mealId, tooOld }: BeilagenErgebnisProps) {
   const [assumptionsOpen, setAssumptionsOpen] = useState(false)
   const allAssumptions = [...new Set([...assumptions, ...result.annahmen])]
   const b = result.beilage
@@ -128,6 +131,14 @@ export default function BeilagenErgebnis({ result, assumptions, onReset, photoUr
               Wie esse ich richtig? →
             </Link>
           </div>
+        </>
+      )}
+
+      {/* Rezept aus dieser Mahlzeit anlegen (PROJ-32) — bei Beilagen nur "Wie gescannt" */}
+      {mealId && (
+        <>
+          <Separator />
+          <RezeptAusMahlzeitButtons mealId={mealId} />
         </>
       )}
 

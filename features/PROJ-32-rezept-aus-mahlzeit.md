@@ -1,6 +1,6 @@
 # PROJ-32: Rezept aus gescannter Mahlzeit anlegen ("wie gescannt" / "mit mehr Sättigung")
 
-## Status: Architected
+## Status: In Progress
 **Created:** 2026-08-04
 **Last Updated:** 2026-08-04
 
@@ -127,6 +127,29 @@ Keine neuen Pakete — alle nötigen Bausteine existieren bereits (Rezept-Formul
 ### Backend-Bedarf
 
 Kein `/backend`-Durchlauf nötig: keine neuen Datenbank-Felder, keine neue Migration, keine neue RLS-Policy, kein neuer API-Endpunkt. Es wird ausschließlich gelesen (bestehende, bereits durch RLS abgesicherte Mahlzeit-Daten des eingeloggten Nutzers) und der bestehende PROJ-31-Speicher-Endpunkt wiederverwendet. `/frontend` deckt die komplette Umsetzung ab.
+
+## Implementation Notes (Frontend)
+
+**Neue/erweiterte Dateien**
+- `src/components/rezept-aus-mahlzeit-buttons.tsx` (neu) — "Als Rezept speichern"-Leiste mit den beiden Buttons, verlinkt auf `/rezept/neu?mealId=<id>&variante=wie-gescannt|mehr-saettigung`. In `SaettigungsErgebnis` (nach den Rezeptvorschlägen, vor dem Reset-Button) und in `BeilagenErgebnis` (nur "Wie gescannt") eingebunden.
+- `src/lib/rezept-aus-mahlzeit.ts` (neu) — reine Transformations-Funktion `buildRezeptVorbefuellung()`: Mahlzeit-Daten → Formular-Vorbefüllung (Titel, Portionen=1, Zutaten-Tags, Zutatenliste, Zubereitung-Platzhalter, Rezept-Typ). Bewusst von der Datenquelle getrennt, um unabhängig testbar zu sein.
+- `src/app/rezept/neu/page.tsx` (erweitert) — liest `mealId`/`variante` aus den Such-Parametern, lädt die Mahlzeit + Analyse mit derselben Eigentümer-/Status-Prüfung wie `/mahlzeit/[id]` (`user_id`-Check + `status = 'completed'`). Bei fremder/fehlender/unvollständiger Mahlzeit: stiller Fallback auf ein leeres Formular (kein Auskunfts-Orakel über fremde Mahlzeit-IDs).
+- `src/components/rezept-formular.tsx` (erweitert) — neue `suggestedImageUrl`-Prop: lädt beim Mounten (nur `mode="create"`, nur wenn noch kein Bild gesetzt) das Bild per `fetch()` zu einer lokalen Blob-URL und öffnet direkt den Zuschneide-Dialog. Bewusst über `fetch()` statt direktem `crossOrigin`-Attribut am `<img>`, um ein "tainted canvas" beim späteren Zuschneiden zuverlässig zu vermeiden, falls die Quelladresse keine passenden CORS-Header setzt — schlägt der fetch fehl, bleibt das Bild-Feld einfach leer.
+- `src/components/beilagen-ergebnis.tsx` — neue `mealId`-Prop durchgereicht (wurde bisher nicht übergeben).
+
+**Verhalten wie in der Spec festgelegt:** "Mit mehr Sättigung" wird zusätzlich nur angezeigt, wenn tatsächlich Verbesserungsvorschläge vorhanden sind (`vorschlaege.length > 0`) — bei einer bereits "sehr sättigenden" Mahlzeit ohne Vorschläge wäre der Button sonst inhaltsgleich zu "Wie gescannt" gewesen. Diese Verfeinerung geht über den wörtlichen Spec-Text hinaus, folgt aber unmittelbar aus der dort begründeten Absicht.
+
+### Bugfix (während der Umsetzung gefunden): Live-Zutatensuche für reguläre Nutzer war seit PROJ-31 tot
+
+Beim Testen mit echten Zutatennamen fiel auf, dass `ZutatInputMitQuelle` (Live-Suche + "Pro Portion (live)"-Zähler, aus PROJ-29 für den Admin-Editor übernommen) unverändert `/api/admin/bls-search` und `/api/admin/off-search` anspricht — beide admin-exklusiv (`requireAdmin()`). Für reguläre Nutzer im PROJ-31-Formular (`variant="user"`) lieferten beide Endpunkte durchgehend 403, seit PROJ-31 deployt wurde — die Live-Suche und der Live-Nährwert-Counter waren für alle normalen Nutzer faktisch wirkungslos (kein Datenverlust: `POST /api/rezepte` berechnet die Makros beim Speichern ohnehin serverseitig über eine eigene BLS-Datenbankabfrage, unabhängig von dieser Such-UI).
+
+**Fix** (Nutzer-Entscheidung: sofort mitbeheben, nicht als separates Ticket):
+- Zwei neue, nicht-admin-exklusive Endpunkte: `src/app/api/rezepte/bls-search/route.ts`, `src/app/api/rezepte/off-search/route.ts` — verlangen nur eine authentifizierte, nicht-anonyme Session (kein Admin), analog zum bereits etablierten Muster aus PROJ-31 (z.B. `/api/rezepte/bild` neben `/api/admin/rezepte/bild`). `bls_lebensmittel` hat bereits eine öffentliche RLS-SELECT-Policy — der reguläre Client reicht, kein Service-Role-Client nötig.
+- `ZutatInputMitQuelle` und der Hook `useLiveNaehrwertSchaetzung` (genutzt von `NaehrwertCounter`) bekommen beide eine `variant`-Prop (`'admin' | 'user'`, Default `'admin'` — keine Verhaltensänderung für den bestehenden Admin-Pfad) und wählen darüber den passenden Endpunkt.
+- 8 neue Vitest-Tests für die beiden neuen Routen (401/403/200-Happy-Path je Route), alle grün. Bestehende Admin-Routen-Tests unverändert grün (Default-Verhalten unangetastet).
+- Live verifiziert: Netzwerk-Log vor dem Fix zeigte durchgehend 403 auf `/api/admin/*-search` beim Öffnen eines vorausgefüllten PROJ-32-Formulars; nach dem Fix 200-Antworten, und der Live-Counter zeigt korrekte, aus echten BLS-Treffern berechnete Werte (verifiziert sowohl für den PROJ-32-Vorbefüllungs-Pfad als auch für das normale manuelle Anlegen aus PROJ-31).
+
+**Verifikation (gesamt):** `npm test` (316/316 grün, 8 davon neu), `npm run lint` (0 Fehler), `tsc --noEmit` (7 vorbestehende Fehler unverändert, keine neuen), `npm run build` (erfolgreich, alle neuen Routen registriert). Manuell im Browser verifiziert: beide Varianten ("Wie gescannt"/"Mit mehr Sättigung") für vollständige Mahlzeiten, nur "Wie gescannt" für Beilagen, kein "Mit mehr Sättigung" bei fehlenden Vorschlägen, Rezept-Typ-Übernahme, Bild-Vorschlag im Zuschneide-Dialog, vollständiger Speicher-Durchlauf inkl. Sättigungs-Matrix-Berechnung, sowie der graceful Fallback bei ungültiger/fremder `mealId`.
 
 ## QA Test Results
 _To be added by /qa_

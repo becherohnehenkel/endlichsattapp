@@ -12,6 +12,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import RezeptVorschlaege from '@/components/rezept-vorschlaege'
+import RezeptAusMahlzeitButtons from '@/components/rezept-aus-mahlzeit-buttons'
 import BeilagenErgebnis from '@/components/beilagen-ergebnis'
 import RatingRing from '@/components/rating-ring'
 import KIHinweis from '@/components/ki-hinweis'
@@ -157,7 +158,7 @@ export default function SaettigungsErgebnis({ result, assumptions, onReset, anal
   const [assumptionsOpen, setAssumptionsOpen] = useState(false)
 
   if (result.typ === 'beilage') {
-    return <BeilagenErgebnis result={result} assumptions={assumptions} onReset={onReset} analysisId={analysisId} photoUrl={photoUrl} tooOld={tooOld} />
+    return <BeilagenErgebnis result={result} assumptions={assumptions} onReset={onReset} analysisId={analysisId} photoUrl={photoUrl} mealId={mealId} tooOld={tooOld} />
   }
 
   const allAssumptions = [...new Set([...assumptions, ...result.annahmen])]
@@ -408,7 +409,15 @@ export default function SaettigungsErgebnis({ result, assumptions, onReset, anal
         </>
       )}
 
-      {/* ── 10. Reset ── */}
+      {/* ── 10. Rezept aus dieser Mahlzeit anlegen (PROJ-32) ── */}
+      {mealId && (
+        <>
+          <Separator />
+          <RezeptAusMahlzeitButtons mealId={mealId} showMehrSaettigung={hasVorschlaege} />
+        </>
+      )}
+
+      {/* ── 11. Reset ── */}
       <Button variant="outline" size="lg" className="w-full" onClick={onReset}>
         Neue Mahlzeit analysieren
       </Button>
