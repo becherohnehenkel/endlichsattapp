@@ -1,6 +1,6 @@
 # PROJ-32: Rezept aus gescannter Mahlzeit anlegen ("wie gescannt" / "mit mehr Sättigung")
 
-## Status: Approved
+## Status: Deployed
 **Created:** 2026-08-04
 **Last Updated:** 2026-08-04
 
@@ -209,4 +209,10 @@ Keine neuen Bugs in PROJ-32 selbst gefunden. Ein Bug wurde während der `/fronte
 - **Recommendation:** Deploy freigegeben
 
 ## Deployment
-_To be added by /deploy_
+
+- **Deployed:** 2026-08-04
+- **Production URL:** https://app.mehralsabnehmen.de/mahlzeit/[id] und https://app.mehralsabnehmen.de/rezept/neu (neue Query-Parameter `mealId`/`variante`)
+- **Commit:** `ec4d233`
+- **Git Tag:** `v1.29.0-PROJ-32`
+- **Pre-Deployment-Checks:** `npm run build` ✓, `npm run lint` ✓ (nur die vorbestehende, unveränderte Bild-Element-Warnung), QA Approved, keine Critical/High-Bugs, keine neuen Env-Variablen, keine Secrets im Diff, keine neue Migration nötig (bestehende RLS-Policy auf `bls_lebensmittel` reichte bereits aus)
+- **Post-Deploy-Verifikation:** Neue Route `/api/rezepte/bls-search` live (401 bei unauthentifiziertem Zugriff, wie erwartet); `/rezept/neu` vom Nutzer im Browser als korrekt ladend bestätigt (kurzzeitige 404-Anzeige beim automatisierten Check war erneut eine sandbox-seitige Netzwerk-Inkonsistenz, kein echtes Deployment-Problem — gleiches Muster wie beim PROJ-31-Deploy)
