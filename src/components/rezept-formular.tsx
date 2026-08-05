@@ -26,6 +26,7 @@ import { Switch } from '@/components/ui/switch'
 import ZutatInputMitQuelle from '@/components/zutat-input-mit-quelle'
 import NaehrwertCounter from '@/components/naehrwert-counter'
 import BildCropper from '@/components/bild-cropper'
+import { useLiveNaehrwertSchaetzung } from '@/hooks/use-live-naehrwert-schaetzung'
 import type { NutritionPer100g } from '@/lib/nutrition'
 
 interface ZutatenZeile {
@@ -73,6 +74,7 @@ function SortableZutatZeile({
   onRemove,
   disableRemove,
   variant,
+  notFound,
 }: {
   id: string
   index: number
@@ -84,6 +86,10 @@ function SortableZutatZeile({
   onRemove: () => void
   disableRemove: boolean
   variant: 'admin' | 'user'
+  /** Refinement 2026-08-05: markiert Zutaten ohne Nährwert-Treffer (derselbe `not_found`-
+   *  Status, der auch den "x Zutaten ohne Nährwert-Treffer"-Hinweis im Zähler auslöst) —
+   *  rein visuell, nicht blockierend. */
+  notFound: boolean
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
   const style = { transform: CSS.Transform.toString(transform), transition }
@@ -92,7 +98,9 @@ function SortableZutatZeile({
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex gap-2 items-start ${isDragging ? 'opacity-50 z-10' : ''}`}
+      className={`flex gap-2 items-start rounded-lg border-l-2 pl-2 py-1.5 transition-colors ${
+        isDragging ? 'opacity-50 z-10' : ''
+      } ${notFound ? 'border-l-amber-400 bg-amber-50' : 'border-l-transparent'}`}
     >
       <button
         type="button"
@@ -103,44 +111,48 @@ function SortableZutatZeile({
       >
         <GripVertical className="h-4 w-4" />
       </button>
-      <Controller
-        control={control}
-        name={`ingredients.${index}.name`}
-        render={({ field: f }) => (
-          <ZutatInputMitQuelle
-            value={f.value}
-            onChange={f.onChange}
-            onBlur={f.onBlur}
-            onSelectSource={onSelectSource}
-            onClearMacros={onClearMacros}
-            linkedMacros={macros}
-            variant={variant}
+      <div className="flex-1 min-w-0 space-y-1.5">
+        <Controller
+          control={control}
+          name={`ingredients.${index}.name`}
+          render={({ field: f }) => (
+            <ZutatInputMitQuelle
+              value={f.value}
+              onChange={f.onChange}
+              onBlur={f.onBlur}
+              onSelectSource={onSelectSource}
+              onClearMacros={onClearMacros}
+              linkedMacros={macros}
+              variant={variant}
+            />
+          )}
+        />
+        <div className="flex gap-2 items-center">
+          <Input
+            placeholder="Menge"
+            className="w-20"
+            type="number"
+            step="0.1"
+            min="0"
+            {...register(`ingredients.${index}.amount`)}
           />
-        )}
-      />
-      <Input
-        placeholder="Menge"
-        className="w-20"
-        type="number"
-        step="0.1"
-        min="0"
-        {...register(`ingredients.${index}.amount`)}
-      />
-      <Input
-        placeholder="Einheit"
-        className="w-20"
-        {...register(`ingredients.${index}.unit`)}
-      />
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        className="flex-shrink-0 text-muted-foreground hover:text-destructive"
-        onClick={onRemove}
-        disabled={disableRemove}
-      >
-        <Trash2 className="h-4 w-4" />
-      </Button>
+          <Input
+            placeholder="Einheit"
+            className="w-20"
+            {...register(`ingredients.${index}.unit`)}
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="flex-shrink-0 text-muted-foreground hover:text-destructive ml-auto"
+            onClick={onRemove}
+            disabled={disableRemove}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
     </div>
   )
 }
@@ -315,6 +327,13 @@ export default function RezeptFormular({
       linkedMacros: ingredientMacros[field.id] ?? null,
     }))
 
+  // Refinement 2026-08-05: einmalig hier statt in NaehrwertCounter aufgerufen, damit Zähler
+  // und Zutaten-Zeilen-Hervorhebung denselben Status nutzen, ohne doppelte BLS/OFF-Suchanfragen.
+  const naehrwertEstimates = useLiveNaehrwertSchaetzung(
+    counterRows.map(r => ({ id: r.id, name: r.name, linkedMacros: r.linkedMacros })),
+    variant
+  )
+
   const dragSensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } })
@@ -482,7 +501,7 @@ export default function RezeptFormular({
       </div>
 
       {/* PROJ-29: Live-Nährwert-Counter */}
-      <NaehrwertCounter rows={counterRows} servings={parseInt(watchedServings) || 0} variant={variant} />
+      <NaehrwertCounter rows={counterRows} servings={parseInt(watchedServings) || 0} estimates={naehrwertEstimates} />
 
       {/* Zeiten + Portionen */}
       <div className="grid grid-cols-3 gap-3">
@@ -538,6 +557,7 @@ export default function RezeptFormular({
                     }}
                     disableRemove={zutatCount <= 1}
                     variant={variant}
+                    notFound={naehrwertEstimates[field.id]?.status === 'not_found'}
                   />
                 )
               )}

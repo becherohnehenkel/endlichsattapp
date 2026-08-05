@@ -150,3 +150,89 @@ test.describe('Sicherheit', () => {
     await expect(page.locator('input[placeholder="Name"]')).toHaveCount(1)
   })
 })
+
+test.describe('Zutaten-Zeilen-Layout & Nährwert-Hinweis (Refinement 2026-08-05)', () => {
+  // Betrifft das geteilte Rezept-Formular (RezeptFormular/ZutatInputMitQuelle/NaehrwertCounter),
+  // genutzt von PROJ-8/24/29/31/32 — hier über den PROJ-32-Einstieg getestet, gilt aber für
+  // jedes Rezept-Formular gleichermaßen.
+
+  test('Zutat-Name steht in eigener Zeile über Menge/Einheit/Löschen, Verschiebe-Griff bleibt erhalten', async ({ page }) => {
+    await loginAs(page)
+    await page.goto(`/rezept/neu?mealId=${VOLLSTAENDIGE_MAHLZEIT_ID}&variante=wie-gescannt`)
+    await page.waitForSelector('#title')
+
+    const nameBox = await page.locator('input[placeholder="Name"]').first().boundingBox()
+    const amountBox = await page.locator('input[placeholder="Menge"]').first().boundingBox()
+    expect(nameBox).not.toBeNull()
+    expect(amountBox).not.toBeNull()
+    // Menge steht unterhalb des Namens (eigene Zeile), nicht daneben
+    expect(amountBox!.y).toBeGreaterThan(nameBox!.y)
+    // Beide beginnen an derselben linken Kante (gleiche Spalte unter dem Verschiebe-Griff)
+    expect(Math.abs(amountBox!.x - nameBox!.x)).toBeLessThan(2)
+
+    await expect(page.getByRole('button', { name: 'Zutat verschieben' }).first()).toBeVisible()
+  })
+
+  test('Zutat ohne Nährwert-Treffer wird hervorgehoben, Zutaten mit Treffer nicht', async ({ page }) => {
+    await loginAs(page)
+    await page.goto(`/rezept/neu?mealId=${VOLLSTAENDIGE_MAHLZEIT_ID}&variante=wie-gescannt`)
+    await page.waitForSelector('#title')
+
+    await page.click('button:has-text("Zutat hinzufügen")')
+    const nameInputs = page.locator('input[placeholder="Name"]')
+    await nameInputs.nth(2).fill('xyzznonfood123qa')
+    await page.keyboard.press('Escape')
+    await page.locator('label:has-text("Zutaten *")').click({ force: true })
+
+    // Hintergrund-Schätzung: Debounce + BLS-/OFF-Suche
+    await expect(page.getByText('1 Zutat ohne Nährwert-Treffer')).toBeVisible({ timeout: 8000 })
+
+    const notFoundRow = nameInputs.nth(2).locator('xpath=ancestor::div[contains(@class, "border-l-2")][1]')
+    await expect(notFoundRow).toHaveClass(/border-l-amber-400/)
+    await expect(notFoundRow).toHaveClass(/bg-amber-50/)
+
+    // Die vorausgefüllten, echten Zutaten (Hähnchenbrust, Reis) bleiben unhervorgehoben
+    const reisRow = nameInputs.nth(1).locator('xpath=ancestor::div[contains(@class, "border-l-2")][1]')
+    await expect(reisRow).not.toHaveClass(/border-l-amber-400/)
+  })
+
+  test('Hervorhebung verschwindet automatisch, sobald die Zutat mit einer BLS-Quelle verknüpft wird', async ({ page }) => {
+    await loginAs(page)
+    await page.goto(`/rezept/neu?mealId=${VOLLSTAENDIGE_MAHLZEIT_ID}&variante=wie-gescannt`)
+    await page.waitForSelector('#title')
+
+    await page.click('button:has-text("Zutat hinzufügen")')
+    const nameInput = page.locator('input[placeholder="Name"]').nth(2)
+    await nameInput.fill('xyzznonfood123qa')
+    await page.keyboard.press('Escape')
+    await page.locator('label:has-text("Zutaten *")').click({ force: true })
+    await expect(page.getByText('1 Zutat ohne Nährwert-Treffer')).toBeVisible({ timeout: 8000 })
+
+    // Jetzt mit einer echten Zutat überschreiben und aus dem BLS-Dropdown auswählen (verknüpfen)
+    await nameInput.fill('Apfel')
+    await page.waitForSelector('ul li button', { timeout: 5000 })
+    await page.locator('ul li button').first().click()
+
+    await expect(page.getByText('ohne Nährwert-Treffer')).toHaveCount(0)
+    const row = nameInput.locator('xpath=ancestor::div[contains(@class, "border-l-2")][1]')
+    await expect(row).not.toHaveClass(/border-l-amber-400/)
+  })
+
+  test('Gruppen-Überschrift wird nie hervorgehoben, unabhängig vom Zustand umliegender Zutaten', async ({ page }) => {
+    await loginAs(page)
+    await page.goto(`/rezept/neu?mealId=${VOLLSTAENDIGE_MAHLZEIT_ID}&variante=wie-gescannt`)
+    await page.waitForSelector('#title')
+
+    await page.click('button:has-text("Gruppe hinzufügen")')
+    await page.locator('input[placeholder="z.B. Für das Dressing"]').fill('Für die Sauce')
+    await page.click('button:has-text("Zutat hinzufügen")')
+    const nameInputs = page.locator('input[placeholder="Name"]')
+    await nameInputs.last().fill('xyzznonfood123qa')
+    await page.keyboard.press('Escape')
+    await page.locator('label:has-text("Zutaten *")').click({ force: true })
+    await expect(page.getByText('1 Zutat ohne Nährwert-Treffer')).toBeVisible({ timeout: 8000 })
+
+    const groupRow = page.locator('input[placeholder="z.B. Für das Dressing"]').locator('xpath=ancestor::div[contains(@class, "border-dashed")][1]')
+    await expect(groupRow).not.toHaveClass(/amber/)
+  })
+})

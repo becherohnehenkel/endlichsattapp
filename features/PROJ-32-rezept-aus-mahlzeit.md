@@ -1,8 +1,8 @@
 # PROJ-32: Rezept aus gescannter Mahlzeit anlegen ("wie gescannt" / "mit mehr Sättigung")
 
-## Status: Deployed
+## Status: Approved (Refinement: Zutaten-Zeilen-Layout & Nährwert-Hervorhebung — QA bestanden, bereit für Deploy)
 **Created:** 2026-08-04
-**Last Updated:** 2026-08-04
+**Last Updated:** 2026-08-05
 
 ## Dependencies
 - PROJ-31 (Nutzer legen eigene Rezepte an) — Rezept-Formular, Anlegen-Endpunkt, 5-Rezepte-Limit werden vollständig wiederverwendet
@@ -46,16 +46,28 @@
 - [ ] Angenommen ein Rezept wurde über "Wie gescannt" oder "Mit mehr Sättigung" gespeichert, dann zählt es normal gegen das 5-Rezepte-Limit und erscheint unter "Eigene Rezepte" wie jedes andere selbst angelegte Rezept
 - [ ] Angenommen der Nutzer bricht das vorausgefüllte Formular ab, ohne zu speichern, dann wird kein Rezept angelegt (identisches Verhalten zum regulären Anlegen aus PROJ-31)
 
+**Zutaten-Zeilen-Layout & Nährwert-Hinweis (Refinement 2026-08-05)**
+
+> Betrifft das gemeinsame Rezept-Formular (`RezeptFormular`/`ZutatInputMitQuelle`/`NaehrwertCounter`), das PROJ-32 mit PROJ-8/24/29/31 teilt. Ausgelöst durch Nutzung des PROJ-32-Flows ("wie gescannt" liefert viele Zutaten ohne automatischen Treffer), wirkt sich aber auf alle Rezept-Bearbeitungs-Wege aus.
+
+- [ ] Angenommen eine Zutaten-Zeile im Rezept-Formular, wenn sie angezeigt wird, dann steht der Zutat-Name in einer eigenen Zeile; Menge, Einheit und Löschen-Icon stehen darunter in einer zweiten Zeile; der Verschiebe-Griff (6 Punkte) bleibt links neben dem gesamten zweizeiligen Block, die Zeile bleibt per Drag-Handle verschiebbar
+- [ ] Angenommen eine Zutat hat nach der bestehenden Hintergrund-Schätzung keinen Treffer (`status = 'not_found'` — derselbe Status, der schon heute den Hinweistext "x Zutaten ohne Nährwert-Treffer" im Nährwert-Zähler auslöst), wenn die Zeile angezeigt wird, dann wird der Zutaten-Block mit einem linken Akzentrand und leichtem Hintergrundton in der bestehenden Warnfarbe (`#D97706`) hervorgehoben
+- [ ] Angenommen eine Zutat ist noch nicht ausgewertet (Schätzung lädt) oder hat einen Treffer/ist manuell mit BLS/OFF verknüpft, wenn die Zeile angezeigt wird, dann bleibt sie unhervorgehoben (kein Aufblitzen der Warnfarbe während des Ladens)
+- [ ] Angenommen eine hervorgehobene Zeile wird nachträglich mit einer BLS/OFF-Quelle verknüpft oder erhält doch noch einen Treffer aus der Hintergrund-Schätzung, dann verschwindet die Hervorhebung automatisch, ohne dass der Nutzer etwas tun muss
+- [ ] Die Hervorhebung ist rein visuell und nicht blockierend — Speichern bleibt trotz nicht gefundener Nährwerte weiterhin möglich (keine neue Pflicht, kein neues Validierungs-Verhalten)
+
 ## Edge Cases
 - Mahlzeit ohne Freitext (reine Foto-Analyse ohne Beschreibung) → Titel fällt auf einen Datums-Platzhalter zurück (z.B. "Mahlzeit vom 04.08.")
 - Zutat mit KI-geschätzten Nährwerten (`zutatenQuelle` = "schaetzung"/"nicht_schaetzbar") → wird trotzdem als normale Zutaten-Zeile übernommen; die eigentliche Nährwert-Zuordnung läuft wie bei jeder manuell eingegebenen Zutat erneut über die bestehende BLS/OFF-Suche, keine Übernahme der ursprünglichen Mahlzeit-Nährwerte
 - Mahlzeit gehört einem anderen Nutzer (URL-Manipulation) → bereits durch die bestehende Eigentümer-Prüfung auf `/mahlzeit/[id]` abgedeckt; PROJ-32 kann nie von einer fremden Mahlzeit aus gestartet werden
 - Zwei sehr ähnliche Verbesserungsvorschläge (z.B. beide zielen auf mehr Protein) → beide werden als separate Zeilen übernommen, keine automatische Zusammenführung
 - Nutzer ändert nach dem Öffnen des vorausgefüllten Formulars alle Werte komplett → es wird ausschließlich das tatsächlich abgeschickte Formular gespeichert, keine versteckte Mahlzeit-Referenz oder Verknüpfung zur Ursprungs-Mahlzeit
+- Gruppen-Überschrift-Zeilen (kein Zutat-Feld, kein Nährwert-Status) → werden nie hervorgehoben, unabhängig vom Zustand umliegender Zutaten-Zeilen
 
 ## Technical Requirements (optional)
 - Kein neues Datenbank-Feld, keine neue Migration — reine Wiederverwendung des PROJ-31-Datenmodells (`recipes.owner_id`, `POST /api/rezepte`)
 - Wiederverwendung von `RezeptFormular` (`variant="user"`) und dem bestehenden Anlegen-Endpunkt aus PROJ-31 — die genaue technische Übergabe der Vorbefüllung an die Formular-Seite legt `/architecture` fest
+- **Refinement 2026-08-05:** Layout- und Hervorhebungs-Änderung betrifft die geteilten Komponenten `RezeptFormular` (`SortableZutatZeile`), `ZutatInputMitQuelle` und `NaehrwertCounter` — genutzt von PROJ-8/24/29/31/32 (Admin- und Nutzer-Editor gleichermaßen). Keine neuen Endpunkte, kein neues Datenfeld; die Hervorhebung nutzt den bereits vorhandenen `not_found`-Status aus `useLiveNaehrwertSchaetzung`. Kein `/architecture`-Durchlauf nötig — reine UI-Umsetzung, `/frontend` deckt es ab.
 
 ## Open Questions
 - [x] Genaue technische Übergabe der Vorbefüllung an `/rezept/neu` → gelöst durch `/architecture`: Übergabe über die Seiten-Adresse (Query-Parameter mit Mahlzeit-ID + Variante), siehe Tech Design (2026-08-04)
@@ -75,6 +87,10 @@
 | Rezept-Typ automatisch aus `analysis_typ` der Mahlzeit übernommen | Konsistent mit dem gewählten Scope (nur vollständige Mahlzeiten für MVP) | 2026-08-04 |
 | Mahlzeit-Foto (falls vorhanden) wird als Vorschlag in den bestehenden Bild-Zuschneide-Dialog geladen | Vermeidet erneuten Upload, nutzt den bestehenden Cropper-Flow aus PROJ-31 | 2026-08-04 |
 | Portionen-Vorschlag: 1 | Übernommene Mengen entsprechen exakt einer gegessenen Mahlzeit — Nährwerte pro Portion bleiben so konsistent mit der ursprünglichen Analyse | 2026-08-04 |
+| Zutaten-Zeile wird zweizeilig dargestellt (Name oben; Menge, Einheit, Löschen-Icon darunter) statt einzeilig | Ursprüngliches einzeiliges Layout war laut Nutzer zu eng, um mit Name, Menge, Einheit und Löschen gleichzeitig zu arbeiten — betrifft alle Rezept-Formulare, nicht nur den PROJ-32-Einstieg | 2026-08-05 |
+| Nährwert-Treffer-Hervorhebung ist ein optionales visuelles Signal, kein Pflichtfeld und keine neue Validierung | Nutzer möchte "durchgeleitet, aber nicht gezwungen" werden — passt zum bereits bestehenden, nicht-blockierenden "x Zutaten ohne Nährwert-Treffer"-Hinweistext | 2026-08-05 |
+| Hervorhebung nutzt denselben `not_found`-Status wie der bestehende Hinweistext, nicht nur "keine Quelle manuell verknüpft" | Zutaten mit erfolgreicher automatischer Hintergrund-Schätzung (aber ohne manuelle BLS/OFF-Verknüpfung) sollen nicht fälschlich als "Problem" markiert werden | 2026-08-05 |
+| Visueller Stil: linker Akzentrand + leichter Hintergrundton in der bestehenden Warnfarbe `#D97706` | Konsistent mit dem Design-System (Warning-Farbe für "Hinweise"), auffällig genug, um zu lenken, ohne wie ein Fehler zu wirken | 2026-08-05 |
 
 ### Technical Decisions
 <!-- Added by /architecture -->
@@ -84,6 +100,7 @@
 | Umwandlung "Mahlzeit-Daten → Rezept-Entwurf" passiert einmalig beim Laden der Seite, wird nirgends zwischengespeichert oder mit der Mahlzeit verknüpft | Stellt sicher, dass sich das Formular ab dem ersten Anzeigen exakt wie ein manuell gestartetes Rezept verhält — inkl. spurlosem Verwerfen (AC "keine versteckte Mahlzeit-Referenz") | 2026-08-04 |
 | Wiederverwendung von Rezept-Formular und Speicher-Endpunkt aus PROJ-31 unverändert, nur mit anderen Startwerten | Kein zweiter Anlege-Weg mit doppeltem Pflegeaufwand und doppelter Sicherheits-/Limit-Prüfung | 2026-08-04 |
 | Rezept-Formular bekommt eine zusätzliche Startmöglichkeit: Bild direkt im Zuschneide-Schritt vorschlagen, statt nur "fertiges Bild" oder "leerer Upload" zu kennen | Vermeidet unnötigen erneuten Upload eines bereits vorhandenen Mahlzeit-Fotos | 2026-08-04 |
+| Refinement 2026-08-05: `useLiveNaehrwertSchaetzung` wird von `NaehrwertCounter` nach `RezeptFormular` hochgezogen (ein Hook-Aufruf statt zwei) | Sowohl der Nährwert-Zähler als auch die neue Zeilen-Hervorhebung brauchen denselben Pro-Zutat-Status; ein zweiter, unabhängiger Hook-Aufruf würde doppelte BLS/OFF-Suchanfragen pro Zutat auslösen | 2026-08-05 |
 
 ---
 <!-- Sections below are added by subsequent skills -->
@@ -151,6 +168,17 @@ Beim Testen mit echten Zutatennamen fiel auf, dass `ZutatInputMitQuelle` (Live-S
 
 **Verifikation (gesamt):** `npm test` (316/316 grün, 8 davon neu), `npm run lint` (0 Fehler), `tsc --noEmit` (7 vorbestehende Fehler unverändert, keine neuen), `npm run build` (erfolgreich, alle neuen Routen registriert). Manuell im Browser verifiziert: beide Varianten ("Wie gescannt"/"Mit mehr Sättigung") für vollständige Mahlzeiten, nur "Wie gescannt" für Beilagen, kein "Mit mehr Sättigung" bei fehlenden Vorschlägen, Rezept-Typ-Übernahme, Bild-Vorschlag im Zuschneide-Dialog, vollständiger Speicher-Durchlauf inkl. Sättigungs-Matrix-Berechnung, sowie der graceful Fallback bei ungültiger/fremder `mealId`.
 
+### Refinement 2026-08-05: Zutaten-Zeilen-Layout & Nährwert-Hervorhebung
+
+**Geänderte Dateien** (alle Teil des gemeinsamen Rezept-Formulars, betrifft PROJ-8/24/29/31/32 gleichermaßen):
+- `src/components/rezept-formular.tsx` — `SortableZutatZeile` von einer einzeiligen `flex`-Zeile auf einen zweizeiligen Block umgebaut: Name (`ZutatInputMitQuelle`) in eigener Zeile, darunter Menge/Einheit/Löschen-Icon; der Verschiebe-Griff bleibt links am gesamten Block, unverändert per `useSortable` draggable. Neue `notFound`-Prop steuert einen linken Akzentrand (`border-l-amber-400`) plus Hintergrundton (`bg-amber-50`) auf dem Zeilen-Wrapper — `border-l-2 border-l-transparent` im Normalzustand, um Layout-Sprünge beim Ein-/Ausblenden zu vermeiden.
+- Der `useLiveNaehrwertSchaetzung`-Hook (bisher in `NaehrwertCounter`) wird jetzt einmalig in `RezeptFormular` aufgerufen (`naehrwertEstimates`) und sowohl an `NaehrwertCounter` (als neue `estimates`-Prop, ersetzt den bisherigen internen Hook-Aufruf und die `variant`-Prop dort) als auch an jede `SortableZutatZeile` (`notFound={naehrwertEstimates[field.id]?.status === 'not_found'}`) weitergereicht — ein Hook-Aufruf statt zwei, keine doppelten BLS/OFF-Suchanfragen.
+- `src/components/naehrwert-counter.tsx` — ruft den Hook nicht mehr selbst auf, nimmt `estimates` als Prop entgegen; sonst unverändert (gleiche Zähl-/Summierlogik, gleicher "x Zutaten ohne Nährwert-Treffer"-Hinweistext).
+
+**Verhalten wie in der Spec festgelegt:** Hervorhebung nutzt exakt denselben `not_found`-Status wie der bestehende Hinweistext — Zutaten mit erfolgreicher Hintergrund-Schätzung (aber ohne manuelle BLS/OFF-Verknüpfung) werden nicht hervorgehoben, nur echte Nicht-Treffer. Rein visuell, keine neue Validierung, Speichern bleibt uneingeschränkt möglich.
+
+**Verifikation:** `npm test` (329/329 grün, keine Änderung an Testanzahl — reines UI-Refinement ohne neue Unit-Tests, da keine neue reine Logik-Funktion entstanden ist), `npm run lint` (0 Fehler in den geänderten Dateien), `tsc --noEmit` (keine neuen Fehler in den geänderten Dateien, die vorbestehenden 7 Fehler in Test-Dateien unverändert), `npm run build` (erfolgreich). Manuell mit Playwright gegen den laufenden Dev-Server verifiziert (`/rezept/neu`, echter Login als `qa-test@endlichsatt.dev`): zweizeiliges Layout mit Name oben, Menge/Einheit/Löschen darunter, Verschiebe-Griff links; eine Zutat ohne Treffer (`xyzznonfood123`) erhält nach der Hintergrund-Schätzung den amber Akzentrand + Hintergrundton, synchron mit dem Zähler-Hinweis "1 Zutat ohne Nährwert-Treffer"; eine Zutat mit Treffer (`Reis`) bleibt unhervorgehoben.
+
 ## QA Test Results
 
 **Tested:** 2026-08-04
@@ -205,6 +233,52 @@ Keine neuen Bugs in PROJ-32 selbst gefunden. Ein Bug wurde während der `/fronte
 - **Acceptance Criteria:** 10/10 vollständig bestanden
 - **Bugs Found:** 0 neue (1 während der Umsetzung gefunden und bereits behoben, siehe oben)
 - **Security:** Pass — kein Datenleck über fremde `mealId`, kein Auth-Bypass, kein XSS
+- **Production Ready:** Ja
+- **Recommendation:** Deploy freigegeben
+
+---
+
+## QA Test Results — Refinement 2026-08-05 (Zutaten-Zeilen-Layout & Nährwert-Hinweis)
+
+**Tested:** 2026-08-05
+**App URL:** http://localhost:3000 (`next dev`) + `next build && next start` auf Port 3099 für den Middleware-abhängigen Regressionscheck
+**Tester:** QA Engineer (AI)
+**Testnutzer:** `qa-test@endlichsatt.dev` (bestehende Mahlzeit-Fixture `44444444-…`)
+**Scope:** Betrifft das geteilte Rezept-Formular (`RezeptFormular`/`SortableZutatZeile`/`ZutatInputMitQuelle`/`NaehrwertCounter`), genutzt von PROJ-8/24/29/31/32 — hier über den PROJ-32-Einstieg getestet, zusätzlich Regression auf PROJ-8/24/30/31 (teilen dieselben Komponenten bzw. dieselbe `next()`-404-Middleware-Eigenheit).
+
+### Acceptance Criteria Status
+
+**Zutaten-Zeilen-Layout & Nährwert-Hinweis**
+- [x] Zutat-Name steht in eigener Zeile, Menge/Einheit/Löschen-Icon darunter, Verschiebe-Griff bleibt links am gesamten Block erhalten und funktionsfähig (E2E: Bounding-Box-Vergleich Name vs. Menge — gleiche linke Kante, Menge unterhalb; `aria-label="Zutat verschieben"` weiterhin vorhanden). Tatsächliches Drag-Verhalten selbst nicht per E2E automatisiert — wie schon bei PROJ-24 dokumentiert (dnd-kit-Pointer-Sequenzen sind dort bewusst nicht automatisiert), stattdessen manuell im Browser bestätigt (Screenshot, siehe Implementation Notes).
+- [x] Zutat ohne Nährwert-Treffer (`status = 'not_found'`) wird mit linkem Akzentrand + Hintergrundton in der Warnfarbe hervorgehoben; Zutaten mit Treffer (vorausgefüllt: Hähnchenbrust, Reis) bleiben unhervorgehoben
+- [x] Während die Hintergrund-Schätzung noch lädt, erscheint keine Hervorhebung (kein Aufblitzen) — implizit durch die Statusmaschine des Hooks sichergestellt (`loading` ≠ `not_found`); im E2E-Test wird ausschließlich auf den finalen `not_found`-Zustand gewartet, ein Zwischenzustand mit Hervorhebung wurde in keinem Testlauf beobachtet
+- [x] Hervorhebung verschwindet automatisch, sobald die Zutat mit einer BLS-Quelle verknüpft wird (E2E: nicht-gefundene Zutat → Treffer-Zutat "Apfel" eingetippt, erstes BLS-Ergebnis angeklickt → Hervorhebung und Hinweistext verschwinden ohne weiteres Zutun)
+- [x] Hervorhebung ist rein visuell und nicht blockierend — Speichern mit nicht gefundenen Nährwerten bleibt möglich (keine neue Validierung eingeführt, bestehendes Speicher-Verhalten unverändert getestet in den ursprünglichen PROJ-32-Kriterien oben)
+- [x] Gruppen-Überschriften werden nie hervorgehoben, auch wenn eine benachbarte Zutat `not_found` ist (E2E verifiziert)
+
+### Edge Cases Status
+- [x] Gruppen-Überschrift-Zeile (kein Zutat-Feld) → nie hervorgehoben, unabhängig vom Zustand umliegender Zutaten-Zeilen (E2E verifiziert, siehe oben)
+
+### Security Audit Results
+- [x] Keine neuen Endpunkte, keine neue Eingabeverarbeitung — Hervorhebung ist eine reine CSS-Klassen-Bedingung auf einem bereits vorhandenen, bereits geprüften Status (`not_found` aus `useLiveNaehrwertSchaetzung`, dessen zugrundeliegende Endpunkte `/api/rezepte/bls-search` und `/api/rezepte/off-search` bereits in der ursprünglichen PROJ-32-QA auditiert wurden)
+- [x] Kein neues XSS-Risiko: Zutat-Name wird weiterhin ausschließlich über React-Text-Interpolation gerendert, keine neue `dangerouslySetInnerHTML`-Nutzung eingeführt
+
+### Regressionstests
+- `npm test`: 329/329 grün (unverändert — reines UI-Refinement ohne neue isolierte Logik-Funktion, daher keine neuen Unit-Tests nötig; bestehende Tests für `useLiveNaehrwertSchaetzung` unverändert grün)
+- `npm run lint`: 0 Fehler in den geänderten Dateien
+- `tsc --noEmit`: keine neuen Fehler in den geänderten Dateien (dieselben 7 vorbestehenden Fehler in Test-Dateien, unverändert)
+- `npm run build`: erfolgreich
+- E2E-Regression (`next dev`, Port 3000): `tests/PROJ-32-…` (26/26 grün, inkl. 4 neuer Refinement-Tests, Chromium + Mobile Chrome), `tests/PROJ-30-…` + `tests/PROJ-31-…` + `tests/PROJ-24-…` + `tests/PROJ-8-…` (102/104 grün) — die 2 verbleibenden Fehlschläge sind exakt die bereits dokumentierte, lokale `next dev`-Middleware-Eigenheit (`notFound()` liefert unter `next dev` 200 statt 404), nicht durch diese Änderung verursacht
+- Gegen echten Produktions-Build verifiziert (`next build && next start`, Port 3099): der betroffene PROJ-30-404-Test läuft dort 16/16 grün (Chromium + Mobile Chrome) — bestätigt, dass es sich um die bekannte Dev-Only-Einschränkung handelt, keine echte Regression
+- Responsive: E2E lief sowohl im Chromium-Projekt (1280px) als auch im Mobile-Chrome-Projekt (375px) grün — zweizeiliges Layout und Hervorhebung funktionieren auf beiden Breiten identisch; zusätzlich manuell bei 900px Browser-Breite per Screenshot bestätigt
+
+### Bugs Found
+Keine.
+
+### Summary
+- **Acceptance Criteria:** 6/6 vollständig bestanden
+- **Bugs Found:** 0
+- **Security:** Pass — keine neue Eingabeverarbeitung, kein neues XSS-Risiko, bestehende Endpunkt-Absicherung unverändert genutzt
 - **Production Ready:** Ja
 - **Recommendation:** Deploy freigegeben
 
