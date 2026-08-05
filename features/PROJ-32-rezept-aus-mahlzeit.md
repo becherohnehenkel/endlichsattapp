@@ -1,6 +1,6 @@
 # PROJ-32: Rezept aus gescannter Mahlzeit anlegen ("wie gescannt" / "mit mehr Sättigung")
 
-## Status: Approved (Refinement: Zutaten-Zeilen-Layout & Nährwert-Hervorhebung — QA bestanden, bereit für Deploy)
+## Status: Deployed
 **Created:** 2026-08-04
 **Last Updated:** 2026-08-05
 
@@ -290,3 +290,12 @@ Keine.
 - **Git Tag:** `v1.29.0-PROJ-32`
 - **Pre-Deployment-Checks:** `npm run build` ✓, `npm run lint` ✓ (nur die vorbestehende, unveränderte Bild-Element-Warnung), QA Approved, keine Critical/High-Bugs, keine neuen Env-Variablen, keine Secrets im Diff, keine neue Migration nötig (bestehende RLS-Policy auf `bls_lebensmittel` reichte bereits aus)
 - **Post-Deploy-Verifikation:** Neue Route `/api/rezepte/bls-search` live (401 bei unauthentifiziertem Zugriff, wie erwartet); `/rezept/neu` vom Nutzer im Browser als korrekt ladend bestätigt (kurzzeitige 404-Anzeige beim automatisierten Check war erneut eine sandbox-seitige Netzwerk-Inkonsistenz, kein echtes Deployment-Problem — gleiches Muster wie beim PROJ-31-Deploy)
+
+### Deployment — Refinement 2026-08-05 (Zutaten-Zeilen-Layout & Nährwert-Hervorhebung)
+
+- **Deployed:** 2026-08-05
+- **Production URL:** https://app.mehralsabnehmen.de/rezept/neu (betrifft das geteilte Rezept-Formular, damit auch `/rezept/[id]/bearbeiten` sowie den Admin-Editor unter `/admin/rezepte/*`)
+- **Commit:** `87f0ebc`
+- **Git Tag:** `v1.30.0-PROJ-32-refinement`
+- **Pre-Deployment-Checks:** `npm run build` ✓, `npm run lint` ✓ (nur die vorbestehende, unveränderte Bild-Element-Warnung), QA Approved (6/6 Acceptance Criteria, 0 Bugs), keine neuen Env-Variablen, keine Secrets im Diff, keine neue Migration nötig (rein clientseitige UI-Änderung)
+- **Post-Deploy-Verifikation:** `https://app.mehralsabnehmen.de/` antwortet 200, `/rezept/neu` löst korrekt auf (`x-matched-path: /rezept/neu`). Visuelle Bestätigung des zweizeiligen Layouts + der amber Nährwert-Hervorhebung in Produktion steht noch aus — dafür ist ein echter eingeloggter Browser-Zugriff nötig, den die Sandbox nicht zuverlässig automatisieren kann (gleiche Einschränkung wie beim ursprünglichen PROJ-32-Deploy dokumentiert); der Nutzer wurde gebeten, dies selbst zu bestätigen.
