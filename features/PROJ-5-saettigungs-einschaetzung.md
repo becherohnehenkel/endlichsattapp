@@ -240,7 +240,13 @@ Gemeinsamer Frontend-Durchlauf mit PROJ-4/PROJ-16/PROJ-8 — geteilte Infrastruk
 **Produktionsbereit: JA** — keine Critical/High Bugs
 
 ## Deployment
-_To be added by /deploy_
+
+### Refinement "Complete"-Umstrukturierung (Drei-Säulen-Modell)
+**Deployed:** 2026-08-11
+**Production URL:** https://app.mehralsabnehmen.de/
+**Git Tag:** v2.0.0-complete-umstrukturierung (gemeinsamer Release mit PROJ-4/16/8/33/34 + Rebranding)
+**Neue Env-Variablen:** keine
+**DB-Migrationen:** keine (additiv über bestehende JSONB-Spalten)
 
 ---
 

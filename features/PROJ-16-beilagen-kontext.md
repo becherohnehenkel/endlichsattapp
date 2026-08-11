@@ -350,6 +350,13 @@ Keine kritischen oder hohen Bugs gefunden. PROJ-16 ist production-ready.
 - Beilagen-Ergebnis-Komponente: Pairing-Vorschläge, upgrade-Tipp, Art of Eating
 - 4 Commits: `0a5cd22`, `403dd74`, `ce0f6d1`, `fe375cc`
 
+### Refinement "Complete"-Umstrukturierung (Komponente & Snack)
+**Deployed:** 2026-08-11
+**Production URL:** https://app.mehralsabnehmen.de/
+**Git Tag:** v2.0.0-complete-umstrukturierung (gemeinsamer Release mit PROJ-4/5/8/33/34 + Rebranding)
+**Neue Env-Variablen:** keine
+**DB-Migrationen:** additive CHECK-Constraint-Erweiterung auf `meal_analyses.analysis_typ` (bereits vor QA angewendet)
+
 ---
 
 ## QA Test Results (Refinement 2026-08-11 — "Complete"-Umstrukturierung: Komponente & Snack)

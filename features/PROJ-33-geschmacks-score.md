@@ -275,4 +275,14 @@ Beim Live-Test des Komponente-Pfads enthielt der von Claude generierte `kombinat
 - **Recommendation:** Deploybereit als Teil des gemeinsamen "Complete"-Rollouts (wartet laut Absprache auf Rename/Headline/Geschmack/Art of Eating zusammen). Rate-Limiting auf den Retry-Endpunkten vor breiterem Nutzerwachstum nachziehen.
 
 ## Deployment
-_To be added by /deploy_
+
+**Deployed:** 2026-08-11
+**Production URL:** https://app.mehralsabnehmen.de/
+**Git Tag:** v2.0.0-complete-umstrukturierung (gemeinsamer Release mit PROJ-4/5/16/8/34 + Rebranding)
+**Neue Env-Variablen:** keine (nutzt den bestehenden `ANTHROPIC_API_KEY`)
+**DB-Migrationen:** `geschmack_score`-Spalte auf `meal_analyses` + `recipes`, neue UPDATE-RLS-Policy auf `meal_analyses` — beide bereits vor dem Deploy live angewendet
+
+### Post-Deployment Verification
+- [x] Production-URL lädt fehlerfrei (`/`, `/saettigungsmatrix`)
+- [x] `manifest.json` liefert die neuen Werte
+- [x] Keine Konsolen-/Seitenfehler beim Homepage-Aufruf (ein einzelner, nicht reproduzierbarer 404 bei einem Ressourcen-Load — beim Nachtest sauber, als transient eingeordnet)

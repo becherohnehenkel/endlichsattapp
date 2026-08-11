@@ -601,6 +601,13 @@ Auf Wunsch des Product Owners direkt im Anschluss an die QA behoben, Schritt fü
 **Git Tag:** v1.4.0-PROJ-4
 **Neue Env-Variable:** `USDA_API_KEY` in Vercel Dashboard hinterlegt
 
+### Refinement "Complete"-Umstrukturierung (Schritt-0-Klassifikation)
+**Deployed:** 2026-08-11
+**Production URL:** https://app.mehralsabnehmen.de/
+**Git Tag:** v2.0.0-complete-umstrukturierung (gemeinsamer Release mit PROJ-5/16/8/33/34 + Rebranding)
+**Neue Env-Variablen:** keine
+**DB-Migrationen:** additive CHECK-Constraint-Erweiterung auf `meal_analyses.analysis_typ` (bereits vor QA angewendet)
+
 ---
 
 ### Refinement-Deployment (2026-08-03): KI-Schätzung für Zutaten ohne BLS/OFF-Treffer

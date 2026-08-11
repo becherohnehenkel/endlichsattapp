@@ -351,6 +351,13 @@ Gemeinsamer Frontend-Durchlauf mit PROJ-4/PROJ-5/PROJ-16 — geteilte Infrastruk
 **New env var required on Vercel:**
 - `ADMIN_EMAIL` — server-only, no NEXT_PUBLIC_ prefix. Must match the admin's login email to grant access to `/admin/rezepte`.
 
+### Refinement "Complete"-Umstrukturierung (Drei-Säulen-Modell)
+**Deployed:** 2026-08-11
+**Production URL:** https://app.mehralsabnehmen.de/
+**Git Tag:** v2.0.0-complete-umstrukturierung (gemeinsamer Release mit PROJ-4/5/16/33/34 + Rebranding)
+**Neue Env-Variablen:** keine
+**DB-Migrationen:** keine (Bestandsrezepte per einmaligem Backfill-Script migriert, nicht per DB-Migration)
+
 ## Post-Deployment: Matching-Verfeinerung (Datenkorrekturen)
 
 **Datum:** 2026-07-20

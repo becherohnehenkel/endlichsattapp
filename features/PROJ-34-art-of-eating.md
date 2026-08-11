@@ -193,4 +193,13 @@ Der vorbestehende, kosmetische React-Hydration-Warnhinweis in `rating-ring.tsx` 
 - **Recommendation:** Deploybereit als Teil des gemeinsamen "Complete"-Rollouts (wartet laut Absprache auf Rename/Headline zusammen mit den übrigen drei Sektionen)
 
 ## Deployment
-_To be added by /deploy_
+
+**Deployed:** 2026-08-11
+**Production URL:** https://app.mehralsabnehmen.de/
+**Git Tag:** v2.0.0-complete-umstrukturierung (gemeinsamer Release mit PROJ-4/5/16/8/33 + Rebranding)
+**Neue Env-Variablen:** keine (rein clientseitig, kein Backend)
+**DB-Migrationen:** keine
+
+### Post-Deployment Verification
+- [x] `/wie-esse-ich-richtig` lädt fehlerfrei, enthält weiterhin alle sechs Prinzipien (Guide unverändert)
+- [x] Production-URL insgesamt fehlerfrei erreichbar
