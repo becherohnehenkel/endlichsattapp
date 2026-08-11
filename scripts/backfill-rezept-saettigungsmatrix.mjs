@@ -72,18 +72,23 @@ function toGrams(amount, unit, ingredientName) {
 }
 
 // ─── calculateRezeptMatrix (mirrors src/lib/saettigungs-matrix-rezept.ts) ──────
+// Bugfix 2026-08-11 (Re-Backfill): "spitzkohl" fehlte, dadurch 300g/Portion als 0g Gemüse
+// gewertet (vom Nutzer live in Produktion gemeldet) — Liste synchron zur TS-Quelle ergänzt.
 const VOLUMEN_KEYWORDS = [
   'salat', 'blattsalat', 'feldsalat', 'rucola', 'spinat', 'kopfsalat', 'eisberg', 'romanasalat',
-  'gurke', 'zucchini', 'brokkoli', 'blumenkohl', 'weißkohl', 'rotkohl', 'grünkohl', 'lauch', 'porree',
-  'champignon', 'pilze', 'tomate', 'paprika', 'karotte', 'möhre', 'fenchel', 'staudensellerie', 'bleichsellerie',
+  'gurke', 'zucchini', 'brokkoli', 'blumenkohl',
+  'weißkohl', 'rotkohl', 'grünkohl', 'spitzkohl', 'wirsing', 'kohlrabi', 'chinakohl', 'rosenkohl',
+  'lauch', 'porree',
+  'champignon', 'pilze', 'tomate', 'paprika', 'karotte', 'möhre', 'fenchel', 'sellerie',
   'heidelbeere', 'blaubeere', 'erdbeere', 'himbeere', 'brombeere', 'beere', 'wassermelone',
-  'radieschen', 'sauerkraut',
+  'radieschen', 'sauerkraut', 'kürbis', 'aubergine', 'spargel', 'mangold', 'rettich',
 ]
 const VOLUMEN_EXCLUSION_TERMS = [
   'pulver', 'extrakt', 'mark',
   'öl', 'essig', 'gewürz', 'gewürzmischung', 'mehl', 'stärke', 'sirup',
   'getrocknet', 'gerebelt', 'gemahlen', 'rosenscharf', 'edelsüß', 'geräuchert',
   'knoblauch', 'zwiebel', 'schalotte', 'ingwer', 'chili',
+  'kürbiskern',
 ]
 function isVolumenZutat(name) {
   if (VOLUMEN_EXCLUSION_TERMS.some(ex => name.includes(ex))) return false

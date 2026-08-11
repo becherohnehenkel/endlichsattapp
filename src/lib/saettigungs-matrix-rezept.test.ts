@@ -96,6 +96,30 @@ describe('calculateRezeptMatrix — Volumen (Energiedichte + Gemüsemenge)', () 
     expect(m.saeulen.volumen.rating).toBe('ungenuegend')
   })
 
+  // Bugfix (2026-08-11): Nutzer meldete live in Produktion, dass ein Rezept mit 300g
+  // Spitzkohl/Portion als "0g Gemüse" bewertet wurde — "spitzkohl" fehlte im Keyword-Set.
+  it('counts Spitzkohl as Gemüse (regression test for the reported production bug)', () => {
+    const ingredients = [{ name: 'Spitzkohl roh', amount: 300, unit: 'g' }]
+    const m = calculateRezeptMatrix(ingredients, { protein_g: 0, ballaststoffe_g: 0, kcal: 90 }, 1)
+    expect(m.saeulen.volumen.erklaerung).toContain('300g Gemüse')
+    expect(m.saeulen.volumen.rating).toBe('gut')
+  })
+
+  it('recognizes other commonly missing vegetables (Kohlrabi, Kürbis)', () => {
+    const ingredients = [
+      { name: 'Kohlrabi roh', amount: 150, unit: 'g' },
+      { name: 'Hokkaidokürbis roh', amount: 150, unit: 'g' },
+    ]
+    const m = calculateRezeptMatrix(ingredients, { protein_g: 0, ballaststoffe_g: 0, kcal: 90 }, 1)
+    expect(m.saeulen.volumen.rating).toBe('gut')
+  })
+
+  it('excludes Kürbiskerne (seeds) from vegetable grams despite containing "kürbis"', () => {
+    const ingredients = [{ name: 'Kürbiskerne', amount: 30, unit: 'g' }]
+    const m = calculateRezeptMatrix(ingredients, { protein_g: 0, ballaststoffe_g: 0, kcal: 160 }, 1)
+    expect(m.saeulen.volumen.erklaerung).toContain('0g Gemüse')
+  })
+
   it('divides ingredient grams and kcal by servings', () => {
     // 400g Gemüse gesamt, 4 Portionen → 100g/Portion = "mittel"-Grenze
     const ingredients = [{ name: 'Zucchini', amount: 400, unit: 'g' }]

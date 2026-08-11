@@ -39,12 +39,18 @@ function worseOf(a: SaeulenRating, b: SaeulenRating): SaeulenRating {
 // ── Volumen: Gemüse/Salat/Pilze mit echtem Wasseranteil ────────────────────────
 // Kartoffeln, Mais und Hülsenfrüchte zählen bewusst NICHT (punkten bereits bei
 // Protein/Ballaststoffe) — siehe docs/saettigungsmatrix.md Abschnitt 3c.
+// Bugfix (2026-08-11, gefunden vom Nutzer live in Produktion): "Spitzkohl" fehlte in der
+// Liste — 300g/Portion wurden dadurch als 0g Gemüse gewertet. Bei der Gelegenheit um weitere
+// gängige Kohlsorten und andere häufig fehlende Gemüsearten ergänzt, statt nur den einen
+// gemeldeten Fall zu flicken.
 const VOLUMEN_KEYWORDS = [
   'salat', 'blattsalat', 'feldsalat', 'rucola', 'spinat', 'kopfsalat', 'eisberg', 'romanasalat',
-  'gurke', 'zucchini', 'brokkoli', 'blumenkohl', 'weißkohl', 'rotkohl', 'grünkohl', 'lauch', 'porree',
-  'champignon', 'pilze', 'tomate', 'paprika', 'karotte', 'möhre', 'fenchel', 'staudensellerie', 'bleichsellerie',
+  'gurke', 'zucchini', 'brokkoli', 'blumenkohl',
+  'weißkohl', 'rotkohl', 'grünkohl', 'spitzkohl', 'wirsing', 'kohlrabi', 'chinakohl', 'rosenkohl',
+  'lauch', 'porree',
+  'champignon', 'pilze', 'tomate', 'paprika', 'karotte', 'möhre', 'fenchel', 'sellerie',
   'heidelbeere', 'blaubeere', 'erdbeere', 'himbeere', 'brombeere', 'beere', 'wassermelone',
-  'radieschen', 'sauerkraut',
+  'radieschen', 'sauerkraut', 'kürbis', 'aubergine', 'spargel', 'mangold', 'rettich',
 ]
 
 const VOLUMEN_EXCLUSION_TERMS = [
@@ -53,6 +59,10 @@ const VOLUMEN_EXCLUSION_TERMS = [
   'getrocknet', 'gerebelt', 'gemahlen', 'rosenscharf', 'edelsüß', 'geräuchert',
   // Kleine Aromaten — auch in realistischen Mengen kein Magendehnungs-Effekt
   'knoblauch', 'zwiebel', 'schalotte', 'ingwer', 'chili',
+  // Samen/Kerne statt der eigentlichen Gemüsefrucht — kalorien-/nährstoffdicht, kein
+  // Magendehnungs-Volumen (analog zur Kleine-Aromaten-Logik oben). Kollidiert sonst als
+  // Teilstring mit dem neuen "kürbis"-Keyword (z.B. "Kürbiskerne").
+  'kürbiskern',
 ]
 
 function isVolumenZutat(name: string): boolean {
