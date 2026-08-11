@@ -56,8 +56,7 @@ function makeStandardMeal(createdAt: string, override: Partial<{
         satiety_scores_before: {
           overall: override.overall ?? 'maessig_saettigend',
           pillars: override.pillars ?? {
-            geschmack: 'gut', biss: 'schwach', ballaststoffe: 'mittel',
-            proteine: 'gut', volumen: 'mittel', art_of_eating: 'nicht_bewertet',
+            ballaststoffe: 'mittel', proteine: 'gut', volumen: 'mittel',
           },
         },
         macros_before: {
@@ -147,29 +146,41 @@ describe('bewertungMajority', () => {
   })
 })
 
+// Refinement 2026-08-11 ("Complete"-Umstrukturierung): 6 Bausteine → 3 Säulen
+// (proteine/ballaststoffe/volumen), neue Priorität Protein zuerst statt Biss.
 describe('getSchwächsterBaustein', () => {
-  it('returns biss as first priority when schwach', () => {
-    const b = { geschmack: 'gut', biss: 'schwach', ballaststoffe: 'gut', proteine: 'gut', volumen: 'gut', art_of_eating: 'gut' } as Record<string, 'gut' | 'mittel' | 'schwach' | 'nicht_bewertet'>
-    expect(getSchwächsterBaustein(b)).toBe('biss')
+  it('returns proteine as first priority when ungenuegend', () => {
+    const b = { proteine: 'ungenuegend', ballaststoffe: 'gut', volumen: 'gut' } as Record<string, 'gut' | 'mittel' | 'gering' | 'ungenuegend' | 'nicht_bewertet'>
+    expect(getSchwächsterBaustein(b)).toBe('proteine')
   })
 
-  it('returns ballaststoffe before volumen when both schwach', () => {
-    const b = { geschmack: 'gut', biss: 'gut', ballaststoffe: 'schwach', proteine: 'gut', volumen: 'schwach', art_of_eating: 'gut' } as Record<string, 'gut' | 'mittel' | 'schwach' | 'nicht_bewertet'>
+  it('returns ballaststoffe before volumen when both ungenuegend', () => {
+    const b = { proteine: 'gut', ballaststoffe: 'ungenuegend', volumen: 'ungenuegend' } as Record<string, 'gut' | 'mittel' | 'gering' | 'ungenuegend' | 'nicht_bewertet'>
     expect(getSchwächsterBaustein(b)).toBe('ballaststoffe')
   })
 
-  it('falls back to mittel if no schwach', () => {
-    const b = { geschmack: 'gut', biss: 'mittel', ballaststoffe: 'gut', proteine: 'gut', volumen: 'gut', art_of_eating: 'gut' } as Record<string, 'gut' | 'mittel' | 'schwach' | 'nicht_bewertet'>
-    expect(getSchwächsterBaustein(b)).toBe('biss')
+  it('prioritizes ungenuegend over gering', () => {
+    const b = { proteine: 'gering', ballaststoffe: 'ungenuegend', volumen: 'gut' } as Record<string, 'gut' | 'mittel' | 'gering' | 'ungenuegend' | 'nicht_bewertet'>
+    expect(getSchwächsterBaustein(b)).toBe('ballaststoffe')
   })
 
-  it('excludes art_of_eating from blind spot detection', () => {
-    const b = { geschmack: 'gut', biss: 'gut', ballaststoffe: 'gut', proteine: 'gut', volumen: 'gut', art_of_eating: 'schwach' } as Record<string, 'gut' | 'mittel' | 'schwach' | 'nicht_bewertet'>
+  it('falls back to gering if nothing ungenuegend', () => {
+    const b = { proteine: 'gering', ballaststoffe: 'gut', volumen: 'gut' } as Record<string, 'gut' | 'mittel' | 'gering' | 'ungenuegend' | 'nicht_bewertet'>
+    expect(getSchwächsterBaustein(b)).toBe('proteine')
+  })
+
+  it('falls back to mittel if nothing worse', () => {
+    const b = { proteine: 'mittel', ballaststoffe: 'gut', volumen: 'gut' } as Record<string, 'gut' | 'mittel' | 'gering' | 'ungenuegend' | 'nicht_bewertet'>
+    expect(getSchwächsterBaustein(b)).toBe('proteine')
+  })
+
+  it('legacy-format keys (geschmack/biss/art_of_eating) are ignored, even if schwach', () => {
+    const b = { proteine: 'gut', ballaststoffe: 'gut', volumen: 'gut', biss: 'schwach', geschmack: 'schwach', art_of_eating: 'schwach' } as unknown as Record<string, 'gut' | 'mittel' | 'gering' | 'ungenuegend' | 'nicht_bewertet'>
     expect(getSchwächsterBaustein(b)).toBeNull()
   })
 
   it('returns null when everything is gut', () => {
-    const b = { geschmack: 'gut', biss: 'gut', ballaststoffe: 'gut', proteine: 'gut', volumen: 'gut', art_of_eating: 'gut' } as Record<string, 'gut' | 'mittel' | 'schwach' | 'nicht_bewertet'>
+    const b = { proteine: 'gut', ballaststoffe: 'gut', volumen: 'gut' } as Record<string, 'gut' | 'mittel' | 'gering' | 'ungenuegend' | 'nicht_bewertet'>
     expect(getSchwächsterBaustein(b)).toBeNull()
   })
 })
@@ -263,9 +274,9 @@ describe('GET /api/recap/wochen', () => {
     const now = getCurrentWeekSunday()
     mockMealsOrder.mockResolvedValue({
       data: [
-        makeStandardMeal(now, { overall: 'sehr_saettigend', pillars: { geschmack: 'gut', biss: 'gut', ballaststoffe: 'gut', proteine: 'gut', volumen: 'gut', art_of_eating: 'nicht_bewertet' } }),
-        makeStandardMeal(now, { overall: 'maessig_saettigend', pillars: { geschmack: 'gut', biss: 'schwach', ballaststoffe: 'mittel', proteine: 'gut', volumen: 'mittel', art_of_eating: 'nicht_bewertet' } }),
-        makeStandardMeal(now, { overall: 'maessig_saettigend', pillars: { geschmack: 'gut', biss: 'schwach', ballaststoffe: 'mittel', proteine: 'gut', volumen: 'mittel', art_of_eating: 'nicht_bewertet' } }),
+        makeStandardMeal(now, { overall: 'sehr_saettigend', pillars: { ballaststoffe: 'gut', proteine: 'gut', volumen: 'gut' } }),
+        makeStandardMeal(now, { overall: 'maessig_saettigend', pillars: { ballaststoffe: 'ungenuegend', proteine: 'gut', volumen: 'mittel' } }),
+        makeStandardMeal(now, { overall: 'maessig_saettigend', pillars: { ballaststoffe: 'ungenuegend', proteine: 'gut', volumen: 'mittel' } }),
       ],
       error: null,
     })
@@ -278,7 +289,7 @@ describe('GET /api/recap/wochen', () => {
     expect(data.wochen[0].bausteine).not.toBeNull()
     expect(data.wochen[0].makrosAvg).not.toBeNull()
     expect(data.wochen[0].gesamtbewertungAvg).toBe('maessig_saettigend')
-    expect(data.wochen[0].schwächsterBaustein).toBe('biss')
+    expect(data.wochen[0].schwächsterBaustein).toBe('ballaststoffe')
   })
 
   it('does not include pillar/macro data when < 2 standard analyses', async () => {

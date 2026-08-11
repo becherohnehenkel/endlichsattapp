@@ -100,7 +100,7 @@ export default async function StartPage() {
   return (
     <div className="min-h-screen bg-background">
       <header className="md:hidden sticky top-0 z-10 border-b border-border bg-card/80 backdrop-blur-sm px-4 py-3 flex items-center justify-between">
-        <span className="font-semibold text-foreground tracking-tight">endlichsatt</span>
+        <span className="font-semibold text-foreground tracking-tight">Mehralsabnehmen</span>
         <Link href="/konto" className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-md hover:bg-muted">
           <UserRound className="h-4 w-4" />
         </Link>
@@ -112,7 +112,7 @@ export default async function StartPage() {
         <section className="pt-8 space-y-6">
           <div className="space-y-1">
             <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-              Wie sättigend ist<br />deine Mahlzeit?
+              Wie komplett ist<br />deine Mahlzeit?
             </h1>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Foto oder Beschreibung — wir zeigen dir warum du hungrig wirst und wie du das änderst.

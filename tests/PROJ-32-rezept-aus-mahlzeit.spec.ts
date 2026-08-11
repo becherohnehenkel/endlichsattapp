@@ -125,7 +125,7 @@ test.describe('"Mit mehr Sättigung"', () => {
     await page.click('button[type="submit"]')
     await page.waitForURL(url => url.toString().includes('/rezept/') && !url.toString().includes('/neu'), { timeout: 8000 })
     const recipeId = page.url().split('/rezept/')[1]
-    await expect(page.getByText('Sättigungs-Bausteine')).toBeVisible()
+    await expect(page.getByText('Sättigungs-Säulen')).toBeVisible()
 
     await deleteRecipeViaApi(page, recipeId)
   })

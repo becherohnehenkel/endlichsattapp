@@ -14,7 +14,9 @@ import RezeptKontextHinweis from '@/components/rezept-kontext-hinweis'
 import { formatRezeptText } from '@/lib/format-rezept-text'
 import KIHinweis from '@/components/ki-hinweis'
 import FeedbackDialog from '@/components/feedback-dialog'
+import GeschmackErgebnis from '@/components/geschmack-ergebnis'
 import type { RezeptSaettigungsMatrix as MatrixType } from '@/lib/saettigungs-matrix-rezept'
+import type { GeschmackState } from '@/components/saettigungs-ergebnis'
 
 // React cache() dedupt den Query zwischen generateMetadata() und der Page-Komponente,
 // damit die DB nur einmal pro Request angefragt wird.
@@ -32,6 +34,7 @@ const getRecipe = cache(async (id: string) => {
       instructions,
       macros_per_serving,
       saettigungs_matrix,
+      geschmack_score,
       recipe_typ,
       is_guest_visible,
       owner_id,
@@ -140,6 +143,9 @@ export default async function RezeptDetailPage({
   const macros = recipe.macros_per_serving as MacrosPerServing | null
   const matrix = recipe.saettigungs_matrix as MatrixType | null
   const recipeTyp = recipe.recipe_typ as 'beilage' | 'grundlage' | null
+  // PROJ-33: `null` heißt "noch nicht berechnet" (z.B. Rezept vor Einführung des Features nie
+  // bearbeitet) — Sektion blendet dann korrekt aus.
+  const recipeGeschmack = (recipe.geschmack_score as GeschmackState | null) ?? undefined
 
   type Ingredient = {
     id: string
@@ -261,7 +267,7 @@ export default async function RezeptDetailPage({
           </p>
         </div>
 
-        {/* Beilagen-/Grundlagen-Hinweis ODER Sättigungs-Bausteine */}
+        {/* Beilagen-/Grundlagen-Hinweis ODER Sättigungs-Säulen */}
         {recipeTyp ? (
           <>
             <Separator />
@@ -272,7 +278,7 @@ export default async function RezeptDetailPage({
             <Separator />
             <div className="space-y-3">
               <div className="space-y-1">
-                <p className="text-sm font-semibold text-foreground">Sättigungs-Bausteine</p>
+                <p className="text-sm font-semibold text-foreground">Sättigungs-Säulen</p>
                 <KIHinweis variante="automatisch" />
                 <KIHinweis variante="rezept-echtheit" />
                 <FeedbackDialog
@@ -291,6 +297,21 @@ export default async function RezeptDetailPage({
             </div>
           </>
         ) : null}
+
+        {/* Geschmack (PROJ-33) — eigenständig, gleichwertig prominent, unabhängig von recipe_typ
+            (auch ein Beilage-/Grundlage-Rezept hat einen Geschmack). `recipeGeschmack` ist bis
+            /backend den Spalten-/Query-Teil ergänzt (siehe PROJ-33 Tech Design) immer undefined —
+            die Sektion bleibt bis dahin sicher ausgeblendet, kein Fehlerzustand. */}
+        {recipeGeschmack && (
+          <>
+            <Separator />
+            <GeschmackErgebnis
+              geschmack={recipeGeschmack}
+              retryEndpoint={`/api/rezepte/${recipe.id}/geschmack-retry`}
+              kiHinweisVariante="automatisch"
+            />
+          </>
+        )}
 
         {/* Nährwerte pro Portion */}
         {macros && (

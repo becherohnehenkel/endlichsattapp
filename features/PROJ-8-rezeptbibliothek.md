@@ -1,8 +1,12 @@
 # PROJ-8: Rezeptbibliothek
 
-## Status: Deployed
+## Status: Deployed (Refinement: Drei-Säulen-Modell "Complete" — Approved, bereit für /deploy)
 **Created:** 2026-06-12
-**Last Updated:** 2026-06-12
+**Last Updated:** 2026-08-11
+
+**Korrektur (2026-08-11):** Der Out-of-Scope-Punkt "Sättigungsmatrix-Score pro Rezept — Post-MVP" war veraltet — das Feature wurde tatsächlich bereits am 2026-06-13 gebaut (`src/lib/saettigungs-matrix-rezept.ts`, `src/components/rezept-saettigungs-matrix.tsx`, Commit `b9e2bbd`), nie aber im Spec nachgezogen. Unten korrigiert.
+
+**Refinement (2026-08-11, "Complete"-Umstrukturierung):** Die Rezept-Sättigungsmatrix nutzte bisher dieselben 6 Bausteine wie die Mahlzeit-Analyse — wird jetzt aus Konsistenzgründen auf dasselbe Drei-Säulen-Modell (Protein/Ballaststoffe/Volumen) umgestellt wie PROJ-5. Nächster Schritt: `/architecture`, dann `/backend`.
 
 ## Dependencies
 - Requires: PROJ-1 (Supabase Infrastructure) — Rezepte und Bilder in DB + Storage
@@ -28,7 +32,7 @@
 - Rezepte bewerten oder kommentieren — Post-MVP
 - Kalorienberechnung der Rezepte über BLS — Post-MVP
 - Schritt-für-Schritt-Modus (einzelne Schritte durchklicken) — Post-MVP
-- Sättigungsmatrix-Score pro Rezept — Post-MVP (interessant, aber zu viel Pflegeaufwand)
+- ~~Sättigungsmatrix-Score pro Rezept — Post-MVP (interessant, aber zu viel Pflegeaufwand)~~ → **Korrektur 2026-08-11: tatsächlich bereits deployed** seit 2026-06-13, siehe Status-Hinweis oben. Deterministisch berechnet (Keyword-Matching auf Zutaten), kein KI-Aufruf.
 - Küchen-Tag-Matching in v1 — nur Zutaten-Matching; Küchen-Tags werden angelegt aber noch nicht für Matching genutzt
 
 ## Acceptance Criteria
@@ -41,6 +45,12 @@
 ### Rezept-Detailseite
 - [ ] Angenommen der Nutzer öffnet ein Rezept, dann sieht er: Titel, Bild (wenn vorhanden), Gesamtzeit, Kochzeit, Portionen, Zutatenliste mit Mengen und Einheiten, Zubereitungstext.
 - [ ] Angenommen der Nutzer ist auf der Rezept-Detailseite, wenn er zurücknavigiert, dann landet er wieder auf der Analyse-Ergebnisseite.
+
+### Rezept-Sättigungsmatrix (nachträglich dokumentiert, Korrektur 2026-08-11)
+- [ ] Angenommen der Nutzer öffnet ein Rezept mit `recipe_typ: null` (vollständiges Gericht), dann sieht er eine deterministisch aus den Zutaten berechnete Sättigungs-Bewertung — kein KI-Aufruf
+- [ ] Angenommen `recipe_typ` ist `'beilage'` oder `'grundlage'`, dann erscheint stattdessen der Kontext-Hinweis aus PROJ-16 Teil 2 (keine Sättigungsmatrix)
+- [ ] **Refinement 2026-08-11:** Die Bewertung nutzt jetzt dieselben 3 Säulen (Protein, Ballaststoffe, Volumen) und vier Stufen (ungenügend/gering/mittel/gut) wie PROJ-5, statt der bisherigen 6 Bausteine mit drei Stufen — für Konsistenz zwischen Rezept-Ansicht und Mahlzeit-Analyse
+- [ ] **Refinement 2026-08-11:** Dieselbe Gesamtbewertungs-Logik wie PROJ-5 (3× gut = sehr sättigend, 2× gut = mäßig, 0–1× gut = wenig)
 
 ### Admin — Rezept anlegen
 - [ ] Angenommen der eingeloggte Nutzer ist Admin, wenn er `/admin/rezepte` aufruft, dann sieht er die Rezeptliste mit "Neues Rezept"-Button.
@@ -98,6 +108,13 @@ Admin-Status wird über die E-Mail-Adresse geprüft:
 | Max. 2 Rezeptvorschläge | Fokus statt Überwältigung; passt in die bestehende Ergebnis-Seite | 2026-06-12 |
 | Mindestens 2 übereinstimmende Tags für Vorschlag | Verhindert irrelevante Matches (z.B. Salz als gemeinsame Zutat) | 2026-06-12 |
 | Eigenständige Rezept-Bibliothek deferred | Absprung aus Analyse reicht für v1; Bibliothek ist eigenes Feature | 2026-06-12 |
+
+#### Refinement (2026-08-11): Rezept-Sättigungsmatrix auf Drei-Säulen-Modell umgestellt
+
+| Decision | Rationale | Date |
+|----------|-----------|------|
+| Rezept-Sättigungsmatrix folgt derselben 3-Säulen-Umstellung wie PROJ-5 | Konsistenz — Nutzer sollen auf Rezept- und Mahlzeit-Seiten dieselbe Bewertungslogik sehen, nicht zwei parallele Systeme | 2026-08-11 |
+| Deterministische Keyword-Berechnung (kein KI-Aufruf) bleibt unverändert als Ansatz | Nur die bewerteten Dimensionen ändern sich (3 statt 6 Säulen) — der Berechnungsmechanismus selbst hat sich bewährt und bleibt gleich | 2026-08-11 |
 
 ### Technical Decisions
 | Decision | Rationale | Date |
@@ -195,6 +212,33 @@ Die Route `GET /api/rezepte/vorschlaege?analysisId=X`:
 ### Keine neuen Pakete nötig
 Alles bereits vorhanden: `react-hook-form` + `zod` (Formulare), shadcn/ui (UI), Supabase Storage (Bilder — Muster aus PROJ-3 wiederverwendbar).
 
+---
+
+### Refinement (2026-08-11): Rezept-Sättigungsmatrix auf Drei-Säulen — gemeinsamer Architecture-Pass mit PROJ-4/PROJ-5/PROJ-16
+
+> Gemeinsamer Architecture-Pass für vier zusammenhängende Specs — Details zu Klassifikation (PROJ-4), Drei-Säulen-Mahlzeit-Anzeige (PROJ-5) und Komponente/Snack (PROJ-16) stehen in den jeweiligen Specs. Hier der PROJ-8-spezifische Teil.
+
+#### Komponenten-Struktur (Änderungen)
+
+```
+RezeptSaettigungsMatrix (bestehend, src/components/rezept-saettigungs-matrix.tsx)
+└── Baustein-Grid: 3 Säulen (Protein, Ballaststoffe, Volumen) statt 6, vier Farbstufen
+    statt drei — sonst unverändert (weiterhin bei jedem Seitenaufruf live berechnet)
+```
+
+#### Datenmodell (einfache Sprache)
+
+Die Rezept-Sättigungsmatrix wird bei jedem Seitenaufruf frisch aus den aktuellen Zutaten berechnet und nirgends gespeichert. Anders als bei Mahlzeit-Analysen (PROJ-4/5/16) gibt es hier also **keine historischen Datensätze mit der alten Struktur** — sobald die neue Berechnungslogik deployed ist, zeigt jeder Rezept-Seitenaufruf sofort die neue Drei-Säulen-Bewertung. Kein neues Datenbankfeld, keine Migration.
+
+#### Tech-Entscheidungen (für PM, mit Begründung)
+
+- **Deutlich einfacher als der Mahlzeit-Teil:** weil nichts gespeichert wird, entfällt die ganze "alte vs. neue Struktur erkennen"-Logik, die bei PROJ-4/5/16 nötig ist — reines Austauschen der Bewertungsfunktion.
+- **Wird trotzdem gemeinsam mit PROJ-4/PROJ-5/PROJ-16 umgesetzt und deployed**, damit Rezept-Seiten und Mahlzeit-Analyse ab demselben Zeitpunkt konsistent aussehen — kein technischer Zwang, aber ein Konsistenz-Wunsch des Product Owners (siehe Decision Log).
+
+#### Abhängigkeiten
+
+Keine neuen npm-Pakete. Keine neue Umgebungsvariable. Keine Schema-Migration.
+
 ## Implementation Notes (Frontend)
 
 **Neue Komponenten:**
@@ -216,6 +260,31 @@ Alles bereits vorhanden: `react-hook-form` + `zod` (Formulare), shadcn/ui (UI), 
 - `src/app/mahlzeit/[id]/mahlzeit-detail.tsx` — `analysisId` Prop + Weitergabe
 
 **Admin-Auth Pattern:** Server-seitiger Check `user.email === process.env.ADMIN_EMAIL` in jeder Admin-Seite und API-Route. Redirect zu `/admin/403` bei Mismatch.
+
+## Implementation Notes (Backend) — Refinement 2026-08-11: Drei-Säulen-Modell + Backfill
+
+Gemeinsamer Backend-Durchlauf mit PROJ-4/PROJ-5/PROJ-16. Für PROJ-8 eigenständig (eigenes deterministisches System, kein KI-Aufruf):
+
+**Korrektur gegenüber Architektur:** Die Rezept-Sättigungsmatrix wird entgegen der ursprünglichen Architektur-Annahme NICHT live bei jedem Seitenaufruf berechnet, sondern beim Anlegen/Bearbeiten eines Rezepts berechnet und in `recipes.saettigungs_matrix` gespeichert (`src/app/api/{admin/,}rezepte/route.ts` bzw. `[id]/route.ts`). Bestehende Rezepte hatten also doch die alte Struktur gespeichert.
+
+**Geänderte Dateien:**
+- `src/lib/saettigungs-matrix-rezept.ts` — komplett neu: `calculateRezeptMatrix()` liefert jetzt `{saeulen: {proteine, ballaststoffe, volumen}, gesamtbewertung}` statt der alten 6-Schlüssel-`bausteine`-Form. Neue Funktions-Signatur braucht zusätzlich `servings` (für Energiedichte/Gemüsemenge pro Portion) sowie `amount`/`unit` pro Zutat (für `toGrams()`-Umrechnung) — vorher nur `name`.
+- `src/app/api/{admin/,}rezepte/route.ts` und `[id]/route.ts` (4 Dateien) — `calculateRezeptMatrix()`-Aufruf um `recipeData.servings` ergänzt.
+- **Backfill statt Alt-Format-Erkennung:** Da nur 15 Rezepte existierten und die Berechnung rein deterministisch aus Zutaten+Portionen ist (im Gegensatz zu Mahlzeit-Analysen, die einen nicht wiederholbaren Foto-Analyse-Moment einfrieren), wurde ein einmaliges Backfill-Skript (`scripts/backfill-rezept-saettigungsmatrix.mjs`) geschrieben und ausgeführt — alle 15 Rezepte haben jetzt die neue `{saeulen, ...}`-Struktur. **Keine Alt-Format-Erkennung im Frontend nötig**, anders als bei PROJ-4/5/16.
+- Neues Feld `saeulen` statt `bausteine` ist eine bewusste Namensänderung (nicht nur weniger Schlüssel) — da vollständig gebackfillt, keine Rückwärtskompatibilitäts-Sorge nötig.
+
+**Verifikation:** Backfill-Lauf protokolliert (15/15 Rezepte aktualisiert, Stichprobe gegen `recipe_ingredients` geprüft — ein Fall mit "0g Gemüse" verifiziert als korrektes Ergebnis, nicht als Bug: Rezept enthält nur Kartoffel/Süßkartoffel/Rote Bete, die laut neuer Spec bewusst nicht als Gemüse zählen). 22 neue Unit-Tests in `src/lib/saettigungs-matrix-rezept.test.ts` (Schwellenwerte, Energiedichte, Gemüsemenge, Division durch Portionen, Edge Cases). `npm test` 369/369 grün, `tsc --noEmit`/`npm run lint` sauber für alle Backend-Dateien.
+
+**Noch offen (gehört zu `/frontend`):** `src/components/rezept-saettigungs-matrix.tsx` liest noch `matrix.bausteine.*` (6 Schlüssel) und muss auf `matrix.saeulen.*` (3 Schlüssel, 4 Farbstufen) umgestellt werden — aktuell einziger `tsc`/`next build`-Fehler im gesamten Projekt.
+
+## Implementation Notes (Frontend) — Refinement 2026-08-11
+
+Gemeinsamer Frontend-Durchlauf mit PROJ-4/PROJ-5/PROJ-16 — geteilte Infrastruktur in PROJ-4s Implementation Notes. Für PROJ-8 eigenständig (kein Alt-Format-Problem, da vollständig gebackfillt):
+
+- `src/components/rezept-saettigungs-matrix.tsx` — 3 Säulen statt 6 Bausteine, `matrix.saeulen.*` statt `matrix.bausteine.*`, kein Alt-Format-Zweig nötig (alle 15 Rezepte gebackfillt, siehe Backend-Notes). `art_of_eating`-Sonderfall (Link zu "Wie esse ich richtig?") entfernt, da Art of Eating keine Säule mehr ist.
+- `src/app/rezept/[id]/page.tsx` — Überschrift "Sättigungs-Bausteine" → "Sättigungs-Säulen"
+
+**Verifikation:** siehe PROJ-4 Implementation Notes (gemeinsamer Verifikationslauf). Live per Screenshot bestätigt: Rezeptseite "Gemüse Spaghetti" zeigt korrekt Proteine/Ballaststoffe/Volumen mit den gebackfillten Werten.
 
 ## QA Test Results
 
@@ -306,3 +375,33 @@ Bei einer Prüfung der bestehenden 5 Rezepte wurden zwei Datenprobleme gefunden 
 - Zeigt jetzt **maximal 1 Rezept** statt bisher bis zu 2 (`/api/rezepte/vorschlaege` cappt serverseitig auf `.slice(0, 1)`)
 - **Neuer Empty-State:** Wenn kein Rezept ≥ 2 Tag-Matches erreicht, zeigt die Komponente jetzt einen kleinen Hinweis-Block mit Link zur Rezeptbibliothek, statt wie vorher gar nichts zu rendern — jede Analyse hat dadurch immer einen Rezept-Touchpoint, unabhängig vom Match-Ergebnis
 - Betrifft nur `src/components/rezept-vorschlaege.tsx` und `src/app/api/rezepte/vorschlaege/route.ts` — Matching-Logik (≥2 Tags, `ingredient_tags`-basiert) selbst unverändert
+
+---
+
+## QA Test Results (Refinement 2026-08-11 — "Complete"-Umstrukturierung: Rezept-Sättigungsmatrix)
+
+**Tested:** 2026-08-11
+**App URL:** http://localhost:3000
+**Tester:** QA Engineer (AI)
+
+Gemeinsamer QA-Pass für PROJ-4/PROJ-5/PROJ-16/PROJ-8 — Details zu Security und der vollständigen Testsuite siehe [PROJ-16 QA-Abschnitt](PROJ-16-beilagen-kontext.md#qa-test-results-refinement-2026-08-11--complete-umstrukturierung-komponente--snack).
+
+### Acceptance Criteria Status
+
+#### Rezept-Sättigungsmatrix auf 3 Säulen umgestellt
+- [x] `calculateRezeptMatrix()` liefert `saeulen` (proteine/ballaststoffe/volumen) statt `bausteine`
+- [x] Alle 15 Bestandsrezepte per einmaligem Backfill-Script (`scripts/backfill-rezept-saettigungsmatrix.mjs`) erfolgreich auf das neue Format migriert (15/15) — kein Dual-Format-Rendering nötig, da Rezept-Matrix deterministisch aus Zutaten/Makros neu berechenbar ist (im Gegensatz zu `meal_analyses`)
+- [x] Admin- und Nutzer-Rezept-Routen (`/api/admin/rezepte`, `/api/rezepte`, jeweils `[id]`) übergeben korrekt `servings` als dritten Parameter an `calculateRezeptMatrix`
+- [x] Rezept-Detailseite zeigt "Sättigungs-Säulen" (nicht mehr "-Bausteine")
+
+### Automated Tests
+- `npm test`: 369/369 passed (inkl. 22 Tests für `calculateRezeptMatrix`)
+- `tests/PROJ-8-rezeptbibliothek.spec.ts`: 47/47 passed (Fixture auf neues Format aktualisiert; ein Flaky-Fehlschlag durch parallele Worker isoliert und als Test-Infrastruktur-Rauschen bestätigt, nicht reproduzierbar bei `--workers=1`)
+- Ein während dieser QA-Runde entdeckter Datensatz-Altlast (4 verwaiste Test-Rezepte aus vorherigen fehlgeschlagenen QA-Testläufen dieser Session, durch fehlgeschlagene Assertions vor dem Cleanup-Schritt) wurde bereinigt (DB-Löschung), kein Produktbug
+
+### Summary
+- **Acceptance Criteria:** 4/4 passed
+- **Bugs Found:** 0
+- **Security:** Pass (siehe PROJ-16)
+- **Production Ready:** JA — BUG-1 aus PROJ-16 wurde in derselben Sitzung behoben, siehe dortiges Re-Test
+- **Recommendation:** Bereit für gemeinsames Deployment mit PROJ-4/PROJ-5/PROJ-16

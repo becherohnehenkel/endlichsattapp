@@ -22,6 +22,13 @@ vi.mock('@/lib/supabase/admin', () => ({
   createAdminClient: vi.fn().mockReturnValue({ from: adminFrom }),
 }))
 
+// PROJ-33: kein echter Claude-Aufruf in Unit-Tests — Standardwert 'error' ist harmlos (Route
+// speichert ihn einfach mit, blockiert nie das Anlegen des Rezepts, siehe Route-Code).
+const mockComputeGeschmack = vi.fn().mockResolvedValue({ status: 'error' })
+vi.mock('@/lib/geschmack', () => ({
+  computeGeschmack: mockComputeGeschmack,
+}))
+
 const VALID_RECIPE = {
   title: 'Hähnchen mit Reis',
   servings: 2,
@@ -107,6 +114,8 @@ describe('POST /api/admin/rezepte', () => {
     // POST makes 5 adminFrom calls: recipes.insert, recipe_ingredients.insert,
     // bls lookup x2 (one per ingredient), recipes.update (macros)
     const blsMock = { select: vi.fn().mockReturnValue({ ilike: vi.fn().mockReturnValue({ limit: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValue({ data: null }) }) }) }) }
+    const finalUpdateMock = vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) })
+    mockComputeGeschmack.mockResolvedValue({ status: 'ok', score: 72, label: 'lecker', verbesserungen: [], unklarHinweis: null })
     adminFrom
       .mockReturnValueOnce({
         insert: vi.fn().mockReturnValue({
@@ -120,9 +129,7 @@ describe('POST /api/admin/rezepte', () => {
       })
       .mockReturnValueOnce(blsMock)
       .mockReturnValueOnce(blsMock)
-      .mockReturnValueOnce({
-        update: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),
-      })
+      .mockReturnValueOnce({ update: finalUpdateMock })
 
     const { POST } = await import('./route')
     const res = await POST(new Request('http://localhost', {
@@ -132,6 +139,12 @@ describe('POST /api/admin/rezepte', () => {
     expect(res.status).toBe(201)
     const data = await res.json()
     expect(data.id).toBe('new-recipe-id')
+    // PROJ-33: Geschmacks-Score wird bei jedem Speichern mitberechnet und persistiert
+    expect(mockComputeGeschmack).toHaveBeenCalledWith({
+      zutatenliste: [{ name: 'Hähnchenbrust', amount: '200 g' }, { name: 'Reis', amount: '150 g' }],
+      anleitung: VALID_RECIPE.instructions,
+    })
+    expect(finalUpdateMock.mock.calls[0][0].geschmack_score).toEqual({ status: 'ok', score: 72, label: 'lecker', verbesserungen: [], unklarHinweis: null })
   })
 
   it('accepts recipe_typ beilage on create', async () => {

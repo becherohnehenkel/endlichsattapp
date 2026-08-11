@@ -330,7 +330,7 @@ export default function MahlzeitInput({ userId, photoScansRemaining, trialDaysRe
           </div>
           <div className="space-y-1">
             <p className="font-semibold text-foreground">Analyse läuft…</p>
-            <p className="text-sm text-muted-foreground">endlichsatt rechnet, was wirklich sättigt.</p>
+            <p className="text-sm text-muted-foreground">Mehralsabnehmen rechnet, was wirklich sättigt.</p>
           </div>
           <div className="space-y-2 px-4">
             <Skeleton className="h-2 w-full rounded-full" />

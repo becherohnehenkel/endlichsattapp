@@ -1,6 +1,6 @@
 import { redirect, notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import type { AnalysisResult, StandardAnalysisResult, ZutatenQuelle } from '@/components/saettigungs-ergebnis'
+import type { AnalysisResult, StandardAnalysisResult, KomponenteAnalysisResult, PillarSet, ZutatenQuelle, GeschmackState } from '@/components/saettigungs-ergebnis'
 import MahlzeitDetail from './mahlzeit-detail'
 
 export default async function MahlzeitDetailPage({
@@ -31,6 +31,7 @@ export default async function MahlzeitDetailPage({
         satiety_scores_before,
         satiety_scores_after,
         improvement,
+        geschmack_score,
         data_sources,
         created_at
       ),
@@ -45,34 +46,37 @@ export default async function MahlzeitDetailPage({
 
   if (!meal) notFound()
 
+  // Refinement 2026-08-11 ("Complete"-Umstrukturierung): `beilage_data` wird für drei
+  // unterschiedliche Formen wiederverwendet, je nach `analysis_typ` und Alter der Zeile —
+  // legacy-Beilage (als_beilage_top/...), neue Komponente (bilanz/kombinationsvorschlag),
+  // neuer Snack (snack_bestaetigung). Als `unknown` gelesen und pro Zweig unten typgeprüft.
   type RawAnalysis = {
     id: string
     analysis_typ: string | null
     refined_ingredients: { ingredients: StandardAnalysisResult['zutatenliste']; assumptions: string[] } | null
-    beilage_data: {
-      als_beilage_top: string
-      als_hauptgericht: string
-      beilage_upgrade: string | null
-      pairing: { empfehlung: string; warum: string }[]
-      art_of_eating_tipp: string | null
-    } | null
+    beilage_data: unknown
     macros_before: StandardAnalysisResult['vorher']['naehrwerte'] | null
     macros_after: StandardAnalysisResult['nachher']['naehrwerte'] | null
     satiety_scores_before: {
-      pillars: StandardAnalysisResult['vorher']['bausteine']
+      pillars: Record<string, string>
       overall: StandardAnalysisResult['vorher']['gesamtbewertung']
       explanation: string
     } | null
     satiety_scores_after: {
-      pillars: StandardAnalysisResult['nachher']['bausteine']
+      pillars: Record<string, string>
       overall: StandardAnalysisResult['nachher']['gesamtbewertung']
       deltas: StandardAnalysisResult['nachher']['deltas']
     } | null
     improvement: {
       suggestions: StandardAnalysisResult['vorschlaege']
-      art_of_eating_tip: string | null
+      // Legacy-Feld — neue Analysen schreiben das nicht mehr (Art of Eating ist eigene Sektion)
+      art_of_eating_tip?: string | null
     } | null
     data_sources: { ingredient: string; source: string; sourceName: string }[] | null
+    // PROJ-33: bereits im GeschmackState-Shape gespeichert (siehe confirm/route.ts) — `null`
+    // heißt "kein Score vorhanden" (Analyse von vor Einführung des Features), wird zu
+    // `undefined` normalisiert, damit die Geschmack-Sektion in der UI korrekt ausblendet.
+    geschmack_score: GeschmackState | null
     created_at: string
   }
 
@@ -98,38 +102,72 @@ export default async function MahlzeitDetailPage({
   const tooOld = new Date(analysis.created_at) < ZUTATENLISTE_CUTOFF
 
   const emptyNaehrwerte = { kcal: 0, protein_g: 0, kohlenhydrate_g: 0, zucker_g: 0, fett_g: 0, ballaststoffe_g: 0 }
-  const emptyBausteine = { geschmack: 'nicht_bewertet', biss: 'nicht_bewertet', ballaststoffe: 'nicht_bewertet', proteine: 'nicht_bewertet', volumen: 'nicht_bewertet', art_of_eating: 'nicht_bewertet' } as StandardAnalysisResult['vorher']['bausteine']
+
+  // Refinement 2026-08-11: erkennt am Schlüsselbestand, ob eine gespeicherte Säulen-Bewertung
+  // noch das alte 6-Bausteine-Format hat (Schlüssel "geschmack" vorhanden) oder schon das neue
+  // 3-Säulen-Format — keine Migration nötig, beide Formate bleiben dauerhaft lesbar.
+  function toPillarSet(pillars: Record<string, string> | undefined): PillarSet {
+    if (pillars && 'geschmack' in pillars) {
+      return { format: 'legacy', bausteine: pillars } as unknown as PillarSet
+    }
+    const saeulen = pillars ?? { proteine: 'ungenuegend', ballaststoffe: 'ungenuegend', volumen: 'ungenuegend' }
+    return { format: 'neu', saeulen } as unknown as PillarSet
+  }
 
   let result: AnalysisResult
 
-  if (analysis.analysis_typ === 'beilage' && analysis.beilage_data) {
+  if (analysis.analysis_typ === 'snack') {
+    const snackData = analysis.beilage_data as { snack_bestaetigung?: string } | null
     result = {
-      typ: 'beilage',
+      typ: 'snack',
+      zutatenliste: analysis.refined_ingredients?.ingredients ?? [],
+      annahmen: analysis.refined_ingredients?.assumptions ?? [],
+      snackBestaetigung: snackData?.snack_bestaetigung ?? 'Alles klar, Snack — der braucht keine Analyse.',
+    }
+  } else if ((analysis.analysis_typ === 'beilage' || analysis.analysis_typ === 'komponente') && analysis.beilage_data) {
+    const raw = analysis.beilage_data as Record<string, unknown>
+    const komponente: KomponenteAnalysisResult['komponente'] =
+      'als_beilage_top' in raw
+        ? {
+            format: 'legacy',
+            als_beilage_top: raw.als_beilage_top as string,
+            als_hauptgericht: raw.als_hauptgericht as string,
+            beilage_upgrade: (raw.beilage_upgrade as string | null) ?? null,
+            pairing: (raw.pairing as { empfehlung: string; warum: string }[]) ?? [],
+            art_of_eating_tipp: (raw.art_of_eating_tipp as string | null) ?? null,
+          }
+        : { format: 'neu', bilanz: raw.bilanz as string, kombinationsvorschlag: raw.kombinationsvorschlag as string }
+
+    result = {
+      typ: analysis.analysis_typ === 'beilage' ? 'beilage' : 'komponente',
       zutatenliste: analysis.refined_ingredients?.ingredients ?? [],
       annahmen: analysis.refined_ingredients?.assumptions ?? [],
       zutatenQuellen,
-      beilage: analysis.beilage_data,
+      komponente,
+      geschmack: analysis.geschmack_score ?? undefined,
     }
   } else {
     result = {
+      typ: analysis.analysis_typ === 'mahlzeit' ? 'mahlzeit' : 'standard',
       zutatenliste: analysis.refined_ingredients?.ingredients ?? [],
       annahmen: analysis.refined_ingredients?.assumptions ?? [],
       zutatenQuellen,
       vorher: {
-        bausteine: analysis.satiety_scores_before?.pillars ?? emptyBausteine,
+        ...toPillarSet(analysis.satiety_scores_before?.pillars),
         gesamtbewertung: analysis.satiety_scores_before?.overall ?? 'wenig_saettigend',
         erklaerung: analysis.satiety_scores_before?.explanation ?? '',
         naehrwerte: analysis.macros_before ?? emptyNaehrwerte,
       },
       vorschlaege: analysis.improvement?.suggestions ?? [],
       nachher: {
-        bausteine: analysis.satiety_scores_after?.pillars ?? emptyBausteine,
+        ...toPillarSet(analysis.satiety_scores_after?.pillars),
         gesamtbewertung: analysis.satiety_scores_after?.overall ?? 'wenig_saettigend',
         naehrwerte: analysis.macros_after ?? emptyNaehrwerte,
         deltas: analysis.satiety_scores_after?.deltas ?? [],
       },
       art_of_eating_tipp: analysis.improvement?.art_of_eating_tip ?? null,
-    }
+      geschmack: analysis.geschmack_score ?? undefined,
+    } as StandardAnalysisResult
   }
 
   const conversations = meal.meal_conversations as unknown as { assumptions: string[] | null }[]

@@ -18,11 +18,11 @@
 | PROJ-1 | Supabase Infrastructure Setup | P0 | Deployed | — | [Spec](PROJ-1-supabase-infrastructure.md) |
 | PROJ-2 | User Authentication | P0 | Deployed | PROJ-1 | [Spec](PROJ-2-user-authentication.md) |
 | PROJ-3 | Mahlzeit-Input (Foto & Freitext) | P0 | Deployed | PROJ-1, PROJ-2 | [Spec](PROJ-3-mahlzeit-input.md) |
-| PROJ-4 | KI-Analyse-Agent (Rückfragen + BLS + Makros) (Refinement: KI-Schätzung für unbekannte Zutaten) | P0 | Deployed | PROJ-3, Sättigungsmatrix verifiziert | [Spec](PROJ-4-ki-analyse-agent.md) |
-| PROJ-5 | Sättigungs-Einschätzung & Verbesserungsvorschlag | P0 | Deployed | PROJ-4 | [Spec](PROJ-5-saettigungs-einschaetzung.md) |
+| PROJ-4 | KI-Analyse-Agent (Rückfragen + BLS + Makros) (Refinement: Schritt-0-Klassifikation "Complete") | P0 | Approved (Refinement) | PROJ-3, Sättigungsmatrix verifiziert | [Spec](PROJ-4-ki-analyse-agent.md) |
+| PROJ-5 | Sättigungs-Einschätzung & Verbesserungsvorschlag (Refinement: Drei-Säulen-Modell "Complete") | P0 | Approved (Refinement) | PROJ-4 | [Spec](PROJ-5-saettigungs-einschaetzung.md) |
 | PROJ-6 | Mahlzeit-Historie | P1 | Deployed | PROJ-1, PROJ-2, PROJ-4, PROJ-5 | [Spec](PROJ-6-mahlzeit-historie.md) |
 | PROJ-7 | Ernährungs-Tagebuch & Inspiration | P2 | Roadmap | PROJ-6 | — |
-| PROJ-8 | Rezeptbibliothek | P1 | Deployed | PROJ-1, PROJ-2, PROJ-4, PROJ-5 | [Spec](PROJ-8-rezeptbibliothek.md) |
+| PROJ-8 | Rezeptbibliothek (Refinement: Drei-Säulen-Modell "Complete") | P1 | Approved (Refinement) | PROJ-1, PROJ-2, PROJ-4, PROJ-5 | [Spec](PROJ-8-rezeptbibliothek.md) |
 | PROJ-9 | Rezept-Zutat: Anzeigename + OFF-Fallback | P1 | Deployed | PROJ-8 | [Spec](PROJ-9-rezept-zutat-datenquellen.md) |
 | PROJ-10 | Foto-Scan-Limit pro Nutzer | P1 | Deployed | PROJ-1, PROJ-2 | [Spec](PROJ-10-foto-scan-limit.md) |
 | PROJ-11 | Paywall (Refinement: Trial-Trigger-Fix + Rückfall-Modell statt harter Sperre) | P2 | Deployed | PROJ-1, PROJ-2, PROJ-8, PROJ-10, PROJ-19 | [Spec](PROJ-11-paywall.md) |
@@ -31,7 +31,7 @@
 | PROJ-14 | Kontoübersicht & Widerrufsbutton | P1 | Deployed | PROJ-2, PROJ-11 | [Spec](PROJ-14-konto-widerruf.md) |
 | PROJ-15 | PWA & Native Navigation | P1 | Deployed | PROJ-2, PROJ-13 | [Spec](PROJ-15-pwa-native-navigation.md) |
 
-| PROJ-16 | Beilagen-Kontext | P1 | Deployed | PROJ-8, PROJ-4, PROJ-5 | [Spec](PROJ-16-beilagen-kontext.md) |
+| PROJ-16 | Beilagen-Kontext (Refinement: Komponente & Snack "Complete") | P1 | Approved (Refinement) | PROJ-8, PROJ-4, PROJ-5 | [Spec](PROJ-16-beilagen-kontext.md) |
 | PROJ-17 | Wöchentlicher Sättigungs-Recap | P2 | Deployed | PROJ-4, PROJ-5, PROJ-6 | [Spec](PROJ-17-woechentlicher-saettigungs-recap.md) |
 | PROJ-18 | Token-Optimierung Foto-Analyse | P1 | Deployed | PROJ-3, PROJ-4 | [Spec](PROJ-18-token-optimierung-foto-analyse.md) |
 | PROJ-19 | Gast-Modus (Anonyme Nutzung ohne Account) | P1 | Deployed | PROJ-1, PROJ-2, PROJ-10, PROJ-11 | [Spec](PROJ-19-gast-modus.md) |
@@ -48,10 +48,12 @@
 | PROJ-30 | Rezept-Eigentümerschaft & Filter (offiziell vs. eigene Rezepte) | P1 | Deployed | PROJ-8 | [Spec](PROJ-30-rezept-eigentuemerschaft-filter.md) |
 | PROJ-31 | Nutzer legen eigene Rezepte an | P1 | Deployed | PROJ-30 | [Spec](PROJ-31-nutzer-eigene-rezepte.md) |
 | PROJ-32 | Rezept aus gescannter Mahlzeit anlegen ("wie gescannt" / "mit mehr Sättigung") | P1 | Deployed | PROJ-30, PROJ-31, PROJ-4, PROJ-5 | [Spec](PROJ-32-rezept-aus-mahlzeit.md) |
+| PROJ-33 | Geschmacks-Score (zweite Sektion der "Complete"-Umstrukturierung) | P1 | Approved | PROJ-3, PROJ-4, PROJ-5, PROJ-16, PROJ-8 | [Spec](PROJ-33-geschmacks-score.md) |
+| PROJ-34 | Art of Eating (dritte Sektion der "Complete"-Umstrukturierung) | P1 | Approved | PROJ-3, PROJ-4, PROJ-5, PROJ-16 | [Spec](PROJ-34-art-of-eating.md) |
 
 <!-- Add features above this line -->
 
-## Next Available ID: PROJ-33
+## Next Available ID: PROJ-35
 
 ## Empfohlene Build-Reihenfolge
 

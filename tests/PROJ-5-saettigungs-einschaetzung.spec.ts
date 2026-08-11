@@ -17,55 +17,50 @@ const MOCK_INGREDIENTS = [
   { name: 'Hähnchenbrust', amount: '200g', isAssumption: false },
 ]
 
+// Refinement 2026-08-11 ("Complete"-Umstrukturierung): Fixtures spiegeln jetzt das
+// tatsächliche, aktuelle /api/analyse/confirm-Antwortformat wider (3 Säulen statt 6
+// Bausteine, kein art_of_eating_tipp mehr) — siehe PROJ-4/PROJ-5 Decision Log.
 const MOCK_RESULT_MAESSIG = {
   analysisId: 'analysis-123',
   result: {
+    typ: 'mahlzeit',
     zutatenliste: [{ name: 'Hähnchenbrust', amount: '200g', source: 'usda', sourceName: 'Chicken, raw' }],
     annahmen: [],
     vorher: {
-      bausteine: {
-        geschmack: 'mittel',
-        biss: 'gut',
-        ballaststoffe: 'schwach',
+      saeulen: {
         proteine: 'gut',
-        volumen: 'mittel',
-        art_of_eating: 'nicht_bewertet',
+        ballaststoffe: 'ungenuegend',
+        volumen: 'gering',
       },
       gesamtbewertung: 'maessig_saettigend',
       erklaerung: 'Gutes Protein, aber wenig Ballaststoffe.',
       naehrwerte: { kcal: 240, protein_g: 44, kohlenhydrate_g: 0, zucker_g: 0, fett_g: 5, ballaststoffe_g: 0 },
     },
-    vorschlaege: [{ aktion: 'Gurken dazugeben', begruendung: 'Mehr Volumen', baustein: 'volumen' }],
+    vorschlaege: [{ aktion: 'Gurken dazugeben', begruendung: 'Mehr Volumen', saeule: 'volumen' }],
     nachher: {
-      bausteine: {
-        geschmack: 'mittel',
-        biss: 'gut',
-        ballaststoffe: 'mittel',
+      saeulen: {
         proteine: 'gut',
+        ballaststoffe: 'mittel',
         volumen: 'gut',
-        art_of_eating: 'nicht_bewertet',
       },
       gesamtbewertung: 'sehr_saettigend',
       naehrwerte: { kcal: 256, protein_g: 44, kohlenhydrate_g: 4, zucker_g: 2, fett_g: 5, ballaststoffe_g: 1 },
       deltas: [{ wert: 'volumen', vorher: 0, nachher: 1, veraenderung: 1 }],
     },
-    art_of_eating_tipp: 'Nimm dir 10 Minuten ohne Handy.',
   },
 }
 
 const MOCK_RESULT_SEHR_SAETTIGEND = {
   analysisId: 'analysis-456',
   result: {
+    typ: 'mahlzeit',
     zutatenliste: [{ name: 'Linsensalat', amount: '300g', source: 'usda', sourceName: 'Lentils' }],
     annahmen: [],
     vorher: {
-      bausteine: {
-        geschmack: 'gut',
-        biss: 'gut',
-        ballaststoffe: 'gut',
+      saeulen: {
         proteine: 'gut',
+        ballaststoffe: 'gut',
         volumen: 'gut',
-        art_of_eating: 'gut',
       },
       gesamtbewertung: 'sehr_saettigend',
       erklaerung: 'Exzellente Mahlzeit mit top Sättigungswert.',
@@ -73,19 +68,15 @@ const MOCK_RESULT_SEHR_SAETTIGEND = {
     },
     vorschlaege: [],
     nachher: {
-      bausteine: {
-        geschmack: 'gut',
-        biss: 'gut',
-        ballaststoffe: 'gut',
+      saeulen: {
         proteine: 'gut',
+        ballaststoffe: 'gut',
         volumen: 'gut',
-        art_of_eating: 'gut',
       },
       gesamtbewertung: 'sehr_saettigend',
       naehrwerte: { kcal: 450, protein_g: 40, kohlenhydrate_g: 50, zucker_g: 5, fett_g: 15, ballaststoffe_g: 12 },
       deltas: [],
     },
-    art_of_eating_tipp: null,
   },
 }
 
@@ -110,7 +101,7 @@ async function reachDone(page: Page, mockResult = MOCK_RESULT_MAESSIG) {
   await page.getByRole('button', { name: /^analysieren/i }).click()
   await expect(page.getByText('Hab ich das richtig verstanden?')).toBeVisible({ timeout: 10000 })
   await page.getByRole('button', { name: /passt so/i }).click()
-  await expect(page.getByText('Die 6 Sättigungs-Bausteine')).toBeVisible({ timeout: 10000 })
+  await expect(page.getByText('Die 3 Sättigungs-Säulen')).toBeVisible({ timeout: 10000 })
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -137,37 +128,37 @@ test.describe('Gesamtbewertung', () => {
 })
 
 // ─────────────────────────────────────────────────────────────
-// DIE 6 SÄTTIGUNGS-BAUSTEINE
+// DIE 3 SÄTTIGUNGS-SÄULEN (Refinement 2026-08-11 — vorher 6 Bausteine)
 // ─────────────────────────────────────────────────────────────
-test.describe('Die 6 Sättigungs-Bausteine', () => {
-  test('Alle 6 Baustein-Namen sind sichtbar', async ({ page }) => {
+test.describe('Die 3 Sättigungs-Säulen', () => {
+  test('Alle 3 Säulen-Namen sind sichtbar', async ({ page }) => {
     await loginAs(page)
     await reachDone(page, MOCK_RESULT_MAESSIG)
-    for (const label of ['Geschmack', 'Biss', 'Ballaststoffe', 'Proteine', 'Volumen', 'Art of Eating']) {
+    for (const label of ['Proteine', 'Ballaststoffe', 'Volumen']) {
       await expect(page.getByText(label).first()).toBeVisible()
     }
   })
 
-  test('Baustein mit Rating "gut" zeigt Label "Gut"', async ({ page }) => {
+  test('Säule mit Rating "gut" zeigt Label "Gut"', async ({ page }) => {
     await loginAs(page)
     await reachDone(page, MOCK_RESULT_MAESSIG)
-    // biss is 'gut' in MOCK_RESULT_MAESSIG
-    const bausteinSection = page.locator('div.grid.grid-cols-3')
-    await expect(bausteinSection.getByText('Gut').first()).toBeVisible()
+    // proteine is 'gut' in MOCK_RESULT_MAESSIG
+    const saeulenSection = page.locator('div.grid.grid-cols-3')
+    await expect(saeulenSection.getByText('Gut').first()).toBeVisible()
   })
 
-  test('Baustein mit Rating "schwach" zeigt Label "Schwach"', async ({ page }) => {
+  test('Säule mit Rating "ungenuegend" zeigt Label "Ungenügend"', async ({ page }) => {
     await loginAs(page)
     await reachDone(page, MOCK_RESULT_MAESSIG)
-    // ballaststoffe is 'schwach' — label appears in both grid and Vorher/Nachher
-    await expect(page.getByText('Schwach').first()).toBeVisible()
+    // ballaststoffe is 'ungenuegend' — label appears in both grid and Vorher/Nachher
+    await expect(page.getByText('Ungenügend').first()).toBeVisible()
   })
 
-  test('Baustein mit Rating "nicht_bewertet" zeigt Label "–"', async ({ page }) => {
+  test('Säule mit Rating "gering" zeigt Label "Gering"', async ({ page }) => {
     await loginAs(page)
     await reachDone(page, MOCK_RESULT_MAESSIG)
-    // art_of_eating is 'nicht_bewertet' — dash appears in both sections
-    await expect(page.getByText('–').first()).toBeVisible()
+    // volumen is 'gering' in MOCK_RESULT_MAESSIG
+    await expect(page.getByText('Gering').first()).toBeVisible()
   })
 })
 
@@ -230,13 +221,14 @@ test.describe('Vorher → Nachher Vergleich', () => {
   test('"Jetzt"-Spalte ist sichtbar', async ({ page }) => {
     await loginAs(page)
     await reachDone(page, MOCK_RESULT_MAESSIG)
-    await expect(page.getByText('Jetzt')).toBeVisible()
+    // Erscheint zweimal (Säulen-Vergleich + Nährwerte-Sektion) — vorbestehendes Verhalten
+    await expect(page.getByText('Jetzt').first()).toBeVisible()
   })
 
   test('"Nach Verbesserung"-Spalte ist sichtbar', async ({ page }) => {
     await loginAs(page)
     await reachDone(page, MOCK_RESULT_MAESSIG)
-    await expect(page.getByText('Nach Verbesserung')).toBeVisible()
+    await expect(page.getByText('Nach Verbesserung').first()).toBeVisible()
   })
 
   test('Verbesserte Bausteine in Nachher-Spalte haben Ring-Highlight', async ({ page }) => {
@@ -256,25 +248,21 @@ test.describe('Vorher → Nachher Vergleich', () => {
 })
 
 // ─────────────────────────────────────────────────────────────
-// ART OF EATING TIPP
+// ART OF EATING (Refinement 2026-08-11 + PROJ-34)
 // ─────────────────────────────────────────────────────────────
-test.describe('Art of Eating Tipp', () => {
-  test('Tipp-Block erscheint wenn art_of_eating_tipp gesetzt ist', async ({ page }) => {
+// Der alte, Claude-generierte Legacy-Anhängsel (art_of_eating_tipp) ist bei frischen Analysen
+// (typ: mahlzeit) seit dem Refinement 2026-08-11 weg — bleibt nur für historische, vor diesem
+// Refinement gespeicherte Analysen sichtbar (siehe PROJ-5-legacy-rendering.spec.ts). PROJ-34
+// hat direkt danach einen komplett neuen, dezenten und zufällig rotierenden Hinweis ergänzt,
+// der bei jeder frischen Analyse erscheint — beide heißen "Art of Eating", sind aber inhaltlich
+// und strukturell komplett verschieden.
+test.describe('Art of Eating (PROJ-34: neuer rotierender Hinweis statt Legacy-Anhängsel)', () => {
+  test('zeigt den neuen, dezenten Art-of-Eating-Hinweis bei frischer, neuer Analyse', async ({ page }) => {
     await loginAs(page)
     await reachDone(page, MOCK_RESULT_MAESSIG)
-    await expect(page.getByText('Nimm dir 10 Minuten ohne Handy.')).toBeVisible()
-  })
-
-  test('Tipp-Block hat "🧘 Art of Eating" Label', async ({ page }) => {
-    await loginAs(page)
-    await reachDone(page, MOCK_RESULT_MAESSIG)
-    await expect(page.getByText('🧘 Art of Eating')).toBeVisible()
-  })
-
-  test('Tipp-Block fehlt wenn art_of_eating_tipp null ist', async ({ page }) => {
-    await loginAs(page)
-    await reachDone(page, MOCK_RESULT_SEHR_SAETTIGEND)
-    await expect(page.getByText('🧘 Art of Eating')).not.toBeVisible()
+    // Prinzip ist zufällig gewählt, daher nur der stabile Teil geprüft
+    await expect(page.getByText(/🧘 Art of Eating ·/)).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Wie esse ich richtig? →' })).toBeVisible()
   })
 })
 
@@ -282,10 +270,10 @@ test.describe('Art of Eating Tipp', () => {
 // NÄHRWERTE
 // ─────────────────────────────────────────────────────────────
 test.describe('Nährwerte', () => {
-  test('"Nährwerte der Mahlzeit" Abschnitt ist sichtbar', async ({ page }) => {
+  test('"Nährwerte" Abschnitt ist sichtbar', async ({ page }) => {
     await loginAs(page)
     await reachDone(page, MOCK_RESULT_MAESSIG)
-    await expect(page.getByText('Nährwerte der Mahlzeit')).toBeVisible()
+    await expect(page.getByText('Nährwerte', { exact: true })).toBeVisible()
   })
 
   test('kcal-Wert der Mahlzeit erscheint', async ({ page }) => {
@@ -297,7 +285,8 @@ test.describe('Nährwerte', () => {
   test('Protein-Wert erscheint', async ({ page }) => {
     await loginAs(page)
     await reachDone(page, MOCK_RESULT_MAESSIG)
-    await expect(page.getByText('44g Protein')).toBeVisible()
+    // Erscheint zweimal (Jetzt + Nach Verbesserung — beide 44g in dieser Fixture)
+    await expect(page.getByText('44g Protein').first()).toBeVisible()
   })
 })
 
@@ -322,7 +311,9 @@ test.describe('Annahmen-Alert', () => {
     await page.getByRole('button', { name: /^analysieren/i }).click()
     await expect(page.getByText('Hab ich das richtig verstanden?')).toBeVisible({ timeout: 10000 })
     await page.getByRole('button', { name: /passt so/i }).click()
-    await expect(page.getByText('Basierend auf Annahmen:')).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText('Basierend auf Annahmen')).toBeVisible({ timeout: 10000 })
+    // Collapsible ist standardmäßig eingeklappt — öffnen bevor der Annahmen-Text sichtbar wird
+    await page.getByText('Basierend auf Annahmen').click()
     await expect(page.getByText(/Magerquark/)).toBeVisible()
   })
 })
@@ -371,8 +362,8 @@ test.describe('Responsive — Mobile 375px', () => {
     await loginAs(page)
     await reachDone(page, MOCK_RESULT_MAESSIG)
     // At 375px the grid is single-column — "Jetzt" appears above "Nach Verbesserung"
-    const jetztEl = page.getByText('Jetzt')
-    const nachherEl = page.getByText('Nach Verbesserung')
+    const jetztEl = page.getByText('Jetzt').first()
+    const nachherEl = page.getByText('Nach Verbesserung').first()
     await expect(jetztEl).toBeVisible()
     await expect(nachherEl).toBeVisible()
     const jetztBox = await jetztEl.boundingBox()

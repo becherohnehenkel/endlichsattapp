@@ -219,4 +219,86 @@ describe('POST /api/analyse/start', () => {
     const res = await POST(makeRequest({ mealId: MEAL_ID }))
     expect(res.status).toBe(503)
   })
+
+  // Refinement 2026-08-11 (Schritt-0-Klassifikation, "Complete"-Umstrukturierung)
+  describe('Schritt-0-Klassifikation', () => {
+    it('sets MAHLZEIT_TYP: komponente as an assumption when classified immediately, no rückfrage', async () => {
+      mockGetUser.mockResolvedValue({ data: { user: { id: 'u1' } } })
+      mockMealSingle.mockResolvedValue({ data: { id: MEAL_ID, free_text: 'Blattsalat', photo_fullsize_path: null, user_id: 'u1' }, error: null })
+      mockAnthropicCreate.mockResolvedValue({
+        content: [{ type: 'text', text: JSON.stringify({ needs_clarification: false, meal_description: 'Blattsalat', mahlzeit_typ: 'komponente', questions: [] }) }],
+      })
+      const { POST } = await import('./route')
+      const res = await POST(makeRequest({ mealId: MEAL_ID }))
+      expect(res.status).toBe(200)
+      const body = await res.json()
+      expect(body.ready).toBe(true)
+      const insertCall = mockConvInsert.mock.calls[0][0]
+      expect(insertCall.assumptions).toEqual(['MAHLZEIT_TYP: komponente'])
+      expect(insertCall.status).toBe('ready')
+    })
+
+    it('sets MAHLZEIT_TYP: snack as an assumption when classified immediately', async () => {
+      mockGetUser.mockResolvedValue({ data: { user: { id: 'u1' } } })
+      mockMealSingle.mockResolvedValue({ data: { id: MEAL_ID, free_text: 'Ein Apfel', photo_fullsize_path: null, user_id: 'u1' }, error: null })
+      mockAnthropicCreate.mockResolvedValue({
+        content: [{ type: 'text', text: JSON.stringify({ needs_clarification: false, meal_description: 'Ein Apfel', mahlzeit_typ: 'snack', questions: [] }) }],
+      })
+      const { POST } = await import('./route')
+      await POST(makeRequest({ mealId: MEAL_ID }))
+      const insertCall = mockConvInsert.mock.calls[0][0]
+      expect(insertCall.assumptions).toEqual(['MAHLZEIT_TYP: snack'])
+    })
+
+    it('sets no assumption flag for mahlzeit_typ: mahlzeit (default, no flag needed)', async () => {
+      mockGetUser.mockResolvedValue({ data: { user: { id: 'u1' } } })
+      mockMealSingle.mockResolvedValue({ data: { id: MEAL_ID, free_text: 'Spaghetti Bolognese', photo_fullsize_path: null, user_id: 'u1' }, error: null })
+      mockAnthropicCreate.mockResolvedValue({
+        content: [{ type: 'text', text: JSON.stringify({ needs_clarification: false, meal_description: 'Spaghetti Bolognese', mahlzeit_typ: 'mahlzeit', questions: [] }) }],
+      })
+      const { POST } = await import('./route')
+      await POST(makeRequest({ mealId: MEAL_ID }))
+      const insertCall = mockConvInsert.mock.calls[0][0]
+      expect(insertCall.assumptions).toBeNull()
+    })
+
+    it('forces a rückfrage when mahlzeit_typ is "unklar", even if needs_clarification is false', async () => {
+      mockGetUser.mockResolvedValue({ data: { user: { id: 'u1' } } })
+      mockMealSingle.mockResolvedValue({ data: { id: MEAL_ID, free_text: 'Avocado-Toast', photo_fullsize_path: null, user_id: 'u1' }, error: null })
+      mockAnthropicCreate.mockResolvedValue({
+        content: [{ type: 'text', text: JSON.stringify({ needs_clarification: false, meal_description: 'Avocado-Toast', mahlzeit_typ: 'unklar', questions: [] }) }],
+      })
+      const { POST } = await import('./route')
+      const res = await POST(makeRequest({ mealId: MEAL_ID }))
+      const body = await res.json()
+      // Sicherheitsnetz: obwohl Claude questions=[] und needs_clarification=false zurückgab,
+      // wird die Klassifikations-Frage erzwungen, statt fälschlich "ready" zurückzugeben.
+      expect(body.ready).toBeUndefined()
+      expect(body.questions).toEqual([{ id: 'mahlzeit_typ', text: 'Ist das eine Mahlzeit, ein Teil davon oder ein Snack?' }])
+      const insertCall = mockConvInsert.mock.calls[0][0]
+      expect(insertCall.status).toBe('questioning')
+      expect(insertCall.assumptions).toBeNull()
+    })
+
+    it('respects a real classification question Claude already asked for "unklar"', async () => {
+      mockGetUser.mockResolvedValue({ data: { user: { id: 'u1' } } })
+      mockMealSingle.mockResolvedValue({ data: { id: MEAL_ID, free_text: 'Poke Bowl klein', photo_fullsize_path: null, user_id: 'u1' }, error: null })
+      mockAnthropicCreate.mockResolvedValue({
+        content: [{
+          type: 'text',
+          text: JSON.stringify({
+            needs_clarification: true,
+            meal_description: 'Poke Bowl klein',
+            mahlzeit_typ: 'unklar',
+            questions: [{ id: 'q1', text: 'Ist das eine Mahlzeit, ein Teil davon oder ein Snack?' }],
+          }),
+        }],
+      })
+      const { POST } = await import('./route')
+      const res = await POST(makeRequest({ mealId: MEAL_ID }))
+      const body = await res.json()
+      expect(body.questions).toHaveLength(1)
+      expect(body.questions[0].id).toBe('q1')
+    })
+  })
 })

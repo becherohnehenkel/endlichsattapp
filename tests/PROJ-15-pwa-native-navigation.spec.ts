@@ -28,7 +28,7 @@ test.describe('PWA-Infrastruktur', () => {
     const response = await request.get('/manifest.json')
     expect(response.status()).toBe(200)
     const body = await response.json()
-    expect(body.name).toBe('endlichsatt')
+    expect(body.name).toBe('Mehralsabnehmen')
     expect(body.start_url).toBe('/')
     expect(body.display).toBe('standalone')
     expect(body.theme_color).toBe('#2E9E6B')
@@ -149,7 +149,7 @@ test.describe('Top Navigation', () => {
     await loginAs(page)
     await page.goto('/')
     await expect(page.locator('[data-testid="top-nav"]')).toBeVisible()
-    await expect(page.locator('[data-testid="top-nav"]').locator('text=endlichsatt')).toBeVisible()
+    await expect(page.locator('[data-testid="top-nav"]').locator('text=Mehralsabnehmen')).toBeVisible()
   })
 
   test('Top Navigation enthält alle Standard-Links', async ({ page, browserName }) => {

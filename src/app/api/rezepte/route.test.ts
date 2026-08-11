@@ -24,6 +24,12 @@ vi.mock('@/lib/paywall', async () => {
   }
 })
 
+// PROJ-33: kein echter Claude-Aufruf in Unit-Tests
+const mockComputeGeschmack = vi.fn().mockResolvedValue({ status: 'error' })
+vi.mock('@/lib/geschmack', () => ({
+  computeGeschmack: mockComputeGeschmack,
+}))
+
 const VALID_RECIPE = {
   title: 'Mein Rezept',
   servings: 2,
@@ -84,10 +90,12 @@ describe('POST /api/rezepte', () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1', is_anonymous: false } } })
     const insertMock = vi.fn().mockReturnValue({ select: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValue({ data: { id: 'new-recipe-1' }, error: null }) }) })
     const blsMock = { select: vi.fn().mockReturnValue({ ilike: vi.fn().mockReturnValue({ limit: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValue({ data: null }) }) }) }) }
+    const finalUpdateMock = vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) })
+    mockComputeGeschmack.mockResolvedValue({ status: 'ok', score: 40, label: 'fad', verbesserungen: [], unklarHinweis: null })
     serverFrom
       .mockReturnValueOnce({ insert: insertMock }) // recipes.insert
       .mockReturnValueOnce({ insert: vi.fn().mockResolvedValue({ error: null }) }) // recipe_ingredients.insert
-      .mockReturnValueOnce({ update: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }) }) // recipes.update (matrix)
+      .mockReturnValueOnce({ update: finalUpdateMock }) // recipes.update (matrix + geschmack)
     adminFrom.mockReturnValueOnce(blsMock)
 
     const { POST } = await import('./route')
@@ -96,6 +104,8 @@ describe('POST /api/rezepte', () => {
     const data = await res.json()
     expect(data.id).toBe('new-recipe-1')
     expect(insertMock.mock.calls[0][0].owner_id).toBe('user-1')
+    // PROJ-33
+    expect(finalUpdateMock.mock.calls[0][0].geschmack_score).toEqual({ status: 'ok', score: 40, label: 'fad', verbesserungen: [], unklarHinweis: null })
   })
 
   it('does not accept an is_guest_visible field even if sent by the client', async () => {

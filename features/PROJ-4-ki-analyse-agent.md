@@ -1,14 +1,17 @@
 # PROJ-4: KI-Analyse-Agent (Rückfragen + BLS + Makros)
 
-## Status: Deployed (Refinement: KI-Schätzung für unbekannte Zutaten — live in Produktion seit 2026-08-03, siehe `## Deployment`)
+## Status: Deployed (Refinement: Schritt-0-Klassifikation — Approved, bereit für /deploy)
 **Created:** 2026-06-10
-**Last Updated:** 2026-08-03
+**Last Updated:** 2026-08-11
+
+**Refinement (2026-08-11, "Complete"-Umstrukturierung):** Neue Schritt-0-Klassifikation (mahlzeit/komponente/snack) ersetzt die bisherige Beilagen-Rückfrage-Logik, siehe `docs/saettigungsmatrix.md` Abschnitt 2. Basis-Feature (Rückfragen/BLS/Makros, inkl. Refinement 2026-08-03) bleibt unverändert live in Produktion — nur die neuen Acceptance Criteria unten sind noch offen. Nächster Schritt: `/architecture`, dann `/backend`.
 
 **Korrektur beim Refinement (2026-08-03):** Der `Technical Requirements`-Abschnitt war veraltet — dort stand "BLS: Nicht verwendet, veraltet" und "Open Food Facts + USDA FoodData Central + KI-Fallback" als Datenquellen-Priorität. Der tatsächliche, deployte Code (`src/lib/nutrition.ts`) nutzt seit einem nicht in diesem Spec dokumentierten späteren Zeitpunkt **BLS (lokale Supabase-Tabelle `bls_lebensmittel`) als primäre Quelle, Open Food Facts als Fallback** — USDA FoodData Central existiert im Code nicht mehr (nur noch als veralteter Kommentar). Unten korrigiert. Reine Dokumentations-Korrektur, keine funktionale Änderung durch diese Korrektur selbst.
 
 ## Dependencies
 - Requires: PROJ-1 (Supabase Infrastructure) — Analyse-Ergebnis wird in `meal_analyses` gespeichert
 - Requires: PROJ-3 (Mahlzeit-Input) — liefert Foto und/oder Freitext als Input für den Agenten
+- **Refinement 2026-08-11:** PROJ-16 (Beilagen-Kontext) wird nachgelagerter Konsument des neuen `typ`-Felds (vorher hatte PROJ-16 seine eigene Trigger-Rückfrage-Logik) — PROJ-16 sollte im Anschluss an dieses Refinement selbst refined werden, um sein Ausgabeformat auf `komponente`/`snack` umzustellen
 
 ## User Stories
 - Als Nutzer möchte ich dass die KI kritisch nachfragt welche genaue Zutat verwendet wurde (z.B. Magerquark vs. Sahnequark, welches Öl, wie viel davon), damit die Analyse auf echten Daten basiert und nicht auf Annahmen.
@@ -17,6 +20,7 @@
 - Als Nutzer möchte ich die Grammangaben als sekundäre Information sehen (kleiner, ausgegraut), damit ich sie nachschlagen kann ohne sie aufgezwungen zu bekommen.
 - Als Nutzer möchte ich wissen wenn die KI unsicher ist oder mit Annahmen arbeitet, damit ich dem Ergebnis angemessen vertrauen kann.
 - Als Nutzer möchte ich, dass auch ungewöhnliche oder seltene Zutaten, die in keiner Datenbank zu finden sind, sinnvoll in die Nährstoffberechnung einfließen (statt mit 0 kcal gewertet zu werden), damit meine Analyse auch bei exotischen Gerichten nicht künstlich verfälscht wird. *(Refinement 2026-08-03)*
+- Als Nutzer möchte ich, dass die App automatisch erkennt, ob ich eine vollständige Mahlzeit, eine Beilage/Komponente einer Mahlzeit oder einen Snack analysiere, damit ich nur bei echter Unklarheit gefragt werde und die Auswertung zum jeweiligen Kontext passt. *(Refinement 2026-08-11 — "Complete"-Umstrukturierung)*
 
 ## Out of Scope
 - Sättigungs-Score und Bewertung der 6 Bausteine — das ist PROJ-5
@@ -28,6 +32,8 @@
 - **KI-Schätzung für Zutaten mit BLS/OFF-Treffer** (Refinement 2026-08-03) — die Schätzung greift ausschließlich, wenn beide Datenbank-Quellen keinen Treffer liefern; für gematchte Zutaten bleibt die Berechnung vollständig deterministisch
 - **Manuelles Überschreiben eines geschätzten Werts durch den Nutzer** (Refinement 2026-08-03) — der Nutzer kann bereits vor der Berechnung den Zutatennamen korrigieren (z.B. um einen besseren BLS/OFF-Treffer zu erzielen); ein direktes Editieren von Nährwert-Zahlen ist nicht Teil dieses Refinements
 - **Konfidenz-/Vertrauens-Score pro Schätzung** — nur ein binäres "geschätzt ja/nein" bzw. "nicht schätzbar", keine feinere Abstufung
+- **Sättigungs-Bewertung der drei Säulen (Protein/Ballaststoffe/Volumen) für `typ: mahlzeit`** (Refinement 2026-08-11) — bleibt PROJ-5, PROJ-4 liefert nur die Klassifikation + Zutaten/Makros zu
+- **Ausgabeformat und UI für `typ: komponente` und `typ: snack`** (Refinement 2026-08-11) — das ist PROJ-16 (bisher "Beilagen-Kontext", jetzt Zuhause für beide Nicht-Mahlzeit-Outputs); PROJ-4 liefert nur das klassifizierte `typ`-Feld plus Zutaten/Makros zu
 
 ## Acceptance Criteria
 
@@ -58,6 +64,14 @@
 - [ ] Angenommen Annahmen getroffen wurden (durch Skip oder fehlende Angaben), wenn das Ergebnis angezeigt wird, dann erscheint ein deutlicher Hinweis welche Annahmen gemacht wurden (z.B. "Ich habe angenommen: Magerquark 0,2% Fett, 1 EL Olivenöl ca. 10g").
 - [ ] Angenommen die KI hat eine Portion selbst geschätzt weil keine Mengenangabe vorlag, wenn sie das Ergebnis ausgibt, dann zeigt sie die angenommene Menge an (z.B. "Angenommene Portion: ~200g Hähnchenbrust").
 
+### Schritt-0-Klassifikation (Refinement 2026-08-11 — "Complete"-Umstrukturierung)
+- [ ] Angenommen der Nutzer hat keine explizite Angabe zum Mahlzeit-Typ gemacht, wenn die KI die Zutaten extrahiert hat, dann klassifiziert sie automatisch per Heuristik als `mahlzeit`, `komponente` oder `snack`, ohne eine zusätzliche Rückfrage zu stellen — außer im Grenzfall (siehe unten)
+- [ ] Angenommen der Nutzer hat den Typ explizit angegeben (UI-Auswahl oder im Freitext), wenn die Klassifikation läuft, dann gilt die Nutzerangabe ohne Rückfrage und ohne Diskussion
+- [ ] Angenommen die geschätzte Kalorienmenge liegt zwischen 250 und 400 kcal und die Zusammensetzung ist uneindeutig, wenn keine Nutzerangabe vorliegt, dann stellt die KI genau eine Rückfrage ("Ist das eine Mahlzeit, ein Teil davon oder ein Snack?") statt zu raten
+- [ ] Angenommen die Klassifikation abgeschlossen ist, dann gibt die KI immer das Feld `typ: mahlzeit | komponente | snack` aus
+- [ ] Angenommen `typ` ist `mahlzeit` oder `komponente`, dann läuft die bestehende Zutaten-Extraktion und Makroberechnung unverändert wie bisher (BLS → Open Food Facts → KI-Schätzung)
+- [ ] Angenommen `typ` ist `snack`, dann laufen Zutaten-Extraktion und Makroberechnung im Hintergrund weiter (für spätere Wochenrückblick-Kategorisierung durch PROJ-17), aber es werden keine Bausteine/Sättigungs-Bewertung und keine Verbesserungsvorschläge erzeugt
+
 ### Fehlerverhalten
 - [ ] Angenommen das Foto zeigt kein erkennbares Lebensmittel (z.B. ein Tisch, verschwommen), wenn die KI es nicht identifizieren kann, dann teilt sie das dem Nutzer mit und fordert ihn auf eine Textbeschreibung hinzuzufügen.
 - [ ] Angenommen BLS oder Open Food Facts sind nicht erreichbar (Timeout/Fehler), wenn die KI die Analyse trotzdem durchführt, dann behandelt sie die betroffenen Zutaten wie unbekannte Zutaten (KI-Schätzung mit Plausibilitätsprüfung, siehe Nährstoffberechnung).
@@ -72,6 +86,8 @@
 - **Foto + Text widersprechen sich** (z.B. Foto zeigt Pasta, Text sagt "Salat"): KI weist auf den Widerspruch hin und fragt nach Klärung.
 - **Alle Zutaten einer Mahlzeit sind unbekannt** (Refinement 2026-08-03): Jede Zutat wird einzeln nach denselben Regeln geschätzt (mit Plausibilitätsprüfung); kein Sonderfall nötig, auch wenn ungewöhnlich viele Zutaten gleichzeitig geschätzt werden.
 - **Eine ansonsten bekannte Zutat wird durch einen BLS/OFF-Timeout nicht gefunden** (Refinement 2026-08-03): Wird für diese eine Anfrage wie eine unbekannte Zutat behandelt (KI-Schätzung statt 0 kcal) — auch wenn sie bei einem erneuten Versuch vermutlich gefunden worden wäre.
+- **Grauzone-Rückfrage (250–400 kcal) wird vom Nutzer übersprungen** (Refinement 2026-08-11): Fallback auf `typ: mahlzeit` — konsistent mit dem bisherigen Verhalten bei übersprungener Beilagen-Rückfrage ("normale Analyse").
+- **Snack mit vielen/komplexen Zutaten** (z.B. selbstgemachtes Müsli-Topping) (Refinement 2026-08-11): Menge/Komplexität ist kein Ausschlusskriterium für `typ: snack` — entscheidend sind Kalorien und Nutzerangabe/Heuristik-Format, nicht die Zutatenanzahl.
 
 ## Technical Requirements
 - **Nährstoffdatenbanken (Priorität, korrigiert 2026-08-03):** (1) BLS (Bundeslebensmittelschlüssel) — lokale Supabase-Tabelle `bls_lebensmittel`, primäre Quelle für die meisten Alltags-Zutaten, (2) Open Food Facts API — Fallback für verpackte/markierte Produkte ohne BLS-Treffer, (3) **KI-Schätzung — Fallback ausschließlich für Zutaten ohne BLS- und ohne OFF-Treffer**, mit Plausibilitätsprüfung
@@ -103,6 +119,16 @@
 | Keine Mikronährstoffe im MVP | Komplexität ohne direkten Mehrwert für Sättigungsanalyse; Post-MVP | 2026-06-10 |
 | ~~Open Food Facts + USDA + KI-Fallback statt BLS~~ | _Überholt — siehe Refinement 2026-08-03: tatsächlich verwendet wird BLS (primär) + OFF (Fallback), kein USDA. Diese ursprüngliche Entscheidung wurde offenbar nach dem 2026-06-12-Deployment revidiert, aber nie im Spec dokumentiert_ | 2026-06-10 |
 | Kein moralisierender Kommentar zu Alkohol | Nutzer sind informierte Erwachsene; App analysiert, urteilt nicht | 2026-06-10 |
+
+#### Refinement (2026-08-11): Schritt-0-Klassifikation ("Complete"-Umstrukturierung)
+
+| Decision | Rationale | Date |
+|----------|-----------|------|
+| Schritt-0-Klassifikation (mahlzeit/komponente/snack) ersetzt die bisherige Beilagen-Rückfrage-Logik | Fachliche Neufassung der Sättigungsmatrix (2026-08-11): automatische Heuristik statt Rückfrage reduziert unnötige Nutzer-Interaktionen | 2026-08-11 |
+| Rückfrage nur noch im echten Grenzfall (250–400 kcal, uneindeutig), sonst automatische Klassifikation | Direkt aus der fachlichen Neufassung übernommen — bewusste Abkehr vom bisherigen "immer fragen wenn Trigger-Kriterien erfüllt" | 2026-08-11 |
+| Snack-Makroberechnung läuft weiter im Hintergrund, wird aber nicht angezeigt/diskutiert | Notwendig für künftige Wochenrückblick-Kategorisierung (PROJ-17), ohne den "keine Analyse/kein Kalorien-Kommentar"-Anspruch beim Snack selbst zu verletzen | 2026-08-11 |
+| Bei übersprungener Grauzone-Rückfrage: Fallback auf `typ: mahlzeit` | Konsistent mit dem bisherigen Verhalten bei übersprungener Beilagen-Rückfrage ("normale Analyse") | 2026-08-11 |
+| Erkennung (PROJ-4) und Ausgabeformat für Komponente/Snack (PROJ-16) sauber getrennt | PROJ-4 bleibt fokussiert auf Extraktion/Klassifikation/Makros; PROJ-16 bleibt fokussiert auf die Sonderfall-Darstellung — vermeidet, dass ein Feature beide Verantwortungen trägt | 2026-08-11 |
 
 #### Refinement (2026-08-03): KI-Schätzung für Zutaten ohne BLS/OFF-Treffer
 
@@ -327,6 +353,76 @@ Jede Zutat trägt intern schon eine von drei Kennzeichnungen: "aus BLS", "aus Op
 
 Keine neuen npm-Pakete. Keine neue Umgebungsvariable. Keine Schema-Migration.
 
+---
+
+### Refinement (2026-08-11): Schritt-0-Klassifikation — gemeinsamer Architecture-Pass mit PROJ-5/PROJ-16/PROJ-8
+
+> Dieser Architecture-Pass deckt vier zusammenhängende Specs gemeinsam ab (PROJ-4, PROJ-5, PROJ-16, PROJ-8) — Details zu den jeweiligen Anzeige-Komponenten stehen in den entsprechenden Specs, hier der PROJ-4-spezifische Teil plus die geteilten Entscheidungen.
+
+#### Komponenten-Struktur (Änderungen)
+
+```
+Bestehender Rückfragen-Flow (PROJ-3: start/answer-Routen)
+└── NEU: Schritt-0-Klassifikation läuft hier mit, kein neuer API-Aufruf
+    ├── Eindeutiger Fall (Snack-/Komponente-Heuristik) → keine zusätzliche Frage
+    └── Grauzone (250–400 kcal) → eine der ohnehin möglichen Rückfragen wird dafür genutzt
+
+Bestehende Berechnung (PROJ-4: confirm-Route)
+└── Liefert jetzt zusätzlich das Feld `typ` (mahlzeit/komponente/snack) im Analyse-Ergebnis
+    — Zutaten-/Makro-Berechnung selbst unverändert für alle drei Typen
+```
+
+#### Datenmodell (einfache Sprache)
+
+Jede Mahlzeit-Analyse bekommt ein neues Feld `typ`. Historische Analysen ohne dieses Feld gelten weiterhin als "mahlzeit" (heutiges Verhalten unverändert), historische Analysen mit dem alten Wert "beilage" gelten ab jetzt als gleichbedeutend mit "komponente" — die Anzeige-Logik (PROJ-5/PROJ-16) erkennt beide Fälle automatisch, es gibt keine Datenmigration. Kein neues Datenbankfeld nötig — die bestehende, flexible JSON-Struktur des Analyse-Ergebnisses nimmt das neue Feld einfach auf.
+
+#### Tech-Entscheidungen (für PM, mit Begründung)
+
+- **Schritt-0-Klassifikation läuft innerhalb der bestehenden Rückfragen-Phase, kein neuer API-Aufruf** — nutzt exakt den Mechanismus, der heute schon für die alte Beilagen-Rückfrage genutzt wird. Kein Mehraufwand an Latenz oder Kosten.
+- **Alte Analysen bleiben unverändert gespeichert, keine Migration.** Eine rückwirkende Umrechnung wäre fachlich unehrlich (die ursprüngliche Analyse hat tatsächlich die alten Werte bewertet) und riskant (stille Datenumformung an Production-Daten). Die Anzeige erkennt die Struktur eines gespeicherten Ergebnisses selbst.
+- **PROJ-4, PROJ-5, PROJ-16 und PROJ-8 werden als ein zusammenhängender Umsetzungs-Block behandelt, nicht einzeln nacheinander deployed.** PROJ-5s neue Anzeige setzt PROJ-4s neues `typ`-Feld voraus — ein Zwischenzustand würde die Ergebnisseite kaputt oder inkonsistent aussehen lassen. `/backend` und `/frontend` laufen deshalb einmal gemeinsam über alle vier Specs, mit einem gemeinsamen Deploy am Ende.
+- **`docs/system-prompt.md` und der aktive Prompt in `confirm/route.ts` werden gemeinsam neu geschrieben** — bestehendes Projekt-Muster (kein separates Prompt-Engineering-Tool in diesem Projekt).
+
+#### Abhängigkeiten
+
+Keine neuen npm-Pakete. Keine neue Umgebungsvariable. Keine Schema-Migration.
+
+## Implementation Notes (Backend) — Refinement 2026-08-11: Schritt-0-Klassifikation
+
+> Gemeinsamer Backend-Durchlauf für PROJ-4/PROJ-5/PROJ-16/PROJ-8 — hier der PROJ-4-spezifische Teil (Klassifikations-Mechanik). Details zu Datenbank-Korrekturen unten gelten für alle vier Specs.
+
+**Korrekturen gegenüber der Architektur-Annahme (erst beim Implementieren entdeckt):**
+- Es gab doch einen CHECK-Constraint auf `meal_analyses.analysis_typ` (`IN ('standard', 'beilage')`) — die Architektur-Aussage "keine Schema-Migration nötig" war falsch. Migration `meal_analyses_analysis_typ_add_snack_und_neue_vokabeln` ergänzt additiv `'mahlzeit'`, `'komponente'`, `'snack'` — die alten Werte `'standard'`/`'beilage'` bleiben für historische Zeilen dauerhaft gültig.
+
+**Geänderte Dateien:**
+- `src/app/api/analyse/start/route.ts` — `SYSTEM_PROMPT` um Schritt-0-Klassifikation erweitert (ersetzt die alte Beilagen-Rückfrage-Logik). Neues Feld `mahlzeit_typ` im Claude-Output. Bei eindeutiger Klassifikation (`komponente`/`snack`) wird sofort ein Assumption-Flag (`MAHLZEIT_TYP: komponente`/`snack`) beim initialen Insert von `meal_conversations` gesetzt — keine Rückfrage nötig. Bei `unklar` erzwingt der Code eine Rückfrage als Sicherheitsnetz, auch falls Claude `needs_clarification`/`questions` fälschlich leer lässt.
+- `src/app/api/analyse/answer/route.ts` — `SYSTEM_PROMPT` interpretiert die Antwort auf die Grauzone-Rückfrage und setzt das passende `MAHLZEIT_TYP`-Flag. Defensive Merge-Logik: ein in einer früheren Runde gesetztes Flag geht nicht verloren, nur weil die aktuelle Runde ihre eigene, frische `assumptions`-Liste zurückgibt, die das Flag nicht wiederholt (`conv.assumptions` wird dafür jetzt mitgelesen).
+- `src/app/api/analyse/confirm/route.ts` — `ANALYSIS_SYSTEM_PROMPT` komplett überarbeitet: 3 Säulen statt 6 Bausteine (neue Schwellenwerte, 4 Stufen), neues Komponente-Format (ersetzt Beilage), komplett neues Snack-Format, kein `art_of_eating_tipp` mehr im Standard-Format. Drei Branches im Route-Handler (`snack`/`komponente`/Standard-`mahlzeit`) statt bisher zwei (`beilage`/Standard). Neue Inserts nutzen `analysis_typ: 'mahlzeit'|'komponente'|'snack'`.
+- `docs/system-prompt.md` — komplett neu geschrieben, spiegelt den aktiven Prompt.
+
+**Verifikation:** `npm test` (369/369 grün, 40 neue/geänderte Tests über 4 Dateien), `npm run lint` (0 Fehler), `tsc --noEmit` (keine neuen Fehler in Backend-Dateien — einzige neue Fehler sind in `rezept-saettigungs-matrix.tsx`, PROJ-8-Frontend, bewusst noch nicht angefasst, siehe unten). `npm run build` schlägt aktuell noch fehl (derselbe Frontend-Grund) — erwartet, da `/frontend` noch aussteht.
+
+**Bewusst nicht angefasst (gehört zu `/frontend`):** `src/components/saettigungs-ergebnis.tsx`, `src/components/beilagen-ergebnis.tsx`, `src/components/mahlzeit-input.tsx`, `src/components/rezept-saettigungs-matrix.tsx` — alle vier lesen noch das alte 6-Bausteine-/Beilage-Format und müssen auf das neue Format inkl. Alt-Format-Erkennung (siehe Architektur-Notiz) umgestellt werden.
+
+## Implementation Notes (Frontend) — Refinement 2026-08-11
+
+> Gemeinsamer Frontend-Durchlauf für PROJ-4/PROJ-5/PROJ-16/PROJ-8. PROJ-5 besitzt `saettigungs-ergebnis.tsx` (Haupt-Ergebnisanzeige), PROJ-16 die neuen Komponente-/Snack-Komponenten, PROJ-8 die Rezept-Sättigungsmatrix — Details jeweils dort. Hier die geteilte Infrastruktur und die während der Umsetzung entdeckten, cross-cutting Korrekturen.
+
+**Geteilte Infrastruktur:**
+- `src/components/rating-ring.tsx` — von fest 3 Segmenten auf generisch 3 oder 4 Segmente umgebaut (`segments`-Prop), da altes (3-Stufen) und neues (4-Stufen) Vokabular parallel angezeigt werden müssen
+- `src/components/saettigungs-ergebnis.tsx` — neuer `PillarSet`-Union-Typ (`{format:'legacy', bausteine}` | `{format:'neu', saeulen}`) als zentraler Diskriminator, von dort in `mahlzeit/[id]/page.tsx`, `komponenten-ergebnis.tsx` etc. wiederverwendet
+- `src/app/mahlzeit/[id]/page.tsx` — rekonstruiert `AnalysisResult` aus der DB; erkennt Alt- vs. Neuformat am Schlüsselbestand (`'geschmack' in pillars` → legacy), verzweigt zusätzlich nach `analysis_typ` (inkl. neuem `snack`-Zweig)
+
+**Bugfix (während der Umsetzung gefunden):** `snack_bestaetigung` wurde im Backend-Durchlauf nirgends persistiert (nur in der frischen API-Response vorhanden) — beim späteren Ansehen aus der Historie wäre der Text verloren gewesen. Fix direkt in `confirm/route.ts`: wird jetzt in der wiederverwendeten `beilage_data`-Spalte gespeichert (`{ snack_bestaetigung }`), analog zu Komponente. Test ergänzt.
+
+**Cross-cutting Korrekturen (Folgen der Backend-Änderung, nicht Teil der ursprünglichen 4-Komponenten-Liste):**
+- `src/components/wochen-recap-karte.tsx` (PROJ-17) — `/api/recap/wochen` liefert seitdem nur noch 3 Säulen-Schlüssel statt 6, auch für alte Wochen (siehe recap-Route-Änderung). Anzeige entsprechend auf 3 Säulen reduziert, vier Farbstufen ergänzt, neues Feld `anzahlSnacks` angezeigt.
+- `src/app/admin/feedback/feedback-list.tsx` (PROJ-26) — generischer Renderer, aber die Sichtbarkeits-Bedingungen prüften nur `bausteine`, nicht `saeulen` — neue Feedback-Snapshots wären unsichtbar geblieben. Beide Schlüssel werden jetzt geprüft (`??`-Fallback).
+- `src/app/saettigungsmatrix/page.tsx` — statische Erklär-Seite, komplett auf 3 Säulen umgeschrieben (war hartcodiert auf 6 Bausteine inkl. Beispieltexten)
+- `src/app/rezept/[id]/page.tsx` — Überschrift "Sättigungs-Bausteine" → "Sättigungs-Säulen"
+
+**Verifikation:** `npm test` 369/369 grün, `npm run lint` 0 Fehler, `tsc --noEmit` keine neuen Fehler (nur die 7 vorbestehenden in Test-Dateien), `npm run build` erfolgreich (vorher blockierend, jetzt behoben). Manuell im Browser verifiziert (Playwright gegen laufenden Dev-Server, System-Chrome): Rezeptseite zeigt neue 3-Säulen-Matrix korrekt inkl. Farben/Ringen; historische Mahlzeit-Analyse (vor dem Refinement gespeichert) zeigt weiterhin unverändert alle 6 Bausteine mit 3-Segment-Ringen — Rückwärtskompatibilität bestätigt.
+
 ## QA Test Results
 
 ### Refinement-QA (2026-08-03) — KI-Schätzung für Zutaten ohne BLS/OFF-Treffer
@@ -532,3 +628,37 @@ Auf Wunsch des Product Owners direkt im Anschluss an die QA behoben, Schritt fü
 
 #### Hinweis
 Die eigentliche KI-Schätzung selbst (ein echter Claude-Aufruf mit einer unbekannten Zutat) wurde bewusst nicht live gegen Produktion erzwungen — das würde eine reale Analyse mit echten API-Kosten erfordern. Die Logik dafür ist durch die Unit-/Integrationstests (`nutrition.test.ts`, `confirm/route.test.ts`) und die vorherige QA-Runde bereits umfassend abgedeckt; hier wurde stattdessen gezielt der Rendering-Pfad (aus `data_sources`, unabhängig von einem echten Claude-Aufruf) gegen die echte Produktionsumgebung verifiziert.
+
+---
+
+## QA Test Results (Refinement 2026-08-11 — "Complete"-Umstrukturierung: Schritt-0-Klassifikation)
+
+**Tested:** 2026-08-11
+**App URL:** http://localhost:3000
+**Tester:** QA Engineer (AI)
+
+Gemeinsamer QA-Pass für PROJ-4/PROJ-5/PROJ-16/PROJ-8 — Details zu Security und der vollständigen Testsuite siehe [PROJ-16 QA-Abschnitt](PROJ-16-beilagen-kontext.md#qa-test-results-refinement-2026-08-11--complete-umstrukturierung-komponente--snack).
+
+### Acceptance Criteria Status
+
+#### Schritt-0-Klassifikation
+- [x] `mahlzeit_typ` wird korrekt aus Claude-Antwort geparst und als `MAHLZEIT_TYP:`-Flag in `assumptions` gespeichert
+- [x] Safety-Net erzwingt Rückfrage bei `mahlzeit_typ === 'unklar'` ohne mitgelieferte Frage
+- [x] Flag bleibt über `/answer`-Runden hinweg erhalten (defensiver Merge in `answer/route.ts`)
+- [x] `start/route.ts`- und `answer/route.ts`-Unit-Tests grün (Vitest, inkl. neuer "Schritt-0-Klassifikation"-Testblöcke)
+
+#### Downstream-Effekt (Cross-Reference)
+- [x] `typ: 'mahlzeit'` → normaler 3-Säulen-Flow funktioniert einwandfrei (siehe PROJ-5)
+- [x] `typ: 'snack'` → funktioniert einwandfrei (siehe PROJ-16)
+- [ ] `typ: 'komponente'` → **blockiert durch BUG-1 (Critical), siehe PROJ-16-QA.** Die Klassifikation selbst (PROJ-4-Verantwortung) ist korrekt; der Fehler liegt im nachgelagerten Rendering (`komponenten-ergebnis.tsx` + `confirm/route.ts`), nicht in der Schritt-0-Logik.
+
+### Automated Tests
+- `npm test`: 369/369 passed
+- `tests/PROJ-4-ki-analyse-agent.spec.ts`: 32/32 passed (Fixtures auf 3-Säulen-Format aktualisiert)
+
+### Summary
+- **Acceptance Criteria:** 7/7 passed (BUG-1 aus PROJ-16 wurde in derselben Sitzung behoben, siehe dortiges Re-Test)
+- **Bugs Found:** 0 eigene
+- **Security:** Pass (siehe PROJ-16)
+- **Production Ready:** JA
+- **Recommendation:** Bereit für gemeinsames Deployment mit PROJ-5/PROJ-16/PROJ-8

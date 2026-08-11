@@ -48,35 +48,28 @@ vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false }))
 
 const validIngredients = [{ name: 'Hähnchenbrust', amount: '200g' }]
 const validAnalysis = {
-  typ: 'standard',
+  typ: 'mahlzeit',
   zutatenliste: [{ name: 'Hähnchenbrust', amount: '200g', grams: 200 }],
   annahmen: [],
   vorher: {
-    bausteine: { geschmack: 'mittel', biss: 'gut', ballaststoffe: 'schwach', proteine: 'gut', volumen: 'mittel', art_of_eating: 'nicht_bewertet' },
+    saeulen: { proteine: 'gut', ballaststoffe: 'ungenuegend', volumen: 'gering' },
     gesamtbewertung: 'maessig_saettigend',
     erklaerung: 'Gutes Protein, aber wenig Ballaststoffe.',
   },
-  vorschlaege: [{ aktion: 'Gurken dazugeben', begruendung: 'Mehr Volumen', baustein: 'volumen' }],
+  vorschlaege: [{ aktion: 'Gurken dazugeben', begruendung: 'Mehr Volumen', saeule: 'volumen' }],
   nachher: {
-    bausteine: { geschmack: 'mittel', biss: 'gut', ballaststoffe: 'mittel', proteine: 'gut', volumen: 'gut', art_of_eating: 'nicht_bewertet' },
+    saeulen: { proteine: 'gut', ballaststoffe: 'mittel', volumen: 'gut' },
     gesamtbewertung: 'sehr_saettigend',
   },
-  art_of_eating_tipp: 'Probier mal ohne Handy zu essen.',
 }
 
-const validBeilageAnalysis = {
-  typ: 'beilage',
+const validKomponenteAnalysis = {
+  typ: 'komponente',
   zutatenliste: [{ name: 'Blattsalat', amount: '100g', grams: 100 }],
-  annahmen: ['BEILAGE_KONTEXT: Blattsalat wird als vollständige Mahlzeit gegessen.'],
-  beilage: {
-    als_beilage_top: 'Als Beilage bringt der Salat Frische und Volumen.',
-    als_hauptgericht: 'Allein macht er noch keine sättigende Mahlzeit — es fehlt eine Proteinquelle und Energie.',
-    beilage_upgrade: 'Eine Handvoll Sonnenblumenkerne drüber: mehr Biss und sättigende Fette.',
-    pairing: [
-      { empfehlung: '150g Skyr mit Honig', warum: 'Liefert Protein und hält lange satt.' },
-      { empfehlung: '2 weichgekochte Eier', warum: 'Einfach, proteinreich und perfekt zur Frische des Salats.' },
-    ],
-    art_of_eating_tipp: 'Sitz hin und iss ohne Ablenkung — dann merkst du besser wann du satt bist.',
+  annahmen: ['MAHLZEIT_TYP: komponente'],
+  komponente: {
+    bilanz: 'Bringt schon mal 100g Blattgemüse und etwas Volumen mit.',
+    kombinationsvorschlag: '150g Skyr mit Honig dazu, dann trägt dich das bis zum Nachmittag.',
   },
 }
 
@@ -194,18 +187,158 @@ describe('POST /api/analyse/confirm', () => {
     expect(mockStorageRemove).not.toHaveBeenCalled()
   })
 
-  // PROJ-16: Beilagen-Kontext tests
-  it('returns beilage result when BEILAGE_KONTEXT is in assumptions', async () => {
+  // PROJ-33 (Refinement 2026-08-11): Geschmacks-Score läuft im selben Claude-Aufruf wie die
+  // Sättigungs-Analyse — Label wird serverseitig aus dem Score abgeleitet, nie von Claude übernommen.
+  describe('PROJ-33 Geschmacks-Score', () => {
+    it('includes a valid geschmack fragment in the response and derives the label from the score', async () => {
+      mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
+      mockMealSingle.mockResolvedValue({ data: { id: 'meal-1', user_id: 'user-1', free_text: 'Test', photo_fullsize_path: null }, error: null })
+      mockAnthropicCreate.mockResolvedValue({
+        content: [{ type: 'text', text: JSON.stringify({
+          ...validAnalysis,
+          geschmack: { score: 78, verbesserungen: ['Ein Spritzer Zitrone dazu.'], unklar_hinweis: null },
+        }) }],
+      })
+      mockInsertSingle.mockResolvedValue({ data: { id: 'analysis-123' }, error: null })
+      mockMealsUpdate.mockResolvedValue({ error: null })
+      mockConvUpdate.mockResolvedValue({ error: null })
+
+      const { POST } = await import('./route')
+      const res = await POST(makeRequest({ mealId: '550e8400-e29b-41d4-a716-446655440000', ingredients: validIngredients }))
+      expect(res.status).toBe(200)
+      const body = await res.json()
+      expect(body.result.geschmack).toEqual({
+        status: 'ok',
+        score: 78,
+        label: 'lecker',
+        verbesserungen: ['Ein Spritzer Zitrone dazu.'],
+        unklarHinweis: null,
+      })
+      // Persistiert auf meal_analyses.geschmack_score (Insert-Payload prüfen)
+      const insertPayload = mockMealAnalysesInsert.mock.calls[0][0]
+      expect(insertPayload.geschmack_score).toEqual(body.result.geschmack)
+    })
+
+    it('gracefully degrades to status:error when Claude omits the geschmack fragment — Sättigung bleibt unberührt', async () => {
+      mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
+      mockMealSingle.mockResolvedValue({ data: { id: 'meal-1', user_id: 'user-1', free_text: 'Test', photo_fullsize_path: null }, error: null })
+      mockAnthropicCreate.mockResolvedValue({
+        content: [{ type: 'text', text: JSON.stringify(validAnalysis) }], // kein "geschmack"-Feld
+      })
+      mockInsertSingle.mockResolvedValue({ data: { id: 'analysis-123' }, error: null })
+      mockMealsUpdate.mockResolvedValue({ error: null })
+      mockConvUpdate.mockResolvedValue({ error: null })
+
+      const { POST } = await import('./route')
+      const res = await POST(makeRequest({ mealId: '550e8400-e29b-41d4-a716-446655440000', ingredients: validIngredients }))
+      expect(res.status).toBe(200)
+      const body = await res.json()
+      expect(body.result.geschmack).toEqual({ status: 'error' })
+      // Sättigung ist trotzdem vollständig und korrekt
+      expect(body.result.vorher.gesamtbewertung).toBe('maessig_saettigend')
+    })
+
+    it('gracefully degrades to status:error when the geschmack fragment fails validation (score out of range)', async () => {
+      mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
+      mockMealSingle.mockResolvedValue({ data: { id: 'meal-1', user_id: 'user-1', free_text: 'Test', photo_fullsize_path: null }, error: null })
+      mockAnthropicCreate.mockResolvedValue({
+        content: [{ type: 'text', text: JSON.stringify({
+          ...validAnalysis,
+          geschmack: { score: 150, verbesserungen: [] }, // > 100, ungültig
+        }) }],
+      })
+      mockInsertSingle.mockResolvedValue({ data: { id: 'analysis-123' }, error: null })
+      mockMealsUpdate.mockResolvedValue({ error: null })
+      mockConvUpdate.mockResolvedValue({ error: null })
+
+      const { POST } = await import('./route')
+      const res = await POST(makeRequest({ mealId: '550e8400-e29b-41d4-a716-446655440000', ingredients: validIngredients }))
+      expect(res.status).toBe(200)
+      const body = await res.json()
+      expect(body.result.geschmack).toEqual({ status: 'error' })
+    })
+
+    it('score >= 85 is labelled richtig_gut', async () => {
+      mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
+      mockMealSingle.mockResolvedValue({ data: { id: 'meal-1', user_id: 'user-1', free_text: 'Test', photo_fullsize_path: null }, error: null })
+      mockAnthropicCreate.mockResolvedValue({
+        content: [{ type: 'text', text: JSON.stringify({
+          ...validAnalysis,
+          geschmack: { score: 90, verbesserungen: [], unklar_hinweis: null },
+        }) }],
+      })
+      mockInsertSingle.mockResolvedValue({ data: { id: 'analysis-123' }, error: null })
+      mockMealsUpdate.mockResolvedValue({ error: null })
+      mockConvUpdate.mockResolvedValue({ error: null })
+
+      const { POST } = await import('./route')
+      const res = await POST(makeRequest({ mealId: '550e8400-e29b-41d4-a716-446655440000', ingredients: validIngredients }))
+      const body = await res.json()
+      expect(body.result.geschmack.label).toBe('richtig_gut')
+      expect(body.result.geschmack.verbesserungen).toEqual([])
+    })
+
+    it('includes geschmack for komponente results too', async () => {
+      mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
+      mockMealSingle.mockResolvedValue({ data: { id: 'meal-1', user_id: 'user-1', free_text: 'Blattsalat', photo_fullsize_path: null }, error: null })
+      mockConvSingle.mockResolvedValue({ data: { assumptions: ['MAHLZEIT_TYP: komponente'] }, error: null })
+      mockAnthropicCreate.mockResolvedValue({
+        content: [{ type: 'text', text: JSON.stringify({
+          ...validKomponenteAnalysis,
+          geschmack: { score: 60, verbesserungen: ['Etwas Feta dazu.'], unklar_hinweis: 'War Öl dabei?' },
+        }) }],
+      })
+      mockInsertSingle.mockResolvedValue({ data: { id: 'komponente-analysis-1' }, error: null })
+      mockMealsUpdate.mockResolvedValue({ error: null })
+      mockConvUpdate.mockResolvedValue({ error: null })
+
+      const { POST } = await import('./route')
+      const res = await POST(makeRequest({ mealId: '550e8400-e29b-41d4-a716-446655440000', ingredients: [{ name: 'Blattsalat', amount: '100g' }] }))
+      const body = await res.json()
+      expect(body.result.geschmack).toEqual({
+        status: 'ok',
+        score: 60,
+        label: 'okay',
+        verbesserungen: ['Etwas Feta dazu.'],
+        unklarHinweis: 'War Öl dabei?',
+      })
+    })
+
+    it('does not include geschmack for snack results', async () => {
+      mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
+      mockMealSingle.mockResolvedValue({ data: { id: 'meal-1', user_id: 'user-1', free_text: 'Apfel', photo_fullsize_path: null }, error: null })
+      mockConvSingle.mockResolvedValue({ data: { assumptions: ['MAHLZEIT_TYP: snack'] }, error: null })
+      mockAnthropicCreate.mockResolvedValue({
+        content: [{ type: 'text', text: JSON.stringify({
+          typ: 'snack',
+          zutatenliste: [{ name: 'Apfel', amount: '1 Stück', grams: 180 }],
+          annahmen: ['MAHLZEIT_TYP: snack'],
+          snack_bestaetigung: 'Alles klar, Snack.',
+        }) }],
+      })
+      mockInsertSingle.mockResolvedValue({ data: { id: 'snack-analysis-1' }, error: null })
+      mockMealsUpdate.mockResolvedValue({ error: null })
+      mockConvUpdate.mockResolvedValue({ error: null })
+
+      const { POST } = await import('./route')
+      const res = await POST(makeRequest({ mealId: '550e8400-e29b-41d4-a716-446655440000', ingredients: [{ name: 'Apfel', amount: '1 Stück' }] }))
+      const body = await res.json()
+      expect(body.result).not.toHaveProperty('geschmack')
+    })
+  })
+
+  // PROJ-16 (Refinement 2026-08-11): Komponente-Kontext tests (löst Beilagen-Kontext ab)
+  it('returns komponente result when MAHLZEIT_TYP: komponente is in assumptions', async () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
     mockMealSingle.mockResolvedValue({ data: { id: 'meal-1', user_id: 'user-1', free_text: 'Blattsalat', photo_fullsize_path: null }, error: null })
     mockConvSingle.mockResolvedValue({
-      data: { assumptions: ['BEILAGE_KONTEXT: Blattsalat wird als vollständige Mahlzeit gegessen.'] },
+      data: { assumptions: ['MAHLZEIT_TYP: komponente'] },
       error: null,
     })
     mockAnthropicCreate.mockResolvedValue({
-      content: [{ type: 'text', text: JSON.stringify(validBeilageAnalysis) }],
+      content: [{ type: 'text', text: JSON.stringify(validKomponenteAnalysis) }],
     })
-    mockInsertSingle.mockResolvedValue({ data: { id: 'beilage-analysis-1' }, error: null })
+    mockInsertSingle.mockResolvedValue({ data: { id: 'komponente-analysis-1' }, error: null })
     mockMealsUpdate.mockResolvedValue({ error: null })
     mockConvUpdate.mockResolvedValue({ error: null })
 
@@ -213,26 +346,26 @@ describe('POST /api/analyse/confirm', () => {
     const res = await POST(makeRequest({ mealId: '550e8400-e29b-41d4-a716-446655440000', ingredients: [{ name: 'Blattsalat', amount: '100g' }] }))
     expect(res.status).toBe(200)
     const body = await res.json()
-    expect(body.result.typ).toBe('beilage')
-    expect(body.result.beilage.als_beilage_top).toBeTruthy()
-    expect(body.result.beilage.pairing).toHaveLength(2)
+    expect(body.result.typ).toBe('komponente')
+    expect(body.result.komponente.bilanz).toBeTruthy()
+    expect(body.result.komponente.kombinationsvorschlag).toBeTruthy()
     expect(body.result).not.toHaveProperty('vorher')
     expect(body.result).not.toHaveProperty('vorschlaege')
   })
 
-  // PROJ-28: Beilagen-Zweig berechnete die Zutaten-Kennzeichnung bisher nicht
-  it('computes zutatenQuellen for beilage results too', async () => {
+  // PROJ-28: Komponente-Zweig berechnete die Zutaten-Kennzeichnung bisher nicht (damals: Beilagen-Zweig)
+  it('computes zutatenQuellen for komponente results too', async () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
     mockMealSingle.mockResolvedValue({ data: { id: 'meal-1', user_id: 'user-1', free_text: 'Blattsalat mit Yuzu-Paste', photo_fullsize_path: null }, error: null })
     mockConvSingle.mockResolvedValue({
-      data: { assumptions: ['BEILAGE_KONTEXT: Blattsalat wird als vollständige Mahlzeit gegessen.'] },
+      data: { assumptions: ['MAHLZEIT_TYP: komponente'] },
       error: null,
     })
     mockAnthropicCreate.mockResolvedValue({
       content: [{
         type: 'text',
         text: JSON.stringify({
-          ...validBeilageAnalysis,
+          ...validKomponenteAnalysis,
           zutatenliste: [
             { name: 'Blattsalat', amount: '100g', grams: 100 },
             { name: 'Yuzu-Paste', amount: '20g', grams: 20, naehrwert_geschaetzt: { kcal: 250, protein_g: 1, carbs_g: 60, sugar_g: 55, fat_g: 0, fiber_g: 1 } },
@@ -241,7 +374,7 @@ describe('POST /api/analyse/confirm', () => {
         }),
       }],
     })
-    mockInsertSingle.mockResolvedValue({ data: { id: 'beilage-analysis-2' }, error: null })
+    mockInsertSingle.mockResolvedValue({ data: { id: 'komponente-analysis-2' }, error: null })
     mockMealsUpdate.mockResolvedValue({ error: null })
     mockConvUpdate.mockResolvedValue({ error: null })
 
@@ -258,6 +391,49 @@ describe('POST /api/analyse/confirm', () => {
     // liefern können, nicht ein Fehler in der Produktionslogik.
     // Reihenfolge entspricht zutatenliste: [Blattsalat, Yuzu-Paste, Unbekannte Zutat]
     expect(body.result.zutatenQuellen).toEqual(['nicht_schaetzbar', 'schaetzung', 'nicht_schaetzbar'])
+  })
+
+  // PROJ-4/16 (Refinement 2026-08-11): Snack-Kontext (komplett neu)
+  it('returns snack result when MAHLZEIT_TYP: snack is in assumptions', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
+    mockMealSingle.mockResolvedValue({ data: { id: 'meal-1', user_id: 'user-1', free_text: 'Ein Apfel', photo_fullsize_path: null }, error: null })
+    mockConvSingle.mockResolvedValue({
+      data: { assumptions: ['MAHLZEIT_TYP: snack'] },
+      error: null,
+    })
+    mockAnthropicCreate.mockResolvedValue({
+      content: [{
+        type: 'text',
+        text: JSON.stringify({
+          typ: 'snack',
+          zutatenliste: [{ name: 'Apfel', amount: '1 Stück', grams: 180 }],
+          annahmen: ['MAHLZEIT_TYP: snack'],
+          snack_bestaetigung: 'Alles klar, Snack — der braucht keine Analyse.',
+        }),
+      }],
+    })
+    mockInsertSingle.mockResolvedValue({ data: { id: 'snack-analysis-1' }, error: null })
+    mockMealsUpdate.mockResolvedValue({ error: null })
+    mockConvUpdate.mockResolvedValue({ error: null })
+
+    const { POST } = await import('./route')
+    const res = await POST(makeRequest({ mealId: '550e8400-e29b-41d4-a716-446655440000', ingredients: [{ name: 'Apfel', amount: '1 Stück' }] }))
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.result.typ).toBe('snack')
+    expect(body.result.snackBestaetigung).toBe('Alles klar, Snack — der braucht keine Analyse.')
+    expect(body.result).not.toHaveProperty('vorher')
+    expect(body.result).not.toHaveProperty('vorschlaege')
+    expect(body.result).not.toHaveProperty('komponente')
+
+    // Insert sollte analysis_typ 'snack' und trotzdem berechnete macros_before enthalten
+    // (Hintergrund-Berechnung für den künftigen Wochenrückblick, siehe PROJ-4 AC)
+    const insertPayload = mockMealAnalysesInsert.mock.calls[0][0]
+    expect(insertPayload.analysis_typ).toBe('snack')
+    expect(insertPayload.macros_before).toBeTruthy()
+    // Bugfix: snack_bestaetigung muss persistiert werden, sonst fehlt der Text beim späteren
+    // Ansehen aus der Historie (beilage_data-Spalte wiederverwendet, wie bei Komponente)
+    expect(insertPayload.beilage_data).toEqual({ snack_bestaetigung: 'Alles klar, Snack — der braucht keine Analyse.' })
   })
 
   // PROJ-18 FIX-3: system prompt must use prompt caching
@@ -527,24 +703,24 @@ describe('POST /api/analyse/confirm', () => {
     expect(sources.find(s => s.ingredient === 'Keine Schätzung')?.source).toBe('nicht_schaetzbar')
   })
 
-  it('skips macro computation for beilage analyses', async () => {
+  it('skips satiety score computation for komponente analyses', async () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
     mockMealSingle.mockResolvedValue({ data: { id: 'meal-1', user_id: 'user-1', free_text: 'Blattsalat', photo_fullsize_path: null }, error: null })
     mockConvSingle.mockResolvedValue({
-      data: { assumptions: ['BEILAGE_KONTEXT: Blattsalat wird als vollständige Mahlzeit gegessen.'] },
+      data: { assumptions: ['MAHLZEIT_TYP: komponente'] },
       error: null,
     })
     mockAnthropicCreate.mockResolvedValue({
-      content: [{ type: 'text', text: JSON.stringify(validBeilageAnalysis) }],
+      content: [{ type: 'text', text: JSON.stringify(validKomponenteAnalysis) }],
     })
-    mockInsertSingle.mockResolvedValue({ data: { id: 'beilage-analysis-1' }, error: null })
+    mockInsertSingle.mockResolvedValue({ data: { id: 'komponente-analysis-3' }, error: null })
     mockMealsUpdate.mockResolvedValue({ error: null })
     mockConvUpdate.mockResolvedValue({ error: null })
 
     const { POST } = await import('./route')
     const res = await POST(makeRequest({ mealId: '550e8400-e29b-41d4-a716-446655440000', ingredients: [{ name: 'Blattsalat', amount: '100g' }] }))
     expect(res.status).toBe(200)
-    // Beilage result has no macros
+    // Komponente result has no Säulen-Bewertung
     const body = await res.json()
     expect(body.result).not.toHaveProperty('nachher')
   })

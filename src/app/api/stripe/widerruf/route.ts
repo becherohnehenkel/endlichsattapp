@@ -55,11 +55,11 @@ export async function POST() {
         {
           From: {
             Email: process.env.MAILJET_FROM_EMAIL ?? 'hallo@mehralsabnehmen.de',
-            Name: 'endlichsatt',
+            Name: 'Mehralsabnehmen',
           },
           To: [{ Email: user.email! }],
           ...(bcc ? { Bcc: bcc } : {}),
-          Subject: 'Bestätigung deines Widerrufs — endlichsatt',
+          Subject: 'Bestätigung deines Widerrufs — Mehralsabnehmen',
           TextPart: [
             'Bestätigung des Widerrufs',
             '',
@@ -72,14 +72,14 @@ export async function POST() {
             '',
             'Bei Fragen antworte auf diese E-Mail.',
             '',
-            'endlichsatt — hallo@mehralsabnehmen.de',
+            'Mehralsabnehmen — hallo@mehralsabnehmen.de',
           ].join('\n'),
           HTMLPart: `<p><strong>Bestätigung des Widerrufs</strong></p>
 <p>Wir bestätigen, dass du dein Widerrufsrecht (§ 356a BGB) am <strong>${zeitstempel} Uhr</strong> ausgeübt hast.</p>
 <p><strong>Konto:</strong> ${user.email}<br><strong>Vertrag:</strong> ${sub.id}</p>
 <p>Dein Abonnement wurde sofort beendet. Eine Rückerstattung anteiliger Beträge wird innerhalb von 14 Tagen bearbeitet.</p>
 <p>Bei Fragen antworte auf diese E-Mail.</p>
-<p>endlichsatt<br>hallo@mehralsabnehmen.de</p>`,
+<p>Mehralsabnehmen<br>hallo@mehralsabnehmen.de</p>`,
         },
       ],
     })

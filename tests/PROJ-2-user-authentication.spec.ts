@@ -23,16 +23,22 @@ async function loginAs(page: Parameters<typeof test>[1]['page'], email: string, 
 // ZUGANGSSCHUTZ
 // ─────────────────────────────────────────
 test.describe('Zugangsschutz', () => {
-  test('Nicht-eingeloggter Nutzer wird von /analyse zu /login weitergeleitet', async ({ page }) => {
+  // Vorbestehender Bug (nicht durch den Rename verursacht): seit PROJ-19 (Gast-Modus) ist
+  // "/analyse" bewusst öffentlich zugänglich (anonyme Session wird client-seitig beim ersten
+  // Besuch angelegt, siehe middleware.ts) — kein Redirect zu /login mehr. Dieser Test wurde
+  // bei der PROJ-19-Einführung nie mitgezogen. Auf das jetzt korrekte Verhalten umgestellt;
+  // der eigentliche "geschützte Route"-Fall wird unten stattdessen an /historie geprüft, das
+  // weiterhin ein volles Konto verlangt.
+  test('Nicht-eingeloggter Nutzer kann /analyse ohne Redirect aufrufen (PROJ-19 Gast-Modus)', async ({ page }) => {
     await page.goto('/analyse')
-    await expect(page).toHaveURL(/\/login/)
+    await page.waitForLoadState('networkidle')
+    expect(page.url()).not.toContain('/login')
   })
 
-  test('redirectTo-Parameter bleibt beim Redirect zu /login erhalten', async ({ page }) => {
-    await page.goto('/analyse')
-    await page.waitForURL(/\/login/, { timeout: 5000 })
-    const redirectTo = new URL(page.url()).searchParams.get('redirectTo')
-    expect(redirectTo).toBe('/analyse')
+  test('/historie ohne Session leitet mit redirectTo-Kontext zu /konto weiter', async ({ page }) => {
+    await page.goto('/historie')
+    await page.waitForURL(/\/konto/, { timeout: 5000 })
+    expect(new URL(page.url()).searchParams.get('reason')).toBe('historie')
   })
 
   // BUG-4 (gefunden 2026-06-16, siehe Decision Log in features/PROJ-2-user-authentication.md):
@@ -164,9 +170,10 @@ test.describe('Logout', () => {
     await page.goto('/konto') // Abmelden-Button ist seit PROJ-14 auf /konto
     await page.getByRole('button', { name: 'Abmelden' }).click()
     await expect(page).toHaveURL(/\/login/, { timeout: 8000 })
-    // Verify session is gone — protected route should redirect again
-    await page.goto('/analyse')
-    await expect(page).toHaveURL(/\/login/)
+    // Verify session is gone — eine wirklich geschützte Route (nicht /analyse, das ist seit
+    // PROJ-19 bewusst öffentlich, siehe "Zugangsschutz"-Block oben) muss weiterhin abweisen
+    await page.goto('/historie')
+    await expect(page).toHaveURL(/\/konto/)
   })
 })
 

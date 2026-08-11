@@ -41,6 +41,7 @@ const WOCHE_AKTUELL_LEER = {
   istAktuelleWoche: true,
   anzahlGesamt: 0,
   anzahlBeilagen: 0,
+  anzahlSnacks: 0,
   anzahlStandard: 0,
   gesamtbewertungAvg: null,
   schwächsterBaustein: null,
@@ -61,6 +62,8 @@ const WOCHE_AKTUELL_ZWEI_ANALYSEN = {
   anzahlStandard: 2,
 }
 
+// Refinement 2026-08-11 ("Complete"-Umstrukturierung): 6 Bausteine → 3 Säulen (proteine/
+// ballaststoffe/volumen), 4 Stufen (gut/mittel/gering/ungenuegend) statt 3.
 const WOCHE_AKTUELL_VOLLSTAENDIG = {
   startDatum: '2026-06-28',
   endDatum: '2026-07-04',
@@ -68,12 +71,12 @@ const WOCHE_AKTUELL_VOLLSTAENDIG = {
   istAktuelleWoche: true,
   anzahlGesamt: 4,
   anzahlBeilagen: 1,
+  anzahlSnacks: 0,
   anzahlStandard: 3,
   gesamtbewertungAvg: 'maessig_saettigend',
-  schwächsterBaustein: 'biss',
+  schwächsterBaustein: 'ballaststoffe',
   bausteine: {
-    geschmack: 'gut', biss: 'schwach', ballaststoffe: 'mittel',
-    proteine: 'gut', volumen: 'mittel', art_of_eating: 'nicht_bewertet',
+    proteine: 'gut', ballaststoffe: 'gering', volumen: 'mittel',
   },
   makrosAvg: { kcal: 520, protein_g: 28, kohlenhydrate_g: 65, fett_g: 18, ballaststoffe_g: 4 },
   topZutaten: ['Hähnchenbrust', 'Pasta', 'Tomate', 'Olivenöl', 'Käse'],
@@ -86,12 +89,12 @@ const WOCHE_LETZTE_VOLLSTAENDIG = {
   istAktuelleWoche: false,
   anzahlGesamt: 5,
   anzahlBeilagen: 0,
-  anzahlStandard: 5,
+  anzahlSnacks: 1,
+  anzahlStandard: 4,
   gesamtbewertungAvg: 'sehr_saettigend',
   schwächsterBaustein: null,
   bausteine: {
-    geschmack: 'gut', biss: 'gut', ballaststoffe: 'gut',
-    proteine: 'gut', volumen: 'gut', art_of_eating: 'nicht_bewertet',
+    proteine: 'gut', ballaststoffe: 'gut', volumen: 'gut',
   },
   makrosAvg: { kcal: 580, protein_g: 35, kohlenhydrate_g: 70, fett_g: 20, ballaststoffe_g: 7 },
   topZutaten: ['Hähnchen', 'Gemüse', 'Quinoa'],
@@ -122,7 +125,7 @@ test.describe('Wochenrückblick-Sektion sichtbar', () => {
   test('Wochenrückblick-Heading erscheint auf der Historien-Seite', async ({ page }) => {
     mockApis(page, WOCHE_AKTUELL_LEER)
     await loginAndGoToHistorie(page)
-    await expect(page.getByText(/Wochenrückblick/i)).toBeVisible({ timeout: 8000 })
+    await expect(page.getByText('Wochenrückblick', { exact: true })).toBeVisible({ timeout: 8000 })
   })
 
   test('Lade-Skelett wird angezeigt während Recap lädt', async ({ page }) => {
@@ -138,7 +141,7 @@ test.describe('Wochenrückblick-Sektion sichtbar', () => {
     const skeleton = page.locator('.animate-pulse').first()
     await expect(skeleton).toBeVisible({ timeout: 5000 })
     resolve()
-    await expect(page.getByText('Diese Woche')).toBeVisible({ timeout: 5000 })
+    await expect(page.getByText('Diese Woche').first()).toBeVisible({ timeout: 5000 })
   })
 })
 
@@ -148,28 +151,28 @@ test.describe('Fortschritts-Zustand aktuelle Woche', () => {
   test('0 Analysen: "Noch 3 Mahlzeiten bis zu deinem Wochenrückblick"', async ({ page }) => {
     mockApis(page, WOCHE_AKTUELL_LEER, { meals: [], hasMore: false })
     await loginAndGoToHistorie(page)
-    await expect(page.getByText('Diese Woche')).toBeVisible({ timeout: 8000 })
+    await expect(page.getByText('Diese Woche').first()).toBeVisible({ timeout: 8000 })
     await expect(page.getByText(/Noch 3 Mahlzeiten bis zu deinem Wochenrückblick/)).toBeVisible()
   })
 
   test('1 Analyse: "Noch 2 Mahlzeiten bis zu deinem Wochenrückblick"', async ({ page }) => {
     mockApis(page, WOCHE_AKTUELL_EINE_ANALYSE)
     await loginAndGoToHistorie(page)
-    await expect(page.getByText('Diese Woche')).toBeVisible({ timeout: 8000 })
+    await expect(page.getByText('Diese Woche').first()).toBeVisible({ timeout: 8000 })
     await expect(page.getByText(/Noch 2 Mahlzeiten bis zu deinem Wochenrückblick/)).toBeVisible()
   })
 
   test('2 Analysen: "Noch 1 Mahlzeit bis zu deinem Wochenrückblick"', async ({ page }) => {
     mockApis(page, WOCHE_AKTUELL_ZWEI_ANALYSEN)
     await loginAndGoToHistorie(page)
-    await expect(page.getByText('Diese Woche')).toBeVisible({ timeout: 8000 })
+    await expect(page.getByText('Diese Woche').first()).toBeVisible({ timeout: 8000 })
     await expect(page.getByText(/Noch 1 Mahlzeit bis zu deinem Wochenrückblick/)).toBeVisible()
   })
 
   test('Fortschritts-Punkte (3 Dots) sichtbar im aufgeklappten Zustand', async ({ page }) => {
     mockApis(page, WOCHE_AKTUELL_EINE_ANALYSE)
     await loginAndGoToHistorie(page)
-    await expect(page.getByText('Diese Woche')).toBeVisible({ timeout: 8000 })
+    await expect(page.getByText('Diese Woche').first()).toBeVisible({ timeout: 8000 })
     // Current week is open by default, so progress content visible
     await expect(page.getByText('1 / 3 Mahlzeiten analysiert')).toBeVisible()
   })
@@ -181,42 +184,51 @@ test.describe('Vollständiger Recap-Inhalt', () => {
   test('Gesamtbewertungs-Badge im Header sichtbar', async ({ page }) => {
     mockApis(page, WOCHE_AKTUELL_VOLLSTAENDIG)
     await loginAndGoToHistorie(page)
-    await expect(page.getByText('Diese Woche')).toBeVisible({ timeout: 8000 })
+    await expect(page.getByText('Diese Woche').first()).toBeVisible({ timeout: 8000 })
     await expect(page.getByText(/Ø Mäßig sättigend/)).toBeVisible()
   })
 
   test('Mahlzeiten-Anzahl mit Beilagen-Hinweis angezeigt', async ({ page }) => {
     mockApis(page, WOCHE_AKTUELL_VOLLSTAENDIG)
     await loginAndGoToHistorie(page)
-    await expect(page.getByText('Diese Woche')).toBeVisible({ timeout: 8000 })
+    await expect(page.getByText('Diese Woche').first()).toBeVisible({ timeout: 8000 })
     // 4 Mahlzeiten, davon 1 Beilage
     await expect(page.getByText(/4 Mahlzeiten analysiert.*davon 1 Beilage/)).toBeVisible({ timeout: 5000 })
   })
 
-  test('6 Bausteine werden angezeigt', async ({ page }) => {
+  test('3 Säulen werden angezeigt', async ({ page }) => {
     mockApis(page, WOCHE_AKTUELL_VOLLSTAENDIG)
     await loginAndGoToHistorie(page)
-    await expect(page.getByText('Diese Woche')).toBeVisible({ timeout: 8000 })
-    await expect(page.getByText('6 Bausteine')).toBeVisible({ timeout: 5000 })
-    await expect(page.getByText('Geschmack')).toBeVisible()
-    await expect(page.getByText('Biss')).toBeVisible()
-    await expect(page.getByText('Ballaststoffe')).toBeVisible()
+    await expect(page.getByText('Diese Woche').first()).toBeVisible({ timeout: 8000 })
+    await expect(page.getByText('3 Säulen')).toBeVisible({ timeout: 5000 })
     await expect(page.getByText('Proteine')).toBeVisible()
+    await expect(page.getByText('Ballaststoffe').first()).toBeVisible()
     await expect(page.getByText('Volumen')).toBeVisible()
-    await expect(page.getByText('Art of Eating')).toBeVisible()
+    // Geschmack/Biss/Art of Eating sind eigene, künftige Sektionen — hier nie mehr enthalten
+    await expect(page.getByText('Geschmack')).not.toBeVisible()
+    await expect(page.getByText('Biss')).not.toBeVisible()
+    await expect(page.getByText('Art of Eating')).not.toBeVisible()
   })
 
-  test('"Blinder Fleck" Callout zeigt schwächsten Baustein', async ({ page }) => {
+  test('"Blinder Fleck" Callout zeigt schwächste Säule', async ({ page }) => {
     mockApis(page, WOCHE_AKTUELL_VOLLSTAENDIG)
     await loginAndGoToHistorie(page)
-    await expect(page.getByText('Diese Woche')).toBeVisible({ timeout: 8000 })
-    await expect(page.getByText(/Dein blinder Fleck diese Woche: Biss/)).toBeVisible({ timeout: 5000 })
+    await expect(page.getByText('Diese Woche').first()).toBeVisible({ timeout: 8000 })
+    await expect(page.getByText(/Dein blinder Fleck diese Woche: Ballaststoffe/)).toBeVisible({ timeout: 5000 })
+  })
+
+  test('Snack-Anzahl wird im Anzahl-Hinweis mitgezählt', async ({ page }) => {
+    mockApis(page, [WOCHE_AKTUELL_VOLLSTAENDIG, WOCHE_LETZTE_VOLLSTAENDIG])
+    await loginAndGoToHistorie(page)
+    await expect(page.getByText('Letzte Woche')).toBeVisible({ timeout: 8000 })
+    await page.getByText('Letzte Woche').click()
+    await expect(page.getByText(/5 Mahlzeiten analysiert.*1 Snack/)).toBeVisible({ timeout: 5000 })
   })
 
   test('Ø Makros pro Mahlzeit werden angezeigt', async ({ page }) => {
     mockApis(page, WOCHE_AKTUELL_VOLLSTAENDIG)
     await loginAndGoToHistorie(page)
-    await expect(page.getByText('Diese Woche')).toBeVisible({ timeout: 8000 })
+    await expect(page.getByText('Diese Woche').first()).toBeVisible({ timeout: 8000 })
     await expect(page.getByText('Ø pro Mahlzeit')).toBeVisible({ timeout: 5000 })
     await expect(page.getByText('520')).toBeVisible() // kcal
     await expect(page.getByText('28g')).toBeVisible() // Protein
@@ -225,10 +237,10 @@ test.describe('Vollständiger Recap-Inhalt', () => {
   test('Top-5 Zutaten als Tags angezeigt', async ({ page }) => {
     mockApis(page, WOCHE_AKTUELL_VOLLSTAENDIG)
     await loginAndGoToHistorie(page)
-    await expect(page.getByText('Diese Woche')).toBeVisible({ timeout: 8000 })
+    await expect(page.getByText('Diese Woche').first()).toBeVisible({ timeout: 8000 })
     await expect(page.getByText('Häufigste Zutaten')).toBeVisible({ timeout: 5000 })
     await expect(page.getByText('Hähnchenbrust')).toBeVisible()
-    await expect(page.getByText('Pasta')).toBeVisible()
+    await expect(page.getByText('Pasta', { exact: true })).toBeVisible()
     await expect(page.getByText('Tomate')).toBeVisible()
   })
 })
@@ -239,9 +251,9 @@ test.describe('Collapse / Expand', () => {
   test('aktuelle Woche ist standardmäßig aufgeklappt', async ({ page }) => {
     mockApis(page, WOCHE_AKTUELL_VOLLSTAENDIG)
     await loginAndGoToHistorie(page)
-    await expect(page.getByText('Diese Woche')).toBeVisible({ timeout: 8000 })
+    await expect(page.getByText('Diese Woche').first()).toBeVisible({ timeout: 8000 })
     // Full recap content visible without clicking
-    await expect(page.getByText('6 Bausteine')).toBeVisible({ timeout: 5000 })
+    await expect(page.getByText('3 Säulen')).toBeVisible({ timeout: 5000 })
   })
 
   test('vergangene Woche ist standardmäßig eingeklappt', async ({ page }) => {
@@ -249,7 +261,7 @@ test.describe('Collapse / Expand', () => {
     await loginAndGoToHistorie(page)
     await expect(page.getByText('Letzte Woche')).toBeVisible({ timeout: 8000 })
     // Past week content not visible until clicked
-    await expect(page.getByText('Hähnchen')).toBeHidden()
+    await expect(page.getByText('Hähnchen', { exact: true })).toBeHidden()
   })
 
   test('Klick auf vergangene Woche klappt sie auf', async ({ page }) => {
@@ -257,7 +269,7 @@ test.describe('Collapse / Expand', () => {
     await loginAndGoToHistorie(page)
     await expect(page.getByText('Letzte Woche')).toBeVisible({ timeout: 8000 })
     await page.getByText('Letzte Woche').click()
-    await expect(page.getByText('Hähnchen')).toBeVisible({ timeout: 5000 })
+    await expect(page.getByText('Hähnchen', { exact: true })).toBeVisible({ timeout: 5000 })
   })
 
   test('zwei Wochen können gleichzeitig aufgeklappt sein', async ({ page }) => {
@@ -266,7 +278,7 @@ test.describe('Collapse / Expand', () => {
     await expect(page.getByText('Letzte Woche')).toBeVisible({ timeout: 8000 })
     // Current week is open → click past week → both open
     await page.getByText('Letzte Woche').click()
-    await expect(page.getByText('Hähnchen')).toBeVisible({ timeout: 5000 }) // past week content
+    await expect(page.getByText('Hähnchen', { exact: true })).toBeVisible({ timeout: 5000 }) // past week content
     await expect(page.getByText('Hähnchenbrust')).toBeVisible() // current week content still visible
   })
 
@@ -275,9 +287,9 @@ test.describe('Collapse / Expand', () => {
     await loginAndGoToHistorie(page)
     await expect(page.getByText('Letzte Woche')).toBeVisible({ timeout: 8000 })
     await page.getByText('Letzte Woche').click()
-    await expect(page.getByText('Hähnchen')).toBeVisible({ timeout: 5000 })
+    await expect(page.getByText('Hähnchen', { exact: true })).toBeVisible({ timeout: 5000 })
     await page.getByText('Letzte Woche').click()
-    await expect(page.getByText('Hähnchen')).toBeHidden({ timeout: 3000 })
+    await expect(page.getByText('Hähnchen', { exact: true })).toBeHidden({ timeout: 3000 })
   })
 })
 
@@ -288,7 +300,7 @@ test.describe('Wochenstruktur', () => {
     // API returns only current week (past week filtered server-side)
     mockApis(page, [WOCHE_AKTUELL_LEER])
     await loginAndGoToHistorie(page)
-    await expect(page.getByText('Diese Woche')).toBeVisible({ timeout: 8000 })
+    await expect(page.getByText('Diese Woche').first()).toBeVisible({ timeout: 8000 })
     await expect(page.getByText('Letzte Woche')).toBeHidden()
   })
 
@@ -298,13 +310,13 @@ test.describe('Wochenstruktur', () => {
     await expect(page.getByText('Letzte Woche')).toBeVisible({ timeout: 8000 })
     // Collapsed: headline visible, content not
     await expect(page.getByText('Ø Sehr sättigend')).toBeVisible()
-    await expect(page.getByText('Hähnchen')).toBeHidden()
+    await expect(page.getByText('Hähnchen', { exact: true })).toBeHidden()
   })
 
   test('Datum-Spanne sichtbar im Wochenkarten-Header', async ({ page }) => {
     mockApis(page, WOCHE_AKTUELL_LEER)
     await loginAndGoToHistorie(page)
-    await expect(page.getByText('Diese Woche')).toBeVisible({ timeout: 8000 })
+    await expect(page.getByText('Diese Woche').first()).toBeVisible({ timeout: 8000 })
     // Date range "28. Jun – 4. Jul" or similar should be visible
     await expect(page.getByText(/Jun.*Jul|Jul.*Jun/)).toBeVisible({ timeout: 3000 })
   })
@@ -316,7 +328,7 @@ test.describe('Regression: PROJ-6 Historien-Features', () => {
   test('Mahlzeiten-Liste noch sichtbar unter dem Wochenrückblick', async ({ page }) => {
     mockApis(page, WOCHE_AKTUELL_VOLLSTAENDIG)
     await loginAndGoToHistorie(page)
-    await expect(page.getByText('Diese Woche')).toBeVisible({ timeout: 8000 })
+    await expect(page.getByText('Diese Woche').first()).toBeVisible({ timeout: 8000 })
     await expect(page.getByText('Hähnchen mit Gemüse')).toBeVisible({ timeout: 5000 })
     await expect(page.getByText('Pasta Bolognese')).toBeVisible()
   })
@@ -324,14 +336,14 @@ test.describe('Regression: PROJ-6 Historien-Features', () => {
   test('FAB-Button "Neue Mahlzeit" noch vorhanden', async ({ page }) => {
     mockApis(page, WOCHE_AKTUELL_VOLLSTAENDIG)
     await loginAndGoToHistorie(page)
-    await expect(page.getByText('Diese Woche')).toBeVisible({ timeout: 8000 })
+    await expect(page.getByText('Diese Woche').first()).toBeVisible({ timeout: 8000 })
     await expect(page.getByRole('link', { name: /neue mahlzeit/i })).toBeVisible({ timeout: 5000 })
   })
 
   test('Leerer Zustand zeigt CTA wenn keine Mahlzeiten', async ({ page }) => {
     mockApis(page, WOCHE_AKTUELL_LEER, { meals: [], hasMore: false })
     await loginAndGoToHistorie(page)
-    await expect(page.getByText('Diese Woche')).toBeVisible({ timeout: 8000 })
+    await expect(page.getByText('Diese Woche').first()).toBeVisible({ timeout: 8000 })
     await expect(page.getByText('Deine erste Analyse wartet')).toBeVisible({ timeout: 5000 })
   })
 

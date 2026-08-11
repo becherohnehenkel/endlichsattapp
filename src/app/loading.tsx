@@ -5,7 +5,7 @@ export default function HomeLoading() {
   return (
     <div className="min-h-screen bg-background">
       <header className="md:hidden sticky top-0 z-10 border-b border-border bg-card/80 backdrop-blur-sm px-4 py-3 flex items-center justify-between">
-        <span className="font-semibold text-foreground tracking-tight">endlichsatt</span>
+        <span className="font-semibold text-foreground tracking-tight">Mehralsabnehmen</span>
         <div className="text-muted-foreground p-1.5">
           <UserRound className="h-4 w-4" />
         </div>

@@ -7,13 +7,13 @@ import { NavigationShell } from "@/components/navigation-shell";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "endlichsatt",
+  title: "Mehralsabnehmen",
   description: "Verstehe warum du hungrig bleibst — und was du konkret ändern kannst.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "endlichsatt",
+    title: "Mehralsabnehmen",
   },
 };
 

@@ -4,11 +4,15 @@ const TEST_EMAIL = 'qa-test@endlichsatt.dev'
 const TEST_PASSWORD = 'QaTest123!'
 
 async function loginAndGoToHistorie(page: Page) {
+  // "/" ist seit PROJ-6 die Standard-Landingpage nach Login (nicht mehr "/historie") — dieser
+  // Helper navigierte bislang nie tatsächlich zur Historie-Seite weiter (vorbestehender
+  // Test-Bug, unabhängig vom Refinement 2026-08-11).
   await page.goto('/login')
   await page.fill('#email', TEST_EMAIL)
   await page.fill('#password', TEST_PASSWORD)
   await page.click('button[type="submit"]')
   await page.waitForURL('**/', { timeout: 8000 })
+  await page.goto('/historie')
 }
 
 const MEAL_SEHR_SAETTIGEND = {
@@ -262,8 +266,12 @@ test.describe('Fehlerfall', () => {
 // AUTHENTIFIZIERUNG
 // ─────────────────────────────────────────────────────────────
 test.describe('Authentifizierung', () => {
-  test('nicht eingeloggter Nutzer wird zum Login weitergeleitet', async ({ page }) => {
-    await page.goto('/')
-    await expect(page).toHaveURL(/\/login/, { timeout: 5000 })
+  // Seit PROJ-19 (Gast-Modus) ist "/" öffentlich zugänglich (anonyme Session) — nicht mehr
+  // login-geschützt. Nur "/historie" selbst verlangt weiterhin ein volles Konto und leitet
+  // unauthentifizierte Besucher zu "/konto" um (nicht "/login", siehe middleware.ts).
+  // Vorbestehender Test-Bug (Annahme war vor PROJ-19 korrekt), unabhängig vom Refinement 2026-08-11.
+  test('nicht eingeloggter Nutzer wird bei /historie zu /konto weitergeleitet', async ({ page }) => {
+    await page.goto('/historie')
+    await expect(page).toHaveURL(/\/konto/, { timeout: 5000 })
   })
 })

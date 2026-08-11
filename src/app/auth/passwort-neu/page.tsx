@@ -46,7 +46,7 @@ export default function PasswortNeuPage() {
     <main className="min-h-screen flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-semibold tracking-tight">endlichsatt</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Mehralsabnehmen</h1>
         </div>
 
         <Card>

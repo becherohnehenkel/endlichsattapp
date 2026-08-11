@@ -13,22 +13,42 @@ import {
 } from '@/components/ui/collapsible'
 import RezeptVorschlaege from '@/components/rezept-vorschlaege'
 import RezeptAusMahlzeitButtons from '@/components/rezept-aus-mahlzeit-buttons'
-import BeilagenErgebnis from '@/components/beilagen-ergebnis'
+import KomponentenErgebnis from '@/components/komponenten-ergebnis'
+import SnackBestaetigung from '@/components/snack-bestaetigung'
 import RatingRing from '@/components/rating-ring'
 import KIHinweis from '@/components/ki-hinweis'
 import FeedbackDialog from '@/components/feedback-dialog'
 import ZutatenBereich from '@/components/zutaten-bereich'
+import GeschmackErgebnis from '@/components/geschmack-ergebnis'
+import ArtOfEatingHinweis from '@/components/art-of-eating-hinweis'
 
-type BausteinRating = 'gut' | 'mittel' | 'schwach' | 'nicht_bewertet'
+// Refinement 2026-08-11 ("Complete"-Umstrukturierung): 6 Bausteine → 3 Säulen. Ältere,
+// vor diesem Refinement gespeicherte Mahlzeit-Analysen bleiben für immer im alten Format
+// gespeichert (keine Migration, siehe PROJ-4/5 Decision Log) — die Anzeige unterscheidet
+// beide Formate über das Feld `format` ('legacy' = 6 Bausteine/3 Stufen, 'neu' = 3 Säulen/
+// 4 Stufen) und rendert jeweils passend.
 
-interface BausteineBewertung {
-  geschmack: BausteinRating
-  biss: BausteinRating
-  ballaststoffe: BausteinRating
-  proteine: BausteinRating
-  volumen: BausteinRating
-  art_of_eating: BausteinRating
+export type LegacyBausteinRating = 'gut' | 'mittel' | 'schwach' | 'nicht_bewertet'
+export type SaeuleRating = 'gut' | 'mittel' | 'gering' | 'ungenuegend'
+
+export interface LegacyBausteine {
+  geschmack: LegacyBausteinRating
+  biss: LegacyBausteinRating
+  ballaststoffe: LegacyBausteinRating
+  proteine: LegacyBausteinRating
+  volumen: LegacyBausteinRating
+  art_of_eating: LegacyBausteinRating
 }
+
+export interface Saeulen {
+  proteine: SaeuleRating
+  ballaststoffe: SaeuleRating
+  volumen: SaeuleRating
+}
+
+export type PillarSet =
+  | { format: 'legacy'; bausteine: LegacyBausteine }
+  | { format: 'neu'; saeulen: Saeulen }
 
 interface Naehrwerte {
   kcal: number
@@ -44,8 +64,29 @@ interface Naehrwerte {
  *  plausible Schätzung. Positionsgenau zu `zutatenliste` ausgerichtet (siehe BUG-7-Fix unten). */
 export type ZutatenQuelle = 'bls' | 'off' | 'schaetzung' | 'nicht_schaetzbar'
 
+// PROJ-33: Geschmacks-Score — eigene, gleichwertig prominente Sektion neben der Sättigung
+// (siehe docs/geschmacks-score-prompt.md). Läuft für Mahlzeit + Komponente, nie für Snack.
+// `geschmack` ist auf beiden Result-Typen optional: `undefined` heißt "kein Score vorhanden"
+// (Analyse von vor Einführung des Features ODER — bei Rezepten — noch nicht berechnet) und
+// blendet die Sektion komplett aus; `status: 'error'` heißt "Berechnung ist fehlgeschlagen,
+// Rest der Analyse aber gespeichert" und zeigt den "Nochmal prüfen"-Button.
+export type GeschmackLabel = 'fad' | 'okay' | 'lecker' | 'richtig_gut'
+
+export interface GeschmackResult {
+  score: number
+  label: GeschmackLabel
+  /** Max. 2, additiv formuliert. Leer, wenn score >= 85 (nur Bestätigung, keine Vorschläge). */
+  verbesserungen: string[]
+  /** Kurzer Hinweis, falls eine Basis-Komponente als "unklar" markiert wurde — kein Blocker. */
+  unklarHinweis?: string | null
+}
+
+export type GeschmackState =
+  | ({ status: 'ok' } & GeschmackResult)
+  | { status: 'error' }
+
 export interface StandardAnalysisResult {
-  typ?: 'standard' | undefined
+  typ?: 'mahlzeit' | 'standard' | undefined
   /** PROJ-28: name/amount/grams stammen direkt aus Claudes Analyse-Antwort */
   zutatenliste: { name: string; amount: string; grams: number }[]
   annahmen: string[]
@@ -54,38 +95,51 @@ export interface StandardAnalysisResult {
    *  `kiGeschaetzteZutaten` (PROJ-4), die bei zwei gleichnamigen Zutaten mit unterschiedlicher
    *  Quelle beide fälschlich gleich kennzeichneten. */
   zutatenQuellen?: ZutatenQuelle[]
-  vorher: {
-    bausteine: BausteineBewertung
+  vorher: PillarSet & {
     gesamtbewertung: 'sehr_saettigend' | 'maessig_saettigend' | 'wenig_saettigend'
     erklaerung: string
     naehrwerte: Naehrwerte
   }
-  vorschlaege: { aktion: string; begruendung: string; baustein: string }[]
-  nachher: {
-    bausteine: BausteineBewertung
+  /** `saeule` = neues Feld (2026-08-11+), `baustein` = Legacy-Feld — beide möglich, nie beide gleichzeitig gemeint */
+  vorschlaege: { aktion: string; begruendung: string; baustein?: string; saeule?: string }[]
+  nachher: PillarSet & {
     gesamtbewertung: 'sehr_saettigend' | 'maessig_saettigend' | 'wenig_saettigend'
     naehrwerte: Naehrwerte
     deltas: { wert: string; vorher: number; nachher: number; veraenderung: number }[]
   }
-  art_of_eating_tipp: string | null
+  /** Nur bei Legacy-Analysen vorhanden — Art of Eating ist jetzt eine eigene, künftige Sektion */
+  art_of_eating_tipp?: string | null
+  /** PROJ-33: fehlt bei alten Analysen (vor Einführung des Features) — Sektion wird dann ausgeblendet */
+  geschmack?: GeschmackState
 }
 
-export interface BeilagenAnalysisResult {
-  typ: 'beilage'
+export interface KomponenteAnalysisResult {
+  typ: 'komponente' | 'beilage'
   zutatenliste: { name: string; amount: string; grams: number }[]
   annahmen: string[]
-  /** PROJ-28 (BUG-7-Fix): analog zu StandardAnalysisResult */
   zutatenQuellen?: ZutatenQuelle[]
-  beilage: {
-    als_beilage_top: string
-    als_hauptgericht: string
-    beilage_upgrade: string | null
-    pairing: { empfehlung: string; warum: string }[]
-    art_of_eating_tipp: string | null
-  }
+  komponente:
+    | { format: 'neu'; bilanz: string; kombinationsvorschlag: string }
+    | {
+        format: 'legacy'
+        als_beilage_top: string
+        als_hauptgericht: string
+        beilage_upgrade: string | null
+        pairing: { empfehlung: string; warum: string }[]
+        art_of_eating_tipp: string | null
+      }
+  /** PROJ-33: nur bei `komponente.format === 'neu'` möglich — Legacy-Beilagen-Analysen kannten das Feature nicht */
+  geschmack?: GeschmackState
 }
 
-export type AnalysisResult = StandardAnalysisResult | BeilagenAnalysisResult
+export interface SnackAnalysisResult {
+  typ: 'snack'
+  zutatenliste: { name: string; amount: string; grams: number }[]
+  annahmen: string[]
+  snackBestaetigung: string
+}
+
+export type AnalysisResult = StandardAnalysisResult | KomponenteAnalysisResult | SnackAnalysisResult
 
 interface SaettigungsErgebnisProps {
   result: AnalysisResult
@@ -101,12 +155,11 @@ interface SaettigungsErgebnisProps {
   tooOld?: boolean
 }
 
-const PILLAR_ORDER: (keyof BausteineBewertung)[] = [
+const LEGACY_PILLAR_ORDER: (keyof LegacyBausteine)[] = [
   'geschmack', 'biss', 'ballaststoffe',
   'proteine', 'volumen', 'art_of_eating',
 ]
-
-const PILLAR_META: Record<keyof BausteineBewertung, { label: string; emoji: string }> = {
+const LEGACY_PILLAR_META: Record<keyof LegacyBausteine, { label: string; emoji: string }> = {
   geschmack:     { label: 'Geschmack',     emoji: '✨' },
   biss:          { label: 'Biss',          emoji: '🥕' },
   ballaststoffe: { label: 'Ballaststoffe', emoji: '🌾' },
@@ -115,12 +168,21 @@ const PILLAR_META: Record<keyof BausteineBewertung, { label: string; emoji: stri
   art_of_eating: { label: 'Art of Eating', emoji: '🧘' },
 }
 
-function ratingConfig(rating: BausteinRating) {
+const NEUE_PILLAR_ORDER: (keyof Saeulen)[] = ['proteine', 'ballaststoffe', 'volumen']
+const NEUE_PILLAR_META: Record<keyof Saeulen, { label: string; emoji: string }> = {
+  proteine:      { label: 'Proteine',      emoji: '💪' },
+  ballaststoffe: { label: 'Ballaststoffe', emoji: '🌾' },
+  volumen:       { label: 'Volumen',       emoji: '🥗' },
+}
+
+function ratingConfig(rating: string) {
   switch (rating) {
-    case 'gut':    return { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-600', label: 'Gut' }
-    case 'mittel': return { bg: 'bg-amber-50',   border: 'border-amber-200',   text: 'text-[#EAB308]',   label: 'Mittel' }
-    case 'schwach':return { bg: 'bg-red-50',     border: 'border-red-200',     text: 'text-red-600',     label: 'Schwach' }
-    default:       return { bg: 'bg-muted',      border: 'border-border',      text: 'text-muted-foreground', label: '–' }
+    case 'gut':         return { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-600', label: 'Gut' }
+    case 'mittel':       return { bg: 'bg-amber-50',   border: 'border-amber-200',   text: 'text-[#EAB308]',   label: 'Mittel' }
+    case 'gering':       return { bg: 'bg-orange-50',  border: 'border-orange-200',  text: 'text-orange-600',  label: 'Gering' }
+    case 'schwach':
+    case 'ungenuegend':  return { bg: 'bg-red-50',     border: 'border-red-200',     text: 'text-red-600',     label: rating === 'schwach' ? 'Schwach' : 'Ungenügend' }
+    default:             return { bg: 'bg-muted',      border: 'border-border',      text: 'text-muted-foreground', label: '–' }
   }
 }
 
@@ -131,15 +193,16 @@ function gesamtConfig(g: string) {
 }
 
 function PillarChip({
-  pillar,
+  label,
+  emoji,
   rating,
   improved = false,
 }: {
-  pillar: keyof BausteineBewertung
-  rating: BausteinRating
+  label: string
+  emoji: string
+  rating: string
   improved?: boolean
 }) {
-  const meta = PILLAR_META[pillar]
   const cfg = ratingConfig(rating)
   return (
     <div
@@ -147,9 +210,63 @@ function PillarChip({
         improved ? 'ring-1 ring-emerald-400' : ''
       }`}
     >
-      <span>{meta.emoji}</span>
-      <span className={`font-medium ${cfg.text}`}>{meta.label}</span>
+      <span>{emoji}</span>
+      <span className={`font-medium ${cfg.text}`}>{label}</span>
       <span className={`ml-auto ${cfg.text}`}>{cfg.label}</span>
+    </div>
+  )
+}
+
+/** Rendert das 6er- oder 3er-Grid, je nach `pillarSet.format`. */
+function PillarGrid({ pillarSet }: { pillarSet: PillarSet }) {
+  const order = pillarSet.format === 'legacy' ? LEGACY_PILLAR_ORDER : NEUE_PILLAR_ORDER
+  const meta = pillarSet.format === 'legacy' ? LEGACY_PILLAR_META : NEUE_PILLAR_META
+  const segments = pillarSet.format === 'legacy' ? 3 : 4
+  const values = (pillarSet.format === 'legacy' ? pillarSet.bausteine : pillarSet.saeulen) as unknown as Record<string, string>
+
+  return (
+    <div className="grid grid-cols-3 gap-2">
+      {order.map(pillar => {
+        const m = meta[pillar as keyof typeof meta]
+        const rating = values[pillar]
+        const cfg = ratingConfig(rating)
+        return (
+          <div
+            key={pillar}
+            className={`flex flex-col items-center gap-1 p-2.5 rounded-xl border text-center ${cfg.bg} ${cfg.border}`}
+          >
+            <div className={`relative w-11 h-11 flex items-center justify-center ${cfg.text}`}>
+              <RatingRing rating={rating} size={44} segments={segments} />
+              <span className="text-xl">{m.emoji}</span>
+            </div>
+            <span className="text-xs font-medium text-foreground leading-tight">{m.label}</span>
+            <span className={`text-xs font-semibold ${cfg.text}`}>{cfg.label}</span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function PillarChipList({ pillarSet, improved }: { pillarSet: PillarSet; improved: Set<string> }) {
+  const order = pillarSet.format === 'legacy' ? LEGACY_PILLAR_ORDER : NEUE_PILLAR_ORDER
+  const meta = pillarSet.format === 'legacy' ? LEGACY_PILLAR_META : NEUE_PILLAR_META
+  const values = (pillarSet.format === 'legacy' ? pillarSet.bausteine : pillarSet.saeulen) as unknown as Record<string, string>
+
+  return (
+    <div className="space-y-1">
+      {order.map(pillar => {
+        const m = meta[pillar as keyof typeof meta]
+        return (
+          <PillarChip
+            key={pillar}
+            label={m.label}
+            emoji={m.emoji}
+            rating={values[pillar]}
+            improved={improved.has(pillar)}
+          />
+        )
+      })}
     </div>
   )
 }
@@ -157,8 +274,15 @@ function PillarChip({
 export default function SaettigungsErgebnis({ result, assumptions, onReset, analysisId, photoUrl, mealId, pageType, tooOld }: SaettigungsErgebnisProps) {
   const [assumptionsOpen, setAssumptionsOpen] = useState(false)
 
-  if (result.typ === 'beilage') {
-    return <BeilagenErgebnis result={result} assumptions={assumptions} onReset={onReset} analysisId={analysisId} photoUrl={photoUrl} mealId={mealId} tooOld={tooOld} />
+  // 'in'-Checks statt Discriminant-Vergleich auf `typ`: `StandardAnalysisResult.typ` ist
+  // optional (`'mahlzeit' | 'standard' | undefined`), was TS' Discriminated-Union-Narrowing
+  // bei einem reinen `result.typ === '...'`-Vergleich zuverlässig verhindert.
+  if ('komponente' in result) {
+    return <KomponentenErgebnis result={result} assumptions={assumptions} onReset={onReset} analysisId={analysisId} photoUrl={photoUrl} mealId={mealId} tooOld={tooOld} />
+  }
+
+  if ('snackBestaetigung' in result) {
+    return <SnackBestaetigung result={result} assumptions={assumptions} onReset={onReset} photoUrl={photoUrl} />
   }
 
   const allAssumptions = [...new Set([...assumptions, ...result.annahmen])]
@@ -174,6 +298,8 @@ export default function SaettigungsErgebnis({ result, assumptions, onReset, anal
   const improvedPillars = new Set(
     result.nachher.deltas.filter(d => d.veraenderung > 0).map(d => d.wert)
   )
+
+  const pillarLabel = result.vorher.format === 'legacy' ? 'Die 6 Sättigungs-Bausteine' : 'Die 3 Sättigungs-Säulen'
 
   return (
     <main className="px-4 py-6 max-w-sm mx-auto space-y-6">
@@ -231,10 +357,10 @@ export default function SaettigungsErgebnis({ result, assumptions, onReset, anal
 
       <Separator />
 
-      {/* ── 2. Die 6 Bausteine ── */}
+      {/* ── 2. Bausteine/Säulen ── */}
       <div className="space-y-3">
         <div className="space-y-1">
-          <p className="text-sm font-semibold text-foreground">Die 6 Sättigungs-Bausteine</p>
+          <p className="text-sm font-semibold text-foreground">{pillarLabel}</p>
           <KIHinweis variante="allgemein" />
           {mealId && pageType && (
             <FeedbackDialog
@@ -245,33 +371,25 @@ export default function SaettigungsErgebnis({ result, assumptions, onReset, anal
                 annahmen: result.annahmen,
                 vorher: result.vorher,
                 vorschlaege: result.vorschlaege,
-                art_of_eating_tipp: result.art_of_eating_tipp,
                 nachher: result.nachher,
               }}
             />
           )}
         </div>
-        <div className="grid grid-cols-3 gap-2">
-          {PILLAR_ORDER.map(pillar => {
-            const meta = PILLAR_META[pillar]
-            const rating = result.vorher.bausteine[pillar]
-            const cfg = ratingConfig(rating)
-            return (
-              <div
-                key={pillar}
-                className={`flex flex-col items-center gap-1 p-2.5 rounded-xl border text-center ${cfg.bg} ${cfg.border}`}
-              >
-                <div className={`relative w-11 h-11 flex items-center justify-center ${cfg.text}`}>
-                  <RatingRing rating={rating} size={44} />
-                  <span className="text-xl">{meta.emoji}</span>
-                </div>
-                <span className="text-xs font-medium text-foreground leading-tight">{meta.label}</span>
-                <span className={`text-xs font-semibold ${cfg.text}`}>{cfg.label}</span>
-              </div>
-            )
-          })}
-        </div>
+        <PillarGrid pillarSet={result.vorher} />
       </div>
+
+      {/* ── 2b. Geschmack (PROJ-33) — eigenständig, gleichwertig prominent, nie vermischt ── */}
+      {result.geschmack && (
+        <>
+          <Separator />
+          <GeschmackErgebnis
+            geschmack={result.geschmack}
+            retryEndpoint="/api/analyse/geschmack-retry"
+            retryBody={{ analysisId }}
+          />
+        </>
+      )}
 
       {/* ── 3. Sehr sättigend: positive Bestätigung ── */}
       {isSehrSaettigend && (
@@ -293,12 +411,15 @@ export default function SaettigungsErgebnis({ result, assumptions, onReset, anal
             <p className="text-sm font-semibold text-foreground">So wird&apos;s noch sättigender</p>
             <div className="space-y-2">
               {result.vorschlaege.map((v, i) => {
-                const pillarMeta = PILLAR_META[v.baustein as keyof BausteineBewertung]
+                const pillarKey = v.saeule ?? v.baustein ?? ''
+                const meta = result.vorher.format === 'legacy'
+                  ? LEGACY_PILLAR_META[pillarKey as keyof LegacyBausteine]
+                  : NEUE_PILLAR_META[pillarKey as keyof Saeulen]
                 return (
                   <div key={i} className="rounded-xl border border-border bg-card p-3 space-y-1">
                     <p className="text-sm font-medium text-foreground">{v.aktion}</p>
                     <p className="text-xs text-muted-foreground">
-                      {pillarMeta ? `${pillarMeta.emoji} ${pillarMeta.label}` : v.baustein}
+                      {meta ? `${meta.emoji} ${meta.label}` : pillarKey}
                       {v.begruendung ? ` · ${v.begruendung}` : ''}
                     </p>
                   </div>
@@ -318,42 +439,33 @@ export default function SaettigungsErgebnis({ result, assumptions, onReset, anal
             <div className="grid grid-cols-1 min-[480px]:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Jetzt</p>
-                <div className="space-y-1">
-                  {PILLAR_ORDER.map(p => (
-                    <PillarChip key={p} pillar={p} rating={result.vorher.bausteine[p]} />
-                  ))}
-                </div>
+                <PillarChipList pillarSet={result.vorher} improved={new Set()} />
               </div>
               <div className="space-y-1.5">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Nach Verbesserung</p>
-                <div className="space-y-1">
-                  {PILLAR_ORDER.map(p => (
-                    <PillarChip
-                      key={p}
-                      pillar={p}
-                      rating={result.nachher.bausteine[p]}
-                      improved={improvedPillars.has(p)}
-                    />
-                  ))}
-                </div>
+                <PillarChipList pillarSet={result.nachher} improved={improvedPillars} />
               </div>
             </div>
           </div>
         </>
       )}
 
-      {/* ── 6. Art of Eating Tipp ── */}
-      {result.art_of_eating_tipp && (
-        <div className="rounded-xl border border-border bg-muted/40 p-3 space-y-1.5">
-          <p className="text-xs font-semibold text-muted-foreground">🧘 Art of Eating</p>
-          <p className="text-sm text-foreground">{result.art_of_eating_tipp}</p>
-          <Link
-            href="/wie-esse-ich-richtig"
-            className="inline-block text-xs font-medium text-[#2E9E6B] hover:underline"
-          >
-            Wie esse ich richtig? →
-          </Link>
-        </div>
+      {/* ── 6. Art of Eating (Legacy-Tipp ODER PROJ-34-Hinweis, nie beide) ── */}
+      {result.vorher.format === 'legacy' ? (
+        result.art_of_eating_tipp && (
+          <div className="rounded-xl border border-border bg-muted/40 p-3 space-y-1.5">
+            <p className="text-xs font-semibold text-muted-foreground">🧘 Art of Eating</p>
+            <p className="text-sm text-foreground">{result.art_of_eating_tipp}</p>
+            <Link
+              href="/wie-esse-ich-richtig"
+              className="inline-block text-xs font-medium text-[#2E9E6B] hover:underline"
+            >
+              Wie esse ich richtig? →
+            </Link>
+          </div>
+        )
+      ) : (
+        <ArtOfEatingHinweis />
       )}
 
       {/* ── 8. Nährwerte ── */}

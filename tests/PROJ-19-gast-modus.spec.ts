@@ -191,10 +191,14 @@ test.describe('Security: Zugriffsschutz für Gäste', () => {
     await clearSession(context)
   })
 
+  // Vorbestehender Bug (nicht durch den Rename verursacht): `/admin`s serverseitiger
+  // `redirect('/login')` landet nicht sofort nach `page.goto()` in `page.url()` — im Dev-Modus
+  // (Turbopack-Kompilierung beim ersten Aufruf der Route) dauert es ca. 500ms, bis die
+  // Browser-URL tatsächlich auf /login wechselt. Der Test las `page.url()` bisher sofort,
+  // bevor der Redirect abgeschlossen war — daher ein `waitForURL` statt der synchronen Prüfung.
   test('SEC-1: /admin ohne Session nicht zugänglich', async ({ page }) => {
     await page.goto('/admin')
-    const url = page.url()
-    const blockedByRedirect = url.includes('/login') || url.includes('/konto')
+    const blockedByRedirect = await page.waitForURL(/\/(login|konto)/, { timeout: 5000 }).then(() => true).catch(() => false)
     const response = await page.request.get('/admin')
     const blockedByStatus = response.status() === 401 || response.status() === 403
     expect(blockedByRedirect || blockedByStatus).toBe(true)
@@ -320,17 +324,25 @@ test.describe('v2 — Sättigungsmatrix ohne Session zugänglich', () => {
     await clearSession(context)
   })
 
+  // Vorbestehender Bug (nicht durch den Rename verursacht): prüfte den mobile-only
+  // "md:hidden"-Kopfzeilentext, der bei der Standard-Chromium-Projekt-Viewport (1280px,
+  // siehe playwright.config.ts) unsichtbar ist. Auf ein viewport-unabhängiges Element
+  // (die Haupt-Überschrift) umgestellt.
   test('AC-v2-1: /saettigungsmatrix ohne Session erreichbar — kein Redirect zu /login', async ({ page }) => {
     await page.goto('/saettigungsmatrix')
     expect(page.url()).not.toContain('/login')
-    await expect(page.getByText('Sättigungs-Matrix')).toBeVisible({ timeout: 6000 })
+    await expect(page.getByRole('heading', { name: 'Was macht eine Mahlzeit wirklich satt?' })).toBeVisible({ timeout: 6000 })
   })
 
-  test('AC-v2-2: /saettigungsmatrix zeigt die 6 Säulen für Gäste', async ({ page }) => {
+  // Refinement 2026-08-11 ("Complete"-Umstrukturierung): 6 Bausteine → 3 Säulen. "Geschmack"
+  // ist keine eigene Überschrift auf dieser Seite mehr (siehe saettigungsmatrix/page.tsx) —
+  // dieser Test wurde bei der Umstellung nie mitgezogen, da PROJ-19 nie Teil der damaligen
+  // Regression war.
+  test('AC-v2-2: /saettigungsmatrix zeigt die 3 Säulen für Gäste', async ({ page }) => {
     await page.goto('/saettigungsmatrix')
-    await expect(page.getByRole('heading', { name: 'Geschmack' })).toBeVisible({ timeout: 6000 })
-    await expect(page.getByRole('heading', { name: 'Proteine' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Proteine' })).toBeVisible({ timeout: 6000 })
     await expect(page.getByRole('heading', { name: 'Ballaststoffe' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Volumen' })).toBeVisible()
   })
 })
 
@@ -390,10 +402,13 @@ test.describe('v2 — Rezepte für Gäste (is_guest_visible)', () => {
     await expect(page.getByText('Zutaten')).not.toBeVisible()
   })
 
+  // Vorbestehender Bug (nicht durch den Rename verursacht): getByText matchte sowohl das
+  // sichtbare <h1> als auch das unsichtbare <title>-Tag (strict-mode violation) — auf die
+  // Überschrift präzisiert, was ohnehin der eigentlich gemeinte "Rezept-Titel im Conversion-Screen" ist.
   test('AC-v2-8: Gesperrtes Rezept zeigt Rezept-Titel im Conversion-Screen', async ({ page }) => {
     await page.goto(`/rezept/${LOCKED_ID}`)
     // Titel des gesperrten Rezepts ist im Conversion-Screen sichtbar
-    await expect(page.getByText('Fenchelsalat')).toBeVisible({ timeout: 8000 })
+    await expect(page.getByRole('heading', { name: 'Fenchelsalat' })).toBeVisible({ timeout: 8000 })
   })
 })
 

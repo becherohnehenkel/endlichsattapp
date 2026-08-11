@@ -9,7 +9,11 @@ import {
 } from '@/components/ui/collapsible'
 import { Badge } from '@/components/ui/badge'
 
-export type PillarScore = 'gut' | 'mittel' | 'schwach' | 'nicht_bewertet'
+// Refinement 2026-08-11 ("Complete"-Umstrukturierung): 6 Bausteine → 3 Säulen. Der
+// Wochenrückblick-Endpoint (`/api/recap/wochen`) liefert seitdem nur noch die drei
+// gemeinsamen Schlüssel proteine/ballaststoffe/volumen — auch für ältere Wochen mit
+// Legacy-Analysen (siehe recap/wochen/route.ts). Vier Stufen statt drei möglich.
+export type PillarScore = 'gut' | 'mittel' | 'gering' | 'ungenuegend' | 'schwach' | 'nicht_bewertet'
 export type GesamtBewertung = 'sehr_saettigend' | 'maessig_saettigend' | 'wenig_saettigend'
 
 export interface WochenRecap {
@@ -19,6 +23,7 @@ export interface WochenRecap {
   istAktuelleWoche: boolean
   anzahlGesamt: number
   anzahlBeilagen: number
+  anzahlSnacks: number
   anzahlStandard: number
   gesamtbewertungAvg: GesamtBewertung | null
   schwächsterBaustein: string | null
@@ -34,19 +39,18 @@ export interface WochenRecap {
 }
 
 const PILLAR_LABELS: Record<string, string> = {
-  geschmack: 'Geschmack',
-  biss: 'Biss',
-  ballaststoffe: 'Ballaststoffe',
   proteine: 'Proteine',
+  ballaststoffe: 'Ballaststoffe',
   volumen: 'Volumen',
-  art_of_eating: 'Art of Eating',
 }
 
-const PILLAR_ORDER = ['geschmack', 'biss', 'ballaststoffe', 'proteine', 'volumen', 'art_of_eating'] as const
+const PILLAR_ORDER = ['proteine', 'ballaststoffe', 'volumen'] as const
 
 const SCORE_DOT: Record<PillarScore, string> = {
   gut: 'bg-emerald-600',
   mittel: 'bg-[#EAB308]',
+  gering: 'bg-orange-500',
+  ungenuegend: 'bg-red-600',
   schwach: 'bg-red-600',
   nicht_bewertet: 'bg-gray-200',
 }
@@ -135,6 +139,7 @@ export default function WochenRecapKarte({ woche, defaultOpen }: Props) {
               <p className="text-sm text-foreground">
                 {woche.anzahlGesamt} {woche.anzahlGesamt === 1 ? 'Mahlzeit' : 'Mahlzeiten'} analysiert
                 {woche.anzahlBeilagen > 0 && `, davon ${woche.anzahlBeilagen} ${woche.anzahlBeilagen === 1 ? 'Beilage' : 'Beilagen'}`}
+                {woche.anzahlSnacks > 0 && `, ${woche.anzahlSnacks} ${woche.anzahlSnacks === 1 ? 'Snack' : 'Snacks'}`}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
                 Für Pillar- und Makro-Auswertung brauchen wir mindestens 2 vollständige Analysen.
@@ -150,13 +155,14 @@ export default function WochenRecapKarte({ woche, defaultOpen }: Props) {
               <p className="text-xs text-muted-foreground -mb-1">
                 {woche.anzahlGesamt} {woche.anzahlGesamt === 1 ? 'Mahlzeit' : 'Mahlzeiten'} analysiert
                 {woche.anzahlBeilagen > 0 && `, davon ${woche.anzahlBeilagen} ${woche.anzahlBeilagen === 1 ? 'Beilage' : 'Beilagen'}`}
+                {woche.anzahlSnacks > 0 && `, ${woche.anzahlSnacks} ${woche.anzahlSnacks === 1 ? 'Snack' : 'Snacks'}`}
               </p>
 
-              {/* 6 Bausteine */}
+              {/* 3 Säulen */}
               {woche.bausteine && (
                 <div>
                   <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-2">
-                    6 Bausteine
+                    3 Säulen
                   </p>
                   <div className="grid grid-cols-3 gap-x-3 gap-y-2">
                     {PILLAR_ORDER.map((key) => {
@@ -172,7 +178,7 @@ export default function WochenRecapKarte({ woche, defaultOpen }: Props) {
                       )
                     })}
                   </div>
-                  {woche.schwächsterBaustein && woche.schwächsterBaustein !== 'art_of_eating' && (
+                  {woche.schwächsterBaustein && (
                     <p className="text-xs text-amber-700 bg-amber-50 rounded-md px-3 py-2 mt-3">
                       Dein blinder Fleck diese Woche: <strong>{PILLAR_LABELS[woche.schwächsterBaustein]}</strong>
                     </p>

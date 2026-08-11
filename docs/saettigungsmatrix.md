@@ -1,6 +1,8 @@
 # Sättigungsmatrix
 
 > Fachliches Fundament für die KI-Analyse. Wird vom `/fachbereich`-Skill gelesen und in den System-Prompt des Analyse-Agenten eingebettet.
+>
+> **Umstrukturierung "Complete" (2026-08-11):** Eine Mahlzeit ist komplett, wenn drei eigenständige Ebenen zusammenkommen — sie sättigt (dieses Dokument), sie schmeckt (`geschmacks-score-prompt.md`, eigenes künftiges Feature) und sie wird bewusst gegessen (Art of Eating, eigenes künftiges Feature). Die drei Ebenen werden getrennt bewertet, nie zu einer Zahl verrechnet. Dieses Dokument beschreibt nur noch die **Sättigungs-Ebene**: Protein, Ballaststoffe, Volumen. Geschmack, Biss und Art of Eating waren früher Teil der sechs Sättigungs-Bausteine — sie sind jetzt ausgelagert (Details siehe Abschnitt 7).
 
 ---
 
@@ -10,50 +12,84 @@
 |-----------|-------------------|--------------------------|
 | Protein | ⭐⭐⭐⭐⭐ sehr hoch | Langsamste Verdauung aller Makronährstoffe. Stimuliert die Ausschüttung der Sättigungshormone GLP-1 und PYY. Verringert aktiv Heißhunger. Höchste thermische Wirkung (ca. 20–30 % der Kalorien werden für die Verdauung verbraucht). |
 | Ballaststoffe | ⭐⭐⭐⭐⭐ sehr hoch | Verlangsamen die Magenentleerung und Verdauung. Binden Wasser und quellen im Darm auf → erhöhen das physische Volumen. Stabilisieren den Blutzucker (kein rascher Abfall = weniger Heißhunger). |
-| Fett | ⭐⭐⭐ mittel | Verlangsamt die Magenentleerung. Trägt stark zum Geschmacksempfinden und zur sensorischen Zufriedenheit bei. Kalorisch dicht — geringe Menge kann viel Energie liefern, aber Sättigungssignal kommt verzögert. |
+| Fett | ⭐⭐⭐ mittel | Verlangsamt die Magenentleerung. Kalorisch dicht — geringe Menge kann viel Energie liefern, aber Sättigungssignal kommt verzögert. (Geschmacklicher Beitrag von Fett lebt jetzt in `geschmacks-score-prompt.md`.) |
 | Komplexe Kohlenhydrate | ⭐⭐⭐ mittel | Werden langsamer abgebaut als einfache Zucker → stabiler Blutzucker, längere Energieversorgung. Oft kombiniert mit Ballaststoffen (Vollkorn, Hülsenfrüchte), was die Sättigungswirkung erhöht. |
 | Einfache Zucker | ⭐ niedrig | Schnelle Aufnahme → rascher Blutzuckeranstieg, ebenso rascher Abfall. Kein nachhaltiges Sättigungssignal. Triggern oft Appetit auf mehr statt weniger. |
 | Wasser / Volumen | ⭐⭐⭐⭐ hoch | Magenrezeptoren registrieren physische Dehnung — unabhängig vom Kaloriengehalt. Lebensmittel mit hohem Wasseranteil (Gemüse, bestimmte Früchte) erzeugen Fülle bei geringer Energiedichte. Sättigungssignal kommt ca. 20 Min. nach dem Essen. |
 
 ---
 
-## 2. Qualitative Faktoren
+## 2. Schritt 0: Mahlzeit, Komponente oder Snack?
 
-### Kauaufwand (Biss)
-Der Kauvorgang ist ein eigenständiger Sättigungsmechanismus. Mechanisches Zerkleinern und Speichelproduktion leiten die Verdauung ein und senden Signale ans Gehirn. Wer mehr kaut, isst automatisch langsamer — und gibt dem Körper Zeit, Sättigungshormone auszuschütten (ca. 20 Min. Verzögerung). Flüssige oder weiche Speisen (Shakes, eingeweichte Flocken, Smoothies) umgehen diesen Mechanismus fast vollständig.
+Nicht jedes Foto zeigt eine vollständige Mahlzeit — und nicht jedes Gericht hat den Anspruch, eine zu sein. Unterscheide VOR der Sättigungs-Analyse drei Typen:
 
-**Lebensmittel mit hohem Kauaufwand:**
-- Rohes oder bissfestes Gemüse (Gurke, Karotte, Blumenkohl, Salate, Paprikaschote)
-- Kohlgemüse (Spitzkohl, Weißkohl, Rotkohl, Wirsing, Chinakohl, Grünkohl, Rosenkohl, Blumenkohl) — Sonderfall, siehe unten
-- Nüsse, Samen, Kerne, 
-- Kross Gebackenes oder Gebratenes (Brot, Knäckebrot, Granola, angebratenes Fleisch/Tofu/Fisch)
-- Hülsenfrüchte (al dente gegart): Kidneybohnen, Linsen, Kichererbsen, Bohnen aller Art
-- Pseudogetreide mit Textur: Quinoa, Amaranth, Buchweizen
+- **`mahlzeit`** — will satt machen und wird an den drei Säulen (Abschnitt 3) gemessen.
+- **`komponente`** — Teil einer Mahlzeit (Beilagensalat, Vorsuppe, einzelne Beilage), wird ergänzt gedacht. **Löst den bisherigen "Beilagen-Kontext" (PROJ-16) ab** — siehe Abschnitt 4 für das neue Output-Format.
+- **`snack`** — steht bewusst für sich: der kleine Hunger zwischendurch, der gar nicht lange sättigen soll, ODER ein reiner Genussmoment (Stück Kuchen, Apfel, Eis). Ein Snack hat NIE den Anspruch, komplett zu sein — und wird deshalb auch nicht daran gemessen. **Neue Kategorie, gab es bisher nicht.**
 
-**Sonderfall Kohlgemüse — Biss bleibt auch gegart erhalten:**
-Anders als die meisten Gemüsesorten, die beim Garen weich werden und Biss verlieren, behält Kohl seine faserige Blattstruktur auch bei starker Garung. Selbst lange gekochter oder geschmorter Kohl (Spitzkohl, Weißkohl, Wirsing, Rotkohl, ...) bietet noch nennenswerten Kauwiderstand — die Faserstruktur der Kohlblätter löst sich nicht annähernd so vollständig auf wie z.B. bei Zucchini oder Auberginen. Konsequenz: Kohlgemüse zählt zum Biss-Baustein unabhängig vom Garzustand (roh, blanchiert, geschmort, lange gekocht) — anders als die generelle Faustregel "roh = Biss, stark gegart = kein Biss mehr", die bei den meisten anderen Gemüsesorten gilt. Gleichzeitig ist Kohl kalorienarm und wasserreich und zählt daher zusätzlich zum Volumen-Baustein (siehe Energiedichte unten) — Kohlgemüse ist damit eine Multi-Pillar-Zutat wie Hülsenfrüchte.
+**Wichtigste Regel: Nutzerangabe schlägt Heuristik.** Sagt der Nutzer (per Auswahl im UI oder im Text), was es ist, gilt das ohne Rückfrage und ohne Diskussion.
 
-**Ausgeschlossen vom Biss-Baustein (zählen NICHT):**
-- Gewürze in Pulverform (Paprikapulver, Kreuzkümmelpulver, Currypulver, ...)
-- Extrakte, Pasten, Pürees, Mus (Mandelmus, Tomatenmark, Ajvar, ...)
-- Öle, Essige, Soßen, Fonds, Brühen
-- Getrocknete oder gemahlene Kräuter und Gewürze
-- Regel: Wenn eine Zutat in der Küche typischerweise in Teelöffeln oder Gramm unter 10 dosiert wird, gehört sie nicht zum Biss-Baustein.
+Ohne Nutzerangabe automatisch klassifizieren (keine Rückfrage im Regelfall — Verhaltensänderung gegenüber dem bisherigen Beilagen-Kontext, der immer aktiv nachfragte):
+- `snack` vermuten bei typischen Snack-Formaten: einzelnes Obst, Gebäck/Süßes, Riegel, Handvoll Nüsse, Eis — oder unter ~250 kcal ohne erkennbaren Mahlzeits-Aufbau (kein Teller mit mehreren Komponenten).
+- `komponente` vermuten, wenn es wie ein Teil eines Gerichts aussieht: Beilagensalat, Vorsuppe, eine einzelne Sättigungsbeilage.
+- Bei Unklarheit (kcal zwischen 250 und 400, Zusammensetzung uneindeutig): nicht raten, sondern als einzige Rückfrage stellen: "Ist das eine Mahlzeit, ein Teil davon oder ein Snack?"
 
-### Geschmackskomplexität
-Ein Gericht das nicht schmeckt, macht nicht wirklich zufrieden — auch wenn es kalorisch ausreichend ist. Sättigung ist nicht nur physiologisch, sondern auch sensorisch. Geschmack entsteht durch das gleichzeitige Zusammenspiel mehrerer Komponenten:
+**Output-Feld `typ: "mahlzeit" | "komponente" | "snack"` immer mit ausgeben.**
 
-- **Temperatur** (warm/kalt/Kontrast)
-- **Grundgeschmäcker** (süß, salzig, sauer, bitter, umami)
-- **Schärfe**
-- **Geruch** (bis zu 80 % des Geschmacksempfindens entstehen über den Geruch)
-- **Textur** (cremig, knusprig, körnig)
-- **Fett** (Träger von Aromen, erzeugt Mundgefühl)
+---
 
-Je mehr dieser Dimensionen gleichzeitig aktiv sind, desto befriedigender das Gericht.
+## 3. Die drei Säulen der Sättigung
 
-### Energiedichte
-Lebensmittel mit niedriger Energiedichte (viel Wasser, viel Ballaststoffe, wenig Fett) erlauben größere Mengen bei gleicher Kalorienzufuhr. Das begünstigt die physische Magendehnung ohne Kalorienüberschuss.
+Gilt nur für `typ: mahlzeit`. Jede Mahlzeit wird anhand von drei Säulen bewertet — Protein, Ballaststoffe, Volumen. Alle Intervalle sind halboffen: Untergrenze eingeschlossen, Obergrenze ausgeschlossen. Nicht vor der Einstufung runden.
+
+### a) Protein (pro Mahlzeit)
+
+| Wert | Stufe |
+|---|---|
+| unter 10 g | ungenügend |
+| 10 bis unter 20 g | gering |
+| 20 bis unter 30 g | mittel |
+| ab 30 g | gut |
+
+Verbesserungsvorschlag: Nenne immer die Lücke in Gramm UND eine konkrete Quelle, die zum Gericht passt ("Es fehlen ~12 g — 150 g Skyr dazu oder die Portion Linsen verdoppeln."). Schlage bevorzugt vor, eine bereits vorhandene Proteinquelle zu vergrößern, bevor du eine neue Zutat einführst.
+
+### b) Ballaststoffe (pro Mahlzeit)
+
+| Wert | Stufe |
+|---|---|
+| unter 3 g | ungenügend |
+| 3 bis unter 5 g | gering |
+| 5 bis unter 10 g | mittel |
+| ab 10 g | gut |
+
+Verbesserungsvorschlag: gleiche Logik wie Protein — Lücke in Gramm plus passende Quelle (Hülsenfrüchte, Vollkorn-Variante des vorhandenen Carbs, Gemüse aufstocken, Leinsamen/Kerne als Topping).
+
+### c) Volumen / Energiedichte
+
+Ersetzt jede Fallunterscheidung nach Gerichtstyp. Berechne zwei Zahlen aus der Zutatenliste:
+
+**1. Energiedichte der Gesamtmahlzeit** = Gesamt-kcal ÷ Gesamt-Gramm (essbare Menge, zubereitet, inkl. Saucen und Öl):
+
+| kcal/g | Stufe |
+|---|---|
+| unter 1,0 | gut |
+| 1,0 bis unter 1,5 | mittel |
+| 1,5 bis unter 2,25 | gering |
+| ab 2,25 | ungenügend |
+
+**2. Gemüsemenge absolut** (Gemüse + Salat + Pilze; Kartoffeln, Mais und Hülsenfrüchte zählen hier NICHT als Gemüse — Hülsenfrüchte punkten bereits bei Protein und Ballaststoffen):
+
+| Menge | Stufe |
+|---|---|
+| unter 100 g | ungenügend |
+| 100 bis unter 200 g | mittel |
+| ab 200 g | gut |
+
+**Gesamtstufe für c):** die schlechtere der beiden Teilstufen. (Ein Gericht mit 250 g Gemüse, aber in Öl ertränkt, ist nicht "gut". Ein kalorienarmes Gericht ohne Gemüse auch nicht.)
+
+Verbesserungsvorschlag: Benenne den Hebel, der die Gesamtstufe drückt.
+- Energiedichte zu hoch → volumenreiche Komponente ERGÄNZEN (Gemüse, Salat, Suppe vorweg), nicht kalorische Komponenten streichen. Additiv formulieren.
+- Gemüse zu wenig → konkrete Menge und Sorte, die geschmacklich zum Gericht passt ("200 g Brokkoli mit in die Pfanne").
 
 **Niedrige Energiedichte (ideal für Volumen):** Gurke, Zucchini, Blattsalate, Radieschen, Staudensellerie, Kohlgemüse (Blumenkohl, Spitzkohl, Weißkohl, Rotkohl, Wirsing, Chinakohl, Grünkohl, Rosenkohl), Sauerkraut, Spinat, Wassermelone, Beeren, Papaya, Grapefruit.
 
@@ -61,7 +97,12 @@ Lebensmittel mit niedriger Energiedichte (viel Wasser, viel Ballaststoffe, wenig
 - Kleine Aromaten wie Knoblauch, Zwiebel (als Menge), Schalotte, Ingwer, Chili — viel zu wenig in realistischen Mengen um Magendehnung auszulösen
 - Konzentrate und Pasten (Tomatenmark, Ajvar) — hochkonzentriert, kein Volumeneffekt
 - Getrocknete oder gepulverte Formen von Lebensmitteln
-- Regel: Eine Zutat zählt nur als Volumen-Baustein, wenn sie in einer Menge verwendet wird die den Magen mechanisch füllen kann (typisch: ≥50g wasserhaltiges Lebensmittel).
+- Regel: Eine Zutat zählt nur als Volumen-Baustein, wenn sie in einer Menge verwendet wird die den Magen mechanisch füllen kann (typisch: ≥50g wasserhaltiges Lebensmittel)
+
+### Unsicherheits-Regeln
+
+- Gramm-Schätzungen aus dem Foto sind unsicher. Liegt ein Wert weniger als 10 % unter einer Stufengrenze, stufe die BESSERE Stufe ein und formuliere den Vorschlag als Absicherung ("Da bist du knapp dran — eine Handvoll mehr und es passt sicher.").
+- Nicht sichtbare kalorische Zutaten (Öl in der Pfanne, Sahne in der Sauce): nimm bei gebratenen Gerichten 10 g Öl als Standard an, außer die Analyse sagt explizit etwas anderes.
 
 ### Roh-/Gekocht-Gewichtskonsistenz bei Getreide, Hülsenfrüchten & Pasta
 
@@ -83,7 +124,7 @@ Die Bezeichnung der Zutat (inkl. ggf. "(gekocht)"/"(roh)"-Zusatz) muss exakt zum
 
 ### Hochenergiedichte + voluminenarme Gerichte (Fastfood-Erkennung)
 
-Manche Gerichte sind nicht einfach "energiedicht" (siehe oben), sondern strukturell so aufgebaut, dass eine normale Erwachsenenportion bereits weit über das hinausgeht, was für echte Sättigung nötig wäre — bei gleichzeitig kaum vorhandenem Eigenvolumen durch Gemüse oder Ballaststoffe. Hier hilft "noch mehr ergänzen" nicht, weil es die ohnehin schon hohe Kalorienmenge nur weiter erhöht (siehe Heuristik unten).
+Manche Gerichte sind nicht einfach "energiedicht" (siehe oben), sondern strukturell so aufgebaut, dass eine normale Erwachsenenportion bereits weit über das hinausgeht, was für echte Sättigung nötig wäre — bei gleichzeitig kaum vorhandenem Eigenvolumen durch Gemüse oder Ballaststoffe. Hier hilft "noch mehr ergänzen" nicht, weil es die ohnehin schon hohe Kalorienmenge nur weiter erhöht (siehe Heuristik in Abschnitt 5).
 
 **Erkennungskriterien (alle relevant, kein hartes Einzelmaß):**
 - Stark verarbeitet / Fastfood-Charakter (Lieferdienst, Imbiss, Fertigprodukt, frittiert/paniert)
@@ -93,60 +134,49 @@ Manche Gerichte sind nicht einfach "energiedicht" (siehe oben), sondern struktur
 
 **Typische Beispiele:** Pizza, Burger, Currywurst mit Pommes, Chicken/Dino-Nuggets (Erwachsenenportion), Pommes frites, fettreicher Döner.
 
-**Wichtige Abgrenzung:** Die Kriterien greifen NICHT bei Kinderportionen, Snacks oder Mahlzeiten, die für sich genommen schon unter dem normalen Energiebedarf liegen — selbst wenn es sich um dieselbe Art von Gericht handelt (z.B. ein Dino-Nuggets-Kinderteller, von einem Erwachsenen gegessen, liefert oft zu WENIG statt zu viel Energie für eine vollwertige Mahlzeit). In diesem Fall bleibt die normale Additions-Logik aktiv — siehe Verbesserungs-Heuristiken.
+**Wichtige Abgrenzung:** Die Kriterien greifen NICHT bei Kinderportionen, Snacks oder Mahlzeiten, die für sich genommen schon unter dem normalen Energiebedarf liegen — selbst wenn es sich um dieselbe Art von Gericht handelt (z.B. ein Dino-Nuggets-Kinderteller, von einem Erwachsenen gegessen, liefert oft zu WENIG statt zu viel Energie für eine vollwertige Mahlzeit). In diesem Fall bleibt die normale Additions-Logik aktiv.
 
 ### Mahlzeitenfrequenz & Blutzuckerstabilität
 Unregelmäßiges Essen führt zu Blutzucker-Achterbahn, Energie-Crashs und erhöhter Heißhungeranfälligkeit. Empfehlung: 2–4 vollwertige Mahlzeiten pro Tag, die den Blutzucker in einem stabilen Normalbereich halten. Dies ist kein Naturgesetz — individuelle Anpassung nach Alltag, Arbeit und sozialer Kompatibilität hat Vorrang.
 
-### Art of Eating
-Bewusstes Essen ist ein vollwertiger Sättigungsfaktor, keine optionale Ergänzung. Ablenkung (Smartphone, TV, Essen im Gehen) verhindert, dass das Gehirn die Körpersignale verarbeiten kann — was zu mechanischem Überessen führt, ohne mehr Sättigung zu erzeugen.
+---
 
-**Kernprinzipien:**
-1. Immer sitzen — Stehessen unterbricht den Bezug zur Mahlzeit
-2. Ablenkungen ausschalten (kein Smartphone, kein Fernseher, keine Musik)
-3. Vor dem ersten Bissen kurz am Essen riechen
-4. Gründlich kauen — jeden Bissen bis fast flüssig
-5. Auf die Details schmecken und riechen (Intensität, Frische, Komplexität)
-6. Auf Körpersignale hören — Sättigung kommt ca. 20 Min. nach dem Essen
-7. **Hara Hachi Bu**: japanische Praxis, mit dem Essen aufzuhören wenn der Magen zu ca. 80 % gefüllt ist
+## 4. Gesamtbewertung & Output
+
+### Gesamtbewertung (Mehrheitsprinzip)
+
+| Anzahl "gut"-Säulen (von 3) | Gesamtbewertung |
+|-----------------------------|------------------|
+| 3 | Sehr sättigend |
+| 2 | Mäßig sättigend |
+| 0–1 | Wenig sättigend |
+
+- Pro Säule: Stufe + der eine Wert, der sie bestimmt.
+- Maximal 2 Verbesserungsvorschläge insgesamt, priorisiert nach schlechtester Stufe. Bei zwei gleich schlechten Säulen: Protein vor Ballaststoffen vor Volumen.
+- Alles additiv formuliert (was DAZU kann), nie restriktiv, das Wort "gesund" kommt nicht vor.
+- Alle drei Säulen "gut" → kein Vorschlag, nur benennen, was das Gericht sättigend macht.
+
+### Output bei `typ: komponente` (löst den bisherigen Beilagen-Kontext ab)
+
+Keine Stufen-Bewertung, kein Sättigungs-Score — eine Komponente wird nicht an einem Anspruch gemessen, den sie nie hatte.
+
+- **Positiv bilanzieren, was sie beisteuert** — quantitativ, nicht nur ein wertschätzender Satz: *"Bringt schon mal 180 g Gemüse und 4 g Ballaststoffe mit."*
+- **Maximal EIN Kombinationsvorschlag**, womit die Komponente zu einer kompletten Mahlzeit wird: *"Dazu ein Stück Brot und ein paar Kichererbsen rein, dann trägt dich das bis zum Abend."* (Reduziert gegenüber dem bisherigen Beilagen-Output mit 2–3 Pairing-Empfehlungen.)
+- Der Geschmacks-Score läuft normal weiter — auch eine Komponente darf lecker sein (neu: gab es im alten Beilagen-Output nicht).
+- Kein `art_of_eating_tipp` mehr in diesem Output — Art of Eating ist eine eigene Sektion, kein Anhängsel mehr.
+
+### Output bei `typ: snack`
+
+Keine Sättigungs-Analyse, kein Geschmacks-Score, keine Verbesserungs- oder Kombinationsvorschläge. Ein Stück Kuchen wird nicht optimiert und ein Apfel nicht aufgewertet.
+
+- Kurz und neutral-warm bestätigen, ohne Rechtfertigungs-Framing: *"Alles klar, Snack — der braucht keine Analyse."* KEIN Kommentar zu Kalorien, KEIN "Ausnahme"- oder "Sünde"-Vokabular, KEINE Kompensations-Tipps ("dafür beim Abendessen...").
+- Der Snack wird ganz normal geloggt: Im Wochenrückblick erscheint er als eigene Kategorie und zählt NICHT in die Komplett-Quote der Mahlzeiten — weder positiv noch negativ. Snacks sind Teil eines kompletten Essalltags, nicht sein Störfaktor.
 
 ---
 
-## 3. Sättigungs-Score / Bewertungslogik
+## 5. Verbesserungs-Heuristiken & Restaurant-Kontext
 
-### Die sechs Bausteine der Sättigungs-Matrix
-
-Jede Mahlzeit wird anhand von sechs Bausteinen bewertet. Eine sättigende Mahlzeit arbeitet an einer Balance aus allen sechs — kein einzelner Baustein ist allein ausreichend.
-
-| Baustein | Bewertungsgrundlage |
-|----------|-------------------|
-| **Geschmack** | Wie viele Geschmacksdimensionen sind aktiv? (Temperatur, Textur, Grundgeschmäcker, Geruch, Fett) |
-| **Biss** | Gibt es Komponenten mit echtem Kauaufwand? Oder ist alles weich/flüssig? |
-| **Ballaststoffe** | Sind Vollkorn, Hülsenfrüchte, Gemüse, Obst oder Nüsse/Samen enthalten? Wie viel? |
-| **Proteine** | Welche Proteinquellen sind enthalten, und wie proteindicht sind sie? Die Skala bewertet einzelne Zutaten: 25%+ Proteinanteil am Eigengewicht = hohe Effizienz (wenig Zutat, große Wirkung — z.B. Thunfisch ~30%, Hähnchen ~25%); 12–24% = mittlere Effizienz (mehr Menge nötig — z.B. Tofu ~15%, Eier ~13%); <12% = niedrige Effizienz (muss Hauptzutat sein, um zu zählen — z.B. Linsen gekocht ~9%, Quark ~12%). Der Baustein ist "gut" wenn eine proteindichte Quelle klar im Gericht vorhanden ist, "mittel" wenn eine Quelle mit niedriger Effizienz die Hauptrolle spielt, "schwach" wenn keine nennenswerte Proteinquelle enthalten ist. |
-| **Volumen** | Enthält die Mahlzeit Lebensmittel mit hohem Wasseranteil und niedriger Energiedichte? |
-| **Art of Eating** | Kontextfaktoren: Wurde sitzend gegessen? Ablenkungsfrei? Bewusst gekaut? |
-
-### Drei-Punkte-Skala
-
-- **gut (grün)** — Baustein ist klar vorhanden und trägt aktiv zur Sättigung bei
-- **mittel (gelb/amber)** — Baustein ist ansatzweise vorhanden, aber ausbaufähig
-- **schwach (rot)** — Baustein fehlt oder ist vernachlässigbar
-
-### Gesamteinschätzung
-
-| Grüne Bausteine | Gesamtbewertung |
-|-----------------|----------------|
-| 5–6 | Sehr sättigend — gut strukturierte Mahlzeit |
-| 3–4 | Mäßig sättigend — klare Verbesserungspotenziale |
-| 0–2 | Wenig sättigend — deutliche Lücken, konkrete Upgrades notwendig |
-
-### Hinweis zur Gewichtung
-Nicht jede Mahlzeit muss alle sechs Bausteine vollständig abdecken. Isolierte Lebensmittel (z.B. Proteinpulver, ein Stück Obst) sind nicht per se schlecht — sie lösen gezielt einen spezifischen Mangel. Fast alle echten Lebensmittel haben mehrere Eigenschaften gleichzeitig (z.B. Hülsenfrüchte = Biss + Ballaststoffe + Volumen + Proteine).
-
----
-
-## 4. Verbesserungs-Heuristiken
+> **Scope-Hinweis (2026-08-11):** Die folgenden Abschnitte (Verbesserungs-Heuristiken, Multi-Pillar-Zutaten, Tauschprinzip, Machbarkeitsfilter, Lob-Protokoll, Restaurant-Kontext) sind bewusst **noch nicht** auf das neue Drei-Säulen-Modell umgeschrieben — sie referenzieren weiterhin das alte 6-Bausteine-Modell (Geschmack, Biss, Ballaststoffe, Proteine, Volumen, Art of Eating). Sie werden überarbeitet, sobald die Geschmack- und Art-of-Eating-Features als eigene Specs existieren, um Doppelarbeit zu vermeiden. Bis dahin gilt für die reine Sättigungs-Bewertung (Protein/Ballaststoffe/Volumen) die Prioritätsregel aus Abschnitt 4 ("Protein vor Ballaststoffen vor Volumen"), nicht die Reihenfolge unten.
 
 ### Erlaubte Optimierungen
 
@@ -173,9 +203,9 @@ Nicht jede Mahlzeit muss alle sechs Bausteine vollständig abdecken. Isolierte L
 
 Geschmack hat immer Vorrang. Ein sättigendes Gericht das nicht schmeckt, wird nicht wiederholt — und löst damit kein Problem. Die Optimierung muss so gestaltet sein, dass das Gericht *besser* schmeckt oder zumindest gleich gut.
 
-### Prioritätsreihenfolge bei mehreren schwachen Bausteinen
+### Prioritätsreihenfolge bei mehreren schwachen Bausteinen (altes Modell — siehe Scope-Hinweis oben)
 
-0. **Portionskalibrierung** — NUR wenn die Erkennungskriterien für "hochenergiedicht + voluminenarm" erfüllt sind (siehe unten). In diesem Fall VOR allen anderen Prioritäten.
+0. **Portionskalibrierung** — NUR wenn die Erkennungskriterien für "hochenergiedicht + voluminenarm" erfüllt sind (siehe Abschnitt 3). In diesem Fall VOR allen anderen Prioritäten.
 1. **Biss** — größte Wirkung auf das wahrgenommene Sättigungsgefühl
 2. **Ballaststoffe** — größte Wirkung auf die Sättigungsdauer
 3. **Volumen** — einfachste Verbesserung mit geringstem Kalorienaufwand
@@ -187,7 +217,7 @@ Geschmack hat immer Vorrang. Ein sättigendes Gericht das nicht schmeckt, wird n
 
 ### Portionskalibrierung bei hochenergiedichtem Fastfood (Ausnahme von "keine Iss-weniger-Empfehlung")
 
-**Trigger:** Die Erkennungskriterien für "hochenergiedicht + voluminenarm" sind erfüllt (siehe Abschnitt 2, "Hochenergiedichte + voluminenarme Gerichte") — insbesondere: Erwachsenenportion, ≥ ca. 600–700 kcal, kaum Eigenvolumen.
+**Trigger:** Die Erkennungskriterien für "hochenergiedicht + voluminenarm" sind erfüllt (siehe Abschnitt 3) — insbesondere: Erwachsenenportion, ≥ ca. 600–700 kcal, kaum Eigenvolumen.
 
 Bei reinen Additions-Vorschlägen (mehr Ballaststoffe/Biss/Volumen ergänzen) wird ein bereits sehr kalorienreiches Gericht kalorisch noch größer, statt besser balanciert zu werden. Für diesen engen Fall gilt eine bewusste Ausnahme von "keine Empfehlung weniger zu essen":
 
@@ -243,7 +273,7 @@ Jeder Vorschlag muss folgendes enthalten — vage Alternativen reichen nicht:
 
 ### Lob-Protokoll: Wenn eine Mahlzeit bereits sehr gut ist
 
-**Trigger:** 5 oder 6 Bausteine sind grün bewertet.
+**Trigger:** 5 oder 6 Bausteine sind grün bewertet (altes Modell — bei drei Säulen entspricht das analog "alle drei Säulen gut", siehe Abschnitt 4).
 
 In diesem Fall gelten besondere Regeln:
 
@@ -251,9 +281,9 @@ In diesem Fall gelten besondere Regeln:
 
 2. **Echte Anerkennung führt.** Die Eröffnung der Antwort soll aufrichtig positiv sein, ohne herablassend oder übertrieben zu wirken. Beispiel: *"Das ist eine wirklich gut strukturierte Mahlzeit — du hast intuitiv fast alle Sättigungsprinzipien umgesetzt."*
 
-3. **Maximal ein optionaler Feinschliff.** Falls es einen 6. Baustein gibt der noch fehlt oder sehr schwach ist, kann dieser leicht erwähnt werden — aber als optionales Extra, nicht als Mangel. Formulierung: *"Falls du noch einen kleinen Schritt machen willst: …"*
+3. **Maximal ein optionaler Feinschliff.** Falls es einen Baustein gibt der noch fehlt oder sehr schwach ist, kann dieser leicht erwähnt werden — aber als optionales Extra, nicht als Mangel. Formulierung: *"Falls du noch einen kleinen Schritt machen willst: …"*
 
-4. **Rezeptbibliothek-Verweis ist automatisch, nicht Teil der LLM-Antwort.** Die Ergebnisseite zeigt unter jeder Analyse — unabhängig von der Gesamtbewertung — deterministisch ein passendes Rezept (Zutaten-Tag-Matching) oder, falls keins passt, einen Hinweis mit Link zur Rezeptbibliothek (`RezeptVorschlaege`-Komponente). Der LLM-Prompt muss dafür nichts setzen und keinen Text dazu formulieren (früher: eigenes Flag `rezeptbibliothek_hinweis`, das nur beim frischen Ergebnis vorhanden war und nach dem Neuladen der Seite verschwand — entfernt zugunsten der konsistenten, immer funktionierenden UI-Lösung).
+4. **Rezeptbibliothek-Verweis ist automatisch, nicht Teil der LLM-Antwort.** Die Ergebnisseite zeigt unter jeder Analyse — unabhängig von der Gesamtbewertung — deterministisch ein passendes Rezept (Zutaten-Tag-Matching) oder, falls keins passt, einen Hinweis mit Link zur Rezeptbibliothek (`RezeptVorschlaege`-Komponente). Der LLM-Prompt muss dafür nichts setzen und keinen Text dazu formulieren.
 
 5. **Keine Liste von Verbesserungsvorschlägen** — diese Sektion bleibt leer oder enthält höchstens einen einzigen optionalen Hinweis.
 
@@ -294,7 +324,7 @@ Der Vorschlag muss zum Geschmacksprofil des Gerichts passen. Orientierung nach G
 
 ---
 
-## 5. Restaurant-Kontext
+## 6. Restaurant-Kontext
 
 ### Grundprinzip: Strategie statt Zutaten
 
@@ -372,7 +402,18 @@ Der Assistent erkennt einen Restaurant-Kontext an:
 
 ---
 
-## 6. Quellen & Referenzen
+## 7. Ausgelagert: Geschmack, Biss & Art of Eating
+
+Vor der "Complete"-Umstrukturierung (2026-08-11) waren Geschmack, Biss und Art of Eating drei der sechs Bausteine dieser Matrix. Sie sind jetzt eigenständige Ebenen, nicht mehr Teil der Sättigungs-Bewertung:
+
+- **Geschmack** (inkl. Biss als Kontrast-Dimension) → `docs/geschmacks-score-prompt.md`, eigenes künftiges Feature mit eigenem Score (0–100) und eigener Sektion auf der Ergebnisseite.
+- **Art of Eating** → eigenes künftiges Feature. Laut Konzept-Dokument "Selbstauskunft" — der Nutzer beantwortet aktiv etwas, statt dass die KI es aus dem Foto schätzt. Die fachlichen Kernprinzipien (Sitzen, Ablenkungsfrei, Riechen, Kauen, Hara Hachi Bu) aus der bisherigen Fassung dieses Dokuments bleiben als Grundlage gültig und wandern beim `/write-spec` für dieses Feature dorthin.
+
+Die Abschnitte 5 und 6 oben (Verbesserungs-Heuristiken, Restaurant-Kontext) referenzieren beide Ebenen weiterhin unverändert im alten 6-Bausteine-Modell — siehe Scope-Hinweis am Anfang von Abschnitt 5.
+
+---
+
+## 8. Quellen & Referenzen
 
 ### Physiologische Sättigungsmechanismen
 - **GLP-1 (Glucagon-like Peptide-1)** und **PYY (Peptid YY)**: Sättigungshormone die primär durch Proteinzufuhr stimuliert werden. Signalisieren dem Hypothalamus Sättigung.
@@ -380,18 +421,18 @@ Der Assistent erkennt einen Restaurant-Kontext an:
 - **Magenrezeptoren**: Mechanorezeptoren in der Magenwand reagieren auf Dehnung — unabhängig vom Kaloriengehalt. Grundlage für den Volumen-Baustein.
 - **Thermischer Effekt**: Protein hat mit ca. 20–30 % den höchsten thermischen Effekt aller Makronährstoffe (Kohlenhydrate ca. 5–10 %, Fett ca. 0–3 %).
 
-### Kauforschung
+### Kauforschung (Grundlage für `geschmacks-score-prompt.md`, nicht mehr Teil dieser Matrix)
 - Mechanisches Kauen aktiviert den Kiefer-Hypothalamus-Signalweg und erhöht die Sättigungswahrnehmung unabhängig vom Nahrungsinhalt.
 - Langsames Essen (>20 Minuten) korreliert mit niedrigerer Gesamtkalorienaufnahme, da die Sättigungshormone Zeit brauchen um die Blut-Hirn-Schranke zu passieren.
 
-### Geruch & Geschmack
+### Geruch & Geschmack (Grundlage für `geschmacks-score-prompt.md`, nicht mehr Teil dieser Matrix)
 - Bis zu 80 % des bewusst wahrgenommenen Geschmacks entsteht über den Geruchssinn (retronasal). Essen mit verstopfter Nase schmeckt kaum — Erdbeer- und Himbeermarmelade sind bei verschlossener Nase kaum zu unterscheiden.
 
 ### Blutzucker & Mahlzeitenfrequenz
 - Unregelmäßiges Essen mit langen Fastenphasen gefolgt von großen Mahlzeiten führt zu Insulinspitzen und nachfolgendem reaktivem Blutzuckerabfall → erhöhte Heißhungeranfälligkeit.
 - 2–4 vollwertige Mahlzeiten stabilisieren den Blutzuckerverlauf ohne ständige Insulinstimulation. Extremfall dauerhafter Snacking: erhöhtes Risiko für Insulinresistenz und langfristig Typ-2-Diabetes.
 
-### Hara Hachi Bu
+### Hara Hachi Bu (Grundlage für das künftige Art-of-Eating-Feature)
 - Japanische Ernährungsphilosophie aus Okinawa (einer der fünf "Blue Zones" mit überdurchschnittlicher Lebenserwartung): Essen einstellen wenn der Magen zu ca. 80 % gefüllt ist. Nutzt die 20-Minuten-Verzögerung des Sättigungssignals als Puffer gegen Überessen.
 
 ### Bundeslebensmittelschlüssel (BLS)

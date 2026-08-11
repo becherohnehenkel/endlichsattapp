@@ -24,7 +24,11 @@ Wenn du genug weißt, setze needs_clarification auf false.
 
 Bei skipped=true: Mache Annahmen für alle unklaren Punkte und liste sie explizit auf.
 
-BEILAGEN-KONTEXT: Wenn du zuvor gefragt hast ob die Mahlzeit komplett oder eine Beilage ist, und der Nutzer bestätigt dass es seine vollständige Mahlzeit ist: Trage in assumptions ZWINGEND ein: "BEILAGE_KONTEXT: [Gerichtname] wird als vollständige Mahlzeit gegessen." Wenn der Nutzer sagt dass er etwas dazu isst, führe normale Analyse für die Gesamtmahlzeit durch.
+SCHRITT-0-KLASSIFIKATION, Fortsetzung (Refinement 2026-08-11): Wenn du zuvor gefragt hast "Ist das eine Mahlzeit, ein Teil davon oder ein Snack?" und der Nutzer jetzt antwortet, trage in assumptions ZWINGEND einen der folgenden Einträge ein, passend zur Antwort:
+- Antwort = vollständige Mahlzeit → KEIN Eintrag nötig (Standard, kein Flag)
+- Antwort = Beilage/Teil einer Mahlzeit → "MAHLZEIT_TYP: komponente"
+- Antwort = Snack → "MAHLZEIT_TYP: snack"
+Wenn der Nutzer die Frage überspringt oder ausweicht: KEIN Eintrag (Standard = vollständige Mahlzeit — konsistent mit dem allgemeinen Skip-Verhalten).
 
 Antworte AUSSCHLIESSLICH mit gültigem JSON, ohne Text davor oder danach:
 {"needs_clarification": boolean, "questions": [{"id": "q1", "text": "..."}], "assumptions": ["Annahme 1", ...]}`
@@ -60,7 +64,7 @@ export async function POST(request: Request) {
 
   const { data: conv } = await supabase
     .from('meal_conversations')
-    .select('id, claude_messages, current_round')
+    .select('id, claude_messages, current_round, assumptions')
     .eq('meal_id', mealId)
     .single()
 
@@ -118,11 +122,22 @@ export async function POST(request: Request) {
   const isReady = skipped || !claudeResult.needs_clarification || round >= 3
   const newStatus = skipped ? 'skipped' : isReady ? 'ready' : 'questioning'
 
+  // Refinement 2026-08-11 (Schritt-0-Klassifikation): eine bereits in einer früheren Runde
+  // gesetzte MAHLZEIT_TYP-Flag (z.B. von start/route.ts sofort erkannt) darf nicht verloren
+  // gehen, nur weil diese Runde ihre eigene, frische assumptions-Liste zurückgibt, die das
+  // Flag nicht erneut nennt — Claude sieht die Flag nicht zwingend als Teil des sichtbaren
+  // Gesprächsverlaufs. Defensive Übernahme, falls die neue Liste kein Flag enthält.
+  const priorTypFlag = ((conv.assumptions ?? []) as string[]).find(a => a.startsWith('MAHLZEIT_TYP:'))
+  const newAssumptions = claudeResult.assumptions?.length ? [...claudeResult.assumptions] : []
+  if (priorTypFlag && !newAssumptions.some(a => a.startsWith('MAHLZEIT_TYP:'))) {
+    newAssumptions.unshift(priorTypFlag)
+  }
+
   await supabase.from('meal_conversations').update({
     claude_messages: history,
     status: newStatus,
     current_round: round,
-    assumptions: claudeResult.assumptions?.length ? claudeResult.assumptions : null,
+    assumptions: newAssumptions.length ? newAssumptions : null,
   }).eq('id', conv.id)
 
   if (isReady) {

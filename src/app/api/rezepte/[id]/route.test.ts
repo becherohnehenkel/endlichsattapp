@@ -24,6 +24,12 @@ vi.mock('@/lib/paywall', () => ({
   getAccessStatus: mockGetAccessStatus,
 }))
 
+// PROJ-33: kein echter Claude-Aufruf in Unit-Tests
+const mockComputeGeschmack = vi.fn().mockResolvedValue({ status: 'error' })
+vi.mock('@/lib/geschmack', () => ({
+  computeGeschmack: mockComputeGeschmack,
+}))
+
 function makeParams(id: string) {
   return { params: Promise.resolve({ id }) }
 }
@@ -205,17 +211,21 @@ describe('PUT /api/rezepte/[id]', () => {
   it('updates an own recipe successfully', async () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
     const blsMock = { select: vi.fn().mockReturnValue({ ilike: vi.fn().mockReturnValue({ limit: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValue({ data: null }) }) }) }) }
+    const finalUpdateMock = vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) })
+    mockComputeGeschmack.mockResolvedValue({ status: 'ok', score: 88, label: 'richtig_gut', verbesserungen: [], unklarHinweis: null })
     serverFrom
       .mockReturnValueOnce(singleFrom({ owner_id: 'user-1' })) // Eigentümer-Check
       .mockReturnValueOnce({ update: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }) }) // recipes.update
       .mockReturnValueOnce({ delete: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }) }) // ingredients.delete
       .mockReturnValueOnce({ insert: vi.fn().mockResolvedValue({ error: null }) }) // ingredients.insert
-      .mockReturnValueOnce({ update: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }) }) // recipes.update (matrix)
+      .mockReturnValueOnce({ update: finalUpdateMock }) // recipes.update (matrix + geschmack)
     adminFrom.mockReturnValueOnce(blsMock) // interner BLS-Lookup aus calculateMacrosPerServing
 
     const { PUT } = await import('./route')
     const res = await PUT(new Request('http://localhost', { method: 'PUT', body: JSON.stringify(VALID_UPDATE) }), makeParams('recipe-1'))
     expect(res.status).toBe(200)
+    // PROJ-33
+    expect(finalUpdateMock.mock.calls[0][0].geschmack_score).toEqual({ status: 'ok', score: 88, label: 'richtig_gut', verbesserungen: [], unklarHinweis: null })
   })
 
   it('does not accept an is_guest_visible field even if sent by the client', async () => {

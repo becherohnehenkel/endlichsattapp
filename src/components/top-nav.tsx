@@ -28,7 +28,7 @@ export function TopNav({ isAdmin }: TopNavProps) {
     <header data-testid="top-nav" className="hidden md:flex fixed top-0 left-0 right-0 z-50 bg-white border-b border-[#DCEEF0] h-14">
       <div className="max-w-5xl mx-auto w-full px-6 flex items-center justify-between">
         <Link href="/" className="font-semibold text-[#2E9E6B] text-lg tracking-tight">
-          endlichsatt
+          Mehralsabnehmen
         </Link>
         <nav className="flex items-center gap-1">
           {items.map(({ href, label, icon: Icon }) => {

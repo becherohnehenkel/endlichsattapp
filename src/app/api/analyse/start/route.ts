@@ -16,14 +16,17 @@ Identifiziere fehlende Informationen, die deine Analyse wesentlich beeinflussen 
 Frage nach: Kochfett/Menge, Fettgehalt von Milchprodukten, Portionsgrößen kalorienreicher Zutaten (Nüsse, Käse, Öl), Zubereitungsart (roh vs. gegart).
 Stelle maximal 2 Fragen. Wenn du genug weißt, setze needs_clarification auf false.
 
-BEILAGEN-RÜCKFRAGE: Wenn die Mahlzeit eindeutig Beilagen-Charakter hat, nutze eine der max. 2 Fragen dafür: "Ist das deine komplette Mahlzeit — oder isst du das als Beilage zu etwas anderem?"
-Klare Trigger (ALLE müssen zutreffen): kein erkennbares Sättigungselement (keine Proteinquelle, keine Stärke, kein relevantes Fett) + erkennbar unter ca. 200 kcal + eindeutiger Beilagen-Charakter (Blattsalat ohne Protein, Rohkost allein, Frischkäse allein, trockenes Brötchen allein).
-NICHT fragen wenn: Proteinquelle vorhanden, mehrere Hauptkomponenten, Beilagen-Charakter unklar (Caesar Salad mit Hähnchen, Avocado-Toast, Poke Bowl → nie fragen).
+SCHRITT-0-KLASSIFIKATION (Refinement 2026-08-11): Bestimme IMMER zuerst, ob es sich um eine vollständige Mahlzeit, eine Komponente (Teil einer Mahlzeit) oder einen Snack handelt. Setze das Feld "mahlzeit_typ" auf genau einen von vier Werten:
+- "snack": einzelnes Obst, Gebäck/Süßes, Riegel, Handvoll Nüsse, Eis — oder erkennbar unter ca. 250 kcal ohne erkennbaren Mahlzeits-Aufbau (kein Teller mit mehreren Komponenten).
+- "komponente": wirkt wie Teil eines Gerichts — Beilagensalat ohne Protein, Rohkost allein, Frischkäse allein, trockenes Brötchen allein, Vorsuppe.
+- "mahlzeit": alles andere — insbesondere wenn eine Proteinquelle erkennbar vorhanden ist, mehrere Hauptkomponenten beschrieben sind, oder es ein bekanntes vollständiges Gericht ist (Caesar Salad mit Hähnchen, Avocado-Toast, Poke Bowl → IMMER "mahlzeit", nie "snack" oder "komponente").
+- "unklar": NUR wenn die geschätzte Kalorienmenge zwischen ca. 250 und 400 kcal liegt UND die Einordnung wirklich uneindeutig ist. In diesem Fall ist "Ist das eine Mahlzeit, ein Teil davon oder ein Snack?" die EINZIGE Frage dieser Runde — keine weiteren Fragen parallel dazu stellen.
+Bei "mahlzeit", "komponente" oder "snack": keine zusätzliche Frage für die Klassifikation nötig — andere Rückfragen (Kochfett, Portionsgröße etc.) laufen unabhängig davon normal weiter, sofern relevant.
 
 WICHTIG: Fülle meal_description IMMER aus — beschreibe kurz was du siehst oder liest (z.B. "Spaghetti Bolognese mit Hackfleisch, Tomatensauce und Parmesan").
 
 Antworte AUSSCHLIESSLICH mit gültigem JSON, ohne Text davor oder danach:
-{"needs_clarification": boolean, "meal_description": "Kurze Beschreibung der Mahlzeit", "questions": [{"id": "q1", "text": "Frage hier"}]}`
+{"needs_clarification": boolean, "meal_description": "Kurze Beschreibung der Mahlzeit", "mahlzeit_typ": "mahlzeit"|"komponente"|"snack"|"unklar", "questions": [{"id": "q1", "text": "Frage hier"}]}`
 
 type ClaudeMessage = { role: 'user' | 'assistant'; content: string }
 
@@ -112,7 +115,8 @@ export async function POST(request: Request) {
 
   const raw = response.content[0]?.type === 'text' ? response.content[0].text : ''
   const cleaned = raw.replace(/^```(?:json)?\s*\n?/m, '').replace(/\n?```\s*$/m, '').trim()
-  let claudeResult: { needs_clarification: boolean; questions: { id: string; text: string }[] }
+  type MahlzeitTyp = 'mahlzeit' | 'komponente' | 'snack' | 'unklar'
+  let claudeResult: { needs_clarification: boolean; questions: { id: string; text: string }[]; mahlzeit_typ?: MahlzeitTyp }
   try {
     claudeResult = JSON.parse(cleaned)
   } catch {
@@ -121,19 +125,36 @@ export async function POST(request: Request) {
     claudeResult = { needs_clarification: false, questions: [] }
   }
 
+  // Refinement 2026-08-11 (Schritt-0-Klassifikation): "unklar" erzwingt eine Rückfrage, auch
+  // falls Claude needs_clarification fälschlich auf false gesetzt hat oder die Klassifikations-
+  // Frage in "questions" vergessen hat — doppeltes Sicherheitsnetz.
+  const needsClarification = claudeResult.needs_clarification || claudeResult.mahlzeit_typ === 'unklar'
+  if (claudeResult.mahlzeit_typ === 'unklar' && !(claudeResult.questions?.length > 0)) {
+    claudeResult.questions = [{ id: 'mahlzeit_typ', text: 'Ist das eine Mahlzeit, ein Teil davon oder ein Snack?' }]
+  }
+
+  // Eindeutige Klassifikation (komponente/snack) wird sofort als Flag gespeichert — kein
+  // Warten auf eine Rückfrage-Antwort nötig. "mahlzeit" oder fehlender Wert = Standard,
+  // kein Flag nötig (analog zum bisherigen BEILAGE_KONTEXT-Muster).
+  const initialAssumptions =
+    claudeResult.mahlzeit_typ === 'komponente' ? ['MAHLZEIT_TYP: komponente']
+    : claudeResult.mahlzeit_typ === 'snack' ? ['MAHLZEIT_TYP: snack']
+    : null
+
   // Store conversation
   messages.push({ role: 'assistant', content: raw })
   await supabase.from('meal_conversations').insert({
     meal_id: mealId,
     claude_messages: messages,
-    status: claudeResult.needs_clarification ? 'questioning' : 'ready',
-    current_round: claudeResult.needs_clarification ? 1 : 0,
+    status: needsClarification ? 'questioning' : 'ready',
+    current_round: needsClarification ? 1 : 0,
+    assumptions: initialAssumptions,
   })
 
   // Update meal status
   await supabase.from('meals').update({ status: 'analysing' }).eq('id', mealId)
 
-  if (claudeResult.needs_clarification && claudeResult.questions?.length > 0) {
+  if (needsClarification && claudeResult.questions?.length > 0) {
     return NextResponse.json({ questions: claudeResult.questions })
   }
   return NextResponse.json({ ready: true })

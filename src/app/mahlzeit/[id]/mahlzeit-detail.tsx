@@ -27,7 +27,7 @@ export default function MahlzeitDetail({ result, assumptions, analysisId, photoU
           <ChevronLeft className="h-4 w-4" />
           Zurück
         </button>
-        <span className="font-semibold text-foreground tracking-tight">endlichsatt</span>
+        <span className="font-semibold text-foreground tracking-tight">Mehralsabnehmen</span>
         <div className="w-16" />
       </header>
       <SaettigungsErgebnis

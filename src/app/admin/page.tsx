@@ -17,7 +17,7 @@ export default async function AdminPage() {
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card px-4 py-3">
         <h1 className="font-semibold text-foreground">Admin</h1>
-        <p className="text-xs text-muted-foreground">endlichsatt</p>
+        <p className="text-xs text-muted-foreground">Mehralsabnehmen</p>
       </header>
 
       <main className="max-w-sm mx-auto px-4 py-8 space-y-3">

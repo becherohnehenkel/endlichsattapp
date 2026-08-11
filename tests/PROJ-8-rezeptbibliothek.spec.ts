@@ -16,31 +16,28 @@ async function loginAs(page: Page) {
 
 // ─── Mock helpers for the analyse flow ────────────────────────
 
+// Refinement 2026-08-11 ("Complete"-Umstrukturierung): 3-Säulen-Format (typ: 'mahlzeit',
+// saeulen statt bausteine) — Details der Analyse sind für diese Testdatei irrelevant, nur
+// dass reachDone() den "done"-Zustand erreicht, um die Rezeptvorschläge-Sektion zu testen.
 const MOCK_RESULT = {
   analysisId: 'analysis-proj8-test',
   result: {
+    typ: 'mahlzeit',
     zutatenliste: [{ name: 'Hähnchenbrust', amount: '200g', source: 'usda', sourceName: 'Chicken' }],
     annahmen: [],
     vorher: {
-      bausteine: {
-        geschmack: 'mittel', biss: 'schwach', ballaststoffe: 'schwach',
-        proteine: 'gut', volumen: 'mittel', art_of_eating: 'nicht_bewertet',
-      },
+      saeulen: { proteine: 'gut', ballaststoffe: 'gering', volumen: 'mittel' },
       gesamtbewertung: 'maessig_saettigend',
-      erklaerung: 'Gutes Protein, aber wenig Biss.',
+      erklaerung: 'Gutes Protein, aber wenig Volumen.',
       naehrwerte: { kcal: 240, protein_g: 44, kohlenhydrate_g: 0, zucker_g: 0, fett_g: 5, ballaststoffe_g: 0 },
     },
-    vorschlaege: [{ aktion: 'Gurken dazugeben', begruendung: 'Mehr Volumen', baustein: 'volumen' }],
+    vorschlaege: [{ aktion: 'Gurken dazugeben', begruendung: 'Mehr Volumen', saeule: 'volumen' }],
     nachher: {
-      bausteine: {
-        geschmack: 'mittel', biss: 'schwach', ballaststoffe: 'schwach',
-        proteine: 'gut', volumen: 'gut', art_of_eating: 'nicht_bewertet',
-      },
+      saeulen: { proteine: 'gut', ballaststoffe: 'gering', volumen: 'gut' },
       gesamtbewertung: 'maessig_saettigend',
       naehrwerte: { kcal: 256, protein_g: 44, kohlenhydrate_g: 4, zucker_g: 2, fett_g: 5, ballaststoffe_g: 1 },
       deltas: [{ wert: 'volumen', vorher: 0, nachher: 1, veraenderung: 1 }],
     },
-    art_of_eating_tipp: null,
   },
 }
 
@@ -99,7 +96,7 @@ async function reachDone(page: Page) {
   await page.getByRole('button', { name: /^analysieren/i }).click()
   await expect(page.getByText('Hab ich das richtig verstanden?')).toBeVisible({ timeout: 10000 })
   await page.getByRole('button', { name: /passt so/i }).click()
-  await expect(page.getByText('Die 6 Sättigungs-Bausteine')).toBeVisible({ timeout: 10000 })
+  await expect(page.getByText('Die 3 Sättigungs-Säulen')).toBeVisible({ timeout: 10000 })
 }
 
 // ─────────────────────────────────────────────────────────────

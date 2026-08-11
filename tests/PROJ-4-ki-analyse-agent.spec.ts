@@ -18,25 +18,28 @@ const MOCK_INGREDIENTS = [
   { name: 'Olivenöl', amount: '1 EL', isAssumption: true },
 ]
 
+// Refinement 2026-08-11 ("Complete"-Umstrukturierung): 3-Säulen-Format (typ: 'mahlzeit',
+// saeulen statt bausteine) — Details der Analyse sind für diese Testdatei irrelevant, nur
+// dass der "done"-Zustand erreicht wird.
 const MOCK_RESULT = {
   analysisId: 'analysis-123',
   result: {
+    typ: 'mahlzeit',
     zutatenliste: [{ name: 'Hähnchenbrust', amount: '200g', source: 'usda', sourceName: 'Chicken, raw' }],
     annahmen: [],
     vorher: {
-      bausteine: { geschmack: 'mittel', biss: 'gut', ballaststoffe: 'schwach', proteine: 'gut', volumen: 'mittel', art_of_eating: 'nicht_bewertet' },
+      saeulen: { proteine: 'gut', ballaststoffe: 'gering', volumen: 'mittel' },
       gesamtbewertung: 'maessig_saettigend',
       erklaerung: 'Gutes Protein.',
       naehrwerte: { kcal: 240, protein_g: 44, kohlenhydrate_g: 0, zucker_g: 0, fett_g: 5, ballaststoffe_g: 0 },
     },
-    vorschlaege: [{ aktion: 'Gurken dazugeben', begruendung: 'Mehr Volumen', baustein: 'volumen' }],
+    vorschlaege: [{ aktion: 'Gurken dazugeben', begruendung: 'Mehr Volumen', saeule: 'volumen' }],
     nachher: {
-      bausteine: { geschmack: 'mittel', biss: 'gut', ballaststoffe: 'mittel', proteine: 'gut', volumen: 'gut', art_of_eating: 'nicht_bewertet' },
+      saeulen: { proteine: 'gut', ballaststoffe: 'gering', volumen: 'gut' },
       gesamtbewertung: 'sehr_saettigend',
       naehrwerte: { kcal: 256, protein_g: 44, kohlenhydrate_g: 4, zucker_g: 2, fett_g: 5, ballaststoffe_g: 1 },
       deltas: [{ wert: 'volumen', vorher: 0, nachher: 1, veraenderung: 1 }],
     },
-    art_of_eating_tipp: null,
   },
 }
 
@@ -175,7 +178,7 @@ test.describe('Nährstoffberechnung', () => {
     )
     await reachConfirming(page)
     await page.getByRole('button', { name: /passt so/i }).click()
-    await expect(page.getByText('Die 6 Sättigungs-Bausteine')).toBeVisible({ timeout: 8000 })
+    await expect(page.getByText('Die 3 Sättigungs-Säulen')).toBeVisible({ timeout: 8000 })
   })
 
   test('Geänderte Zutaten werden korrekt an /api/analyse/confirm gesendet', async ({ page }) => {
@@ -191,7 +194,7 @@ test.describe('Nährstoffberechnung', () => {
     await page.locator('input[placeholder="Zutat"]').fill('Putenbrust')
     await page.getByRole('button', { name: 'Fertig' }).click()
     await page.getByRole('button', { name: /passt so/i }).click()
-    await expect(page.getByText('Die 6 Sättigungs-Bausteine')).toBeVisible({ timeout: 8000 })
+    await expect(page.getByText('Die 3 Sättigungs-Säulen')).toBeVisible({ timeout: 8000 })
     const body = capturedBody as { ingredients: { name: string }[] }
     expect(body.ingredients[0].name).toBe('Putenbrust')
   })

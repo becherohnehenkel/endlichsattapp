@@ -73,13 +73,16 @@ function Naehrwerte({ naehrwerte }: { naehrwerte: Record<string, number> }) {
 
 function SnapshotDetails({ snapshot }: { snapshot: unknown }) {
   if (!snapshot || typeof snapshot !== 'object') return null
+  // Refinement 2026-08-11: `bausteine` (6 Schlüssel, Legacy) und `saeulen` (3 Schlüssel, neu)
+  // können beide vorkommen, je nachdem ob das Feedback vor oder nach diesem Refinement
+  // eingereicht wurde — `Bausteine` rendert beide generisch über Object.entries.
   const s = snapshot as {
     zutatenliste?: { name?: string | null; amount?: unknown; unit?: string | null }[]
-    vorher?: { bausteine?: Record<string, unknown>; gesamtbewertung?: string; erklaerung?: string; naehrwerte?: Record<string, number> }
-    nachher?: { bausteine?: Record<string, unknown>; gesamtbewertung?: string; naehrwerte?: Record<string, number> }
-    vorschlaege?: { aktion?: string; begruendung?: string; baustein?: string }[]
+    vorher?: { bausteine?: Record<string, unknown>; saeulen?: Record<string, unknown>; gesamtbewertung?: string; erklaerung?: string; naehrwerte?: Record<string, number> }
+    nachher?: { bausteine?: Record<string, unknown>; saeulen?: Record<string, unknown>; gesamtbewertung?: string; naehrwerte?: Record<string, number> }
+    vorschlaege?: { aktion?: string; begruendung?: string; baustein?: string; saeule?: string }[]
     art_of_eating_tipp?: string | null
-    matrix?: { bausteine?: Record<string, unknown>; gesamtbewertung?: string }
+    matrix?: { bausteine?: Record<string, unknown>; saeulen?: Record<string, unknown>; gesamtbewertung?: string }
     naehrwerte?: Record<string, number>
     annahmen?: string[]
   }
@@ -109,23 +112,23 @@ function SnapshotDetails({ snapshot }: { snapshot: unknown }) {
         </div>
       )}
 
-      {s.vorher?.bausteine && (
+      {(s.vorher?.bausteine ?? s.vorher?.saeulen) && (
         <div>
           <p className="font-semibold text-foreground mb-1">
-            Vorher {s.vorher.gesamtbewertung ? `(${s.vorher.gesamtbewertung})` : ''}
+            Vorher {s.vorher!.gesamtbewertung ? `(${s.vorher!.gesamtbewertung})` : ''}
           </p>
-          <Bausteine bausteine={s.vorher.bausteine} />
-          {s.vorher.erklaerung && <p className="text-muted-foreground mt-1">{s.vorher.erklaerung}</p>}
-          {s.vorher.naehrwerte && <div className="mt-1"><Naehrwerte naehrwerte={s.vorher.naehrwerte} /></div>}
+          <Bausteine bausteine={(s.vorher!.bausteine ?? s.vorher!.saeulen)!} />
+          {s.vorher!.erklaerung && <p className="text-muted-foreground mt-1">{s.vorher!.erklaerung}</p>}
+          {s.vorher!.naehrwerte && <div className="mt-1"><Naehrwerte naehrwerte={s.vorher!.naehrwerte} /></div>}
         </div>
       )}
 
-      {s.matrix?.bausteine && (
+      {(s.matrix?.bausteine ?? s.matrix?.saeulen) && (
         <div>
           <p className="font-semibold text-foreground mb-1">
-            Sättigungs-Matrix {s.matrix.gesamtbewertung ? `(${s.matrix.gesamtbewertung})` : ''}
+            Sättigungs-Matrix {s.matrix!.gesamtbewertung ? `(${s.matrix!.gesamtbewertung})` : ''}
           </p>
-          <Bausteine bausteine={s.matrix.bausteine} />
+          <Bausteine bausteine={(s.matrix!.bausteine ?? s.matrix!.saeulen)!} />
         </div>
       )}
 
@@ -142,7 +145,7 @@ function SnapshotDetails({ snapshot }: { snapshot: unknown }) {
           <ul className="space-y-1">
             {s.vorschlaege.map((v, i) => (
               <li key={i} className="text-muted-foreground">
-                <span className="font-medium text-foreground">{v.baustein}:</span> {v.aktion} — {v.begruendung}
+                <span className="font-medium text-foreground">{v.saeule ?? v.baustein}:</span> {v.aktion} — {v.begruendung}
               </li>
             ))}
           </ul>
@@ -156,13 +159,13 @@ function SnapshotDetails({ snapshot }: { snapshot: unknown }) {
         </div>
       )}
 
-      {s.nachher?.bausteine && (
+      {(s.nachher?.bausteine ?? s.nachher?.saeulen) && (
         <div>
           <p className="font-semibold text-foreground mb-1">
-            Nachher {s.nachher.gesamtbewertung ? `(${s.nachher.gesamtbewertung})` : ''}
+            Nachher {s.nachher!.gesamtbewertung ? `(${s.nachher!.gesamtbewertung})` : ''}
           </p>
-          <Bausteine bausteine={s.nachher.bausteine} />
-          {s.nachher.naehrwerte && <div className="mt-1"><Naehrwerte naehrwerte={s.nachher.naehrwerte} /></div>}
+          <Bausteine bausteine={(s.nachher!.bausteine ?? s.nachher!.saeulen)!} />
+          {s.nachher!.naehrwerte && <div className="mt-1"><Naehrwerte naehrwerte={s.nachher!.naehrwerte} /></div>}
         </div>
       )}
     </div>

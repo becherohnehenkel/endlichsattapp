@@ -5,7 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 
 // ─── Types ────────────────────────────────────────────────────
 
-type PillarScore = 'gut' | 'mittel' | 'schwach' | 'nicht_bewertet'
+type PillarScore = 'gut' | 'mittel' | 'gering' | 'ungenuegend' | 'schwach' | 'nicht_bewertet'
 type GesamtBewertung = 'sehr_saettigend' | 'maessig_saettigend' | 'wenig_saettigend'
 
 interface WochenRecap {
@@ -15,6 +15,7 @@ interface WochenRecap {
   istAktuelleWoche: boolean
   anzahlGesamt: number
   anzahlBeilagen: number
+  anzahlSnacks: number
   anzahlStandard: number
   gesamtbewertungAvg: GesamtBewertung | null
   schwächsterBaustein: string | null
@@ -81,23 +82,32 @@ function getWeekLabel(weekStartIso: string, weekIndex: number): string {
 }
 
 // ─── Computation helpers ───────────────────────────────────────
+// Refinement 2026-08-11 ("Complete"-Umstrukturierung): 6 Bausteine → 3 Säulen. Ältere,
+// vor diesem Refinement gespeicherte Analysen haben weiterhin bis zu 6 Schlüssel (inkl.
+// geschmack/biss/art_of_eating) — der Wochenrückblick zeigt nur noch die drei
+// gemeinsamen Schlüssel (proteine/ballaststoffe/volumen), die es in beiden Formaten gibt.
+// Das alte Drei-Stufen-Vokabular ("schwach") und das neue Vier-Stufen-Vokabular
+// ("ungenuegend"/"gering") werden dabei als eigene Kategorien gezählt, nicht ineinander
+// übersetzt — beide laufen innerhalb des 4-Wochen-Fensters dieses Rückblicks ohnehin
+// nach kurzer Zeit aus.
 
-const PILLAR_KEYS = ['geschmack', 'biss', 'ballaststoffe', 'proteine', 'volumen', 'art_of_eating'] as const
+const PILLAR_KEYS = ['ballaststoffe', 'proteine', 'volumen'] as const
 
-// Priority for tie-breaking: lower = wins (schwach=0 beats mittel=1 beats gut=2)
-const SCORE_PRIORITY: Record<string, number> = { schwach: 0, mittel: 1, gut: 2, nicht_bewertet: 3 }
+// Priority for tie-breaking: lower = wins (schlechter gewinnt bei Gleichstand)
+const SCORE_PRIORITY: Record<string, number> = { ungenuegend: 0, schwach: 0, gering: 1, mittel: 2, gut: 3, nicht_bewertet: 4 }
 const BEWERTUNG_PRIORITY: Record<string, number> = { wenig_saettigend: 0, maessig_saettigend: 1, sehr_saettigend: 2 }
 
-// Pillar priority for "schwächster Baustein" — most impactful first
-const SCHWACH_PRIORITY = ['biss', 'ballaststoffe', 'volumen', 'geschmack', 'proteine'] as const
+// Pillar priority for "schwächster Baustein" — most impactful first (neue Priorität: Protein zuerst)
+const SCHWACH_PRIORITY = ['proteine', 'ballaststoffe', 'volumen'] as const
 
 export function pillarMajority(scores: string[]): PillarScore {
-  const counts: Record<string, number> = { gut: 0, mittel: 0, schwach: 0, nicht_bewertet: 0 }
+  const counts: Record<string, number> = {}
   for (const s of scores) {
-    if (s in counts) counts[s]++
+    counts[s] = (counts[s] ?? 0) + 1
   }
+  if (Object.keys(counts).length === 0) return 'nicht_bewertet'
   return Object.entries(counts)
-    .sort((a, b) => b[1] - a[1] || (SCORE_PRIORITY[a[0]] ?? 3) - (SCORE_PRIORITY[b[0]] ?? 3))[0][0] as PillarScore
+    .sort((a, b) => b[1] - a[1] || (SCORE_PRIORITY[a[0]] ?? 4) - (SCORE_PRIORITY[b[0]] ?? 4))[0][0] as PillarScore
 }
 
 export function bewertungMajority(scores: string[]): GesamtBewertung | null {
@@ -112,7 +122,10 @@ export function bewertungMajority(scores: string[]): GesamtBewertung | null {
 
 export function getSchwächsterBaustein(bausteine: Record<string, PillarScore>): string | null {
   for (const key of SCHWACH_PRIORITY) {
-    if (bausteine[key] === 'schwach') return key
+    if (bausteine[key] === 'schwach' || bausteine[key] === 'ungenuegend') return key
+  }
+  for (const key of SCHWACH_PRIORITY) {
+    if (bausteine[key] === 'gering') return key
   }
   for (const key of SCHWACH_PRIORITY) {
     if (bausteine[key] === 'mittel') return key
@@ -208,19 +221,24 @@ export async function buildWochenRecaps(userId: string): Promise<WochenRecap[]> 
     // Max 4 weeks displayed
     if (displayIndex >= 4) break
 
-    // Classify analyses for this week
+    // Classify analyses for this week. Refinement 2026-08-11: neue Analysen nutzen
+    // 'mahlzeit'/'komponente'/'snack', ältere Analysen weiterhin 'standard'/'beilage' —
+    // beide Vokabulare werden hier als gleichbedeutend behandelt (siehe PROJ-16 Decision Log).
     const standardAnalyses: RawAnalysis[] = []
     const beilageAnalyses: RawAnalysis[] = []
+    const snackAnalyses: RawAnalysis[] = []
 
     for (const meal of weekMeals) {
       const analysis = meal.meal_analyses?.[0]
       if (!analysis) continue
-      if (analysis.analysis_typ === 'standard') standardAnalyses.push(analysis)
-      else if (analysis.analysis_typ === 'beilage') beilageAnalyses.push(analysis)
+      if (analysis.analysis_typ === 'standard' || analysis.analysis_typ === 'mahlzeit') standardAnalyses.push(analysis)
+      else if (analysis.analysis_typ === 'beilage' || analysis.analysis_typ === 'komponente') beilageAnalyses.push(analysis)
+      else if (analysis.analysis_typ === 'snack') snackAnalyses.push(analysis)
     }
 
     const anzahlGesamt = weekMeals.length
     const anzahlBeilagen = beilageAnalyses.length
+    const anzahlSnacks = snackAnalyses.length
     const anzahlStandard = standardAnalyses.length
 
     let gesamtbewertungAvg: GesamtBewertung | null = null
@@ -264,6 +282,7 @@ export async function buildWochenRecaps(userId: string): Promise<WochenRecap[]> 
       istAktuelleWoche,
       anzahlGesamt,
       anzahlBeilagen,
+      anzahlSnacks,
       anzahlStandard,
       gesamtbewertungAvg,
       schwächsterBaustein,

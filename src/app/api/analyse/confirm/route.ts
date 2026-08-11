@@ -3,6 +3,7 @@ import { z } from 'zod'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@/lib/supabase/server'
 import { queryBLS, queryOpenFoodFacts, isPlausibleEstimate, type NutritionPer100g } from '@/lib/nutrition'
+import { GESCHMACK_PROMPT_RULES, GESCHMACK_JSON_FIELD, parseGeschmackFragment, type GeschmackState } from '@/lib/geschmack'
 
 const ingredientSchema = z.object({
   name: z.string().min(1).max(200),
@@ -57,8 +58,12 @@ function formatNutrition(n: NutritionPer100g): string {
 }
 
 // ─── Lean Claude prompt (no macro calculation) ───────────────
+// Refinement 2026-08-11 ("Complete"-Umstrukturierung): 6-Bausteine-Modell → 3-Säulen-Modell
+// (Protein/Ballaststoffe/Volumen). Geschmack, Biss und Art of Eating sind jetzt eigenständige,
+// künftige Features — siehe docs/saettigungsmatrix.md. Neuer Sonderfall "Komponente" (löst
+// "Beilage" ab) und komplett neuer Sonderfall "Snack". Siehe PROJ-4/PROJ-5/PROJ-16 Decision Logs.
 
-const ANALYSIS_SYSTEM_PROMPT = `Du bist der Sättigungs-Assistent von endlichsatt. Du analysierst Mahlzeiten anhand der Sättigungs-Matrix mit 6 Bausteinen. Du bist präzise, herzlich und nie bevormundend.
+const ANALYSIS_SYSTEM_PROMPT = `Du bist der Sättigungs-Assistent von Mehralsabnehmen. Du analysierst Mahlzeiten anhand der Sättigungs-Matrix mit drei Säulen: Protein, Ballaststoffe, Volumen. Du bist präzise, herzlich und nie bevormundend.
 
 Was du nie tust: "weniger essen" empfehlen, moralisieren, Light-Produkte vorschlagen, Zutaten entfernen die der Nutzer mag, Proteinshakes empfehlen, die Wörter "gesund", "ungesund" oder "Gesundheit" verwenden — Sättigung ist kein Gesundheitsurteil. Einzige eng gefasste Ausnahme von "weniger essen": Portionskalibrierung bei hochenergiedichtem Fastfood, siehe eigener Abschnitt.
 
@@ -66,33 +71,32 @@ Was du nie tust: "weniger essen" empfehlen, moralisieren, Light-Produkte vorschl
 Der User-Prompt enthält zwei Blöcke: ältere Rückfragen-Annahmen (Kontext, z.B. Portionsgröße) und danach die FINALE, vom Nutzer zuletzt geprüfte und ggf. korrigierte Zutatenliste. Diese finale Liste ist die einzige Quelle für Zutat-Identität und -Name im Output-Feld "zutatenliste".
 Wenn eine ältere Annahme eine andere Zutat nennt als die finale Liste (z.B. Annahme sagt "Süßkartoffelnudeln", finale Liste sagt "Spaghetti") — das bedeutet, der Nutzer hat die Zutat bewusst geändert. Übernimm dann IMMER den Namen aus der finalen Liste unverändert, auch wenn dafür keine Datenbankdaten vorliegen und du den Nährwert selbst schätzen musst. Erkläre nicht warum die alte Zutat "eigentlich" gemeint gewesen sein könnte und tausche den Namen nicht zurück — das wäre ein stillschweigendes Verwerfen der Nutzerkorrektur. Annahmen zu Menge/Portionierung/Zubereitung bleiben weiterhin gültig und wichtig, nur die Zutat-Identität selbst ist ausschließlich durch die finale Liste bestimmt.
 
-## Die 6 Bausteine (bewerte jeden: gut / mittel / schwach)
+## Sonderfälle zuerst prüfen: Komponente oder Snack?
+Prüfe die Rückfragen-Annahmen auf einen dieser Flags, BEVOR du irgendetwas anderes tust:
+- "MAHLZEIT_TYP: komponente" → verwende AUSSCHLIESSLICH das Komponente-Ausgabe-Format (siehe unten). Kein Standard-Flow, keine Säulen-Bewertung.
+- "MAHLZEIT_TYP: snack" → verwende AUSSCHLIESSLICH das Snack-Ausgabe-Format (siehe unten). Kein Standard-Flow, keine Säulen-Bewertung.
+- Kein solcher Flag vorhanden → normale Mahlzeit, Standard-Format mit den drei Säulen unten.
 
-**Geschmack** — gut: mehrere Geschmacksdimensionen aktiv (Fett, Salz, Süße, Säure, Umami, Röstaromen, Gewürze, Textur, Temperatur) | mittel: 1–2 Dimensionen | schwach: monoton oder geschmacksneutral
-Hinweis Gebäck: Selbstgemachtes Süßgebäck (Kuchen, Knoten, Muffins, Kekse, Brötchen) mit Butter + Zucker + Gewürzen → immer "gut". Backen erzeugt Röstaromen (Maillard), Butter = Aromaträger, Süße + Gewürz + Karamellisierung = volle Geschmackstiefe.
+## Die drei Säulen der Sättigung (nur für Standard-Format)
+Bewerte jede Säule mit genau einem von vier Werten: ungenuegend / gering / mittel / gut. Alle Intervalle halboffen (Untergrenze eingeschlossen, Obergrenze ausgeschlossen).
 
-**Biss** — gut: echter Kauaufwand (Nüsse, Kerne, rohes/bissfestes Gemüse, knusprig Gebackenes) | mittel: etwas Biss | schwach: alles weich/breiig/flüssig
-Hinweis: Nüsse, Samen und Kerne zählen IMMER gleichzeitig für Biss UND Geschmack (Fett als Aromaträger) — beide Bausteine profitieren.
-
-**Ballaststoffe** — gut: Vollkorn, Hülsenfrüchte, Nüsse, Gemüse klar präsent | mittel: ansatzweise | schwach: kaum Ballaststoffe
-
-**Proteine** — gut: proteindichte Quelle in ausreichender Menge (Fisch/Fleisch ~25-30% Protein, Quark/Joghurt >100g, Hülsenfrüchte als Hauptzutat) | mittel: Protein vorhanden aber ineffizient | schwach: keine nennenswerte Quelle
-
-**Volumen** — gut: viel Gemüse/Salat/quellende Lebensmittel | mittel: etwas Volumen | schwach: kalorisch dicht, wenig physisches Volumen
-
-**Art of Eating** — gut: sitzend, ablenkungsfrei, langsam | mittel: teilweise bewusst | schwach: im Stehen, mit Ablenkung | nicht_bewertet: wenn nicht angegeben
+**Protein** (pro Mahlzeit): unter 10g = ungenuegend | 10–20g = gering | 20–30g = mittel | ab 30g = gut
+**Ballaststoffe** (pro Mahlzeit): unter 3g = ungenuegend | 3–5g = gering | 5–10g = mittel | ab 10g = gut
+**Volumen**: berechne zwei Werte und nimm die SCHLECHTERE Stufe:
+  1. Energiedichte = Gesamt-kcal ÷ Gesamt-Gramm der Mahlzeit: unter 1,0 = gut | 1,0–1,5 = mittel | 1,5–2,25 = gering | ab 2,25 = ungenuegend
+  2. Gemüsemenge absolut (Gemüse+Salat+Pilze; Kartoffeln/Mais/Hülsenfrüchte zählen NICHT): unter 100g = ungenuegend | 100–200g = mittel | ab 200g = gut
 
 ## Gesamtbewertung
-5–6 gut: sehr_saettigend | 3–4 gut: maessig_saettigend | 0–2 gut: wenig_saettigend
+Zähle die Säulen mit "gut": 3 = sehr_saettigend | 2 = maessig_saettigend | 0–1 = wenig_saettigend
 
-## Wenn die Mahlzeit bereits sehr gut ist (5–6 Bausteine grün)
+## Wenn die Mahlzeit bereits sehr gut ist (alle drei Säulen gut)
 Das ist echte Leistung — erkenne sie aufrichtig an, ohne herablassend oder übertrieben zu wirken.
-- Die "erklaerung" beginnt mit echter Anerkennung, z.B.: "Das ist eine wirklich gut strukturierte Mahlzeit — du hast fast alle Sättigungsprinzipien intuitiv umgesetzt."
+- Die "erklaerung" beginnt mit echter Anerkennung, z.B.: "Das ist eine wirklich gut strukturierte Mahlzeit — du hast intuitiv fast alle Sättigungsprinzipien umgesetzt."
 - Maximal 1 Vorschlag, formuliert als optionaler Feinschliff ("Falls du noch einen kleinen Schritt machen willst…")
 - 0 Vorschläge ist völlig in Ordnung wenn kein echter Mehrwert entsteht.
 
-## Verbesserungsvorschläge (0–3, bei sehr_saettigend max. 1)
-Priorität: Portionskalibrierung (nur bei Fastfood-Trigger unten) → Biss → Ballaststoffe → Volumen → Geschmack → Proteine → Art of Eating
+## Verbesserungsvorschläge (0–2, bei sehr_saettigend max. 1)
+Priorität: Portionskalibrierung (nur bei Fastfood-Trigger unten) → schlechteste Säule zuerst → bei Gleichstand: Protein vor Ballaststoffen vor Volumen
 
 **Machbarkeitsfilter — jeder Vorschlag muss diesen bestehen:**
 1. Kein extra Einkauf: nur Zutaten die typischerweise im Haushalt vorhanden sind (Eier, Joghurt, Nüsse, Hülsenfrüchte aus der Dose, Kräuter, Käse, Zitrone)
@@ -103,8 +107,10 @@ Priorität: Portionskalibrierung (nur bei Fastfood-Trigger unten) → Biss → B
    - Suppe/Eintopf → Linsen, Tofu-Würfel, Ei einrühren, Joghurt obendrauf ✓
    - Curry/asiatisch → Hühnchen, Tofu, Kichererbsen, Tempeh ✓ | Feta ✗
    - Frühstück → Ei, Joghurt, Quark, Nüsse ✓
-   - Fleischgericht als Hauptzutat → KEIN Protein-Upgrade vorschlagen; andere Bausteine prüfen
+   - Fleischgericht als Hauptzutat → KEIN Protein-Upgrade vorschlagen; andere Säulen prüfen
 4. Wenn kein Vorschlag den Filter besteht: lieber keinen machen als einen unpassenden.
+
+Für Volumen-Vorschläge: Energiedichte zu hoch → volumenreiche Komponente ERGÄNZEN (Gemüse, Salat, Suppe vorweg), nicht kalorische Komponente streichen. Gemüse zu wenig → konkrete Menge/Sorte die zum Gericht passt.
 
 **Zusatz-Felder:**
 Wenn ein Vorschlag eine neue Zutat hinzufügt: "zusatz" mit EINFACHEM Grundbegriff (z.B. "Ei", "Thunfisch", "Walnüsse") — GENAU EINE Zutat, keine Alternativen, kein "hartgekochtes Ei".
@@ -125,8 +131,7 @@ Erkenne einen Restaurantbesuch an: typischen Außer-Haus-Gerichten, Beschreibung
 
 Im Restaurant-Kontext: KEINE Zutaten-Vorschläge ("Kichererbsen dazugeben" ist nicht bestellbar). Stattdessen Bestellstrategien:
 - **Vorspeisensalat**: Bei schweren Hauptgerichten (Schnitzel, Pasta, Pizza, Burger) — Salat zuerst liefert Volumen + Ballaststoffe, dämpft den Hauptgerichten-Konsum natürlich
-- **Teilen**: Bei sehr großen/üppigen Portionen in der Gruppe — aber nur wenn halbierte Portion + Art of Eating zusammenkommen
-- **Art of Eating**: Im Restaurant besonders wichtig (Ablenkung, Gespräche, sozialem Tempo) — Gabel ablegen, kurze Pause in der Mitte, Teller darf stehen bleiben
+- **Teilen**: Bei sehr großen/üppigen Portionen in der Gruppe
 - **Nächste Mahlzeit**: Im Restaurant-Kontext darf der Vorschlag auch auf die nächste Mahlzeit verweisen
 
 ## Stückweise verzehrtes Gebäck / Portionierung aus Gesamtrezepten
@@ -148,51 +153,66 @@ Liegt die Angabe in rohem/trockenem Gewicht vor (z.B. "1 Tasse roher Quinoa"), z
 Die Zutatenbezeichnung (inkl. "(gekocht)"/"(roh)") muss exakt zum tatsächlichen Garzustand von "grams" passen. Umrechnung immer explizit in "annahmen" nennen, z.B. "1 Tasse roher Quinoa (~75g trocken) → ca. 210g gegart (Faktor ×2,8), Nährwerte auf gegartem Zustand berechnet".
 
 ## Wichtig: Nährwerte werden vom System berechnet
-Keine Zahlen ausgeben. Nur "grams"-Feld pro Zutat schätzen.
+Keine Zahlen ausgeben. Nur "grams"-Feld pro Zutat schätzen. Gilt für ALLE drei Ausgabe-Formate (Standard, Komponente, Snack) — auch bei Komponente und Snack werden im Hintergrund Nährwerte berechnet, auch wenn sie im Ausgabe-Text nicht diskutiert werden.
 
 **Ausnahme:** Bei Zutaten, die in der Zutatenliste unten als "Keine Datenbankdaten vorhanden — KI-Schätzung" markiert sind, schätze zusätzlich ihren Nährwert pro 100g in einem eigenen Feld "naehrwert_geschaetzt" (kcal, protein_g, carbs_g, sugar_g, fat_g, fiber_g — alles Zahlen, realistische Werte für dieses Lebensmittel). Für JEDE ANDERE Zutat (mit BLS- oder Open-Food-Facts-Daten) lässt du dieses Feld weg oder setzt es auf null — für diese gilt weiterhin: keine eigenen Zahlen ausgeben.
 
-## Sonderfall: Beilagen-Kontext
-Wenn "BEILAGE_KONTEXT:" in den Rückfragen-Annahmen steht, verwende AUSSCHLIESSLICH das Beilagen-Ausgabe-Format. KEIN Standard-Sättigungs-Flow, keine Bausteine-Bewertung, keine Verbesserungsvorschläge.
-
-Beilagen-Ausgabe: 1 Satz was das Gericht als Beilage leistet (als_beilage_top) + 1–2 Sätze warum es allein nicht sättigt (als_hauptgericht) + optional 1 Tipp der die Beilage selbst aufwertet (beilage_upgrade oder null) + 2–3 konkrete Pairing-Empfehlungen mit Menge und 1-Satz-Begründung + art_of_eating_tipp wie immer.
-
+## Sonderfall: Komponente (löst "Beilage" ab)
+Wenn "MAHLZEIT_TYP: komponente" in den Rückfragen-Annahmen steht: KEIN Sättigungs-Score, KEINE Säulen-Bewertung, KEINE Standard-Verbesserungsvorschläge.
+Stattdessen zwei Felder:
+- "bilanz": positive Bilanz MIT KONKRETEN ZAHLEN was das Gericht beisteuert, z.B. "Bringt schon mal 180g Gemüse und 4g Ballaststoffe mit." — nicht nur ein wertschätzender Satz ohne Zahlen.
+- "kombinationsvorschlag": GENAU EIN konkreter Vorschlag womit daraus eine komplette Mahlzeit wird, mit Menge, z.B. "Dazu ein Stück Vollkornbrot und eine Handvoll Kichererbsen (ca. 100g) rein, dann trägt dich das bis zum Abend."
 Ton: "Als Beilage macht das richtig Sinn." — nie "Das ist zu wenig." Nutzer lernt was fehlt, wird nicht dafür bestraft.
+
+## Sonderfall: Snack (komplett neu)
+Wenn "MAHLZEIT_TYP: snack" in den Rückfragen-Annahmen steht: KEINE Analyse, KEIN Sättigungs-Score, KEIN Kommentar zu Kalorien, KEIN "Ausnahme"- oder "Sünde"-Vokabular, KEINE Kompensations-Tipps.
+Nur ein Feld "snack_bestaetigung": kurzer, neutral-warmer Satz, z.B. "Alles klar, Snack — der braucht keine Analyse." Zutatenliste und Gramm-Schätzung trotzdem normal ausfüllen (läuft im Hintergrund weiter, wird nur nicht diskutiert).
+
+## Geschmacks-Score (PROJ-33 — NUR bei Standard- und Komponente-Format, NIE bei Snack)
+Zusätzlich zur Sättigungs-Bewertung (Standard-Format) bzw. zusätzlich zur Komponente-Bilanz (Komponente-Format) füllst du ein eigenständiges "geschmack"-Feld. Es ist eine völlig unabhängige Bewertungsebene — nie mit der Sättigung vermischen, nie in "erklaerung"/"bilanz" erwähnen.
+
+${GESCHMACK_PROMPT_RULES}
 
 Antworte AUSSCHLIESSLICH mit gültigem JSON ohne Text davor oder danach.
 
 "naehrwert_geschaetzt" (falls befüllt) hat immer die Form {"kcal": 0, "protein_g": 0, "carbs_g": 0, "sugar_g": 0, "fat_g": 0, "fiber_g": 0} — Werte pro 100g.
 
-Standard-Format (wenn KEIN BEILAGE_KONTEXT):
+Standard-Format (kein MAHLZEIT_TYP-Flag):
 {
-  "typ": "standard",
+  "typ": "mahlzeit",
   "zutatenliste": [{"name": "...", "amount": "...", "grams": 0, "naehrwert_geschaetzt": null}],
   "annahmen": ["..."],
   "vorher": {
-    "bausteine": {"geschmack": "gut|mittel|schwach", "biss": "gut|mittel|schwach", "ballaststoffe": "gut|mittel|schwach", "proteine": "gut|mittel|schwach", "volumen": "gut|mittel|schwach", "art_of_eating": "gut|mittel|schwach|nicht_bewertet"},
+    "saeulen": {"proteine": "ungenuegend|gering|mittel|gut", "ballaststoffe": "ungenuegend|gering|mittel|gut", "volumen": "ungenuegend|gering|mittel|gut"},
     "gesamtbewertung": "sehr_saettigend|maessig_saettigend|wenig_saettigend",
     "erklaerung": "2-4 Sätze auf Deutsch, warm. Bei sehr_saettigend: mit echter Anerkennung beginnen."
   },
-  "vorschlaege": [{"aktion": "...", "begruendung": "...", "baustein": "biss|ballaststoffe|volumen|geschmack|proteine|art_of_eating", "zusatz": {"name": "...", "grams": 0}}],
+  "vorschlaege": [{"aktion": "...", "begruendung": "...", "saeule": "proteine|ballaststoffe|volumen", "zusatz": {"name": "...", "grams": 0}}],
   "nachher": {
-    "bausteine": {"geschmack": "...", "biss": "...", "ballaststoffe": "...", "proteine": "...", "volumen": "...", "art_of_eating": "..."},
+    "saeulen": {"proteine": "...", "ballaststoffe": "...", "volumen": "..."},
     "gesamtbewertung": "..."
   },
-  "art_of_eating_tipp": "1 warmer Satz wenn nicht bewertet, sonst null"
+  ${GESCHMACK_JSON_FIELD}
 }
 
-Beilagen-Format (wenn BEILAGE_KONTEXT in den Annahmen):
+Komponente-Format (MAHLZEIT_TYP: komponente):
 {
-  "typ": "beilage",
+  "typ": "komponente",
   "zutatenliste": [{"name": "...", "amount": "...", "grams": 0}],
-  "annahmen": ["BEILAGE_KONTEXT: ...", "..."],
-  "beilage": {
-    "als_beilage_top": "1 Satz — was das Gericht als Beilage leistet",
-    "als_hauptgericht": "1–2 Sätze — warum es allein nicht sättigt, warm und sachlich",
-    "beilage_upgrade": "1 Satz Tipp oder null",
-    "pairing": [{"empfehlung": "Konkrete Empfehlung mit Menge (z.B. 150g Skyr mit Honig)", "warum": "1 Satz Begründung"}],
-    "art_of_eating_tipp": "1 Satz oder null"
-  }
+  "annahmen": ["MAHLZEIT_TYP: komponente", "..."],
+  "komponente": {
+    "bilanz": "Quantitative positive Bilanz mit Zahlen",
+    "kombinationsvorschlag": "Genau ein konkreter Vorschlag mit Menge"
+  },
+  ${GESCHMACK_JSON_FIELD}
+}
+
+Snack-Format (MAHLZEIT_TYP: snack):
+{
+  "typ": "snack",
+  "zutatenliste": [{"name": "...", "amount": "...", "grams": 0}],
+  "annahmen": ["MAHLZEIT_TYP: snack", "..."],
+  "snack_bestaetigung": "Kurzer, neutral-warmer Satz"
 }`
 
 // ─── Route handler ───────────────────────────────────────────
@@ -223,6 +243,7 @@ export async function POST(request: Request) {
   if (!meal) return NextResponse.json({ error: 'Mahlzeit nicht gefunden' }, { status: 404 })
 
   // Fetch Q&A assumptions — these are critical for portion scaling (e.g. "Rezept ergibt 15 Stück")
+  // and now also carry the Schritt-0-Klassifikation-Flag ("MAHLZEIT_TYP: komponente"/"snack")
   const { data: conv } = await supabase
     .from('meal_conversations')
     .select('assumptions')
@@ -279,7 +300,7 @@ export async function POST(request: Request) {
   const assumptionBlock = qaAssumptions.length > 0
     ? [
         '',
-        'Kontext aus den Rückfragen (z.B. Portionsgrößen-Skalierung). Falls dies der Zutatenliste unten widerspricht, gilt die Zutatenliste — siehe Hinweis dort:',
+        'Kontext aus den Rückfragen (z.B. Portionsgrößen-Skalierung, Schritt-0-Klassifikation). Falls dies der Zutatenliste unten widerspricht, gilt die Zutatenliste — siehe Hinweis dort:',
         ...qaAssumptions.map(a => `- ${a}`),
       ]
     : []
@@ -315,37 +336,44 @@ export async function POST(request: Request) {
   const raw = response.content[0]?.type === 'text' ? response.content[0].text : ''
   const cleaned = raw.replace(/^```(?:json)?\s*\n?/m, '').replace(/\n?```\s*$/m, '').trim()
 
+  // PROJ-33: `geschmack` ist bewusst `unknown` — die eigentliche Validierung passiert erst
+  // über parseGeschmackFragment() (Graceful Degradation statt Wurf bei fehlerhaftem Fragment).
   type StandardClaudeResult = {
-    typ?: 'standard' | undefined
+    typ?: 'mahlzeit' | undefined
     zutatenliste: { name: string; amount: string; grams: number; naehrwert_geschaetzt?: NutritionPer100g | null }[]
     annahmen: string[]
     vorher: {
-      bausteine: Record<string, string>
+      saeulen: Record<string, string>
       gesamtbewertung: string
       erklaerung: string
     }
-    vorschlaege: { aktion: string; begruendung: string; baustein: string; zusatz?: { name: string; grams: number } | null }[]
+    vorschlaege: { aktion: string; begruendung: string; saeule: string; zusatz?: { name: string; grams: number } | null }[]
     nachher: {
-      bausteine: Record<string, string>
+      saeulen: Record<string, string>
       gesamtbewertung: string
     }
-    art_of_eating_tipp: string | null
+    geschmack?: unknown
   }
 
-  type BeilageClaudeResult = {
-    typ: 'beilage'
+  type KomponenteClaudeResult = {
+    typ: 'komponente'
     zutatenliste: { name: string; amount: string; grams: number; naehrwert_geschaetzt?: NutritionPer100g | null }[]
     annahmen: string[]
-    beilage: {
-      als_beilage_top: string
-      als_hauptgericht: string
-      beilage_upgrade: string | null
-      pairing: { empfehlung: string; warum: string }[]
-      art_of_eating_tipp: string | null
+    komponente: {
+      bilanz: string
+      kombinationsvorschlag: string
     }
+    geschmack?: unknown
   }
 
-  type ClaudeResult = StandardClaudeResult | BeilageClaudeResult
+  type SnackClaudeResult = {
+    typ: 'snack'
+    zutatenliste: { name: string; amount: string; grams: number; naehrwert_geschaetzt?: NutritionPer100g | null }[]
+    annahmen: string[]
+    snack_bestaetigung: string
+  }
+
+  type ClaudeResult = StandardClaudeResult | KomponenteClaudeResult | SnackClaudeResult
 
   let result: ClaudeResult
   try {
@@ -394,38 +422,41 @@ export async function POST(request: Request) {
     return undefined
   }
 
-  // ─── Beilagen-Branch ─────────────────────────────────────────
+  // ─── Snack-Branch (komplett neu, 2026-08-11) ──────────────────
+  // Makros laufen im Hintergrund weiter (für den künftigen Wochenrückblick, PROJ-17), werden
+  // aber nicht diskutiert — kein Sättigungs-Score, keine Vorschläge, siehe PROJ-4/PROJ-16.
 
-  if (result.typ === 'beilage') {
-    const resolvedBeilage = await Promise.all(
+  if (result.typ === 'snack') {
+    const resolvedSnack = await Promise.all(
       result.zutatenliste.map(async z => ({ z, resolved: await resolveNutrition(z.name, z.naehrwert_geschaetzt) }))
     )
+    const snackMacros = computeMacros(resolvedSnack.map(({ z, resolved }) => ({ grams: z.grams ?? 0, per100g: resolved?.per100g })))
+    const zutatenQuellenSnack = resolvedSnack.map(({ resolved }) => resolved?.source ?? 'nicht_schaetzbar')
 
-    // PROJ-28 (BUG-7-Fix, 2026-08-04): positionsgenau statt namensbasiert — zwei Zutaten mit
-    // identischem Namen aber unterschiedlicher Quelle (z.B. "Zwiebel" zweimal) wurden vorher
-    // beide fälschlich gleich gekennzeichnet, weil die Zuordnung über den Namen lief statt über
-    // den Index. `zutatenQuellen[i]` gehört exakt zu `zutatenliste[i]`.
-    const zutatenQuellenBeilage = resolvedBeilage.map(({ resolved }) => resolved?.source ?? 'nicht_schaetzbar')
-
-    const beilageFullResult = {
-      typ: 'beilage' as const,
+    const snackFullResult = {
+      typ: 'snack' as const,
       zutatenliste: result.zutatenliste,
       annahmen: result.annahmen,
-      zutatenQuellen: zutatenQuellenBeilage,
-      beilage: result.beilage,
+      zutatenQuellen: zutatenQuellenSnack,
+      snackBestaetigung: result.snack_bestaetigung,
     }
 
-    const { data: beilageAnalysis, error: beilageInsertError } = await supabase
+    const { data: snackAnalysis, error: snackInsertError } = await supabase
       .from('meal_analyses')
       .insert({
         meal_id: mealId,
-        analysis_typ: 'beilage',
+        analysis_typ: 'snack',
         refined_ingredients: {
           ingredients: result.zutatenliste,
           assumptions: result.annahmen,
         } as unknown as import('@/types/database').Json,
-        beilage_data: result.beilage as unknown as import('@/types/database').Json,
-        data_sources: resolvedBeilage.map(({ z, resolved }) => ({
+        macros_before: snackMacros as unknown as import('@/types/database').Json,
+        // Bugfix (noch in derselben Session gefunden): snack_bestaetigung wurde ursprünglich
+        // nirgends persistiert — beim späteren Ansehen aus der Historie (/mahlzeit/[id]) gäbe es
+        // dann keinen gespeicherten Text zum Rekonstruieren. `beilage_data`-Spalte wiederverwendet
+        // (bereits der etablierte Ablageort für Komponente-Zusatzdaten), kein neues Feld nötig.
+        beilage_data: { snack_bestaetigung: result.snack_bestaetigung } as unknown as import('@/types/database').Json,
+        data_sources: resolvedSnack.map(({ z, resolved }) => ({
           ingredient: z.name,
           source: resolved?.source ?? 'nicht_schaetzbar',
           sourceName: z.name,
@@ -434,25 +465,85 @@ export async function POST(request: Request) {
       .select('id')
       .single()
 
-    if (beilageInsertError) {
-      console.error('[analyse/confirm] beilage DB insert error:', beilageInsertError)
+    if (snackInsertError) {
+      console.error('[analyse/confirm] snack DB insert error:', snackInsertError)
       return NextResponse.json({ error: 'Ergebnis konnte nicht gespeichert werden.' }, { status: 500 })
     }
 
     await supabase.from('meals').update({ status: 'completed' }).eq('id', mealId)
     await supabase.from('meal_conversations').update({ status: 'completed' }).eq('meal_id', mealId)
 
-    return NextResponse.json({ analysisId: beilageAnalysis.id, result: beilageFullResult })
+    return NextResponse.json({ analysisId: snackAnalysis.id, result: snackFullResult })
   }
 
-  // ─── Standard-Branch: macro computation ──────────────────────
+  // ─── Komponente-Branch (löst Beilagen-Branch ab) ──────────────
+
+  if (result.typ === 'komponente') {
+    const resolvedKomponente = await Promise.all(
+      result.zutatenliste.map(async z => ({ z, resolved: await resolveNutrition(z.name, z.naehrwert_geschaetzt) }))
+    )
+
+    // PROJ-28 (BUG-7-Fix, 2026-08-04): positionsgenau statt namensbasiert — zwei Zutaten mit
+    // identischem Namen aber unterschiedlicher Quelle wurden vorher beide fälschlich gleich
+    // gekennzeichnet, weil die Zuordnung über den Namen lief statt über den Index.
+    const zutatenQuellenKomponente = resolvedKomponente.map(({ resolved }) => resolved?.source ?? 'nicht_schaetzbar')
+
+    // PROJ-33: Graceful Degradation — ein fehlendes/fehlerhaftes Geschmack-Fragment darf die
+    // Komponente-Analyse nie blockieren, siehe parseGeschmackFragment().
+    const geschmackKomponente: GeschmackState = parseGeschmackFragment(result.geschmack)
+
+    const komponenteFullResult = {
+      typ: 'komponente' as const,
+      zutatenliste: result.zutatenliste,
+      annahmen: result.annahmen,
+      zutatenQuellen: zutatenQuellenKomponente,
+      // Bugfix (QA 2026-08-11): ohne explizites format-Feld fiel `komponenten-ergebnis.tsx`
+      // (prüft `k.format === 'neu'`) in den Legacy-Renderzweig und crashte auf `k.pairing.map(...)`,
+      // da das neue Format kein `pairing`-Array mehr hat. Analog zum bereits korrekten Muster in
+      // mahlzeit/[id]/page.tsx bei der Historie-Rekonstruktion.
+      komponente: { format: 'neu' as const, ...result.komponente },
+      geschmack: geschmackKomponente,
+    }
+
+    const { data: komponenteAnalysis, error: komponenteInsertError } = await supabase
+      .from('meal_analyses')
+      .insert({
+        meal_id: mealId,
+        analysis_typ: 'komponente',
+        refined_ingredients: {
+          ingredients: result.zutatenliste,
+          assumptions: result.annahmen,
+        } as unknown as import('@/types/database').Json,
+        beilage_data: result.komponente as unknown as import('@/types/database').Json,
+        geschmack_score: geschmackKomponente as unknown as import('@/types/database').Json,
+        data_sources: resolvedKomponente.map(({ z, resolved }) => ({
+          ingredient: z.name,
+          source: resolved?.source ?? 'nicht_schaetzbar',
+          sourceName: z.name,
+        })),
+      })
+      .select('id')
+      .single()
+
+    if (komponenteInsertError) {
+      console.error('[analyse/confirm] komponente DB insert error:', komponenteInsertError)
+      return NextResponse.json({ error: 'Ergebnis konnte nicht gespeichert werden.' }, { status: 500 })
+    }
+
+    await supabase.from('meals').update({ status: 'completed' }).eq('id', mealId)
+    await supabase.from('meal_conversations').update({ status: 'completed' }).eq('meal_id', mealId)
+
+    return NextResponse.json({ analysisId: komponenteAnalysis.id, result: komponenteFullResult })
+  }
+
+  // ─── Mahlzeit-Branch (Standard): macro computation ────────────
 
   const resolvedIngredients = await Promise.all(
     result.zutatenliste.map(async z => ({ z, resolved: await resolveNutrition(z.name, z.naehrwert_geschaetzt) }))
   )
 
   // PROJ-28 (BUG-7-Fix, 2026-08-04): positionsgenau statt namensbasiert — siehe Kommentar im
-  // Beilagen-Zweig oben. `zutatenQuellen[i]` gehört exakt zu `zutatenliste[i]`, unabhängig
+  // Komponente-Zweig oben. `zutatenQuellen[i]` gehört exakt zu `zutatenliste[i]`, unabhängig
   // davon ob mehrere Zutaten denselben Namen tragen.
   const zutatenQuellen = resolvedIngredients.map(({ resolved }) => resolved?.source ?? 'nicht_schaetzbar')
 
@@ -488,24 +579,28 @@ export async function POST(request: Request) {
       veraenderung: nachherMacros[k] - vorherMacros[k],
     }))
 
+  // PROJ-33: Graceful Degradation — ein fehlendes/fehlerhaftes Geschmack-Fragment darf die
+  // Sättigungs-Analyse nie blockieren, siehe parseGeschmackFragment().
+  const geschmackStandard: GeschmackState = parseGeschmackFragment(result.geschmack)
+
   const fullResult = {
     zutatenliste: result.zutatenliste,
     annahmen: result.annahmen,
     zutatenQuellen,
     vorher: {
-      bausteine: result.vorher.bausteine,
+      saeulen: result.vorher.saeulen,
       gesamtbewertung: result.vorher.gesamtbewertung,
       erklaerung: result.vorher.erklaerung,
       naehrwerte: vorherMacros,
     },
     vorschlaege: result.vorschlaege,
     nachher: {
-      bausteine: result.nachher.bausteine,
+      saeulen: result.nachher.saeulen,
       gesamtbewertung: result.nachher.gesamtbewertung,
       naehrwerte: nachherMacros,
       deltas,
     },
-    art_of_eating_tipp: result.art_of_eating_tipp ?? null,
+    geschmack: geschmackStandard,
   }
 
   // ─── Persist to meal_analyses ───────────────────────────────
@@ -514,7 +609,7 @@ export async function POST(request: Request) {
     .from('meal_analyses')
     .insert({
       meal_id: mealId,
-      analysis_typ: 'standard',
+      analysis_typ: 'mahlzeit',
       refined_ingredients: {
         ingredients: fullResult.zutatenliste,
         assumptions: fullResult.annahmen,
@@ -522,19 +617,19 @@ export async function POST(request: Request) {
       macros_before: fullResult.vorher.naehrwerte as unknown as import('@/types/database').Json,
       macros_after: fullResult.nachher.naehrwerte as unknown as import('@/types/database').Json,
       satiety_scores_before: {
-        pillars: fullResult.vorher.bausteine,
+        pillars: fullResult.vorher.saeulen,
         overall: fullResult.vorher.gesamtbewertung,
         explanation: fullResult.vorher.erklaerung,
       },
       satiety_scores_after: {
-        pillars: fullResult.nachher.bausteine,
+        pillars: fullResult.nachher.saeulen,
         overall: fullResult.nachher.gesamtbewertung,
         deltas: fullResult.nachher.deltas,
       },
       improvement: {
         suggestions: fullResult.vorschlaege,
-        art_of_eating_tip: fullResult.art_of_eating_tipp,
       },
+      geschmack_score: geschmackStandard as unknown as import('@/types/database').Json,
       data_sources: resolvedIngredients.map(({ z, resolved }) => ({
         ingredient: z.name,
         source: resolved?.source ?? 'nicht_schaetzbar',
@@ -556,5 +651,5 @@ export async function POST(request: Request) {
     .update({ status: 'completed' })
     .eq('meal_id', mealId)
 
-  return NextResponse.json({ analysisId: analysis.id, result: fullResult })
+  return NextResponse.json({ analysisId: analysis.id, result: { typ: 'mahlzeit', ...fullResult } })
 }

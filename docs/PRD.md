@@ -1,8 +1,8 @@
-# Product Requirements Document — endlichsatt
+# Product Requirements Document — Mehralsabnehmen
 
 ## Vision
 
-endlichsatt ist eine Web-App, die Nutzern hilft zu verstehen, warum bestimmte Mahlzeiten nicht sättigen — und wie man sie konkret verbessert. Anhand eines Fotos oder einer Freitexteingabe analysiert die App die Nährwerte über den Bundeslebensmittelschlüssel (BLS) und bewertet das Gericht mit einer proprietären Sättigungsmatrix. endlichsatt ist das, was nach dem Kalorienzählen kommt.
+Mehralsabnehmen ist eine Web-App, die Nutzern hilft zu verstehen, warum bestimmte Mahlzeiten nicht sättigen — und wie man sie konkret verbessert. Anhand eines Fotos oder einer Freitexteingabe analysiert die App die Nährwerte über den Bundeslebensmittelschlüssel (BLS) und bewertet das Gericht mit einer proprietären Sättigungsmatrix. Mehralsabnehmen ist das, was nach dem Kalorienzählen kommt.
 
 ## Target Users
 

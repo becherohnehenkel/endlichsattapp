@@ -20,6 +20,12 @@ vi.mock('@/lib/supabase/admin', () => ({
   }),
 }))
 
+// PROJ-33: kein echter Claude-Aufruf in Unit-Tests
+const mockComputeGeschmack = vi.fn().mockResolvedValue({ status: 'error' })
+vi.mock('@/lib/geschmack', () => ({
+  computeGeschmack: mockComputeGeschmack,
+}))
+
 const MOCK_RECIPE = {
   id: 'recipe-1',
   title: 'Hähnchen mit Reis',
@@ -103,12 +109,14 @@ describe('PUT /api/admin/rezepte/[id]', () => {
     // PUT makes 5 adminFrom calls: recipes.update, recipe_ingredients.delete,
     // recipe_ingredients.insert, bls lookup x1 (one ingredient), recipes.update (macros)
     const blsMock = { select: vi.fn().mockReturnValue({ ilike: vi.fn().mockReturnValue({ limit: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValue({ data: null }) }) }) }) }
+    const finalUpdateMock = vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) })
+    mockComputeGeschmack.mockResolvedValue({ status: 'ok', score: 55, label: 'okay', verbesserungen: [], unklarHinweis: null })
     adminFrom
       .mockReturnValueOnce({ update: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }) })
       .mockReturnValueOnce({ delete: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }) })
       .mockReturnValueOnce({ insert: vi.fn().mockResolvedValue({ error: null }) })
       .mockReturnValueOnce(blsMock)
-      .mockReturnValueOnce({ update: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }) })
+      .mockReturnValueOnce({ update: finalUpdateMock })
 
     const { PUT } = await import('./route')
     const res = await PUT(
@@ -116,6 +124,8 @@ describe('PUT /api/admin/rezepte/[id]', () => {
       makeParams('recipe-1')
     )
     expect(res.status).toBe(200)
+    // PROJ-33
+    expect(finalUpdateMock.mock.calls[0][0].geschmack_score).toEqual({ status: 'ok', score: 55, label: 'okay', verbesserungen: [], unklarHinweis: null })
   })
 
   it('updates recipe_typ to grundlage', async () => {

@@ -21,23 +21,32 @@ async function loginAs(page: Page) {
   await page.waitForURL('**/analyse', { timeout: 8000 })
 }
 
-// Mock-Ergebnis: Beilagen-Analyse (typ: 'beilage')
-const MOCK_BEILAGE_RESULT = {
-  analysisId: 'beilage-analysis-1',
+// Refinement 2026-08-11 ("Complete"-Umstrukturierung): Mock-Ergebnis spiegelt jetzt das
+// tatsächliche, aktuelle /api/analyse/confirm-Antwortformat wider — Feld heißt "komponente"
+// (nicht mehr "beilage"), Flag in assumptions heißt "MAHLZEIT_TYP: komponente" (nicht mehr
+// "BEILAGE_KONTEXT:"), Inhalt ist bilanz + genau ein kombinationsvorschlag statt 2-3 Pairing.
+const MOCK_KOMPONENTE_RESULT = {
+  analysisId: 'komponente-analysis-1',
   result: {
-    typ: 'beilage',
+    typ: 'komponente',
     zutatenliste: [{ name: 'Blattsalat', amount: '100g', grams: 100 }],
-    annahmen: ['BEILAGE_KONTEXT: Blattsalat wird als vollständige Mahlzeit gegessen.'],
-    beilage: {
-      als_beilage_top: 'Als Beilage bringt der Salat Frische und Volumen.',
-      als_hauptgericht: 'Allein macht er noch keine sättigende Mahlzeit — es fehlt eine Proteinquelle und Energie.',
-      beilage_upgrade: 'Eine Handvoll Sonnenblumenkerne drüber: mehr Biss und sättigende Fette.',
-      pairing: [
-        { empfehlung: '150g Skyr mit Honig', warum: 'Liefert Protein und hält lange satt.' },
-        { empfehlung: '2 weichgekochte Eier', warum: 'Einfach, proteinreich und perfekt zur Frische des Salats.' },
-      ],
-      art_of_eating_tipp: 'Sitz hin und iss ohne Ablenkung.',
+    annahmen: ['MAHLZEIT_TYP: komponente'],
+    komponente: {
+      format: 'neu',
+      bilanz: 'Bringt schon mal 100g Blattgemüse und etwas Volumen mit.',
+      kombinationsvorschlag: '150g Skyr mit Honig dazu, dann trägt dich das bis zum Nachmittag.',
     },
+  },
+}
+
+// Mock-Ergebnis: Snack-Analyse (typ: 'snack', komplett neu)
+const MOCK_SNACK_RESULT = {
+  analysisId: 'snack-analysis-1',
+  result: {
+    typ: 'snack',
+    zutatenliste: [{ name: 'Apfel', amount: '1 Stück', grams: 180 }],
+    annahmen: ['MAHLZEIT_TYP: snack'],
+    snackBestaetigung: 'Alles klar, Snack — der braucht keine Analyse.',
   },
 }
 
@@ -114,10 +123,10 @@ test.describe('Rezept-Detailseite: Beilage-Hinweis', () => {
   })
 })
 
-// ─── Teil 3: Beilagen-Rückfrage in der Analyse ───────────────────────────────
+// ─── Teil 3+4+5: Schritt-0-Klassifikation → Komponente/Snack-Output (Refinement 2026-08-11) ──
 
-test.describe('Analyse-Flow: Beilagen-Rückfrage', () => {
-  function setupAnalyseMocks(page: Page, startResponse: object) {
+test.describe('Analyse-Flow: Komponente & Snack (löst Beilagen-Rückfrage ab)', () => {
+  function setupAnalyseMocks(page: Page, startResponse: object, completeAssumptions: string[] = []) {
     page.route('/api/meal', route =>
       route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify({ id: 'mock-meal-id' }) })
     )
@@ -127,115 +136,138 @@ test.describe('Analyse-Flow: Beilagen-Rückfrage', () => {
     page.route('/api/analyse/complete', route =>
       route.fulfill({
         status: 200, contentType: 'application/json',
-        body: JSON.stringify({ ingredients: [{ name: 'Blattsalat', amount: '100g', isAssumption: false }], assumptions: ['BEILAGE_KONTEXT: Blattsalat wird als vollständige Mahlzeit gegessen.'] }),
+        body: JSON.stringify({ ingredients: [{ name: 'Blattsalat', amount: '100g', isAssumption: false }], assumptions: completeAssumptions }),
       })
     )
   }
 
-  test('Beilage-Analyse zeigt keinen Sättigungs-Score', async ({ page }) => {
+  test('Komponente-Analyse zeigt keinen Sättigungs-Score', async ({ page }) => {
     await loginAs(page)
-    setupAnalyseMocks(page, { ready: true })
+    setupAnalyseMocks(page, { ready: true }, ['MAHLZEIT_TYP: komponente'])
     page.route('/api/analyse/confirm', route =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_BEILAGE_RESULT) })
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_KOMPONENTE_RESULT) })
     )
     await page.fill('textarea', 'Blattsalat')
     await page.getByRole('button', { name: /^analysieren/i }).click()
     await expect(page.getByText('Hab ich das richtig verstanden?')).toBeVisible({ timeout: 10000 })
     await page.getByRole('button', { name: /passt so/i }).click()
-    // Beilagen-Ergebnis: kein Gesamtbewertungs-Badge ("Sehr sättigend", "Mäßig sättigend" etc.)
-    await expect(page.getByText('Die 6 Sättigungs-Bausteine')).not.toBeVisible({ timeout: 10000 })
+    // Komponente-Ergebnis: kein Gesamtbewertungs-Badge ("Sehr sättigend" etc.), kein Säulen-Grid
+    await expect(page.getByText('Die 3 Sättigungs-Säulen')).not.toBeVisible({ timeout: 10000 })
     await expect(page.getByText('Als Beilage gedacht')).toBeVisible({ timeout: 10000 })
   })
 
-  test('Beilage-Analyse zeigt als_beilage_top Text', async ({ page }) => {
+  test('Komponente-Analyse zeigt quantitative Bilanz', async ({ page }) => {
     await loginAs(page)
-    setupAnalyseMocks(page, { ready: true })
+    setupAnalyseMocks(page, { ready: true }, ['MAHLZEIT_TYP: komponente'])
     page.route('/api/analyse/confirm', route =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_BEILAGE_RESULT) })
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_KOMPONENTE_RESULT) })
     )
     await page.fill('textarea', 'Blattsalat')
     await page.getByRole('button', { name: /^analysieren/i }).click()
     await expect(page.getByText('Hab ich das richtig verstanden?')).toBeVisible({ timeout: 10000 })
     await page.getByRole('button', { name: /passt so/i }).click()
-    await expect(page.getByText('Als Beilage bringt der Salat Frische und Volumen.')).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText('Bringt schon mal 100g Blattgemüse und etwas Volumen mit.')).toBeVisible({ timeout: 10000 })
   })
 
-  test('Beilage-Analyse zeigt Pairing-Vorschläge', async ({ page }) => {
+  test('Komponente-Analyse zeigt genau EINEN Kombinationsvorschlag', async ({ page }) => {
     await loginAs(page)
-    setupAnalyseMocks(page, { ready: true })
+    setupAnalyseMocks(page, { ready: true }, ['MAHLZEIT_TYP: komponente'])
     page.route('/api/analyse/confirm', route =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_BEILAGE_RESULT) })
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_KOMPONENTE_RESULT) })
     )
     await page.fill('textarea', 'Blattsalat')
     await page.getByRole('button', { name: /^analysieren/i }).click()
     await expect(page.getByText('Hab ich das richtig verstanden?')).toBeVisible({ timeout: 10000 })
     await page.getByRole('button', { name: /passt so/i }).click()
-    await expect(page.getByText('150g Skyr mit Honig')).toBeVisible({ timeout: 10000 })
-    await expect(page.getByText('2 weichgekochte Eier')).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText('150g Skyr mit Honig dazu, dann trägt dich das bis zum Nachmittag.')).toBeVisible({ timeout: 10000 })
   })
 
-  test('Beilage-Analyse zeigt beilage_upgrade Tipp', async ({ page }) => {
+  // PROJ-34 (2026-08-11): der alte Legacy-Anhängsel (fester Claude-Text) ist verschwunden,
+  // wurde aber durch den neuen, dezenten und zufällig rotierenden PROJ-34-Hinweis ersetzt —
+  // beide heißen "Art of Eating", sind aber inhaltlich und strukturell komplett verschieden.
+  test('Komponente-Analyse zeigt den neuen rotierenden Art-of-Eating-Hinweis statt des alten Legacy-Anhängsels', async ({ page }) => {
     await loginAs(page)
-    setupAnalyseMocks(page, { ready: true })
+    setupAnalyseMocks(page, { ready: true }, ['MAHLZEIT_TYP: komponente'])
     page.route('/api/analyse/confirm', route =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_BEILAGE_RESULT) })
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_KOMPONENTE_RESULT) })
     )
     await page.fill('textarea', 'Blattsalat')
     await page.getByRole('button', { name: /^analysieren/i }).click()
     await expect(page.getByText('Hab ich das richtig verstanden?')).toBeVisible({ timeout: 10000 })
     await page.getByRole('button', { name: /passt so/i }).click()
-    await expect(page.getByText('Sonnenblumenkerne')).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText('Als Beilage gedacht')).toBeVisible({ timeout: 10000 })
+    // Neuer, dezenter PROJ-34-Hinweis (Prinzip ist zufällig, daher nur der stabile Teil geprüft)
+    await expect(page.getByText(/🧘 Art of Eating ·/)).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Wie esse ich richtig? →' })).toBeVisible()
   })
 
-  test('Beilage-Analyse zeigt als_hauptgericht Einordnung', async ({ page }) => {
+  // Refinement 2026-08-11: Snack-Output ist komplett neu, gab es vorher gar nicht
+  test('Snack-Analyse zeigt neutrale Bestätigung statt Analyse', async ({ page }) => {
     await loginAs(page)
-    setupAnalyseMocks(page, { ready: true })
+    setupAnalyseMocks(page, { ready: true }, ['MAHLZEIT_TYP: snack'])
     page.route('/api/analyse/confirm', route =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_BEILAGE_RESULT) })
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_SNACK_RESULT) })
     )
-    await page.fill('textarea', 'Blattsalat')
+    await page.fill('textarea', 'Ein Apfel')
     await page.getByRole('button', { name: /^analysieren/i }).click()
     await expect(page.getByText('Hab ich das richtig verstanden?')).toBeVisible({ timeout: 10000 })
     await page.getByRole('button', { name: /passt so/i }).click()
-    await expect(page.getByText('Allein macht er noch keine sättigende Mahlzeit')).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText('Alles klar, Snack — der braucht keine Analyse.')).toBeVisible({ timeout: 10000 })
   })
 
-  test('Normale Analyse nach Beilage-Rückfrage: Nutzer antwortet mit Gesamtgericht', async ({ page }) => {
+  test('Snack-Analyse zeigt keinen Sättigungs-Score, keine Vorschläge, kein Komponente-Badge', async ({ page }) => {
     await loginAs(page)
-    // Simulate user saying "I'm eating this with Hähnchen" → normal analysis runs
+    setupAnalyseMocks(page, { ready: true }, ['MAHLZEIT_TYP: snack'])
+    page.route('/api/analyse/confirm', route =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_SNACK_RESULT) })
+    )
+    await page.fill('textarea', 'Ein Apfel')
+    await page.getByRole('button', { name: /^analysieren/i }).click()
+    await expect(page.getByText('Hab ich das richtig verstanden?')).toBeVisible({ timeout: 10000 })
+    await page.getByRole('button', { name: /passt so/i }).click()
+    await expect(page.getByText('Alles klar, Snack')).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText('Die 3 Sättigungs-Säulen')).not.toBeVisible()
+    await expect(page.getByText('Als Beilage gedacht')).not.toBeVisible()
+    await expect(page.getByText("So wird's noch sättigender")).not.toBeVisible()
+  })
+
+  test('Snack-Analyse zeigt erkannte Zutat', async ({ page }) => {
+    await loginAs(page)
+    setupAnalyseMocks(page, { ready: true }, ['MAHLZEIT_TYP: snack'])
+    page.route('/api/analyse/confirm', route =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_SNACK_RESULT) })
+    )
+    await page.fill('textarea', 'Ein Apfel')
+    await page.getByRole('button', { name: /^analysieren/i }).click()
+    await expect(page.getByText('Hab ich das richtig verstanden?')).toBeVisible({ timeout: 10000 })
+    await page.getByRole('button', { name: /passt so/i }).click()
+    await expect(page.getByText('Apfel')).toBeVisible({ timeout: 10000 })
+  })
+
+  test('Normale Analyse (typ: mahlzeit): kein Komponente- oder Snack-Output', async ({ page }) => {
+    await loginAs(page)
     const normalResult = {
       analysisId: 'normal-analysis-1',
       result: {
+        typ: 'mahlzeit',
         zutatenliste: [{ name: 'Salat mit Hähnchen', amount: '400g', grams: 400 }],
         annahmen: [],
         vorher: {
-          bausteine: { geschmack: 'gut', biss: 'gut', ballaststoffe: 'gut', proteine: 'gut', volumen: 'gut', art_of_eating: 'nicht_bewertet' },
+          saeulen: { proteine: 'gut', ballaststoffe: 'gut', volumen: 'gut' },
           gesamtbewertung: 'sehr_saettigend',
           erklaerung: 'Vollständige Mahlzeit mit Protein.',
           naehrwerte: { kcal: 400, protein_g: 35, kohlenhydrate_g: 15, zucker_g: 3, fett_g: 20, ballaststoffe_g: 5 },
         },
         vorschlaege: [],
         nachher: {
-          bausteine: { geschmack: 'gut', biss: 'gut', ballaststoffe: 'gut', proteine: 'gut', volumen: 'gut', art_of_eating: 'nicht_bewertet' },
+          saeulen: { proteine: 'gut', ballaststoffe: 'gut', volumen: 'gut' },
           gesamtbewertung: 'sehr_saettigend',
           naehrwerte: { kcal: 400, protein_g: 35, kohlenhydrate_g: 15, zucker_g: 3, fett_g: 20, ballaststoffe_g: 5 },
           deltas: [],
         },
-        art_of_eating_tipp: null,
       },
     }
-    page.route('/api/meal', route =>
-      route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify({ id: 'mock-meal-id' }) })
-    )
-    page.route('/api/analyse/start', route =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ready: true }) })
-    )
-    page.route('/api/analyse/complete', route =>
-      route.fulfill({
-        status: 200, contentType: 'application/json',
-        body: JSON.stringify({ ingredients: [{ name: 'Salat mit Hähnchen', amount: '400g', isAssumption: false }], assumptions: [] }),
-      })
-    )
+    setupAnalyseMocks(page, { ready: true })
     page.route('/api/analyse/confirm', route =>
       route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(normalResult) })
     )
@@ -243,9 +275,9 @@ test.describe('Analyse-Flow: Beilagen-Rückfrage', () => {
     await page.getByRole('button', { name: /^analysieren/i }).click()
     await expect(page.getByText('Hab ich das richtig verstanden?')).toBeVisible({ timeout: 10000 })
     await page.getByRole('button', { name: /passt so/i }).click()
-    // Normal result: shows Sättigungs-Score, not Beilage-Badge
+    // Normal result: shows Sättigungs-Score, not Komponente/Snack-Badge
     await expect(page.getByText('Sehr sättigend')).toBeVisible({ timeout: 10000 })
-    await expect(page.locator('[data-testid="beilage-result"]')).not.toBeVisible()
+    await expect(page.getByText('Als Beilage gedacht')).not.toBeVisible()
   })
 })
 

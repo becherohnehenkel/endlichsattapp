@@ -137,6 +137,7 @@ export type Database = {
           beilage_data: Json | null
           created_at: string
           data_sources: Json | null
+          geschmack_score: Json | null
           id: string
           improvement: Json | null
           macros_after: Json | null
@@ -151,6 +152,7 @@ export type Database = {
           beilage_data?: Json | null
           created_at?: string
           data_sources?: Json | null
+          geschmack_score?: Json | null
           id?: string
           improvement?: Json | null
           macros_after?: Json | null
@@ -165,6 +167,7 @@ export type Database = {
           beilage_data?: Json | null
           created_at?: string
           data_sources?: Json | null
+          geschmack_score?: Json | null
           id?: string
           improvement?: Json | null
           macros_after?: Json | null
@@ -350,6 +353,7 @@ export type Database = {
           created_at: string
           cuisine_tags: string[]
           focal_point: Json | null
+          geschmack_score: Json | null
           id: string
           image_path: string | null
           ingredient_tags: string[]
@@ -369,6 +373,7 @@ export type Database = {
           created_at?: string
           cuisine_tags?: string[]
           focal_point?: Json | null
+          geschmack_score?: Json | null
           id?: string
           image_path?: string | null
           ingredient_tags?: string[]
@@ -388,6 +393,7 @@ export type Database = {
           created_at?: string
           cuisine_tags?: string[]
           focal_point?: Json | null
+          geschmack_score?: Json | null
           id?: string
           image_path?: string | null
           ingredient_tags?: string[]

@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getOwnRecipeLimitStatus, OWN_RECIPE_LIMIT } from '@/lib/paywall'
 import { calculateMacrosPerServing } from '@/lib/nutrition'
 import { calculateRezeptMatrix } from '@/lib/saettigungs-matrix-rezept'
+import { computeGeschmack } from '@/lib/geschmack'
 import { RecipeIngredientsSchema, isZutat } from '@/lib/recipe-ingredients-schema'
 
 // PROJ-31: bewusst kein is_guest_visible-Feld — das ist eine kuratorische Einordnung für die
@@ -108,10 +109,16 @@ export async function POST(request: Request) {
     zutaten.map(ing => ({ ...ing, macros_per_100g: (ing.macros_per_100g ?? null) as unknown as import('@/lib/nutrition').NutritionPer100g | null })),
     recipeData.servings
   )
-  const matrix = calculateRezeptMatrix(zutaten, macros as Record<string, number> | null)
+  const matrix = calculateRezeptMatrix(zutaten, macros as Record<string, number> | null, recipeData.servings)
+  // PROJ-33: bei jedem Speichern neu berechnet (bewusst ohne Diffing, siehe Spec Open Questions)
+  const geschmack = await computeGeschmack({
+    zutatenliste: zutaten.map(z => ({ name: z.name, amount: `${z.amount} ${z.unit}` })),
+    anleitung: recipeData.instructions,
+  })
   await supabase.from('recipes').update({
     macros_per_serving: (macros ?? null) as unknown as import('@/types/database').Json,
     saettigungs_matrix: matrix as unknown as import('@/types/database').Json,
+    geschmack_score: geschmack as unknown as import('@/types/database').Json,
   }).eq('id', recipe.id)
 
   return NextResponse.json({ id: recipe.id }, { status: 201 })
