@@ -1,6 +1,6 @@
 # PROJ-35: Bottom-Navigation & Kontobereich-Neuordnung
 
-## Status: Approved
+## Status: Deployed
 **Created:** 2026-08-30
 **Last Updated:** 2026-08-30
 
@@ -194,4 +194,9 @@ Keine.
 - **Recommendation:** Deploy. Die vorbestehende Flakiness der Gesamt-Suite bei Vollparallel-Lauf ist ein separates Infrastruktur-Thema und blockiert PROJ-35 nicht.
 
 ## Deployment
-_To be added by /deploy_
+
+- **Production URL:** https://satt.mehralsabnehmen.de
+- **Deployed:** 2026-08-30
+- **Git Tag:** v2.1.0-PROJ-35
+- Vercel-Build grün, Nutzer hat die neue Navigation (Start/Ernährung/Analyse/Training/Check-In), das Konto-Icon (Desktop + Mobile-Seiten-Header) und die neuen Routen `/ernaehrung`, `/training`, `/check-in` live auf Produktion visuell bestätigt.
+- Kein DB-/Env-Änderungsbedarf, kein Rollback-relevantes Risiko (reines Frontend-/Routing-Feature).
