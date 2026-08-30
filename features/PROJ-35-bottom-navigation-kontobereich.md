@@ -1,6 +1,6 @@
 # PROJ-35: Bottom-Navigation & Kontobereich-Neuordnung
 
-## Status: Planned
+## Status: Architected
 **Created:** 2026-08-30
 **Last Updated:** 2026-08-30
 
@@ -77,12 +77,43 @@
 <!-- Added by /architecture -->
 | Decision | Rationale | Date |
 |----------|-----------|------|
+| `/ernaehrung` als eigene Seite mit demselben Inhalt wie `/rezepte`, statt HTTP-Redirect | Ein Redirect würde die URL zurück auf `/rezepte` springen lassen und die aktive Nav-Markierung brechen; eine eigene Seite hält URL und Nav-Status konsistent und lässt sich in PROJ-36 einfach mit echtem Inhalt austauschen | 2026-08-30 |
+| Konto-Icon als eigene, wiederverwendbare Komponente (genutzt von Desktop-TopBar und neuer Mobile-Leiste) | Login-/Gast-Verhalten (Conversion-Screen für Gäste) soll nur an einer Stelle im Code existieren, nicht dupliziert werden | 2026-08-30 |
+| `/training` und `/check-in` ohne Zugriffsbeschränkung in der Middleware | Keine sensiblen Daten auf den Platzhalterseiten; konsistent mit Spec-Vorgabe, dass Gäste alle Tabs uneingeschränkt sehen | 2026-08-30 |
+| Kein Backend/API-Bedarf für dieses Feature | Reine Oberflächen- und Routing-Änderung, keine neuen Daten | 2026-08-30 |
 
 ---
 <!-- Sections below are added by subsequent skills -->
 
 ## Tech Design (Solution Architect)
-_To be added by /architecture_
+
+### Component-Struktur
+```
+NavigationShell (bestehend, angepasst)
+├── TopBar (nur Desktop, bestehend, angepasst)
+│   ├── Logo
+│   ├── 5 Nav-Items (Start, Ernährung, Analyse, Training, Check-In)
+│   └── Konto-Icon (NEU: aus der Item-Liste rausgelöst, rechtsbündig)
+├── MobileAccountBar (NEU, nur Mobile)
+│   ├── Logo
+│   └── Konto-Icon
+└── BottomNav (nur Mobile, bestehend, angepasst)
+    └── 5 Nav-Items (Start, Ernährung, Analyse, Training, Check-In)
+
+Konto-Seite (bestehend, angepasst)
+└── Admin-Eintrag (NEU: nur sichtbar wenn isAdmin)
+
+Neue Seiten
+├── /ernaehrung  — zeigt (vorerst) denselben Inhalt wie /rezepte
+├── /training    — leere Platzhalterseite
+└── /check-in    — leere Platzhalterseite
+```
+
+### Datenmodell
+Keine neuen Datenbank-Tabellen oder -Felder. Liest ausschließlich bereits vorhandene Login-/Admin-Informationen.
+
+### Backend-Bedarf
+Keiner — reines Frontend-/Routing-Feature.
 
 ## QA Test Results
 _To be added by /qa_
