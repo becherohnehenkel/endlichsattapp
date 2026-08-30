@@ -31,7 +31,6 @@ export default async function RootLayout({
   const { data: { user } } = await supabase.auth.getUser();
 
   const isLoggedIn = !!user;
-  const isAdmin = user?.email === process.env.ADMIN_EMAIL;
 
   return (
     <html lang="de">
@@ -44,7 +43,7 @@ export default async function RootLayout({
         />
       </head>
       <body className={`${inter.className} antialiased`}>
-        <NavigationShell isAdmin={isAdmin} isLoggedIn={isLoggedIn}>
+        <NavigationShell isLoggedIn={isLoggedIn}>
           {children}
         </NavigationShell>
       </body>

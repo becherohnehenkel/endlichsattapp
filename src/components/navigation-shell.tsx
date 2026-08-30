@@ -8,12 +8,11 @@ const HIDDEN_PATHS = ['/login', '/registrieren', '/upgrade']
 const HIDDEN_PREFIXES = ['/admin', '/auth']
 
 interface NavigationShellProps {
-  isAdmin: boolean
   isLoggedIn: boolean
   children: React.ReactNode
 }
 
-export function NavigationShell({ isAdmin, isLoggedIn, children }: NavigationShellProps) {
+export function NavigationShell({ isLoggedIn, children }: NavigationShellProps) {
   const pathname = usePathname()
 
   const shouldHideNav =
@@ -27,11 +26,11 @@ export function NavigationShell({ isAdmin, isLoggedIn, children }: NavigationShe
 
   return (
     <>
-      <TopNav isAdmin={isAdmin} />
+      <TopNav />
       <div className="md:pt-14 pb-20 md:pb-0">
         {children}
       </div>
-      <BottomNav isAdmin={isAdmin} />
+      <BottomNav />
     </>
   )
 }

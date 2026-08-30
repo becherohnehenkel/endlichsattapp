@@ -1,6 +1,6 @@
 # PROJ-35: Bottom-Navigation & Kontobereich-Neuordnung
 
-## Status: Architected
+## Status: In Progress
 **Created:** 2026-08-30
 **Last Updated:** 2026-08-30
 
@@ -90,30 +90,42 @@
 ### Component-Struktur
 ```
 NavigationShell (bestehend, angepasst)
-├── TopBar (nur Desktop, bestehend, angepasst)
+├── TopNav (nur Desktop, bestehend, angepasst)
 │   ├── Logo
 │   ├── 5 Nav-Items (Start, Ernährung, Analyse, Training, Check-In)
-│   └── Konto-Icon (NEU: aus der Item-Liste rausgelöst, rechtsbündig)
-├── MobileAccountBar (NEU, nur Mobile)
-│   ├── Logo
-│   └── Konto-Icon
+│   ├── Trennlinie
+│   └── Konto-Icon (NEU: aus der Item-Liste rausgelöst, optisch abgetrennt, rechtsbündig)
 └── BottomNav (nur Mobile, bestehend, angepasst)
-    └── 5 Nav-Items (Start, Ernährung, Analyse, Training, Check-In)
+    └── 5 Nav-Items (Start, Ernährung, Analyse, Training, Check-In) — ohne Konto/Admin
 
-Konto-Seite (bestehend, angepasst)
-└── Admin-Eintrag (NEU: nur sichtbar wenn isAdmin)
+Bestehende Seiten-Header (pro Seite, unverändert)
+└── Enthalten bereits je ein eigenes Konto-Icon oben rechts (Mobile) — siehe Korrektur unten
+
+Konto-Seite (bereits vorhanden, keine Änderung nötig)
+└── Admin-Eintrag existierte schon vor PROJ-35 in konto-view.tsx
 
 Neue Seiten
-├── /ernaehrung  — zeigt (vorerst) denselben Inhalt wie /rezepte
-├── /training    — leere Platzhalterseite
-└── /check-in    — leere Platzhalterseite
+├── /ernaehrung  — re-exportiert 1:1 die /rezepte-Seite (Alias, kein neuer Inhalt)
+├── /training    — leere Platzhalterseite mit Standard-Seiten-Header
+└── /check-in    — leere Platzhalterseite mit Standard-Seiten-Header
 ```
+
+**Korrektur während der Umsetzung (2026-08-30):** Die ursprünglich geplante neue `MobileAccountBar`-Komponente entfällt. Bei der Implementierung stellte sich heraus, dass praktisch jede bestehende Seite bereits einen eigenen mobilen Seiten-Header mit Konto-Icon oben rechts mitbringt (`md:hidden sticky top-0 …` in z.B. `page.tsx`, `rezepte/page.tsx`, `analyse/page.tsx`). Eine zusätzliche globale Mobile-Leiste hätte sich mit diesen bestehenden Headern dupliziert. Stattdessen: Bottom-Nav verliert Konto/Admin ersatzlos (Zugriff läuft mobil weiter über die vorhandenen Seiten-Header), und die drei neuen Seiten (`/ernaehrung` als Alias, `/training`, `/check-in`) übernehmen exakt dasselbe bestehende Header-Muster für Konsistenz. Die Vereinheitlichung dieser ~10 duplizierten Header in eine gemeinsame Komponente bleibt bewusst außerhalb des Scopes von PROJ-35 (potenzielles separates Aufräum-Thema).
+
+Ebenfalls während der Umsetzung entdeckt: Der Admin-Link in der Konto-Seite existierte bereits vor PROJ-35 (`konto-view.tsx:230-241`) — hier musste nichts Neues gebaut werden, nur das alte Admin-Icon aus Bottom-/Top-Nav entfernt werden.
 
 ### Datenmodell
 Keine neuen Datenbank-Tabellen oder -Felder. Liest ausschließlich bereits vorhandene Login-/Admin-Informationen.
 
 ### Backend-Bedarf
 Keiner — reines Frontend-/Routing-Feature.
+
+## Implementation Notes (Frontend)
+- `src/components/bottom-nav.tsx`, `src/components/top-nav.tsx`: NAV_ITEMS auf Start/Ernährung/Analyse/Training/Check-In umgestellt, Konto+Admin-Logik entfernt (`isAdmin`-Prop entfällt komplett aus BottomNav/TopNav/NavigationShell/layout.tsx).
+- `top-nav.tsx`: Konto-Icon (`User`, `lucide-react`) als eigenständiger, per Trennlinie abgesetzter Button rechts neben den 5 Nav-Items, mit eigenem Aktiv-Zustand für `/konto*`.
+- Neu: `src/app/ernaehrung/page.tsx` + `loading.tsx` re-exportieren 1:1 `src/app/rezepte/page.tsx` + `loading.tsx`.
+- Neu: `src/app/training/page.tsx`, `src/app/check-in/page.tsx` — minimale Platzhalterseiten nach bestehendem Seiten-Header-Muster (Titel + Konto-Icon), keine Zugriffsbeschränkung.
+- `npm run build` und `npm run lint` laufen fehlerfrei; manuell im Browser (Desktop + Mobile-Viewport) verifiziert: Nav-Reihenfolge, Aktiv-Markierung, Ernährung-Alias, Platzhalterseiten, Gast-Konto-Conversion-Screen.
 
 ## QA Test Results
 _To be added by /qa_

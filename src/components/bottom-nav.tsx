@@ -2,27 +2,19 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Plus, ChefHat, Clock, User, ShieldCheck } from 'lucide-react'
+import { Home, Plus, ChefHat, Dumbbell, ClipboardCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const NAV_ITEMS = [
   { href: '/', label: 'Start', icon: Home },
+  { href: '/ernaehrung', label: 'Ernährung', icon: ChefHat },
   { href: '/analyse', label: 'Analyse', icon: Plus },
-  { href: '/rezepte', label: 'Rezepte', icon: ChefHat },
-  { href: '/historie', label: 'Historie', icon: Clock },
-  { href: '/konto', label: 'Konto', icon: User },
+  { href: '/training', label: 'Training', icon: Dumbbell },
+  { href: '/check-in', label: 'Check-In', icon: ClipboardCheck },
 ]
 
-interface BottomNavProps {
-  isAdmin: boolean
-}
-
-export function BottomNav({ isAdmin }: BottomNavProps) {
+export function BottomNav() {
   const pathname = usePathname()
-
-  const items = isAdmin
-    ? [...NAV_ITEMS, { href: '/admin', label: 'Admin', icon: ShieldCheck }]
-    : NAV_ITEMS
 
   return (
     <nav
@@ -31,7 +23,7 @@ export function BottomNav({ isAdmin }: BottomNavProps) {
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       <div className="flex items-center justify-around h-16">
-        {items.map(({ href, label, icon: Icon }) => {
+        {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
           const isActive = href === '/' ? pathname === '/' : pathname.startsWith(href)
           return (
             <Link
