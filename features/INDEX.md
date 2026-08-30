@@ -51,10 +51,16 @@
 | PROJ-33 | Geschmacks-Score (zweite Sektion der "Complete"-Umstrukturierung) | P1 | Deployed | PROJ-3, PROJ-4, PROJ-5, PROJ-16, PROJ-8 | [Spec](PROJ-33-geschmacks-score.md) |
 | PROJ-34 | Art of Eating (dritte Sektion der "Complete"-Umstrukturierung) | P1 | Deployed | PROJ-3, PROJ-4, PROJ-5, PROJ-16 | [Spec](PROJ-34-art-of-eating.md) |
 | PROJ-35 | Bottom-Navigation & Kontobereich-Neuordnung | P1 | Deployed | PROJ-2, PROJ-8, PROJ-13, PROJ-19 | [Spec](PROJ-35-bottom-navigation-kontobereich.md) |
+| PROJ-36 | Ernährung-Hub (Übersichtsseite) | P1 | Planned | PROJ-35, PROJ-8 | [Spec](PROJ-36-ernaehrung-hub.md) |
+| PROJ-37 | So geht abnehmen (inkl. Kcal-Rechner) | P1 | Roadmap | PROJ-36 | — |
+| PROJ-38 | Emotionales Essen | P2 | Roadmap | PROJ-36 | — |
+| PROJ-39 | Heißhunger | P2 | Roadmap | PROJ-36 | — |
+| PROJ-40 | Kalorien | P2 | Roadmap | PROJ-36 | — |
+| PROJ-41 | Kalorien zählen | P2 | Roadmap | PROJ-36 | — |
 
 <!-- Add features above this line -->
 
-## Next Available ID: PROJ-36
+## Next Available ID: PROJ-42
 
 ## Empfohlene Build-Reihenfolge
 
