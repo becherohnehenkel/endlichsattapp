@@ -1,6 +1,6 @@
 # PROJ-36: Ernährung-Hub (Übersichtsseite)
 
-## Status: Planned
+## Status: Architected
 **Created:** 2026-08-30
 **Last Updated:** 2026-08-30
 
@@ -86,12 +86,42 @@
 <!-- Added by /architecture -->
 | Decision | Rationale | Date |
 |----------|-----------|------|
+| Gemeinsame Header-Komponente (Zurück + Breadcrumb + Konto) für alle 8 Unterseiten statt 8x Copy-Paste | Anders als bei PROJ-35 brauchen hier alle 8 Seiten ab sofort exakt denselben neuen Header — Duplizierung würde sofort 8 identische Stellen für spätere Änderungen erzeugen | 2026-08-30 |
+| Redirects zentral über `redirects()` in `next.config.ts` statt einzelner Redirect-Seiten | Standard-Next.js-Ansatz, kein zusätzlicher Seiten-Ladevorgang, dauerhaft (308) für Suchmaschinen/Bookmarks, gleiche Datei wie die bestehenden Security-Header | 2026-08-30 |
+| Keine Änderung an bottom-nav.tsx/top-nav.tsx nötig | Aktiv-Markierung prüft bereits per URL-Präfix (`pathname.startsWith('/ernaehrung')`) — matched automatisch auch alle neuen verschachtelten Unterseiten | 2026-08-30 |
+| Kein Backend/API-Bedarf für dieses Feature | Reine Oberflächen- und Routing-Änderung, keine neuen Daten | 2026-08-30 |
 
 ---
 <!-- Sections below are added by subsequent skills -->
 
 ## Tech Design (Solution Architect)
-_To be added by /architecture_
+
+### Component-Struktur
+```
+Ernährung-Hub (/ernaehrung) — Server Component, Tab-Root
+├── Header (Titel "Ernährung" + Konto-Icon — kein Zurück, kein Breadcrumb)
+└── Liste mit 8 Zeilen (Titel + Untertitel + Pfeil), je ein Link zu:
+    ├── Rezepte              → /ernaehrung/rezepte
+    ├── Richtig essen        → /ernaehrung/wie-esse-ich-richtig
+    ├── Sättigungsmatrix     → /ernaehrung/saettigungsmatrix
+    ├── So geht abnehmen     → /ernaehrung/so-geht-abnehmen      (Platzhalter)
+    ├── Emotionales Essen    → /ernaehrung/emotionales-essen     (Platzhalter)
+    ├── Heißhunger           → /ernaehrung/heisshunger           (Platzhalter)
+    ├── Kalorien             → /ernaehrung/kalorien              (Platzhalter)
+    └── Kalorien zählen      → /ernaehrung/kalorien-zaehlen      (Platzhalter)
+
+NEU: Gemeinsame Header-Komponente für alle 8 Unterseiten
+├── Zurück-Button (Browser-History, router.back())
+├── Breadcrumb "Ernährung / [Seitentitel]" ("Ernährung" antippbar → /ernaehrung)
+└── Konto-Icon
+→ verwendet von: Rezepte, Sättigungsmatrix, Richtig-essen (alle drei umgezogen) + den 5 neuen Platzhalterseiten
+```
+
+### Datenmodell
+Keine neuen Datenbank-Tabellen oder -Felder. Reine Struktur-/Routing-Änderung.
+
+### Backend-Bedarf
+Keiner — reines Frontend-/Routing-Feature.
 
 ## QA Test Results
 _To be added by /qa_
