@@ -6,6 +6,10 @@
  * - Bottom Navigation (data-testid="bottom-nav"): Mobile-Tests auf beiden Projekten
  * - Top Navigation (data-testid="top-nav"): nur chromium (Desktop-Viewport ist bei isMobile:true unzuverlässig)
  * - Navigation ausgeblendet auf /login, /registrieren, /upgrade, /admin/*
+ *
+ * Hrefs/Item-Set 2026-08-30 im Zuge von PROJ-35 aktualisiert (Start/Ernährung/Analyse/
+ * Training/Check-In statt Start/Analyse/Rezepte/Historie/Konto) — siehe
+ * features/PROJ-35-bottom-navigation-kontobereich.md.
  */
 
 import { test, expect, type Page } from '@playwright/test'
@@ -86,10 +90,18 @@ test.describe('Bottom Navigation', () => {
     await page.goto('/')
     const nav = page.locator('[data-testid="bottom-nav"]')
     await expect(nav.locator('a[href="/"]')).toBeVisible()
+    await expect(nav.locator('a[href="/ernaehrung"]')).toBeVisible()
     await expect(nav.locator('a[href="/analyse"]')).toBeVisible()
-    await expect(nav.locator('a[href="/rezepte"]')).toBeVisible()
-    await expect(nav.locator('a[href="/historie"]')).toBeVisible()
-    await expect(nav.locator('a[href="/konto"]')).toBeVisible()
+    await expect(nav.locator('a[href="/training"]')).toBeVisible()
+    await expect(nav.locator('a[href="/check-in"]')).toBeVisible()
+  })
+
+  test('Bottom Navigation enthält kein Konto- oder Admin-Icon (PROJ-35)', async ({ page }) => {
+    await loginAs(page)
+    await page.goto('/')
+    const nav = page.locator('[data-testid="bottom-nav"]')
+    await expect(nav.locator('a[href="/konto"]')).toHaveCount(0)
+    await expect(nav.locator('a[href="/admin"]')).toHaveCount(0)
   })
 
   test('aktiver Tab (Startseite) ist hervorgehoben', async ({ page }) => {
@@ -99,11 +111,11 @@ test.describe('Bottom Navigation', () => {
     await expect(homeLink).toHaveClass(/text-\[#2E9E6B\]/)
   })
 
-  test('aktiver Tab wechselt beim Navigieren zu /rezepte', async ({ page }) => {
+  test('aktiver Tab wechselt beim Navigieren zu /ernaehrung', async ({ page }) => {
     await loginAs(page)
-    await page.goto('/rezepte')
-    const rezepteLink = page.locator('[data-testid="bottom-nav"] a[href="/rezepte"]')
-    await expect(rezepteLink).toHaveClass(/text-\[#2E9E6B\]/)
+    await page.goto('/ernaehrung')
+    const ernaehrungLink = page.locator('[data-testid="bottom-nav"] a[href="/ernaehrung"]')
+    await expect(ernaehrungLink).toHaveClass(/text-\[#2E9E6B\]/)
   })
 
   test('Bottom Navigation ist auf Sub-Seite /konto sichtbar', async ({ page }) => {
@@ -159,21 +171,24 @@ test.describe('Top Navigation', () => {
     // Nav-Links sind im <nav> innerhalb des Headers — Logo-Link (/) separat davon
     const navLinks = page.locator('[data-testid="top-nav"] nav')
     await expect(navLinks.locator('a[href="/"]')).toBeVisible()
+    await expect(navLinks.locator('a[href="/ernaehrung"]')).toBeVisible()
     await expect(navLinks.locator('a[href="/analyse"]')).toBeVisible()
-    await expect(navLinks.locator('a[href="/rezepte"]')).toBeVisible()
-    await expect(navLinks.locator('a[href="/historie"]')).toBeVisible()
-    await expect(navLinks.locator('a[href="/konto"]')).toBeVisible()
+    await expect(navLinks.locator('a[href="/training"]')).toBeVisible()
+    await expect(navLinks.locator('a[href="/check-in"]')).toBeVisible()
+    // Konto-Link (PROJ-35) liegt außerhalb des <nav>-Item-Loops, direkt im Header
+    await expect(navLinks.locator('a[href="/konto"]')).toHaveCount(0)
+    await expect(page.locator('[data-testid="top-nav"] a[href="/konto"]')).toBeVisible()
   })
 
-  test('aktiver Link (/rezepte) ist in Top Navigation hervorgehoben', async ({
+  test('aktiver Link (/ernaehrung) ist in Top Navigation hervorgehoben', async ({
     page,
     browserName,
   }) => {
     test.skip(browserName !== 'chromium', 'Desktop-Test nur auf chromium')
     await loginAs(page)
-    await page.goto('/rezepte')
-    const rezepteLink = page.locator('[data-testid="top-nav"] a[href="/rezepte"]')
-    await expect(rezepteLink).toHaveClass(/bg-\[#DFF0F2\]/)
+    await page.goto('/ernaehrung')
+    const ernaehrungLink = page.locator('[data-testid="top-nav"] a[href="/ernaehrung"]')
+    await expect(ernaehrungLink).toHaveClass(/bg-\[#DFF0F2\]/)
   })
 
   test('keine Top Navigation auf /login', async ({ page, browserName }) => {
