@@ -1,6 +1,6 @@
 # PROJ-36: Ernährung-Hub (Übersichtsseite)
 
-## Status: In Progress
+## Status: Approved
 **Created:** 2026-08-30
 **Last Updated:** 2026-08-30
 
@@ -135,7 +135,74 @@ Keiner — reines Frontend-/Routing-Feature.
 - `npm run build`, `npm run lint`, `npm test` (390/390) fehlerfrei. Manuell verifiziert: Hub-Liste, Breadcrumb+Zurück auf Unterseite, migrierte Rezepte-Seite (Filter/Gast-Banner/Suche intakt), alle 3 Redirects (308) und alle 8 neuen/verschobenen Routen (200) per curl.
 
 ## QA Test Results
-_To be added by /qa_
+
+**Tested:** 2026-08-30
+**App URL:** http://localhost:3000
+**Tester:** QA Engineer (AI)
+
+### Acceptance Criteria Status
+
+#### Ernährung-Hub
+- [x] Zeigt alle 8 Einträge in korrekter Reihenfolge mit korrekten Ziel-URLs
+- [x] Kein Zurück-Pfeil, kein Breadcrumb auf dem Hub selbst (Tab-Root)
+
+#### Verschachtelte URLs & Redirects
+- [x] `/rezepte`, `/saettigungsmatrix`, `/wie-esse-ich-richtig` redirecten dauerhaft (308) auf die neuen `/ernaehrung/...`-Pfade
+- [x] `/ernaehrung/rezepte` liefert unveränderte volle Funktionalität (Suche, Filter, Gast-Banner) — keine Regression durch den Umzug
+- [x] Query-Parameter bleiben beim Redirect erhalten (`?foo=bar` → `/ernaehrung/rezepte?foo=bar`), kein doppelter Redirect-Hop
+
+#### Breadcrumb & Zurück
+- [x] Alle 8 Unterseiten zeigen den Breadcrumb "Ernährung / [Titel]" + Konto-Icon
+- [x] "Ernährung" im Breadcrumb verlinkt korrekt auf `/ernaehrung`
+- [x] "Zurück" von einer Unterseite, die vom Hub aus geöffnet wurde, führt zurück zum Hub
+
+#### Platzhalter-Unterseiten
+- [x] Alle 5 neuen Seiten laden ohne Login (Status < 400) und zeigen "Bald verfügbar"
+
+#### Bestehende interne Links
+- [x] Start-Seite, `rezept-vorschlaege.tsx`, `saettigungs-ergebnis.tsx`, `komponenten-ergebnis.tsx`, `art-of-eating-hinweis.tsx` verlinken direkt auf die neuen Pfade (keine unnötigen Redirect-Hops)
+
+#### Gast-Modus
+- [x] Gast kann Hub und alle bereits öffentlichen Unterseiten ohne Login öffnen
+
+#### Regression (Nav aus PROJ-35)
+- [x] "Ernährung"-Tab in Bottom-Nav bleibt auf allen 8 Unterseiten aktiv markiert (automatisch durch URL-Präfix, keine Code-Änderung an bottom-nav.tsx/top-nav.tsx nötig)
+
+### Edge Cases Status
+
+#### EC-1: Alter Deep-Link zu `/rezepte`
+- [x] 308-Redirect statt 404, per curl bestätigt
+
+#### EC-2: Tippfehler unter `/ernaehrung/...`
+- [x] Normales Next.js-404, kein Sonderfall nötig
+
+#### EC-3: Redirect-Kette / doppelte Redirects
+- [x] Einfacher Redirect-Hop bestätigt (`/ernaehrung/rezepte` selbst liefert direkt 200, kein zweiter Redirect)
+
+### Security Audit Results
+- [x] Keine Secrets/Env-Variablen im HTML-Response der neuen Seiten (per `curl` geprüft)
+- [x] Kein neuer Auth-Bypass: Zugriffsregeln (Gast/eingeloggt) unverändert übernommen, Middleware nicht angetastet
+- [x] Redirects sind rein pfadbasiert (keine offene Redirect-Schwachstelle — Ziel ist statisch in `next.config.ts` definiert, kein nutzergesteuerter Parameter)
+
+### Bugs Found
+Keine.
+
+### Beobachtung (kein Bug, zur Kenntnisnahme)
+Auf **Desktop** ist der neue Breadcrumb-Header (`ErnaehrungSubHeader`) — wie alle bestehenden Seiten-Header im Projekt — `md:hidden`. Auf Desktop gibt es daher keinen sichtbaren Breadcrumb auf den 8 Unterseiten; die Orientierung läuft dort ausschließlich über die aktive Markierung des "Ernährung"-Tabs in der Top-Nav. Das entspricht 1:1 dem bestehenden App-weiten Muster (noch nie gab es Desktop-spezifische Sub-Header) und wurde in der Architektur-Diskussion nicht explizit als Desktop-Anforderung besprochen — daher kein Bug, aber bewusst dokumentiert, falls das für den Nutzer relevant ist.
+
+### Regressionstest
+
+- **Vitest:** 390/390 grün, keine Regression.
+- **E2E — neue Datei `tests/PROJ-36-ernaehrung-hub.spec.ts`:** 22/22 grün.
+- **E2E — PROJ-34 (Art of Eating):** 1 Test hatte einen exakten `href`-Match auf den alten Pfad (`/wie-esse-ich-richtig`) — durch die URL-Verschachtelung erwartungsgemäß obsolet. Aktualisiert auf `/ernaehrung/wie-esse-ich-richtig`, jetzt 5/5 grün.
+- **E2E — 7 weitere potenziell betroffene Dateien geprüft** (PROJ-11, PROJ-19, PROJ-22, PROJ-30, PROJ-31, PROJ-32, zusätzlich zu PROJ-34): 8 Fehlschläge insgesamt, davon 7 **nicht** durch PROJ-36 verursacht — betreffen Foto-Scan-Kontingente, Trial-Countdown, Subscription-Status (PROJ-11) und Testdaten-Reste (PROJ-30/31/32/22), reproduzieren identisch in Isolation ohne jede Beteiligung der von PROJ-36 geänderten Dateien. Diese decken sich mit dem bereits nach PROJ-35 separat geflaggten Test-Infrastruktur-Thema (gemeinsamer Test-Account) — nicht erneut gemeldet, um Duplikate zu vermeiden.
+
+### Summary
+- **Acceptance Criteria:** 14/14 passed
+- **Bugs Found:** 0
+- **Security:** Pass — keine neue Angriffsfläche, keine offene Redirect-Schwachstelle
+- **Production Ready:** YES
+- **Recommendation:** Deploy. Die vorbestehende Test-Account-Flakiness (separat geflaggt) blockiert PROJ-36 nicht.
 
 ## Deployment
 _To be added by /deploy_

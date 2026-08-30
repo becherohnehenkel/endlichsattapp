@@ -77,7 +77,7 @@ test.describe('Art of Eating: erscheint bei allen drei neuen Analyse-Typen', () 
     await page.getByRole('button', { name: /passt so/i }).click()
     await expect(page.getByText('Die 3 Sättigungs-Säulen')).toBeVisible({ timeout: 10000 })
     await expect(page.getByText(/🧘 Art of Eating ·/)).toBeVisible()
-    await expect(page.getByRole('link', { name: 'Wie esse ich richtig? →' })).toHaveAttribute('href', '/wie-esse-ich-richtig')
+    await expect(page.getByRole('link', { name: 'Wie esse ich richtig? →' })).toHaveAttribute('href', '/ernaehrung/wie-esse-ich-richtig')
   })
 
   test('Komponente (neu-Format) zeigt den Hinweis', async ({ page }) => {
