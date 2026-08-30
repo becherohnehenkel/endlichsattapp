@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Separator } from '@/components/ui/separator'
-import BackButton from './back-button'
+import { ErnaehrungSubHeader } from '@/components/ernaehrung-sub-header'
 
 // Refinement 2026-08-11 ("Complete"-Umstrukturierung): 6 Bausteine → 3 Säulen. Geschmack,
 // Biss und Art of Eating sind jetzt eigenständige Ebenen (siehe docs/saettigungsmatrix.md
@@ -71,11 +71,7 @@ function ratingConfig(rating: Rating) {
 export default function SaettigungsmatrixPage() {
   return (
     <div className="min-h-screen bg-background">
-      <header className="md:hidden sticky top-0 z-10 border-b border-border bg-card/80 backdrop-blur-sm px-4 py-3 flex items-center justify-between">
-        <BackButton />
-        <span className="font-semibold text-foreground tracking-tight">Sättigungs-Matrix</span>
-        <div className="w-16" />
-      </header>
+      <ErnaehrungSubHeader title="Sättigungs-Matrix" />
 
       <main className="max-w-sm mx-auto px-4 py-6 space-y-6">
 

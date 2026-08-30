@@ -1,8 +1,8 @@
 import Link from 'next/link'
-import { ChevronLeft, UserRound } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getAccessStatus } from '@/lib/paywall'
 import RezeptBibliothek, { type RezeptListItem } from '@/components/rezept-bibliothek'
+import { ErnaehrungSubHeader } from '@/components/ernaehrung-sub-header'
 
 function formatRecipeCount(n: number): string {
   return n === 1 ? '1 Rezept' : `${n} Rezepte`
@@ -58,18 +58,7 @@ export default async function RezeptePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="md:hidden sticky top-0 z-10 border-b border-border bg-card/80 backdrop-blur-sm px-4 py-3 flex items-center">
-        <Link href="/" className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors w-16">
-          <ChevronLeft className="h-4 w-4" />
-          Zurück
-        </Link>
-        <span className="font-semibold text-foreground tracking-tight flex-1 text-center">Rezepte</span>
-        <div className="w-16 flex justify-end">
-          <Link href="/konto" className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-md hover:bg-muted">
-            <UserRound className="h-4 w-4" />
-          </Link>
-        </div>
-      </header>
+      <ErnaehrungSubHeader title="Rezepte" />
 
       {trialDaysRemaining !== null && (
         <p className="text-center text-xs text-muted-foreground px-4 pt-3">

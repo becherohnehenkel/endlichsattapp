@@ -35,7 +35,7 @@ export default function RezeptVorschlaege({ analysisId }: RezeptVorschlaegeProps
   // damit dieser Abschnitt unabhängig vom Match-Ergebnis immer etwas Konsistentes zeigt.
   if (!rezepte || rezepte.length === 0) {
     return (
-      <Link href="/rezepte">
+      <Link href="/ernaehrung/rezepte">
         <div className="rounded-xl border border-border bg-muted/40 p-4 flex items-center gap-3 hover:border-[#2E9E6B] transition-colors cursor-pointer">
           <div className="w-9 h-9 rounded-full bg-[#2E9E6B]/15 flex items-center justify-center shrink-0">
             <ChefHat className="h-4 w-4 text-[#2E9E6B]" />

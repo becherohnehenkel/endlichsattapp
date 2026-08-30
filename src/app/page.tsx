@@ -186,7 +186,7 @@ export default async function StartPage() {
 
         {/* ── Sättigungs-Matrix Teaser ─────────────────────── */}
         <section>
-          <Link href="/saettigungsmatrix">
+          <Link href="/ernaehrung/saettigungsmatrix">
             <div className="rounded-2xl border border-[#2E9E6B]/30 bg-[#DFF0F2] p-4 flex items-center gap-4 hover:border-[#2E9E6B] transition-colors cursor-pointer">
               <span className="text-3xl flex-shrink-0">🧩</span>
               <div className="space-y-0.5 min-w-0">
@@ -203,7 +203,7 @@ export default async function StartPage() {
 
         {/* ── Art of Eating Teaser ──────────────────────────── */}
         <section>
-          <Link href="/wie-esse-ich-richtig">
+          <Link href="/ernaehrung/wie-esse-ich-richtig">
             <div className="rounded-2xl border border-[#2E9E6B]/30 bg-[#DFF0F2] p-4 flex items-center gap-4 hover:border-[#2E9E6B] transition-colors cursor-pointer">
               <span className="text-3xl flex-shrink-0">🧘</span>
               <div className="space-y-0.5 min-w-0">
@@ -224,7 +224,7 @@ export default async function StartPage() {
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold text-foreground">Rezeptbibliothek</h2>
               <Link
-                href="/rezepte"
+                href="/ernaehrung/rezepte"
                 className="text-xs text-[#2E9E6B] hover:underline flex items-center gap-0.5"
               >
                 Alle <ChevronRight className="h-3 w-3" />
@@ -266,7 +266,7 @@ export default async function StartPage() {
               ))}
             </div>
 
-            <Link href="/rezepte" className="block">
+            <Link href="/ernaehrung/rezepte" className="block">
               <Button variant="outline" className="w-full text-sm h-10 rounded-xl">
                 Alle Rezepte ansehen
               </Button>

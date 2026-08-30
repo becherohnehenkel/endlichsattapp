@@ -30,7 +30,7 @@ export default function OwnRecipeActions({ recipeId, title }: OwnRecipeActionsPr
     setDeleting(true)
     try {
       await fetch(`/api/rezepte/${recipeId}`, { method: 'DELETE' })
-      router.push('/rezepte')
+      router.push('/ernaehrung/rezepte')
       router.refresh()
     } finally {
       setDeleting(false)

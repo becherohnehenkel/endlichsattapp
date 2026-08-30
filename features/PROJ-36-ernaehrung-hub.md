@@ -1,6 +1,6 @@
 # PROJ-36: Ernährung-Hub (Übersichtsseite)
 
-## Status: Architected
+## Status: In Progress
 **Created:** 2026-08-30
 **Last Updated:** 2026-08-30
 
@@ -122,6 +122,17 @@ Keine neuen Datenbank-Tabellen oder -Felder. Reine Struktur-/Routing-Änderung.
 
 ### Backend-Bedarf
 Keiner — reines Frontend-/Routing-Feature.
+
+## Implementation Notes (Frontend)
+- Neu: `src/app/ernaehrung/page.tsx` — echter Hub mit 8 Zeilen (ersetzt den PROJ-35-Alias auf `/rezepte`).
+- Neu: `src/components/ernaehrung-sub-header.tsx` — gemeinsamer Zurück+Breadcrumb+Konto-Header (shadcn `Breadcrumb`), genutzt von allen 8 Unterseiten.
+- Verschoben (per `git mv`, Historie erhalten): `src/app/rezepte/*` → `src/app/ernaehrung/rezepte/*`, `src/app/saettigungsmatrix/page.tsx` → `src/app/ernaehrung/saettigungsmatrix/page.tsx`, `src/app/wie-esse-ich-richtig/page.tsx` → `src/app/ernaehrung/wie-esse-ich-richtig/page.tsx`. Alte `back-button.tsx`-Dateien entfernt (Funktionalität jetzt im gemeinsamen Header).
+- Neu: 5 Platzhalterseiten unter `src/app/ernaehrung/{so-geht-abnehmen,emotionales-essen,heisshunger,kalorien,kalorien-zaehlen}/page.tsx`.
+- `next.config.ts`: `redirects()` für die 3 alten Pfade (308, dauerhaft) ergänzt.
+- Interne Links aktualisiert: `src/app/page.tsx`, `src/app/rezept/neu/page.tsx`, `src/app/rezept/[id]/own-recipe-actions.tsx`, `src/components/{rezept-vorschlaege,saettigungs-ergebnis,art-of-eating-hinweis,komponenten-ergebnis}.tsx`.
+- Bottom-/Top-Nav unverändert — Aktiv-Markierung für "Ernährung" funktioniert automatisch auch auf den neuen verschachtelten Pfaden (per URL-Präfix bestätigt).
+- Hub-Zeilen-Untertitel sind bewusst vorläufige Platzhalter-Texte (siehe Open Questions) — Icons: `ChefHat`, `Utensils`, `LayoutGrid`, `Calculator`, `HeartHandshake`, `Flame`, `Apple`, `ListChecks` (alle `lucide-react`).
+- `npm run build`, `npm run lint`, `npm test` (390/390) fehlerfrei. Manuell verifiziert: Hub-Liste, Breadcrumb+Zurück auf Unterseite, migrierte Rezepte-Seite (Filter/Gast-Banner/Suche intakt), alle 3 Redirects (308) und alle 8 neuen/verschobenen Routen (200) per curl.
 
 ## QA Test Results
 _To be added by /qa_

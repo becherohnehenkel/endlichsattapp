@@ -457,7 +457,7 @@ export default function SaettigungsErgebnis({ result, assumptions, onReset, anal
             <p className="text-xs font-semibold text-muted-foreground">🧘 Art of Eating</p>
             <p className="text-sm text-foreground">{result.art_of_eating_tipp}</p>
             <Link
-              href="/wie-esse-ich-richtig"
+              href="/ernaehrung/wie-esse-ich-richtig"
               className="inline-block text-xs font-medium text-[#2E9E6B] hover:underline"
             >
               Wie esse ich richtig? →

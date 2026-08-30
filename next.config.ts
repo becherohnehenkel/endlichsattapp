@@ -10,6 +10,13 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      { source: '/rezepte', destination: '/ernaehrung/rezepte', permanent: true },
+      { source: '/saettigungsmatrix', destination: '/ernaehrung/saettigungsmatrix', permanent: true },
+      { source: '/wie-esse-ich-richtig', destination: '/ernaehrung/wie-esse-ich-richtig', permanent: true },
+    ]
+  },
   async headers() {
     return [
       {

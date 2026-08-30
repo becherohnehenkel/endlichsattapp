@@ -86,7 +86,7 @@ export default async function NeuesEigenesRezeptPage({ searchParams }: NeuesEige
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card px-4 py-3 flex items-center gap-3">
         <Link
-          href="/rezepte"
+          href="/ernaehrung/rezepte"
           className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ChevronLeft className="h-4 w-4" />
