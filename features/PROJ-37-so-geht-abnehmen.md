@@ -1,6 +1,6 @@
 # PROJ-37: So geht abnehmen (inkl. Kcal-Rechner)
 
-## Status: Architected
+## Status: In Progress
 **Created:** 2026-08-31
 **Last Updated:** 2026-08-31
 
@@ -199,6 +199,15 @@ Neue, optionale Felder in der bestehenden `profiles`-Tabelle: Gewicht, Größe, 
 
 ### Backend-Bedarf
 Eine neue API-Route zum Speichern der Rechner-Eingaben für eingeloggte Nutzer (Lesen der zuletzt gespeicherten Werte erfolgt serverseitig beim Seitenaufruf, kein separater API-Aufruf nötig).
+
+## Implementation Notes (Frontend)
+- Neu: `src/lib/kcal-rechner.ts` — reine Berechnungslogik (Mifflin-St-Jeor, PAL-Faktoren, Ziel-Faktoren, Validierungsgrenzen), keine React-Abhängigkeit, gut isoliert testbar.
+- Neu: `src/components/kcal-rechner.tsx` — interaktives Formular (Client Component), inkl. Inline-Validierung, 5kg-Abweichungs-Hinweis, Autosave-Aufruf gegen `/api/kcal-rechner` (POST) — **diese Route existiert noch nicht, folgt in `/backend`**. Fehlerfall (Route fehlt/schlägt fehl) wird bereits jetzt korrekt abgefangen (Ergebnis bleibt sichtbar, "Speichern fehlgeschlagen"-Hinweis erscheint) — das war ohnehin ein Akzeptanzkriterium.
+- Neu: `src/components/wochen-balken-diagramm.tsx` — reine CSS/HTML-Balkendiagramm-Komponente (kein Bild-Asset, keine Chart-Bibliothek).
+- Neu: `src/components/so-geht-abnehmen-guide.tsx` — Arbeitspunkte-Container nach demselben Muster wie `art-of-eating-guide.tsx` (eigener localStorage-Key `sga_completed`, Fortschrittsbalken, "Verstanden"-Buttons). Arbeitspunkt 1 rendert `KcalRechner`, Arbeitspunkte 2–5 sind statische JSX-Inhalte mit dem final abgestimmten Wortlaut aus der Spec.
+- `src/app/ernaehrung/so-geht-abnehmen/page.tsx` liest die zuletzt gespeicherten Werte serverseitig aus `profiles` (Spalten `kcal_gewicht_kg`, `kcal_groesse_cm`, `kcal_alter_jahre`, `kcal_geschlecht`, `kcal_aktivitaetslevel`, `kcal_ziel`) — **diese Spalten existieren noch nicht**. Die Query ist bewusst so geschrieben, dass ein PostgREST-Fehler bei unbekannter Spalte als "keine gespeicherten Werte" behandelt wird (kein Absturz); ein expliziter Type-Cast überbrückt, dass die generierten Supabase-Typen die neuen Spalten vor der Migration noch nicht kennen.
+- **Für `/backend` offen:** (1) Migration für die 6 neuen `profiles`-Spalten, (2) `POST /api/kcal-rechner`-Route (Auth-Check: nur echte, nicht-anonyme Nutzer; Upsert der 6 Felder), (3) danach den Type-Cast in `page.tsx` entfernen, sobald die generierten Supabase-Typen aktuell sind.
+- `npm run build`, `npm run lint`, `npm test` (390/390) fehlerfrei. Manuell im Browser verifiziert: Formular-Validierung (Wertebereiche, Button-Deaktivierung), Berechnung (Mifflin-St-Jeor + PAL + Ziel-Faktor gegen Hand­rechnung geprüft: 80kg/180cm/30J/männlich/moderat aktiv → 2759 kcal Erhaltungsbedarf, 2483 kcal bei "Fett verlieren" — exakt 90 %), alle 5 Arbeitspunkte inkl. Diagramm-Captions, Protein-Liste, Krafttraining-Punkte, Schlaf-Tipps und Training-Link.
 
 ## QA Test Results
 _To be added by /qa_
