@@ -53,7 +53,7 @@
 | PROJ-35 | Bottom-Navigation & Kontobereich-Neuordnung | P1 | Deployed | PROJ-2, PROJ-8, PROJ-13, PROJ-19 | [Spec](PROJ-35-bottom-navigation-kontobereich.md) |
 | PROJ-36 | Ernährung-Hub (Übersichtsseite) | P1 | Deployed | PROJ-35, PROJ-8 | [Spec](PROJ-36-ernaehrung-hub.md) |
 | PROJ-37 | So geht abnehmen (inkl. Kcal-Rechner) | P1 | Deployed | PROJ-36 | [Spec](PROJ-37-so-geht-abnehmen.md) |
-| PROJ-38 | Emotionales Essen | P2 | In Progress | PROJ-36 | [Spec](PROJ-38-emotionales-essen.md) |
+| PROJ-38 | Emotionales Essen | P2 | Approved | PROJ-36 | [Spec](PROJ-38-emotionales-essen.md) |
 | PROJ-39 | Heißhunger | P2 | Roadmap | PROJ-36 | — |
 | PROJ-40 | Kalorien | P2 | Roadmap | PROJ-36 | — |
 | PROJ-41 | Kalorien zählen | P2 | Roadmap | PROJ-36 | — |

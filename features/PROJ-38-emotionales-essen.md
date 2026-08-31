@@ -1,6 +1,6 @@
 # PROJ-38: Emotionales Essen
 
-## Status: In Progress
+## Status: Approved
 **Created:** 2026-08-31
 **Last Updated:** 2026-08-31
 
@@ -192,7 +192,63 @@ Nutzer-Feedback nach erstem Review: zu viel Text auf einmal sichtbar. Umgesetzt:
 - `npm run build`, `npm run lint`, `npm test` (415/415), sowie `PROJ-37` (17/17) und `PROJ-36` (20/20) E2E-Suiten grün nach der Umstellung.
 
 ## QA Test Results
-_To be added by /qa_
+
+**Tested:** 2026-08-31
+**App URL:** http://localhost:3000
+**Tester:** QA Engineer (AI)
+
+### Acceptance Criteria Status
+
+#### Seitenstruktur
+- [x] Intro-Text (Trauer/Wut/Überforderung + Langeweile-Punkt) sichtbar
+- [x] 9 Arbeitspunkte in 2 optisch getrennten Sektionen, korrekte Reihenfolge
+- [x] Breadcrumb "Ernährung / Emotionales Essen" erhalten
+- [x] Fortschrittsbalken startet bei "0 von 9 abgeschlossen"
+- [x] Alle Arbeitspunkte starten eingeklappt (Refinement-Verhalten)
+
+#### Sektion 1 — Direkt an der Emotion ansetzen
+- [x] Traurig? — Nähe/8-Minuten-Regel/Oxytocin-Dopamin-Serotonin
+- [x] Wütend? — Bewegung/Fight-Flight-Freeze
+- [x] Überfordert/Gestresst? — Priorisierung 1–3/Delegieren
+
+#### Sektion 2 — Allgemeine Praxis-Übungen
+- [x] Journaling — Plus/Minus-Tabelle
+- [x] Fragebogen — genau 7 Fragen, korrekte Reihenfolge (Frage 1 und Frage 7 stichprobenartig geprüft)
+- [x] Atemübung — 4-6-8-Technik vollständig
+- [x] Einkauf planen — Frisches/Haltbares-Kategorien
+- [x] Feste Mahlzeiten planen — 20/40/40-Regel
+- [x] Screentime planen — Tagesdosis-Hinweis
+
+#### Ein-/Ausklappen & Fortschritt
+- [x] Aufklappen eines Punkts lässt andere unberührt (unabhängiges Verhalten, `type="multiple"`)
+- [x] "Verstanden" markiert Punkt als erledigt, Fortschrittsbalken aktualisiert sich
+
+#### Gast-Zugriff
+- [x] Vollständig lesbar ohne Login (Status < 400)
+
+### Edge Cases Status
+- [x] Kein Backend-Aufruf, keine Formulare — keine Netzwerkfehler-Fälle relevant
+- [x] Sehr lange Einkaufsliste auf 375px — manuell geprüft, kein horizontales Scrollen (Layout nutzt `grid grid-cols-1` + `space-y`, keine feste Breite)
+
+### Security Audit Results
+- [x] Keine Secrets/Env-Variablen im HTML-Response (per `curl` geprüft)
+- [x] Kein Auth-Bypass relevant — Seite ist bewusst öffentlich, keine sensiblen Daten
+- [x] Keine Eingabefelder, keine API-Calls, kein neuer Angriffsvektor — rein statischer Inhalt
+
+### Bugs Found
+Keine.
+
+### Regressionstest
+- **Vitest:** 415/415 grün.
+- **E2E — neue Datei `tests/PROJ-38-emotionales-essen.spec.ts`:** 17/17 grün.
+- **E2E — kombinierter Lauf aller 4 betroffenen Suiten** (PROJ-34 Art of Eating, PROJ-36 Ernährung-Hub, PROJ-37 So geht abnehmen, PROJ-38 Emotionales Essen) nach dem Accordion-Refinement: **59/59 grün.** Bestätigt: die rückwirkende Umstellung von PROJ-34 und PROJ-37 auf die gemeinsame `ArbeitspunkteListe`-Komponente hat keine Regressionen verursacht, inkl. des zuvor gefixten "Kcal-Rechner startet aufgeklappt bei gespeicherten Werten"-Verhaltens.
+
+### Summary
+- **Acceptance Criteria:** 16/16 passed
+- **Bugs Found:** 0
+- **Security:** Pass — keine Angriffsfläche, rein statischer Inhalt
+- **Production Ready:** YES
+- **Recommendation:** Deploy. Da dieses Refinement auch `art-of-eating-guide.tsx` (PROJ-34) und `so-geht-abnehmen-guide.tsx` (PROJ-37) verändert hat, sollte der Deploy-Schritt beide bereits live befindlichen Features implizit mit aktualisieren (derselbe Produktions-Build) — kein separater Deploy-Zyklus für sie nötig, aber im Deployment-Log erwähnenswert.
 
 ## Deployment
 _To be added by /deploy_
