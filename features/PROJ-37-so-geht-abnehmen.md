@@ -1,6 +1,6 @@
 # PROJ-37: So geht abnehmen (inkl. Kcal-Rechner)
 
-## Status: Approved
+## Status: Deployed
 **Created:** 2026-08-31
 **Last Updated:** 2026-08-31
 
@@ -290,4 +290,9 @@ Eine neue API-Route zum Speichern der Rechner-Eingaben für eingeloggte Nutzer (
 - **Recommendation:** Deploy. Hinweis: Die DB-Migration (6 neue `profiles`-Spalten) ist bereits live angewendet (vom Nutzer manuell ausgeführt, da Supabase-MCP diese Session getrennt war) — kein zusätzlicher Deploy-Schritt für die Datenbank nötig.
 
 ## Deployment
-_To be added by /deploy_
+
+- **Production URL:** https://satt.mehralsabnehmen.de/ernaehrung/so-geht-abnehmen
+- **Deployed:** 2026-08-31
+- **Git Tag:** v2.3.0-PROJ-37
+- Vercel-Build grün, Nutzer hat auf Produktion visuell bestätigt: Kcal-Rechner berechnet korrekt, Werte + Ergebnis bleiben nach Reload erhalten.
+- DB-Migration (6 neue `profiles`-Spalten) war bereits vor diesem Deploy live angewendet (manuell vom Nutzer, da Supabase-MCP getrennt war) — kein zusätzlicher DB-Schritt bei diesem Deploy nötig.
