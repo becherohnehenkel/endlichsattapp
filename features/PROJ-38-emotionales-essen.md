@@ -1,6 +1,6 @@
 # PROJ-38: Emotionales Essen
 
-## Status: Planned
+## Status: Architected
 **Created:** 2026-08-31
 **Last Updated:** 2026-08-31
 
@@ -137,12 +137,42 @@ Keine — Copy für Intro und alle 9 Arbeitspunkte final (Quelle: vom Nutzer ber
 <!-- Added by /architecture -->
 | Decision | Rationale | Date |
 |----------|-----------|------|
+| Neue gemeinsame Komponente `ArbeitspunkteListe` statt einer dritten Kopie der Fortschritts-/Karten-/Toggle-Logik | Art of Eating und So geht abnehmen duplizieren dieselbe Logik bereits; eine dritte Kopie hätte die Duplikation weiter verschärft | 2026-08-31 |
+| Bestehende zwei Guide-Seiten (Art of Eating, So geht abnehmen) bleiben unangetastet, nutzen den neuen Baustein noch nicht | Umbau bereits ausgelieferter, getesteter Features liegt außerhalb des Rahmens von PROJ-38 — Migration kann bei künftigem Anfassen dieser Seiten nachgezogen werden | 2026-08-31 |
+| Sektions-Trenner (Divider + kleine Überschrift) als einfache visuelle Ergänzung, keine neue Bibliothek | Reicht aus, um die 3 emotionsspezifischen Punkte optisch abzusetzen | 2026-08-31 |
+| Kein Backend | Reiner statischer Inhalt, kein Formular, keine Persistenz | 2026-08-31 |
 
 ---
 <!-- Sections below are added by subsequent skills -->
 
 ## Tech Design (Solution Architect)
-_To be added by /architecture_
+
+### Component-Struktur
+```
+/ernaehrung/emotionales-essen (Server Component)
+├── ErnaehrungSubHeader (bestehend aus PROJ-36)
+└── EmotionalesEssenGuide (NEU)
+    ├── Intro-Text (unnummeriert)
+    └── ArbeitspunkteListe (NEU: gemeinsamer Baustein für Fortschrittsbalken,
+    │                        Karten-Optik und "Verstanden"-Toggle)
+        ├── Sektion "Direkt an der Emotion ansetzen" (Trennlinie + kleine Überschrift)
+        │   ├── 1. Traurig?
+        │   ├── 2. Wütend?
+        │   └── 3. Überfordert/Gestresst?
+        └── Sektion "Allgemeine Praxis-Übungen"
+            ├── 4. Journaling
+            ├── 5. Fragebogen (7 Fragen)
+            ├── 6. Atemübung
+            ├── 7. Einkauf planen
+            ├── 8. Feste Mahlzeiten planen
+            └── 9. Screentime planen
+```
+
+### Datenmodell
+Keins — reiner statischer Inhalt. Fortschritt bleibt wie bisher in `localStorage` (eigener Key für diese Seite, kein Server-Sync).
+
+### Backend-Bedarf
+Keiner.
 
 ## QA Test Results
 _To be added by /qa_
