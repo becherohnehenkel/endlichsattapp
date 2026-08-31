@@ -1,6 +1,6 @@
 # PROJ-37: So geht abnehmen (inkl. Kcal-Rechner)
 
-## Status: In Progress
+## Status: Approved
 **Created:** 2026-08-31
 **Last Updated:** 2026-08-31
 
@@ -218,7 +218,76 @@ Eine neue API-Route zum Speichern der Rechner-Eingaben für eingeloggte Nutzer (
 - `npm run build`, `npm run lint`, `npm test` (401/401) fehlerfrei.
 
 ## QA Test Results
-_To be added by /qa_
+
+**Tested:** 2026-08-31
+**App URL:** http://localhost:3000
+**Tester:** QA Engineer (AI)
+
+### Acceptance Criteria Status
+
+#### Eingabe & Validierung
+- [x] Alle Eingabefelder vorhanden (Gewicht, Größe, Alter, Geschlecht, Aktivitätslevel, Ziel)
+- [x] Gewicht/Größe/Alter außerhalb der Wertebereiche → Inline-Fehler + "Berechnen" deaktiviert
+- [x] Bei vollständig gültigem Formular ist "Berechnen" aktiv
+
+#### Berechnung
+- [x] Mifflin-St-Jeor × PAL korrekt (gegen Handrechnung geprüft: 80/180/30/männlich/moderat aktiv → 2759 kcal)
+- [x] Fett verlieren = 90 % (2483 kcal), Gewicht halten = 100 %, Muskeln aufbauen = 110 % (3035 kcal)
+- [x] Ergebnis auf ganze Zahlen gerundet
+
+#### Speichern (eingeloggte Nutzer)
+- [x] Autosave bei "Berechnen", kein separater Speichern-Schritt
+- [x] Nach Reload: Felder vorausgefüllt **und Ergebnis sofort sichtbar** (siehe BUG-1)
+- [x] 5kg-Abweichungs-Hinweis beim Bearbeiten des Gewichtsfelds
+- [x] Fehlschlagendes Speichern zeigt Ergebnis trotzdem + Fehlerhinweis (via Route-Interception geprüft)
+
+#### Gäste
+- [x] Leeres Formular ohne Session
+- [x] Nach Berechnen + Reload wieder leer — nichts gespeichert
+
+#### Seiten-Struktur
+- [x] Alle 5 Arbeitspunkte in korrekter Reihenfolge mit finalem Wortlaut
+- [x] Breadcrumb "Ernährung / So geht abnehmen" bleibt erhalten (Mobile — Header ist wie alle Seiten-Header bewusst `md:hidden`)
+- [x] Beide Balkendiagramme mit korrekten Captions
+- [x] Krafttraining-Link zeigt dezent auf `/training`
+
+### Edge Cases Status
+- [x] Gast berechnet mehrfach → jedes Mal unabhängiges Ergebnis
+- [x] Erstberechnung ohne vorherige gespeicherte Werte → kein 5kg-Hinweis (kein Vergleichswert)
+- [x] Zielwechsel ohne Gewichtsänderung → keine 5kg-Warnung
+- [x] Extreme aber valide Werte (z. B. 300 kg) → liefert Ergebnis ohne Zusatzprüfung (wie spezifiziert)
+
+### Security Audit Results
+- [x] `POST /api/kcal-rechner` ohne Session → 401 (Body wird nicht mal geparst)
+- [x] Anonyme Gast-Session → 403 (Gäste dürfen laut Spec nicht speichern)
+- [x] Zod lehnt Werte außerhalb der Grenzen und ungültige Enums (`geschlecht`, `aktivitaetslevel`, `ziel`) mit 400 ab — auch bei Injection-Versuchen im Enum-Feld (z. B. `"maennlich OR 1=1"`)
+- [x] Malformed JSON wird sauber behandelt (Auth-Check läuft vor dem Parsen, kein Crash)
+- [x] Zusätzliche/fremde Felder im Body (z. B. `id`) werden ignoriert — Update-Payload wird explizit aus den validierten Zod-Feldern gebaut, nie aus dem Rohkörper gespreadet
+- [x] Kein IDOR möglich — Route verwendet ausschließlich `user.id` aus der eigenen Session, nie einen client-gelieferten Wert
+- [x] Keine Secrets im Response, kein XSS-Vektor (nur Zahlen/Enums, keine Freitext-Ausgabe von Nutzereingaben)
+
+### Bugs Found
+
+#### BUG-1: Ergebnis wurde nach Reload nicht automatisch angezeigt (gefixt)
+- **Severity:** Medium
+- **Steps to Reproduce:** Eingeloggt einmal berechnen (Werte werden gespeichert) → Seite neu laden.
+- **Erwartet:** Felder vorausgefüllt UND das zuletzt berechnete Ergebnis sofort sichtbar (explizites Akzeptanzkriterium).
+- **Tatsächlich (vor Fix):** Nur die Felder waren vorausgefüllt, das Ergebnis blieb leer bis zu einem erneuten Klick auf "Berechnen".
+- **Fix:** `ergebnis`-State in `kcal-rechner.tsx` wird jetzt bei vorhandenen `gespeicherteWerte` direkt beim Mount berechnet (`useState(gespeicherteWerte ? berechneKcal(...) : null)`), nicht mehr hart auf `null` initialisiert.
+- **Status:** Gefixt und per E2E-Test abgedeckt (verhindert Regression).
+
+### Regressionstest
+- **Vitest:** 415/415 grün (14 neue Unit-Tests für `kcal-rechner.ts`, 11 neue Integrationstests für die API-Route).
+- **E2E — neue Datei `tests/PROJ-37-so-geht-abnehmen.spec.ts`:** 17/17 grün.
+- **E2E — PROJ-36 (Ernährung-Hub):** Ein Test prüfte `/ernaehrung/so-geht-abnehmen` fälschlich noch als Platzhalter — erwartungsgemäß durch PROJ-37 obsolet (Seite hat jetzt echten Inhalt). Test angepasst (Seite aus der "Platzhalter"-Liste entfernt, eigene Abdeckung existiert jetzt in PROJ-37s eigener Suite), danach 21/21 grün.
+- **E2E — Nav/Auth-Regression (PROJ-15, PROJ-2):** 40/40 grün, keine Auswirkung durch die neue API-Route oder die geänderte Seite.
+
+### Summary
+- **Acceptance Criteria:** 16/16 passed (nach Bugfix)
+- **Bugs Found:** 1 (Medium, gefixt)
+- **Security:** Pass — Auth/Autorisierung/Validierung/IDOR alle korrekt
+- **Production Ready:** YES
+- **Recommendation:** Deploy. Hinweis: Die DB-Migration (6 neue `profiles`-Spalten) ist bereits live angewendet (vom Nutzer manuell ausgeführt, da Supabase-MCP diese Session getrennt war) — kein zusätzlicher Deploy-Schritt für die Datenbank nötig.
 
 ## Deployment
 _To be added by /deploy_

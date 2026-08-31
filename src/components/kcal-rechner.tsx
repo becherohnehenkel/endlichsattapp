@@ -59,7 +59,11 @@ export function KcalRechner({ kannSpeichern, gespeicherteWerte, onBerechnet }: K
   const [aktivitaetslevel, setAktivitaetslevel] = useState<Aktivitaetslevel | ''>(gespeicherteWerte?.aktivitaetslevel ?? '')
   const [ziel, setZiel] = useState<Ziel | ''>(gespeicherteWerte?.ziel ?? '')
 
-  const [ergebnis, setErgebnis] = useState<KcalRechnerErgebnis | null>(null)
+  // PROJ-37: Bei vorhandenen gespeicherten Werten wird das Ergebnis sofort angezeigt
+  // (deterministisch aus den gespeicherten Eingaben berechnet) — kein erneuter Klick nötig.
+  const [ergebnis, setErgebnis] = useState<KcalRechnerErgebnis | null>(
+    gespeicherteWerte ? berechneKcal(gespeicherteWerte) : null
+  )
   const [speicherFehler, setSpeicherFehler] = useState(false)
   const [wirdGespeichert, setWirdGespeichert] = useState(false)
   const [letztesGespeichertesGewicht, setLetztesGespeichertesGewicht] = useState(gespeicherteWerte?.gewichtKg ?? null)
