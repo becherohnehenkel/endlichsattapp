@@ -1,6 +1,6 @@
 # PROJ-37: So geht abnehmen (inkl. Kcal-Rechner)
 
-## Status: Planned
+## Status: Architected
 **Created:** 2026-08-31
 **Last Updated:** 2026-08-31
 
@@ -161,12 +161,44 @@ Am Ende: dezenter Text-Link *"Trainingspläne findest du im Training-Bereich →
 <!-- Added by /architecture -->
 | Decision | Rationale | Date |
 |----------|-----------|------|
+| Neue Felder in der bestehenden `profiles`-Tabelle statt neuer Tabelle | 1:1-Beziehung zum Nutzer, kein Verlauf nötig — passt zum bestehenden Muster (z. B. `stripe_customer_id`) | 2026-08-31 |
+| Kein Verlauf/Historie der Eingaben — nur der letzte Stand wird gespeichert | Nutzeranforderung deckt nur "letzten Stand vorausfüllen", kein Bedarf an Verlaufsanzeige | 2026-08-31 |
+| Neue API-Route zum Speichern (REST-Muster wie `/api/feedback`, `/api/stripe/*`) | Konsistent mit bestehender Architektur — kein direkter DB-Zugriff aus Client-Komponenten | 2026-08-31 |
+| Berechnung (Mifflin-St-Jeor + PAL + Ziel) läuft rein client-seitig | Reine Mathematik ohne sensible Serverlogik, sofortiges Ergebnis ohne Wartezeit; nur das Speichern braucht einen Server-Call | 2026-08-31 |
+| Speichern nur für echte eingeloggte Nutzer, nicht für anonyme Gast-Sessions | Konsistent mit bestehenden Guest-Checks (z. B. `isAnonymous` in `rezepte/page.tsx`) | 2026-08-31 |
+| Neue, reine CSS-Balkendiagramm-Komponente statt Chart-Bibliothek | Nur 2 einfache, statische Balken-Sets — eine Chart-Library wäre Overkill | 2026-08-31 |
+| Formular-Steuerelemente: Geschlecht als Radio-Buttons, Ziel als antippbare Schaltflächen (Segmented-Control-Stil), Aktivitätslevel als Dropdown | Nutzervorgabe — Dropdown hält die 5 PAL-Stufen platzsparend, Radio/Buttons passen zur geringen Optionsanzahl bei Geschlecht/Ziel | 2026-08-31 |
 
 ---
 <!-- Sections below are added by subsequent skills -->
 
 ## Tech Design (Solution Architect)
-_To be added by /architecture_
+
+### Component-Struktur
+```
+/ernaehrung/so-geht-abnehmen (Server Component)
+├── ErnaehrungSubHeader (bestehend aus PROJ-36)
+└── ArbeitspunkteGuide (NEU — generisches Container-Muster, analog zu art-of-eating-guide.tsx)
+    ├── Fortschrittsbalken ("X von 5 abgeschlossen")
+    ├── 1. Kcal-Rechner (NEU, einzige interaktive Karte)
+    │   ├── Eingabefelder (bei eingeloggten Nutzern mit letzten gespeicherten Werten vorausgefüllt)
+    │   │   ├── Gewicht, Größe, Alter — Input-Felder mit Inline-Validierung
+    │   │   ├── Geschlecht — Radio-Buttons
+    │   │   ├── Aktivitätslevel — Dropdown (5 PAL-Stufen)
+    │   │   └── Ziel — antippbare Schaltflächen (Segmented-Control-Stil, 3 Optionen)
+    │   ├── "Berechnen"-Button → Ergebnis + Autosave bei eingeloggten Nutzern
+    │   └── 5kg-Abweichungs-Hinweis
+    ├── 2. Wöchentlich vs. Täglich (Text + 2 CSS-Balkendiagramme)
+    ├── 3. Warum auf Proteine achten (Text + Info-Box + 3er-Liste)
+    ├── 4. Krafttraining (Text + dezenter Link zu /training)
+    └── 5. Schlaf/Erholung (Text + 4er-Liste)
+```
+
+### Datenmodell
+Neue, optionale Felder in der bestehenden `profiles`-Tabelle: Gewicht, Größe, Alter, Geschlecht, Aktivitätslevel, Ziel. Kein Verlauf — nur der letzte Stand wird gespeichert. Für Gäste wird nichts angelegt.
+
+### Backend-Bedarf
+Eine neue API-Route zum Speichern der Rechner-Eingaben für eingeloggte Nutzer (Lesen der zuletzt gespeicherten Werte erfolgt serverseitig beim Seitenaufruf, kein separater API-Aufruf nötig).
 
 ## QA Test Results
 _To be added by /qa_
