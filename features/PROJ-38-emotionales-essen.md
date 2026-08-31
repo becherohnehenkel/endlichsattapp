@@ -1,6 +1,6 @@
 # PROJ-38: Emotionales Essen
 
-## Status: Architected
+## Status: In Progress
 **Created:** 2026-08-31
 **Last Updated:** 2026-08-31
 
@@ -173,6 +173,13 @@ Keins — reiner statischer Inhalt. Fortschritt bleibt wie bisher in `localStora
 
 ### Backend-Bedarf
 Keiner.
+
+## Implementation Notes (Frontend)
+- Neu: `src/components/arbeitspunkte-liste.tsx` — gemeinsamer Baustein (Fortschrittsbalken, Karten-Optik, "Verstanden"-Toggle, `localStorage`, optionale Sektions-Trenner), extrahiert aus dem bisher zweifach duplizierten Muster (`art-of-eating-guide.tsx`, `so-geht-abnehmen-guide.tsx` — beide bewusst unangetastet gelassen, siehe Architektur-Entscheidung).
+- Neu: `src/components/emotionales-essen-guide.tsx` — Intro-Text + 9 Arbeitspunkte in 2 Sektionen, nutzt `ArbeitspunkteListe` mit eigenem `localStorage`-Key (`ee_completed`).
+- `src/app/ernaehrung/emotionales-essen/page.tsx`: Platzhalter durch `EmotionalesEssenGuide` ersetzt.
+- `npm run build`, `npm run lint`, `npm test` (415/415) fehlerfrei. Verifiziert per Accessibility-Tree (Screenshot-Capture des Browser-Tools war in dieser Session zeitweise instabil, siehe unten): Intro, Fortschrittsbalken "0 von 9", beide Sektionen mit Trennlinie/Überschrift, alle 9 Arbeitspunkte mit korrektem Inhalt (Fragebogen mit exakt 7 Fragen in Reihenfolge, Einkaufsliste mit Frisches/Haltbares-Gliederung), Breadcrumb-Header aus PROJ-36 erhalten.
+- Ein React-Konsolenfehler ("missing key prop", zugeschrieben an `ArbeitspunkteListe`) tauchte im Browser-Tool auf, blieb aber identisch bestehen, nachdem zu einer völlig anderen Seite navigiert wurde, die diese Komponente gar nicht rendert (`/ernaehrung/wie-esse-ich-richtig`, nutzt `ArtOfEatingGuide`) — eindeutiges Zeichen für einen hängengebliebenen Tool-Puffer, nicht für einen echten Fehler. Code-Review bestätigt: beide `.map()`-Aufrufe in `arbeitspunkte-liste.tsx` haben eindeutige `key`-Props (`sektionIndex`, `punkt.id`), `emotionales-essen-guide.tsx` enthält keine `.map()`-Aufrufe. Sollte sich das bei der QA-Runde (mit funktionierendem Browser-Zugriff) doch reproduzieren lassen, bitte als Bug behandeln.
 
 ## QA Test Results
 _To be added by /qa_
