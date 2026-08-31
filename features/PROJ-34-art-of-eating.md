@@ -68,6 +68,7 @@
 | Die sechs Prinzipien-Texte werden aus einer einzigen, gemeinsamen Quelle gelesen — sowohl vom bestehenden vollständigen Guide als auch von der neuen kompakten Karte | Verhindert, dass dieselben sechs Texte an zwei Stellen gepflegt werden und im Lauf der Zeit auseinanderlaufen | 2026-08-11 |
 | Zufallsauswahl passiert ausschließlich nach dem ersten Rendern im Browser (nicht während des Server-Renderings) | Verhindert einen React-Hydration-Fehler — Server und Browser müssten sonst zufällig denselben Wert treffen, was nicht garantiert werden kann. Derselbe Kniff wird im bestehenden Guide bereits für ein ähnliches Problem verwendet | 2026-08-11 |
 | Kein neuer Backend-/Datenbank-Bedarf | Reiner Frontend-Zufallsmechanismus auf bereits im Code vorhandenem, statischem Text — bestätigt die Einschätzung aus der Spec | 2026-08-11 |
+| **Refinement 2026-08-31 (im Zuge von PROJ-38):** `art-of-eating-guide.tsx` doch angefasst — auf die neue, gemeinsame `ArbeitspunkteListe`-Komponente umgestellt (Ein-/Ausklappen statt alles auf einmal sichtbar) | Löst die ursprüngliche Entscheidung "bleibt unverändert" (Zeile oben) ab — Nutzerwunsch nach konsistentem Ein-/Ausklapp-Verhalten über alle drei "Arbeitspunkte"-Guides hinweg. `art-of-eating-hinweis.tsx` (die kompakte Karte, das eigentliche PROJ-34-Feature) bleibt unangetastet. Details siehe PROJ-38 Decision Log. | 2026-08-31 |
 
 ---
 <!-- Sections below are added by subsequent skills -->

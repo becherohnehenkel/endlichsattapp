@@ -118,12 +118,12 @@ test.describe('Breadcrumb auf allen 8 Unterseiten', () => {
 })
 
 // ─── Platzhalter-Unterseiten ────────────────────────────────────────────────
-// /ernaehrung/so-geht-abnehmen hat seit PROJ-37 echten Inhalt (Kcal-Rechner + 4 Arbeitspunkte)
-// und ist daher absichtlich aus dieser Liste raus — eigene Abdeckung in PROJ-37-so-geht-abnehmen.spec.ts.
+// /ernaehrung/so-geht-abnehmen (PROJ-37) und /ernaehrung/emotionales-essen (PROJ-38) haben
+// mittlerweile echten Inhalt und sind daher absichtlich aus dieser Liste raus — eigene
+// Abdeckung in PROJ-37-so-geht-abnehmen.spec.ts bzw. PROJ-38-emotionales-essen.spec.ts.
 
-test.describe('4 neue Platzhalter-Unterseiten', () => {
+test.describe('3 neue Platzhalter-Unterseiten', () => {
   const placeholders = [
-    '/ernaehrung/emotionales-essen',
     '/ernaehrung/heisshunger',
     '/ernaehrung/kalorien',
     '/ernaehrung/kalorien-zaehlen',

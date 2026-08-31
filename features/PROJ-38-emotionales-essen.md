@@ -181,6 +181,16 @@ Keiner.
 - `npm run build`, `npm run lint`, `npm test` (415/415) fehlerfrei. Verifiziert per Accessibility-Tree (Screenshot-Capture des Browser-Tools war in dieser Session zeitweise instabil, siehe unten): Intro, Fortschrittsbalken "0 von 9", beide Sektionen mit Trennlinie/Überschrift, alle 9 Arbeitspunkte mit korrektem Inhalt (Fragebogen mit exakt 7 Fragen in Reihenfolge, Einkaufsliste mit Frisches/Haltbares-Gliederung), Breadcrumb-Header aus PROJ-36 erhalten.
 - Ein React-Konsolenfehler ("missing key prop", zugeschrieben an `ArbeitspunkteListe`) tauchte im Browser-Tool auf, blieb aber identisch bestehen, nachdem zu einer völlig anderen Seite navigiert wurde, die diese Komponente gar nicht rendert (`/ernaehrung/wie-esse-ich-richtig`, nutzt `ArtOfEatingGuide`) — eindeutiges Zeichen für einen hängengebliebenen Tool-Puffer, nicht für einen echten Fehler. Code-Review bestätigt: beide `.map()`-Aufrufe in `arbeitspunkte-liste.tsx` haben eindeutige `key`-Props (`sektionIndex`, `punkt.id`), `emotionales-essen-guide.tsx` enthält keine `.map()`-Aufrufe. Sollte sich das bei der QA-Runde (mit funktionierendem Browser-Zugriff) doch reproduzieren lassen, bitte als Bug behandeln.
 
+### Refinement (2026-08-31): Ein-/Ausklappen + Layout-Feedback
+Nutzer-Feedback nach erstem Review: zu viel Text auf einmal sichtbar. Umgesetzt:
+- `ArbeitspunkteListe` von "immer ausgeklappt" auf shadcn `Accordion` (`type="multiple"`, jeder Punkt unabhängig auf-/zuklappbar, alle standardmäßig eingeklappt) umgestellt. Neuer optionaler `defaultOffenIds`-Prop, damit einzelne Punkte (z. B. der Kcal-Rechner bei bereits gespeicherten Werten) trotzdem sofort ohne Klick sichtbar starten können — wichtig, um das PROJ-37-Akzeptanzkriterium "Ergebnis sofort sichtbar" nicht zu brechen.
+- **Übergreifend auf alle 3 Guides angewendet** (Nutzerwunsch, explizit bestätigt trotz Aufwand für 2 bereits deployte Features): `art-of-eating-guide.tsx` (PROJ-34) und `so-geht-abnehmen-guide.tsx` (PROJ-37) wurden ebenfalls auf `ArbeitspunkteListe` umgestellt — beide nutzten zuvor eine eigene, duplizierte "immer ausgeklappt"-Implementierung.
+- Textbreite: horizontaler Innenabstand im aufgeklappten Zustand entfernt (volle Kartenbreite statt Einrückung unter der Nummer).
+- Schriftgröße im Fließtext aller 3 Guides von `text-sm` auf `text-xs` reduziert (mehr Inhalt pro Bildschirm auf Mobile).
+- Desktop-Breite der 3 Guide-Seiten von `max-w-sm` (384px) auf `md:max-w-[850px]` erhöht (Mobile bleibt unverändert).
+- Bestehende E2E-Suiten `PROJ-37-so-geht-abnehmen.spec.ts` und `PROJ-36-ernaehrung-hub.spec.ts` angepasst (Accordion-Items müssen vor Sichtbarkeits-Checks erst aufgeklappt werden; `/ernaehrung/emotionales-essen` aus der Platzhalter-Testliste entfernt, da jetzt echter Inhalt). `PROJ-34-art-of-eating.spec.ts` unverändert — testet nur einen Link auf die Guide-Seite, nie deren Inhalt selbst.
+- `npm run build`, `npm run lint`, `npm test` (415/415), sowie `PROJ-37` (17/17) und `PROJ-36` (20/20) E2E-Suiten grün nach der Umstellung.
+
 ## QA Test Results
 _To be added by /qa_
 

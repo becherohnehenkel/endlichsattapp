@@ -20,7 +20,20 @@ async function loginAs(page: Page) {
   await page.waitForURL((url) => !url.toString().includes('/login'), { timeout: 8000 })
 }
 
+// PROJ-37 (Refinement): Arbeitspunkte sind jetzt Accordion-Items, standardmäßig eingeklappt.
+// Idempotent (prüft aria-expanded), da der Kcal-Rechner bei bereits gespeicherten Werten
+// automatisch aufgeklappt startet (defaultOffenIds) — ein blinder Klick würde ihn sonst
+// wieder zuklappen.
+async function oeffneArbeitspunkt(page: Page, titel: string) {
+  const trigger = page.getByRole('button', { name: titel })
+  const expanded = await trigger.getAttribute('aria-expanded')
+  if (expanded !== 'true') {
+    await trigger.click()
+  }
+}
+
 async function fillValidesFormular(page: Page) {
+  await oeffneArbeitspunkt(page, 'Kcal-Rechner')
   await page.fill('#kcal-gewicht', '80')
   await page.fill('#kcal-groesse', '180')
   await page.fill('#kcal-alter', '30')
@@ -35,6 +48,7 @@ async function fillValidesFormular(page: Page) {
 test.describe('Eingabe & Validierung', () => {
   test('AC: zeigt alle Eingabefelder (Gewicht, Größe, Alter, Geschlecht, Aktivitätslevel, Ziel)', async ({ page }) => {
     await page.goto('/ernaehrung/so-geht-abnehmen')
+    await oeffneArbeitspunkt(page, 'Kcal-Rechner')
     await expect(page.locator('#kcal-gewicht')).toBeVisible()
     await expect(page.locator('#kcal-groesse')).toBeVisible()
     await expect(page.locator('#kcal-alter')).toBeVisible()
@@ -115,6 +129,7 @@ test.describe('Gäste', () => {
   test('AC: Gast öffnet den Rechner mit leeren Feldern', async ({ page, context }) => {
     await context.clearCookies()
     await page.goto('/ernaehrung/so-geht-abnehmen')
+    await oeffneArbeitspunkt(page, 'Kcal-Rechner')
     await expect(page.locator('#kcal-gewicht')).toHaveValue('')
     await expect(page.locator('#kcal-groesse')).toHaveValue('')
     await expect(page.locator('#kcal-alter')).toHaveValue('')
@@ -128,6 +143,7 @@ test.describe('Gäste', () => {
     await expect(page.getByText('2759 kcal', { exact: true })).toBeVisible()
 
     await page.reload()
+    await oeffneArbeitspunkt(page, 'Kcal-Rechner')
     await expect(page.locator('#kcal-gewicht')).toHaveValue('')
   })
 })
@@ -210,11 +226,13 @@ test.describe('Seiten-Struktur "So geht abnehmen"', () => {
 
   test('AC: Krafttraining-Arbeitspunkt verlinkt dezent auf /training', async ({ page }) => {
     await page.goto('/ernaehrung/so-geht-abnehmen')
+    await oeffneArbeitspunkt(page, 'Krafttraining')
     await expect(page.getByRole('link', { name: 'Trainingspläne findest du im Training-Bereich →' })).toHaveAttribute('href', '/training')
   })
 
   test('AC: Wöchentlich vs. Täglich zeigt beide Balkendiagramme mit den korrekten Captions', async ({ page }) => {
     await page.goto('/ernaehrung/so-geht-abnehmen')
+    await oeffneArbeitspunkt(page, 'Wöchentlich vs. Täglich')
     await expect(page.getByRole('img', { name: /Wie ein starrer Plan aussieht: Jeden Tag exakt gleich\./ })).toBeVisible()
     await expect(page.getByRole('img', { name: /Wie es wirklich aussieht: Mal mehr, mal weniger/ })).toBeVisible()
   })

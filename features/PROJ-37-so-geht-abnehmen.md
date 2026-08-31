@@ -168,6 +168,7 @@ Am Ende: dezenter Text-Link *"Trainingspläne findest du im Training-Bereich →
 | Speichern nur für echte eingeloggte Nutzer, nicht für anonyme Gast-Sessions | Konsistent mit bestehenden Guest-Checks (z. B. `isAnonymous` in `rezepte/page.tsx`) | 2026-08-31 |
 | Neue, reine CSS-Balkendiagramm-Komponente statt Chart-Bibliothek | Nur 2 einfache, statische Balken-Sets — eine Chart-Library wäre Overkill | 2026-08-31 |
 | Formular-Steuerelemente: Geschlecht als Radio-Buttons, Ziel als antippbare Schaltflächen (Segmented-Control-Stil), Aktivitätslevel als Dropdown | Nutzervorgabe — Dropdown hält die 5 PAL-Stufen platzsparend, Radio/Buttons passen zur geringen Optionsanzahl bei Geschlecht/Ziel | 2026-08-31 |
+| **Refinement 2026-08-31 (im Zuge von PROJ-38):** `so-geht-abnehmen-guide.tsx` auf die neue, gemeinsame `ArbeitspunkteListe`-Komponente umgestellt (Ein-/Ausklappen statt alles auf einmal sichtbar); Kcal-Rechner startet automatisch aufgeklappt, wenn gespeicherte Werte vorhanden sind (`defaultOffenIds`), damit das Ergebnis weiterhin ohne Klick sichtbar bleibt; Desktop-Breite auf 850px erhöht, Fließtext auf `text-xs` verkleinert | Nutzerwunsch nach konsistentem Ein-/Ausklapp-Verhalten über alle drei "Arbeitspunkte"-Guides hinweg — Details siehe PROJ-38 Decision Log | 2026-08-31 |
 
 ---
 <!-- Sections below are added by subsequent skills -->
