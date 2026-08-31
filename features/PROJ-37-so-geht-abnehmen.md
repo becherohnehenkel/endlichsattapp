@@ -209,6 +209,14 @@ Eine neue API-Route zum Speichern der Rechner-Eingaben für eingeloggte Nutzer (
 - **Für `/backend` offen:** (1) Migration für die 6 neuen `profiles`-Spalten, (2) `POST /api/kcal-rechner`-Route (Auth-Check: nur echte, nicht-anonyme Nutzer; Upsert der 6 Felder), (3) danach den Type-Cast in `page.tsx` entfernen, sobald die generierten Supabase-Typen aktuell sind.
 - `npm run build`, `npm run lint`, `npm test` (390/390) fehlerfrei. Manuell im Browser verifiziert: Formular-Validierung (Wertebereiche, Button-Deaktivierung), Berechnung (Mifflin-St-Jeor + PAL + Ziel-Faktor gegen Hand­rechnung geprüft: 80kg/180cm/30J/männlich/moderat aktiv → 2759 kcal Erhaltungsbedarf, 2483 kcal bei "Fett verlieren" — exakt 90 %), alle 5 Arbeitspunkte inkl. Diagramm-Captions, Protein-Liste, Krafttraining-Punkte, Schlaf-Tipps und Training-Link.
 
+## Implementation Notes (Backend)
+- Migration (vom Nutzer manuell in Supabase SQL Editor ausgeführt, da MCP-Zugriff diese Session getrennt war): 6 neue, optionale Spalten auf `profiles` (`kcal_gewicht_kg`, `kcal_groesse_cm`, `kcal_alter_jahre`, `kcal_geschlecht`, `kcal_aktivitaetslevel`, `kcal_ziel`), letztere drei mit `CHECK`-Constraints auf die gültigen Enum-Werte.
+- Neu: `POST /api/kcal-rechner` (`src/app/api/kcal-rechner/route.ts`) — Zod-Validierung (Wertebereiche/Enums aus `src/lib/kcal-rechner.ts` wiederverwendet, keine doppelte Grenzwert-Pflege), Auth-Check (401 ohne Session, 403 für anonyme Gast-Sessions), Schreiben über den Service-Role-Client mit explizitem `.eq('id', user.id)` — selbes Muster wie `/api/invite/redeem`.
+- `src/types/database.ts`: die 6 neuen Spalten in die `profiles`-Typdefinition (Row/Insert/Update) ergänzt — der Type-Cast aus der Frontend-Phase in `page.tsx` konnte dadurch wieder entfernt werden, keine Workarounds mehr im Code.
+- Integrationstest: `src/app/api/kcal-rechner/route.test.ts` — 401/403/400 (pro Feld out-of-range + ungültiges Enum)/500/Erfolgsfall, insgesamt 11 neue Tests.
+- End-to-End gegen die echte (migrierte) Datenbank live verifiziert: Speichern liefert 200, nach Seiten-Reload sind Gewicht/Größe/Alter/Geschlecht korrekt vorausgefüllt (temporäres Playwright-Skript, nicht committed — offizielle E2E-Abdeckung folgt in `/qa`).
+- `npm run build`, `npm run lint`, `npm test` (401/401) fehlerfrei.
+
 ## QA Test Results
 _To be added by /qa_
 

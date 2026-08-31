@@ -4,29 +4,14 @@ import { SoGehtAbnehmenGuide } from '@/components/so-geht-abnehmen-guide'
 import type { KcalRechnerGespeicherteWerte } from '@/components/kcal-rechner'
 import type { Geschlecht, Aktivitaetslevel, Ziel } from '@/lib/kcal-rechner'
 
-// PROJ-37: Liest die zuletzt gespeicherten Kcal-Rechner-Werte aus `profiles`. Die Spalten
-// (kcal_gewicht_kg, kcal_groesse_cm, kcal_alter_jahre, kcal_geschlecht, kcal_aktivitaetslevel,
-// kcal_ziel) existieren erst nach /backend — bis dahin liefert die Query fehlerfrei "kein
-// Ergebnis" zurück (PostgREST-Fehler bei unbekannter Spalte wird hier bewusst als "keine
-// gespeicherten Werte" behandelt, kein Absturz der Seite). Der Type-Cast ist bewusst, weil
-// die generierten Supabase-Typen die neuen Spalten vor der /backend-Migration noch nicht kennen.
-interface KcalProfileRow {
-  kcal_gewicht_kg: number | null
-  kcal_groesse_cm: number | null
-  kcal_alter_jahre: number | null
-  kcal_geschlecht: string | null
-  kcal_aktivitaetslevel: string | null
-  kcal_ziel: string | null
-}
-
+// PROJ-37: Liest die zuletzt gespeicherten Kcal-Rechner-Werte aus `profiles`.
 async function ladeGespeicherteWerte(userId: string): Promise<KcalRechnerGespeicherteWerte | null> {
   const supabase = await createClient()
-  const result = await supabase
+  const { data } = await supabase
     .from('profiles')
     .select('kcal_gewicht_kg, kcal_groesse_cm, kcal_alter_jahre, kcal_geschlecht, kcal_aktivitaetslevel, kcal_ziel')
     .eq('id', userId)
     .maybeSingle()
-  const data = result.data as unknown as KcalProfileRow | null
 
   if (
     !data ||

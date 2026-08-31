@@ -263,6 +263,12 @@ export type Database = {
           feedback_today_date: string | null
           id: string
           invite_code_redeemed_at: string | null
+          kcal_aktivitaetslevel: string | null
+          kcal_alter_jahre: number | null
+          kcal_geschlecht: string | null
+          kcal_groesse_cm: number | null
+          kcal_gewicht_kg: number | null
+          kcal_ziel: string | null
           name: string | null
           photo_scans_remaining: number
           photo_scans_today_count: number
@@ -278,6 +284,12 @@ export type Database = {
           feedback_today_date?: string | null
           id: string
           invite_code_redeemed_at?: string | null
+          kcal_aktivitaetslevel?: string | null
+          kcal_alter_jahre?: number | null
+          kcal_geschlecht?: string | null
+          kcal_groesse_cm?: number | null
+          kcal_gewicht_kg?: number | null
+          kcal_ziel?: string | null
           name?: string | null
           photo_scans_remaining?: number
           photo_scans_today_count?: number
@@ -293,6 +305,12 @@ export type Database = {
           feedback_today_date?: string | null
           id?: string
           invite_code_redeemed_at?: string | null
+          kcal_aktivitaetslevel?: string | null
+          kcal_alter_jahre?: number | null
+          kcal_geschlecht?: string | null
+          kcal_groesse_cm?: number | null
+          kcal_gewicht_kg?: number | null
+          kcal_ziel?: string | null
           name?: string | null
           photo_scans_remaining?: number
           photo_scans_today_count?: number
