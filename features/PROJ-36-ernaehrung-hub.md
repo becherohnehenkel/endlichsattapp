@@ -1,6 +1,6 @@
 # PROJ-36: Ernährung-Hub (Übersichtsseite)
 
-## Status: Approved
+## Status: Deployed
 **Created:** 2026-08-30
 **Last Updated:** 2026-08-30
 
@@ -205,4 +205,9 @@ Auf **Desktop** ist der neue Breadcrumb-Header (`ErnaehrungSubHeader`) — wie a
 - **Recommendation:** Deploy. Die vorbestehende Test-Account-Flakiness (separat geflaggt) blockiert PROJ-36 nicht.
 
 ## Deployment
-_To be added by /deploy_
+
+- **Production URL:** https://satt.mehralsabnehmen.de/ernaehrung
+- **Deployed:** 2026-08-31
+- **Git Tag:** v2.2.0-PROJ-36
+- Vercel-Build grün, Nutzer hat auf Produktion visuell bestätigt: Ernährung-Hub mit 8 Einträgen, Redirect von `/rezepte` auf `/ernaehrung/rezepte` funktioniert.
+- Keine DB-/Env-Änderungen. Redirect-Konfiguration (`next.config.ts`) ist der einzige "riskante" Teil dieses Deploys — bei Problemen: alte Redirect-Einträge entfernen und die 3 Ordner zurück nach `src/app/{rezepte,saettigungsmatrix,wie-esse-ich-richtig}` verschieben (Rollback via Vercel "Promote to Production" auf den vorherigen Deploy ist der schnellere Weg).
