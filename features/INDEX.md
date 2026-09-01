@@ -55,7 +55,7 @@
 | PROJ-37 | So geht abnehmen (inkl. Kcal-Rechner) | P1 | Deployed | PROJ-36 | [Spec](PROJ-37-so-geht-abnehmen.md) |
 | PROJ-38 | Emotionales Essen (Refinement: Onboarding, Timer, Atemübung, Reiz-Ampel "Complete") | P2 | Deployed | PROJ-36 | [Spec](PROJ-38-emotionales-essen.md) |
 | PROJ-39 | Heißhunger | P2 | Deployed | PROJ-36, PROJ-38 | [Spec](PROJ-39-heisshunger.md) |
-| PROJ-40 | Kalorien | P2 | Architected | PROJ-36, PROJ-37 | [Spec](PROJ-40-kalorien.md) |
+| PROJ-40 | Kalorien | P2 | In Progress | PROJ-36, PROJ-37 | [Spec](PROJ-40-kalorien.md) |
 | PROJ-41 | Kalorien zählen | P2 | Roadmap | PROJ-36 | — |
 
 <!-- Add features above this line -->

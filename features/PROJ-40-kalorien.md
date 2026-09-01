@@ -188,6 +188,13 @@ Kein neues Datenmodell nötig. Genutzt wird exakt dasselbe Muster wie bei "Heiß
 
 Keine neuen Pakete nötig — vollständig mit den bereits installierten shadcn/ui-Komponenten und Tailwind CSS umsetzbar.
 
+## Implementation Notes (Frontend)
+- Neu: `src/components/kalorien-guide.tsx` — Intro-Text + 2 Bereiche (1 Punkt "Was sind Kalorien" ohne Sektions-Label, 5 Punkte unter "Die Makronährstoffe"), nutzt `ArbeitspunkteListe` mit eigenem `localStorage`-Key (`kal_completed`).
+- Neu: `src/components/protein-quellen-uebersicht.tsx` — 3 gestapelte Karten (40 %/30 %/20 % Proteinanteil), je 3 Zeilen (🥩 Tierisch/🧀 Vegetarisch/🌱 Vegan), Daten 1:1 aus der vom Nutzer bereitgestellten Grafik übernommen.
+- `src/app/ernaehrung/kalorien/page.tsx`: Platzhalter aus PROJ-36 durch `KalorienGuide` ersetzt.
+- Die Satzeinleitung "Unsere Kalorien werden zum Großteil aus den Makronährstoffen berechnet…" aus dem Spec-Entwurf wurde als Lead-in des ersten Punkts im Bereich "Die Makronährstoffe" (Proteine) platziert statt als eigener Sektions-Absatz, da `ArbeitspunkteListe` pro Sektion nur ein kurzes Label, keinen Fließtext unterstützt. Die äußere Seiten-Einleitung wurde stattdessen neu formuliert ("Kalorien und Makronährstoffe — die Bausteine deiner Ernährung, einfach erklärt."), angelehnt an den bestehenden Hub-Untertitel für diese Seite.
+- `npm run build`, `npm run lint`, `npm test` (415/415) fehlerfrei. Verifiziert per Playwright-Skript (Text-Check + Screenshot nach Animations-Settle): Intro, alle 6 Arbeitspunkte in korrekter Reihenfolge inkl. Sektions-Divider "DIE MAKRONÄHRSTOFFE", Link zu "So geht abnehmen" korrekt, alle 3 Proteinquellen-Karten mit korrekten Daten sichtbar.
+
 ## QA Test Results
 _To be added by /qa_
 
