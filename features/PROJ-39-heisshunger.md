@@ -1,6 +1,6 @@
 # PROJ-39: Heißhunger
 
-## Status: Planned
+## Status: Deployed
 **Created:** 2026-09-01
 **Last Updated:** 2026-09-01
 
@@ -223,4 +223,6 @@ Keine.
 - **Recommendation:** Deploy
 
 ## Deployment
-_To be added by /deploy_
+- **Production URL:** https://satt.mehralsabnehmen.de/ernaehrung/heisshunger
+- **Deployed:** 2026-09-01 (Vercel auto-deploy via Push zu `main`, commits `37a3411`..`f0c02b0`)
+- **Verified in Produktion:** Nutzer hat die Live-Seite geprüft, alles grün ("Alles auf Grün").
