@@ -155,6 +155,12 @@ Kein neues Datenmodell nötig. Genutzt wird exakt dasselbe Muster wie bei "Emoti
 
 Keine neuen Pakete nötig — vollständig mit den bereits installierten shadcn/ui-Komponenten und Tailwind CSS umsetzbar.
 
+## Implementation Notes (Frontend)
+- Neu: `src/components/heisshunger-guide.tsx` — Intro-Text + 4 flache Arbeitspunkte (keine Sektions-Gruppierung), nutzt `ArbeitspunkteListe` mit eigenem `localStorage`-Key (`hh_completed`).
+- Neu: `src/components/blutzucker-vergleichs-grafik.tsx` — 2 rein illustrative SVG-Kurven (kein echtes Chart, keine Achsen/Werte) im selben Stil wie `WochenBalkenDiagramm` (PROJ-37): Achterbahn-Kurve (6 Mahlzeiten, amber) vs. sanftere 3-Peaks-Kurve (grün).
+- `src/app/ernaehrung/heisshunger/page.tsx`: Platzhalter aus PROJ-36 durch `HeisshungerGuide` ersetzt.
+- `npm run build`, `npm run lint`, `npm test` (415/415) fehlerfrei. Verifiziert per Playwright-Skript (Text- und Screenshot-Check nach Animations-Settle) statt Browser-Tool-Screenshot, da Letzteres bei diesem Feature zwischenzeitlich Navigations-Probleme zeigte — Playwright bestätigt: Intro sichtbar, alle 4 Arbeitspunkte in korrekter Reihenfolge, beide Blutzucker-Kurven rendern korrekt (Achterbahn-Zickzack vs. sanfte 3-Peaks-Kurve), Stress-Link zeigt auf `/ernaehrung/emotionales-essen`, Screentime-Reflexionsfragen sichtbar, genau 4 nummerierte Beobachtungspunkte bei "Sehen, riechen, schmecken & hören".
+
 ## QA Test Results
 _To be added by /qa_
 
