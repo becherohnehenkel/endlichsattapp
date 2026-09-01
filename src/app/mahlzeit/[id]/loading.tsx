@@ -13,7 +13,7 @@ export default function MahlzeitDetailLoading() {
         <div className="w-16" />
       </header>
 
-      <main className="px-4 py-6 max-w-sm mx-auto space-y-6">
+      <main className="px-4 py-6 max-w-sm md:max-w-[850px] mx-auto space-y-6">
         {/* Annahmen-Collapsible */}
         <Skeleton className="h-10 w-full rounded-lg" />
 

@@ -55,7 +55,7 @@ export default function RezeptBibliothek({
   }, [rezepte, query, activeTag, ownerFilter])
 
   return (
-    <div className="max-w-sm mx-auto px-4 py-5 space-y-4">
+    <div className="max-w-sm md:max-w-[850px] mx-auto px-4 py-5 space-y-4">
 
       {/* PROJ-30: Eigentümer-Filter */}
       {showEigeneFilter && (

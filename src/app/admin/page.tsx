@@ -20,7 +20,7 @@ export default async function AdminPage() {
         <p className="text-xs text-muted-foreground">Mehralsabnehmen</p>
       </header>
 
-      <main className="max-w-sm mx-auto px-4 py-8 space-y-3">
+      <main className="max-w-sm md:max-w-[850px] mx-auto px-4 py-8 space-y-3">
         <Link
           href="/admin/rezepte"
           className="flex items-center gap-3 p-4 rounded-xl border border-border bg-card hover:bg-[#DFF0F2] transition-colors"

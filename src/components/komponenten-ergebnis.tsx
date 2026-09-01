@@ -40,7 +40,7 @@ export default function KomponentenErgebnis({ result, assumptions, onReset, phot
   const k = result.komponente
 
   return (
-    <main className="px-4 py-6 max-w-sm mx-auto space-y-6">
+    <main className="px-4 py-6 max-w-sm md:max-w-[850px] mx-auto space-y-6">
 
       {/* Annahmen + optionales Foto */}
       {(allAssumptions.length > 0 || photoUrl) && (

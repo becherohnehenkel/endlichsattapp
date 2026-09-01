@@ -3,7 +3,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 export default function KontoLoading() {
   return (
     <div className="min-h-screen bg-background">
-      <main className="max-w-sm mx-auto px-4 py-8 space-y-4">
+      <main className="max-w-sm md:max-w-[850px] mx-auto px-4 py-8 space-y-4">
         {/* Konto-Karte */}
         <div className="rounded-2xl border border-border bg-card p-5 space-y-5">
           {/* E-Mail */}

@@ -123,7 +123,7 @@ export default function KontoView({
         <h1 className="font-semibold text-foreground">Mein Konto</h1>
       </header>
 
-      <main className="max-w-sm mx-auto px-4 py-6 space-y-4">
+      <main className="max-w-sm md:max-w-[850px] mx-auto px-4 py-6 space-y-4">
 
         {/* Konto-Info */}
         <div className="rounded-2xl border border-border bg-card p-4 space-y-3">

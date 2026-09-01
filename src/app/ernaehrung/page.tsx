@@ -42,7 +42,7 @@ export default function ErnaehrungHubPage() {
         </Link>
       </header>
 
-      <main className="max-w-sm mx-auto px-4 py-6 space-y-2.5">
+      <main className="max-w-sm md:max-w-[850px] mx-auto px-4 py-6 space-y-2.5">
         {HUB_ENTRIES.map(({ href, title, subtitle, icon: Icon }) => (
           <Link
             key={href}

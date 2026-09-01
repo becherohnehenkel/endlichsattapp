@@ -34,7 +34,7 @@ export default async function AdminFeedbackPage() {
         </div>
       </header>
 
-      <main className="max-w-sm mx-auto px-4 py-6">
+      <main className="max-w-sm md:max-w-[850px] mx-auto px-4 py-6">
         {!feedback || feedback.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-16">Noch kein Feedback eingegangen.</p>
         ) : (

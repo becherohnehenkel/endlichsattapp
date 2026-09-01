@@ -67,7 +67,7 @@ export default async function RezeptePage() {
       )}
 
       {restricted && totalRecipeCount != null && totalRecipeCount > 0 && (
-        <div className="max-w-sm mx-auto px-4 pt-4">
+        <div className="max-w-sm md:max-w-[850px] mx-auto px-4 pt-4">
           <div className="rounded-xl border border-[#2E9E6B]/30 bg-[#DFF0F2] px-4 py-3 space-y-1">
             <p className="text-sm font-semibold text-[#0E7C86]">
               {isGuest ? 'Gastrezepte' : 'Eingeschränkte Auswahl'}

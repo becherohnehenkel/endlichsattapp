@@ -106,7 +106,7 @@ export default async function StartPage() {
         </Link>
       </header>
 
-      <main className="max-w-sm mx-auto px-4 pb-10 space-y-8">
+      <main className="max-w-sm md:max-w-[850px] mx-auto px-4 pb-10 space-y-8">
 
         {/* ── Hero: Analyse CTA ─────────────────────────────── */}
         <section className="pt-8 space-y-6">

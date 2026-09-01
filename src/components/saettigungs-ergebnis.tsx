@@ -302,7 +302,7 @@ export default function SaettigungsErgebnis({ result, assumptions, onReset, anal
   const pillarLabel = result.vorher.format === 'legacy' ? 'Die 6 Sättigungs-Bausteine' : 'Die 3 Sättigungs-Säulen'
 
   return (
-    <main className="px-4 py-6 max-w-sm mx-auto space-y-6">
+    <main className="px-4 py-6 max-w-sm md:max-w-[850px] mx-auto space-y-6">
 
       {/* Annahmen + optionales Foto — ausklappbar */}
       {(allAssumptions.length > 0 || photoUrl) && (

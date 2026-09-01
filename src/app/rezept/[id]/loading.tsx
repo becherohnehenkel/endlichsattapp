@@ -12,7 +12,7 @@ export default function RezeptDetailLoading() {
         <div className="w-16" />
       </header>
 
-      <main className="max-w-sm mx-auto px-4 py-6 space-y-6">
+      <main className="max-w-sm md:max-w-[850px] mx-auto px-4 py-6 space-y-6">
         {/* Bild */}
         <Skeleton className="w-full aspect-square rounded-xl" />
 

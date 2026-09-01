@@ -6,7 +6,7 @@ export default function RezepteLoading() {
     <div className="min-h-screen bg-background">
       <ErnaehrungSubHeader title="Rezepte" />
 
-      <main className="max-w-sm mx-auto px-4 py-6 space-y-4">
+      <main className="max-w-sm md:max-w-[850px] mx-auto px-4 py-6 space-y-4">
         {/* Filter Chips */}
         <div className="flex gap-2 overflow-hidden">
           {[1, 2, 3, 4].map(i => (

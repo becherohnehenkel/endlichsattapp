@@ -344,7 +344,7 @@ export default function MahlzeitInput({ userId, photoScansRemaining, trialDaysRe
 
   if (step === 'confirming') {
     return (
-      <main className="px-4 py-6 max-w-sm mx-auto space-y-6">
+      <main className="px-4 py-6 max-w-sm md:max-w-[850px] mx-auto space-y-6">
         <ZutatenlisteBestaetigung
           ingredients={ingredients}
           assumptions={assumptions}
@@ -384,7 +384,7 @@ export default function MahlzeitInput({ userId, photoScansRemaining, trialDaysRe
 
   if (step === 'questions') {
     return (
-      <main className="px-4 py-6 max-w-sm mx-auto space-y-6">
+      <main className="px-4 py-6 max-w-sm md:max-w-[850px] mx-auto space-y-6">
         <div className="space-y-1">
           <Badge variant="secondary" className="text-xs">
             Kurze Rückfrage · Runde {currentRound} von 3
@@ -472,7 +472,7 @@ export default function MahlzeitInput({ userId, photoScansRemaining, trialDaysRe
   const showCounter = charCount >= 800
 
   return (
-    <main className="px-4 py-6 max-w-sm mx-auto space-y-5">
+    <main className="px-4 py-6 max-w-sm md:max-w-[850px] mx-auto space-y-5">
       <div>
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
           Was hast du gegessen?

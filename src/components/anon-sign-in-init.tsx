@@ -19,7 +19,7 @@ export default function AnonSignInInit() {
   }, [router])
 
   return (
-    <main className="px-4 py-6 max-w-sm mx-auto space-y-5">
+    <main className="px-4 py-6 max-w-sm md:max-w-[850px] mx-auto space-y-5">
       <div className="space-y-2">
         <Skeleton className="h-7 w-48" />
         <Skeleton className="h-4 w-64" />

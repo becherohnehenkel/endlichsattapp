@@ -13,7 +13,7 @@ export default function HistorieLoading() {
         <div className="w-16" />
       </header>
 
-      <main className="max-w-sm mx-auto px-4 py-6 space-y-3">
+      <main className="max-w-sm md:max-w-[850px] mx-auto px-4 py-6 space-y-3">
         {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="rounded-xl border border-border bg-card p-4 space-y-2">
             <div className="flex items-center gap-3">
