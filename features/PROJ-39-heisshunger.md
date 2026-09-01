@@ -107,12 +107,53 @@
 <!-- Added by /architecture -->
 | Decision | Rationale | Date |
 |----------|-----------|------|
+| Bestehende `ArbeitspunkteListe`-Komponente wiederverwenden statt neu bauen | Einheitliches Verhalten über alle 4 Ernährungs-Guides, kein zusätzlicher Entwicklungsaufwand | 2026-09-01 |
+| Neue kleine Grafik-Komponente für den Blutzucker-Vergleich statt Wiederverwendung von `WochenBalkenDiagramm` | Anderer Darstellungsbedarf — durchgehender Kurvenverlauf statt 7 einzelne Tages-Balken; bleibt aber im selben rein illustrativen, CSS-basierten Stil ohne Chart-Bibliothek | 2026-09-01 |
+| Kein Erstbesucher-Onboarding (Auto-Öffnen/Pulse/Dialog) wie bei PROJ-38 | War eine gezielte Einführung ins Akkordeon-Konzept selbst — Nutzer kennen das Muster inzwischen aus 3 anderen Guides, spart Aufwand | 2026-09-01 |
+| Kein Backend / keine neue API-Route | Reiner Lese-Inhalt, identisch zum Muster von PROJ-38 und Teilen von PROJ-37 | 2026-09-01 |
 
 ---
 <!-- Sections below are added by subsequent skills -->
 
 ## Tech Design (Solution Architect)
-_To be added by /architecture_
+
+### A) Komponenten-Struktur
+
+```
+/ernaehrung/heisshunger (Seite, ersetzt den bestehenden Platzhalter aus PROJ-36)
++-- ErnaehrungSubHeader ("Heißhunger") — bestehende Komponente, unverändert
++-- HeisshungerGuide (neu, analog zu EmotionalesEssenGuide)
+    +-- Intro-Text
+    +-- ArbeitspunkteListe (bestehende Komponente) — 4 flache Punkte, keine Sektions-Gruppierung
+        +-- 1. Konstante Energie
+        |     +-- Erklärtext (Blutzucker-Zusammenhang)
+        |     +-- BlutzuckerVergleichsGrafik (neu) — 2 illustrative Kurven nebeneinander
+        |     +-- Bonus-Tipp-Kasten
+        +-- 2. Stress
+        |     +-- Kurztext + Link auf /ernaehrung/emotionales-essen
+        +-- 3. Screentime und Content
+        |     +-- Erklärtext
+        |     +-- 4 Reflexionsfragen
+        |     +-- Handlungsempfehlung
+        +-- 4. Sehen, riechen, schmecken & hören
+              +-- Erklärtext
+              +-- 4 nummerierte Beobachtungspunkte
+```
+
+### B) Datenmodell (einfache Sprache)
+
+Kein neues Datenmodell nötig. Genutzt wird exakt dasselbe Muster wie bei "Emotionales Essen": Welche der 4 Punkte als "Verstanden" markiert wurden, wird im Browser gespeichert (eigener Speicher-Schlüssel, damit sich der Fortschritt nicht mit anderen Guides überschneidet). Kein Server, kein Nutzerkonto nötig — funktioniert identisch für eingeloggte Nutzer und Gäste.
+
+### C) Tech-Entscheidungen (Begründung für PM)
+
+- **Kein Backend, keine neue API-Route.** Die Seite ist reiner Lese-Inhalt, genau wie "Emotionales Essen" und große Teile von "So geht abnehmen". Das hält die Umsetzung schnell und wartungsarm.
+- **Bestehende Arbeitspunkte-Komponente wiederverwenden statt neu bauen.** Sorgt automatisch für ein einheitliches Verhalten (Auf-/Zuklappen, Fortschrittsbalken, "Verstanden"-Button) über alle 4 Ernährungs-Guides hinweg — Nutzer müssen sich nicht an eine neue Bedienung gewöhnen.
+- **Eine neue, kleine Grafik-Komponente für den Blutzucker-Vergleich.** Die bestehende Balkendiagramm-Komponente (genutzt bei "So geht abnehmen" für Wöchentlich-vs-Täglich) passt vom Baustil her nicht — dort geht es um 7 einzelne Tage als Balken, hier um einen durchgehenden Kurvenverlauf mit Auf und Ab. Deshalb eine neue, ebenso einfache, rein illustrative Komponente (keine echten Messwerte, keine Chart-Bibliothek) im selben visuellen Stil.
+- **Kein Erstbesucher-Onboarding (Auto-Öffnen/Pulsieren/Erklär-Overlay) wie bei "Emotionales Essen".** Das war dort eine gezielte Einführung in das neue Akkordeon-Konzept selbst. Nutzer kennen dieses Konzept inzwischen aus 3 anderen Guides — für Heißhunger nicht nötig, spart Entwicklungsaufwand. Kann bei Bedarf später ergänzt werden.
+
+### D) Abhängigkeiten (zu installierende Pakete)
+
+Keine neuen Pakete nötig — vollständig mit den bereits installierten shadcn/ui-Komponenten und Tailwind CSS umsetzbar.
 
 ## QA Test Results
 _To be added by /qa_
