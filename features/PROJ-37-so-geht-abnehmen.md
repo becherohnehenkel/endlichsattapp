@@ -302,3 +302,4 @@ Eine neue API-Route zum Speichern der Rechner-Eingaben für eingeloggte Nutzer (
 - **Git Tag:** v2.3.0-PROJ-37
 - Vercel-Build grün, Nutzer hat auf Produktion visuell bestätigt: Kcal-Rechner berechnet korrekt, Werte + Ergebnis bleiben nach Reload erhalten.
 - DB-Migration (6 neue `profiles`-Spalten) war bereits vor diesem Deploy live angewendet (manuell vom Nutzer, da Supabase-MCP getrennt war) — kein zusätzlicher DB-Schritt bei diesem Deploy nötig.
+- **Refinement-Deploy 2026-09-01** (Vercel auto-deploy via Push zu `main`, commits `3e0fb64`..`2e7aae4`, Tag `v2.8.0-ernaehrung-guides`): Teil eines gebündelten Deploys über PROJ-34/37/38/39/40/41 — Erstbesucher-Auto-Open + neue Überschriften auf mehreren Ernährungs-Guides. Nutzer hat auf Produktion visuell bestätigt ("Alles auf Grün").

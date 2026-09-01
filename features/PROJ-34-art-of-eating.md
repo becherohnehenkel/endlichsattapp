@@ -202,6 +202,7 @@ Der vorbestehende, kosmetische React-Hydration-Warnhinweis in `rating-ring.tsx` 
 **Git Tag:** v2.0.0-complete-umstrukturierung (gemeinsamer Release mit PROJ-4/5/16/8/33 + Rebranding)
 **Neue Env-Variablen:** keine (rein clientseitig, kein Backend)
 **DB-Migrationen:** keine
+- **Refinement-Deploy 2026-09-01** (Vercel auto-deploy via Push zu `main`, commits `3e0fb64`..`2e7aae4`, Tag `v2.8.0-ernaehrung-guides`): Teil eines gebündelten Deploys über PROJ-34/37/38/39/40/41 — bei `wie-esse-ich-richtig` neue Überschrift "Richtig Essen" + Intro-Text, Erstbesucher-Auto-Open, sowie "gesund"-Wort-Fix im Fun-Fact zu "Schaffe den richtigen Rahmen". Nutzer hat auf Produktion visuell bestätigt ("Alles auf Grün").
 
 ### Post-Deployment Verification
 - [x] `/wie-esse-ich-richtig` lädt fehlerfrei, enthält weiterhin alle sechs Prinzipien (Guide unverändert)

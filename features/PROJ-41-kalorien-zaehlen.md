@@ -211,3 +211,4 @@ Keine.
 - **Production URL:** https://satt.mehralsabnehmen.de/ernaehrung/kalorien-zaehlen
 - **Deployed:** 2026-09-01 (Vercel auto-deploy via Push zu `main`, commits `d9fc95d`..`1159dca`)
 - **Verified in Produktion:** Nutzer hat die Live-Seite geprüft, alles grün ("Alles auf Grün").
+- **Refinement-Deploy 2026-09-01** (Vercel auto-deploy via Push zu `main`, commits `3e0fb64`..`2e7aae4`, Tag `v2.8.0-ernaehrung-guides`): Teil eines gebündelten Deploys über PROJ-34/37/38/39/40/41 — Erstbesucher-Auto-Open (erster Punkt öffnet automatisch) + neue Überschrift/Intro "Warum das Alles?". Nutzer hat auf Produktion visuell bestätigt ("Alles auf Grün").
