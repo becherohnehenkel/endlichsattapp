@@ -327,11 +327,9 @@ export function EmotionalesEssenGuide({ tagesKcal }: EmotionalesEssenGuideProps)
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <p className="text-foreground leading-relaxed">
-          Trauer, Wut, Überforderung, Stress — das sind menschliche Emotionen, die auch zu einem &quot;gesunden&quot; Leben dazugehören können. Aber keine davon lässt sich mit etwas zu essen lösen. Wie du stattdessen damit umgehen kannst, zeige ich dir hier.
-        </p>
-        <p className="text-xs text-muted-foreground leading-relaxed">
-          Langeweile gibt es eigentlich nicht wirklich — meistens ist es ein Zeichen für Dauerstimulation. Klebst du ständig am Screen? Kopfhörer immer drin? Deine Sinne (Hören, Sehen, Riechen, Fühlen) sind permanent gereizt. Und was passt da super dazu? Genau: Geschmack, Kauen, ein tolles Mundgefühl. Die vermeintliche Langeweile ist oft nur ein fehlender Reiz, den du mit Essen oder Trinken füllen willst.
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Emotionales Abnehmen</h1>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          Trauer, Wut, Überforderung, Stress — echte Emotionen, aber keine lässt sich mit Essen lösen. Oft ist es auch nur Langeweile: ein fehlender Reiz für deine Sinne, den du unbewusst mit Essen füllst. Wie es anders geht, zeige ich dir hier.
         </p>
       </div>
 

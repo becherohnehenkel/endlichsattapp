@@ -21,10 +21,11 @@ async function oeffneArbeitspunkt(page: Page, titel: string) {
 // ─── Seitenstruktur ─────────────────────────────────────────────────────────
 
 test.describe('Seitenstruktur', () => {
-  test('AC: zeigt den Intro-Text zu emotionalem Essen', async ({ page }) => {
+  test('AC: zeigt die Überschrift und den Intro-Text zu emotionalem Essen', async ({ page }) => {
     await page.goto('/ernaehrung/emotionales-essen')
+    await expect(page.getByRole('heading', { name: 'Emotionales Abnehmen', exact: true })).toBeVisible()
     await expect(page.getByText(/Trauer, Wut, Überforderung, Stress/)).toBeVisible()
-    await expect(page.getByText(/Langeweile gibt es eigentlich nicht wirklich/)).toBeVisible()
+    await expect(page.getByText(/Wie es anders geht, zeige ich dir hier/)).toBeVisible()
   })
 
   test('AC: zeigt 9 Arbeitspunkte in 2 Sektionen mit den korrekten Überschriften', async ({ page }) => {

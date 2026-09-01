@@ -258,6 +258,11 @@ Letzte Anpassungsrunde des Nutzers, um die verbliebenen reinen Text-Arbeitspunkt
 - 3 neue E2E-Tests (`Onboarding (Erstbesucher-Hinweis)`): Auto-Öffnen + Pulse + Dialog-Anzeige; Dialog bleibt nach Wegklicken + Reload dauerhaft verschwunden; eigene Interaktion vor dem Auto-Öffnen bricht die gesamte Sequenz ab. `PROJ-38`-Suite: 23/23 (chromium).
 - `npm run build`, `npm run lint` (0 Fehler, 1 vorbestehende Warnung), `npm test` (415/415) grün.
 
+### Refinement (2026-09-01, Teil 6): Überschrift "Emotionales Abnehmen" + Intro gekürzt
+Konsistent mit der neuen Überschrift bei "So geht abnehmen": `<h1>Emotionales Abnehmen</h1>` ergänzt. Der bisherige zweiabsätzige Intro-Text (Emotionen + Langeweile-Erklärung, insgesamt ~120 Wörter) wurde auf Nutzerwunsch ("kürze ihn, damit man nicht von ihm überfordert wird") zu einem einzigen, knappen Absatz (~35 Wörter) verdichtet — behält beide Kernaussagen (Emotionen lösen sich nicht durch Essen; vermeintliche Langeweile ist oft fehlender Sinnesreiz), lässt aber die ausführliche Screen/Kopfhörer-Beispielliste weg.
+- `tests/PROJ-38-emotionales-essen.spec.ts`: bestehenden Intro-Test auf Überschrift + neuen (kürzeren) Text aktualisiert. Volle Suite: 46/46 (chromium + Mobile Chrome).
+- `npm run build`, `npm run lint`, `npm test` (415/415) weiterhin grün.
+
 ## QA Test Results
 
 **Tested:** 2026-08-31
