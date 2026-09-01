@@ -29,16 +29,17 @@ const SEKTIONEN: ArbeitspunkteSektion[] = [
 export default function ArtOfEatingGuide() {
   return (
     <div className="space-y-6">
-      <div className="space-y-1.5">
-        <p className="text-foreground leading-relaxed">
-          Die meisten Menschen glauben, Essen zu können. Wenige tun es wirklich.
+      <div className="space-y-2">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Richtig Essen</h1>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          Die meisten Menschen glauben, Essen zu können. Wenige tun es wirklich. Dieser Guide hilft dir dabei.
         </p>
-        <p className="text-xs text-muted-foreground">Dieser Guide hilft dir dabei.</p>
       </div>
 
       <ArbeitspunkteListe
         storageKey="aoe_completed"
         sektionen={SEKTIONEN}
+        ersterPunktOnboarding={{ autoOpenNachMs: 700 }}
         celebration={
           <div className="rounded-2xl border border-[#2E9E6B]/30 bg-[#DFF0F2] p-5 text-center space-y-2">
             <p className="text-3xl">🧘</p>

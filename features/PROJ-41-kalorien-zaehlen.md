@@ -97,6 +97,7 @@ Keine — Inhalt final, inklusive der vom Nutzer präzisierten Grafik-Idee für 
 | "Jetzt vs. Zukunft"-Vergleich mit vorhandenen Gesichts-Icons (neutral/grau vs. lächelnd/grün) aus der bereits installierten Icon-Bibliothek statt einer Custom-Illustration | Kein neues Paket, kein Custom-SVG nötig, gleiche visuelle Aussage schneller umsetzbar | 2026-09-01 |
 | Kein Erstbesucher-Onboarding wie bei PROJ-38 | War eine einmalige, gezielte Einführung ins Akkordeon-Konzept selbst — nicht pro Guide nötig | 2026-09-01 |
 | Kein Backend / keine neue API-Route | Reiner Lese-Inhalt, identisch zum Muster von PROJ-38/39/40 | 2026-09-01 |
+| **Refinement 2026-09-01:** `ersterPunktOnboarding={{ autoOpenNachMs: 700 }}` doch ergänzt (erster Arbeitspunkt klappt beim Laden automatisch auf) | Löst die Entscheidung "Kein Erstbesucher-Onboarding" (Zeile oben) teilweise ab — Nutzerwunsch nach konsistentem Auto-Open-Verhalten über alle Ernährung-Guides hinweg (ohne Pulse/Dialog, die bleiben PROJ-38-exklusiv). `pulseNachMs` in `ArbeitspunkteListe` dafür optional gemacht. | 2026-09-01 |
 
 ---
 <!-- Sections below are added by subsequent skills -->

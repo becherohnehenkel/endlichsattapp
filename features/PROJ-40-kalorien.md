@@ -146,6 +146,7 @@ Keine — Inhalt final, inklusive der vom Nutzer bereitgestellten Protein-Quelle
 | Protein-Quellen als 3 gestapelte Karten (eine pro Prozent-Stufe) statt einer Tabelle | Kommagetrennte Lebensmittel-Listen passen besser in breite Zeilen als in schmale Tabellenspalten (anders als bei PROJ-39s kurzen Einzelwerten) | 2026-09-01 |
 | Kein Erstbesucher-Onboarding wie bei PROJ-38 | War eine einmalige, gezielte Einführung ins Akkordeon-Konzept selbst — nicht pro Guide nötig | 2026-09-01 |
 | Kein Backend / keine neue API-Route | Reiner Lese-Inhalt, identisch zum Muster von PROJ-38/39 | 2026-09-01 |
+| **Refinement 2026-09-01:** Neue Überschrift "Kalorien und Makronährstoffe" + Intro-Text ergänzt, `ersterPunktOnboarding={{ autoOpenNachMs: 700 }}` ergänzt (erster Arbeitspunkt klappt beim Laden automatisch auf) | Löst die Entscheidung "Kein Erstbesucher-Onboarding" (Zeile oben) teilweise ab — Nutzerwunsch nach konsistentem Auto-Open-Verhalten über alle Ernährung-Guides hinweg. Der neue Intro-Text erwähnt "Alkohol", was den bestehenden Reihenfolge-Test brach (Substring-Kollision mit dem Arbeitspunkt-Titel) — Test auf `boundingBox()`-Vergleich der Trigger-Buttons statt Text-Index umgestellt. | 2026-09-01 |
 
 ---
 <!-- Sections below are added by subsequent skills -->

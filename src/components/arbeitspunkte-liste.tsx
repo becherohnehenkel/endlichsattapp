@@ -54,19 +54,18 @@ interface ArbeitspunkteListeProps {
    */
   defaultOffenIds?: number[]
   /**
-   * Onboarding-Hinweis für Erstbesucher: öffnet den allerersten Arbeitspunkt automatisch
-   * nach `autoOpenNachMs`, lässt danach dessen "Verstanden"-Button nach `pulseNachMs`
-   * pulsieren (zeigt, dass er anklickbar ist), und zeigt optional danach ein einmaliges
-   * Erklär-Dialog (per `dialog.storageKey` dauerhaft in localStorage gemerkt). Alle drei
-   * Schritte werden abgebrochen, sobald der Nutzer selbst irgendeinen Punkt bedient — sonst
-   * würde z. B. das Dialog-Overlay eine parallel laufende eigene Interaktion blockieren.
-   * Wird komplett übersprungen, wenn der erste Punkt schon abgeschlossen ist. Nur für
-   * Emotionales Essen aktiviert — die anderen beiden Guides (Art of Eating, So geht
-   * abnehmen) nutzen diese Komponente unverändert ohne Onboarding.
+   * Öffnet den allerersten Arbeitspunkt automatisch nach `autoOpenNachMs` (bei jedem
+   * Seitenaufruf, nicht nur einmalig) — zeigt Erstbesuchern direkt, wie ein Punkt aussieht.
+   * Optional lässt `pulseNachMs` danach den "Verstanden"-Button pulsieren (zeigt, dass er
+   * anklickbar ist), und `dialog` zeigt zusätzlich ein einmaliges Erklär-Overlay (per
+   * `dialog.storageKey` dauerhaft in localStorage gemerkt, taucht danach nie wieder auf).
+   * Alle Schritte werden abgebrochen, sobald der Nutzer selbst irgendeinen Punkt bedient —
+   * sonst würde z. B. das Dialog-Overlay eine parallel laufende eigene Interaktion blockieren.
+   * Wird komplett übersprungen, wenn der erste Punkt schon abgeschlossen ist.
    */
   ersterPunktOnboarding?: {
     autoOpenNachMs: number
-    pulseNachMs: number
+    pulseNachMs?: number
     dialog?: { nachMs: number; storageKey: string; titel: string; text: string; buttonText: string }
   }
 }
@@ -113,10 +112,12 @@ export function ArbeitspunkteListe({ storageKey, sektionen, celebration, default
       // direkt nach click() zurücksetzen, sondern erst einen Tick später.
       setTimeout(() => { autoKlickLaeuftRef.current = false }, 0)
     }, ersterPunktOnboarding.autoOpenNachMs)
-    const pulseTimer = setTimeout(() => {
-      if (interagiertRef.current) return
-      setPulsierendeId(ersterPunktId)
-    }, ersterPunktOnboarding.pulseNachMs)
+    const pulseTimer = ersterPunktOnboarding.pulseNachMs != null
+      ? setTimeout(() => {
+          if (interagiertRef.current) return
+          setPulsierendeId(ersterPunktId)
+        }, ersterPunktOnboarding.pulseNachMs)
+      : null
 
     const dialog = ersterPunktOnboarding.dialog
     let dialogTimer: ReturnType<typeof setTimeout> | null = null
@@ -133,7 +134,7 @@ export function ArbeitspunkteListe({ storageKey, sektionen, celebration, default
 
     return () => {
       clearTimeout(openTimer)
-      clearTimeout(pulseTimer)
+      if (pulseTimer) clearTimeout(pulseTimer)
       if (dialogTimer) clearTimeout(dialogTimer)
     }
     // Nur beim Mount einplanen — soll nicht erneut anlaufen, wenn sich `completed` später ändert.

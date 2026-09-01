@@ -30,8 +30,6 @@ test.describe('Seitenstruktur', () => {
   test('AC: zeigt 2 Bereiche mit 6 Punkten in der richtigen Reihenfolge', async ({ page }) => {
     await page.goto('/ernaehrung/kalorien')
     await expect(page.getByText('Die Makronährstoffe')).toBeVisible()
-    const main = page.locator('main')
-    const text = await main.innerText()
     const titel = [
       'Was sind Kalorien',
       'Proteine',
@@ -40,8 +38,12 @@ test.describe('Seitenstruktur', () => {
       'Ballaststoffe',
       'Alkohol',
     ]
-    const positions = titel.map(t => text.indexOf(t))
-    expect(positions.every(p => p >= 0)).toBe(true)
+    const positions: number[] = []
+    for (const t of titel) {
+      const box = await page.getByRole('button', { name: t }).boundingBox()
+      expect(box).not.toBeNull()
+      positions.push(box!.y)
+    }
     expect(positions).toEqual([...positions].sort((a, b) => a - b))
   })
 

@@ -88,7 +88,11 @@ export function HeisshungerGuide() {
         Heißhunger fühlt sich plötzlich an — ist er aber selten. Bekommt dein Körper deutlich weniger Energie als sonst, meldet er sich lauter: Hunger. Heißhunger entsteht meist, wenn das Kaloriendefizit zu groß ist. Deshalb arbeiten wir mit einem kleinen Defizit und tasten uns langsam an dein Ziel heran.
       </p>
 
-      <ArbeitspunkteListe storageKey="hh_completed" sektionen={SEKTIONEN} />
+      <ArbeitspunkteListe
+        storageKey="hh_completed"
+        sektionen={SEKTIONEN}
+        ersterPunktOnboarding={{ autoOpenNachMs: 700 }}
+      />
     </div>
   )
 }

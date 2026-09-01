@@ -49,7 +49,11 @@ export function KalorienZaehlenGuide() {
         Kalorienzählen ist ein Werkzeug auf Zeit — kein Dauerzustand.
       </p>
 
-      <ArbeitspunkteListe storageKey="kalz_completed" sektionen={SEKTIONEN} />
+      <ArbeitspunkteListe
+        storageKey="kalz_completed"
+        sektionen={SEKTIONEN}
+        ersterPunktOnboarding={{ autoOpenNachMs: 700 }}
+      />
     </div>
   )
 }

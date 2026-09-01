@@ -67,6 +67,21 @@ const MAHLZEIT_RESULT = {
   },
 }
 
+test.describe('Art of Eating Guide-Seite: Struktur', () => {
+  test('AC: zeigt Überschrift und Intro-Text', async ({ page }) => {
+    await page.goto('/ernaehrung/wie-esse-ich-richtig')
+    await expect(page.getByRole('heading', { name: 'Richtig Essen' })).toBeVisible()
+    await expect(page.getByText(/Die meisten Menschen glauben, Essen zu können/)).toBeVisible()
+  })
+
+  test('AC: erster Arbeitspunkt startet eingeklappt und öffnet sich automatisch', async ({ page }) => {
+    await page.goto('/ernaehrung/wie-esse-ich-richtig')
+    const trigger = page.getByRole('button', { name: 'Schaffe den richtigen Rahmen' })
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false')
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true', { timeout: 2000 })
+  })
+})
+
 test.describe('Art of Eating: erscheint bei allen drei neuen Analyse-Typen', () => {
   test('Mahlzeit (neu-Format) zeigt den dezenten, rotierenden Hinweis mit Link zum Guide', async ({ page }) => {
     await loginAs(page)

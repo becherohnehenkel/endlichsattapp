@@ -137,11 +137,18 @@ const SEKTIONEN: ArbeitspunkteSektion[] = [
 export function KalorienGuide() {
   return (
     <div className="space-y-6">
-      <p className="text-foreground leading-relaxed">
-        Kalorien und Makronährstoffe — die Bausteine deiner Ernährung, einfach erklärt.
-      </p>
+      <div className="space-y-2">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Kalorien und Makronährstoffe</h1>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          Alle Informationen, die für deine Ernährung wichtig sind, findest du hier. Außerdem gibt es eine Menge Beispiele, woher du was bekommst … außer beim Alkohol. Ich glaube, das weißt du schon, woher der kommt ;-)
+        </p>
+      </div>
 
-      <ArbeitspunkteListe storageKey="kal_completed" sektionen={SEKTIONEN} />
+      <ArbeitspunkteListe
+        storageKey="kal_completed"
+        sektionen={SEKTIONEN}
+        ersterPunktOnboarding={{ autoOpenNachMs: 700 }}
+      />
     </div>
   )
 }
