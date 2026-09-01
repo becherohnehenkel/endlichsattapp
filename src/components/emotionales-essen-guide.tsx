@@ -335,7 +335,21 @@ export function EmotionalesEssenGuide({ tagesKcal }: EmotionalesEssenGuideProps)
         </p>
       </div>
 
-      <ArbeitspunkteListe storageKey="ee_completed" sektionen={sektionen} />
+      <ArbeitspunkteListe
+        storageKey="ee_completed"
+        sektionen={sektionen}
+        ersterPunktOnboarding={{
+          autoOpenNachMs: 700,
+          pulseNachMs: 1000,
+          dialog: {
+            nachMs: 1900,
+            storageKey: 'ee_onboarding_dismissed',
+            titel: 'So funktioniert’s',
+            text: 'Jeder Punkt zeigt dir eine konkrete Übung gegen emotionales Essen — von der Emotion direkt ansetzen (Traurig, Wütend, Überfordert) bis zu allgemeinen Praxis-Übungen wie Journaling oder der Atemübung. Klick einen Punkt auf, probier die Übung aus und markier sie mit "Verstanden" als erledigt — dein Fortschritt bleibt gespeichert.',
+            buttonText: 'Alles klar, los geht’s',
+          },
+        }}
+      />
     </div>
   )
 }

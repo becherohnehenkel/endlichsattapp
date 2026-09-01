@@ -237,6 +237,27 @@ Letzte Anpassungsrunde des Nutzers, um die verbliebenen reinen Text-Arbeitspunkt
 - Neue, robustere E2E-Assertions ergänzt: für Punkt 3 wird jetzt per `boundingBox()`-Vergleich echt geprüft, dass die Struktur-Erklärung vor der Tabelle steht und die Tabelle 4 `<th>`-Spalten hat; für Punkt 6 wird per `boundingBox()`-Vergleich geprüft, dass der Rundenzähler über dem Block steht und der Block breiter als 280px ist (echte Vollbreiten-Prüfung statt nur Text-Vorhandensein).
 - `npm run build`, `npm run lint` (0 Fehler, 1 vorbestehende Warnung), `npm test` (415/415) grün. `PROJ-38`-Suite: 20/20 (chromium), volle Cross-Browser-Suite lief zusätzlich grün.
 
+### Refinement (2026-09-01, Teil 5): Atemübung-Bugfix, Kontrast-Fix, Erstbesucher-Onboarding
+**Bugfix Atemübung:** Der Block startete beim allerersten "Einatmen" bereits gefüllt statt sich sichtbar zu füllen. Ursache: der Füllstands-`<div>` war nur `{uebungsphase && (...)}` gerendert — beim Wechsel von `'countdown'` (kein Element) zu `'einatmen'` (Element wird neu gemountet mit `height: 100%`) gibt es keinen vorherigen Renderzustand, von dem die CSS-Transition aus animieren könnte. Fix: Der Füllstands-`<div>` bleibt jetzt durchgehend gemountet (auch bei 0% Höhe während `countdown`/`fertig`), sodass die Transition beim ersten "Einatmen" korrekt von 0% auf 100% läuft.
+
+**Kontrast-Fix:** Die graue Anweisungs-Schrift war auf dem dunklen Füllstands-Hintergrund (`#0E7C86`→`#2E9E6B`-Gradient) schwer lesbar. Statt die Schrift schwarz zu machen (hätte auf dem hellen `bg-muted/30`-Grund während `countdown`/`ausatmen` schlecht kontrastiert), wurde der Füllstand selbst auf einen hellen Farbton (`#DFF0F2`, das bestehende "Secondary/Accent"-Token aus dem Design-System) reduziert — Text bleibt durchgängig dunkel (`text-foreground` / `#456A6E`) und ist jetzt in jeder Phase lesbar, unabhängig vom Füllstand.
+
+**Neu — Erstbesucher-Onboarding für `ArbeitspunkteListe`:** Neuer optionaler Prop `ersterPunktOnboarding` (nur von Emotionales Essen genutzt — die anderen 2 Guides bleiben unverändert ohne Onboarding):
+1. Nach 700ms öffnet sich der erste Arbeitspunkt ("Traurig?") automatisch.
+2. Nach 1000ms pulsiert dessen "Verstanden"-Button (`animate-pulse` + Ring), um zu zeigen, dass er anklickbar ist.
+3. Nach 1900ms erscheint ein einmaliges Dialog-Overlay (shadcn `Dialog`), das erklärt, wie die Punkte funktionieren und wie sie beim emotionalen Essen helfen. Wegklicken (Overlay-Klick, Escape oder Button) merkt sich das dauerhaft in `localStorage` (`ee_onboarding_dismissed`) — taucht danach nie wieder auf.
+4. Interagiert der Nutzer selbst mit irgendeinem Punkt, BEVOR einer dieser drei Schritte feuert, wird die gesamte restliche Sequenz abgebrochen (`interagiertRef`) — sowohl aus UX-Gründen (er hat's schon verstanden) als auch technisch zwingend: das Dialog-Overlay ist `fixed inset-0 z-50` und würde sonst jede parallel laufende eigene Bedienung blockieren.
+5. Wird komplett übersprungen, wenn der erste Punkt schon als "Verstanden" markiert ist.
+
+**Technische Design-Entscheidung — Accordion bleibt uncontrolled:** Erster Implementierungsversuch stellte das Accordion von `defaultValue` (uncontrolled) auf `value`/`onValueChange` (controlled) um, um den ersten Punkt programmatisch zu öffnen. Das brach zwei bestehende Interaktions-Tests auf nicht offensichtliche Weise (Klick auf einen anderen Trigger reagierte irgendwann gar nicht mehr — 30s-Timeout). Nach Analyse verworfen zugunsten eines deutlich kleineren Eingriffs: das Accordion bleibt vollständig `uncontrolled` (`defaultValue`, wie zuvor), das automatische Öffnen passiert per echtem simuliertem `ref.current.click()` auf den Trigger-Button — Radix verhält sich dadurch exakt wie bei einem echten Nutzerklick, ohne jedes Risiko einer controlled/uncontrolled-Inkonsistenz.
+
+**Zweiter, subtilerer Bug während der Umsetzung:** Der simulierte `.click()` fürs Auto-Öffnen löst denselben `onValueChange`-Callback aus wie ein echter Nutzerklick — dadurch wertete die Interaktions-Erkennung den eigenen Auto-Klick fälschlich als "Nutzer hat interagiert" und brach Pulse + Dialog sofort wieder ab. Fix: ein `autoKlickLaeuftRef`-Flag wird unmittelbar vor dem simulierten Klick gesetzt und den Callback davon absehen lässt, `interagiert` zu markieren — zurückgesetzt wird das Flag erst einen Tick später (`setTimeout(…, 0)`), da Radix' `onValueChange` hier nicht synchron innerhalb von `click()` feuert, sondern erst über einen nachgelagerten Effekt.
+
+**Das ursprünglich separate `Dialog` wurde in `ArbeitspunkteListe` konsolidiert** (statt einer eigenständigen `emotionales-essen-onboarding.tsx`), weil zwei unabhängige Geschwister-Komponenten sich sonst nicht auf denselben "hat der Nutzer schon interagiert?"-Zustand hätten abstimmen können — genau das führte zuerst zu denselben zwei kollidierenden Test-Fehlern (Dialog öffnete während eine andere Testinteraktion lief und blockierte sie).
+
+- 3 neue E2E-Tests (`Onboarding (Erstbesucher-Hinweis)`): Auto-Öffnen + Pulse + Dialog-Anzeige; Dialog bleibt nach Wegklicken + Reload dauerhaft verschwunden; eigene Interaktion vor dem Auto-Öffnen bricht die gesamte Sequenz ab. `PROJ-38`-Suite: 23/23 (chromium).
+- `npm run build`, `npm run lint` (0 Fehler, 1 vorbestehende Warnung), `npm test` (415/415) grün.
+
 ## QA Test Results
 
 **Tested:** 2026-08-31

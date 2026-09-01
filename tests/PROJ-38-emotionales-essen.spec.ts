@@ -239,6 +239,44 @@ test.describe('Ein-/Ausklappen & Fortschritt', () => {
   })
 })
 
+// ─── Onboarding (Erstbesucher-Hinweis) ──────────────────────────────────────
+
+test.describe('Onboarding (Erstbesucher-Hinweis)', () => {
+  test('AC: Erster Punkt öffnet sich automatisch kurz nach dem Laden, der "Verstanden"-Button pulsiert, danach erscheint ein einmaliges Erklär-Overlay', async ({ page }) => {
+    await page.goto('/ernaehrung/emotionales-essen')
+
+    const traurigTrigger = page.getByRole('button', { name: /Traurig/ })
+    await expect(traurigTrigger).toHaveAttribute('aria-expanded', 'true', { timeout: 2000 })
+
+    const verstandenButton = page.getByRole('button', { name: 'Verstanden', exact: true })
+    await expect(verstandenButton).toHaveClass(/animate-pulse/, { timeout: 2000 })
+
+    await expect(page.getByText('So funktioniert’s')).toBeVisible({ timeout: 3000 })
+    await expect(page.getByText(/Klick einen Punkt auf, probier die Übung aus/)).toBeVisible()
+
+    await page.getByRole('button', { name: /Alles klar, los geht/ }).click()
+    await expect(page.getByText('So funktioniert’s')).not.toBeVisible()
+  })
+
+  test('AC: Das Erklär-Overlay taucht nach dem Wegklicken nicht erneut auf', async ({ page }) => {
+    await page.goto('/ernaehrung/emotionales-essen')
+    await expect(page.getByText('So funktioniert’s')).toBeVisible({ timeout: 3000 })
+    await page.getByRole('button', { name: /Alles klar, los geht/ }).click()
+
+    await page.reload()
+    await page.waitForTimeout(2300)
+    await expect(page.getByText('So funktioniert’s')).not.toBeVisible()
+  })
+
+  test('AC: Eigene Interaktion vor dem Auto-Öffnen bricht das Onboarding ab', async ({ page }) => {
+    await page.goto('/ernaehrung/emotionales-essen')
+    await oeffneArbeitspunkt(page, 'Wütend?')
+    await page.waitForTimeout(2300)
+    await expect(page.getByText('So funktioniert’s')).not.toBeVisible()
+    await expect(page.getByRole('button', { name: /Traurig/ })).toHaveAttribute('aria-expanded', 'false')
+  })
+})
+
 // ─── Gast-Zugriff (reiner statischer Inhalt) ────────────────────────────────
 
 test.describe('Gast-Zugriff', () => {

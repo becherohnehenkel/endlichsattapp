@@ -19,10 +19,20 @@ const ZYKLUS: Zyklusschritt[] = [
 const WIEDERHOLUNGEN = 5
 const COUNTDOWN_START = 5
 
-const FUELLHOEHE: Record<Uebungsphase, number> = {
+const FUELLHOEHE: Record<Phase, number> = {
+  countdown: 0,
   einatmen: 100,
   halten: 100,
   ausatmen: 0,
+  fertig: 0,
+}
+
+const FUELL_DAUER_MS: Record<Phase, number> = {
+  countdown: 300,
+  einatmen: 4000,
+  halten: 300,
+  ausatmen: 8000,
+  fertig: 500,
 }
 
 const ANWEISUNG: Record<Uebungsphase, string> = {
@@ -121,19 +131,20 @@ export function AtemuebungAnimation() {
         {phase === 'countdown' ? 'Bereit?' : phase === 'fertig' ? 'Fertig!' : `Runde ${runde} von ${WIEDERHOLUNGEN}`}
       </p>
       <div className="relative h-32 w-full overflow-hidden rounded-2xl border-2 border-[#0E7C86]/25 bg-muted/30">
-        {uebungsphase && (
-          <div
-            className={`absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#0E7C86] to-[#2E9E6B] ${
-              uebungsphase === 'halten' ? 'animate-pulse [animation-duration:3s]' : ''
-            }`}
-            style={{
-              height: `${FUELLHOEHE[uebungsphase]}%`,
-              transitionProperty: 'height',
-              transitionDuration: `${ZYKLUS.find(z => z.phase === uebungsphase)!.dauerSek * 1000}ms`,
-              transitionTimingFunction: 'linear',
-            }}
-          />
-        )}
+        {/* Bleibt durchgehend gemountet (auch bei 0% Höhe), damit die CSS-Transition beim allerersten
+            "Einatmen" (Wechsel von 'countdown') tatsächlich von 0% aus animiert statt sofort gefüllt
+            zu erscheinen — ein neu gemountetes Element hat keinen vorherigen Zustand zum Überblenden. */}
+        <div
+          className={`absolute inset-x-0 bottom-0 bg-[#DFF0F2] ${
+            phase === 'halten' ? 'animate-pulse [animation-duration:3s]' : ''
+          }`}
+          style={{
+            height: `${FUELLHOEHE[phase]}%`,
+            transitionProperty: 'height',
+            transitionDuration: `${FUELL_DAUER_MS[phase]}ms`,
+            transitionTimingFunction: 'linear',
+          }}
+        />
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 px-4 text-center">
           {phase === 'countdown' && (
             <p className="text-2xl font-bold tabular-nums text-foreground">{countdown}</p>
@@ -141,7 +152,7 @@ export function AtemuebungAnimation() {
           {uebungsphase && (
             <>
               <p className="text-lg font-bold text-foreground">{PHASE_LABEL[uebungsphase]}</p>
-              <p className="text-[11px] text-muted-foreground">{ANWEISUNG[uebungsphase]}</p>
+              <p className="text-[11px] text-[#456A6E]">{ANWEISUNG[uebungsphase]}</p>
               {restSekunden != null && (
                 <p className="text-sm font-semibold tabular-nums text-[#0E7C86]">{restSekunden}s</p>
               )}
