@@ -136,6 +136,13 @@ Kein neues Datenmodell nötig. Genutzt wird exakt dasselbe Muster wie bei den an
 
 Keine neuen Pakete nötig — die verwendeten Icons sind Teil der bereits installierten Icon-Bibliothek, alles Weitere mit shadcn/ui und Tailwind CSS umsetzbar.
 
+## Implementation Notes (Frontend)
+- Neu: `src/components/kalorien-zaehlen-guide.tsx` — Intro-Text + 2 flache Punkte, nutzt `ArbeitspunkteListe` mit eigenem `localStorage`-Key (`kalz_completed`).
+- Neu: `src/components/gruende-liste.tsx` — 3 hervorgehobene Karten (Target/Utensils/Star-Icon aus `lucide-react`), die 3. Karte mit den 3 Erkenntnis-Fragen als Zusatzliste; Karte 1 und 2 verlinken auf `/ernaehrung/so-geht-abnehmen` bzw. `/ernaehrung/kalorien`.
+- Neu: `src/components/jetzt-zukunft-vergleich.tsx` — 2-Spalten-Vergleich mit `Meh` (grau/neutral, "So isst du jetzt") und `Smile` (grün, "So wirst du in Zukunft essen") aus `lucide-react`, wie im Architecture-Schritt festgelegt.
+- `src/app/ernaehrung/kalorien-zaehlen/page.tsx`: Platzhalter aus PROJ-36 durch `KalorienZaehlenGuide` ersetzt.
+- `npm run build`, `npm run lint`, `npm test` (415/415) fehlerfrei. Verifiziert per Playwright-Skript (Text-Check + Screenshots nach Animations-Settle): beide Arbeitspunkte, alle 3 Gründe-Karten samt Links und Erkenntnis-Fragen, sowie der Jetzt-vs-Zukunft-Vergleich rendern korrekt.
+
 ## QA Test Results
 _To be added by /qa_
 
