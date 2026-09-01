@@ -93,12 +93,48 @@ Keine — Inhalt final, inklusive der vom Nutzer präzisierten Grafik-Idee für 
 <!-- Added by /architecture -->
 | Decision | Rationale | Date |
 |----------|-----------|------|
+| Bestehende `ArbeitspunkteListe`-Komponente wiederverwenden statt neu bauen | Einheitliches Verhalten über alle Ernährungs-Guides, kein zusätzlicher Entwicklungsaufwand | 2026-09-01 |
+| "Jetzt vs. Zukunft"-Vergleich mit vorhandenen Gesichts-Icons (neutral/grau vs. lächelnd/grün) aus der bereits installierten Icon-Bibliothek statt einer Custom-Illustration | Kein neues Paket, kein Custom-SVG nötig, gleiche visuelle Aussage schneller umsetzbar | 2026-09-01 |
+| Kein Erstbesucher-Onboarding wie bei PROJ-38 | War eine einmalige, gezielte Einführung ins Akkordeon-Konzept selbst — nicht pro Guide nötig | 2026-09-01 |
+| Kein Backend / keine neue API-Route | Reiner Lese-Inhalt, identisch zum Muster von PROJ-38/39/40 | 2026-09-01 |
 
 ---
 <!-- Sections below are added by subsequent skills -->
 
 ## Tech Design (Solution Architect)
-_To be added by /architecture_
+
+### A) Komponenten-Struktur
+
+```
+/ernaehrung/kalorien-zaehlen (Seite, ersetzt den bestehenden Platzhalter aus PROJ-36)
++-- ErnaehrungSubHeader ("Kalorien zählen") — bestehende Komponente, unverändert
++-- KalorienZaehlenGuide (neu, analog zu KalorienGuide/HeisshungerGuide)
+    +-- ArbeitspunkteListe (bestehende Komponente) — 2 flache Punkte
+        +-- 1. Warum zählen wir Kalorien?
+        |     +-- GruendeListe (neu) — 3 hervorgehobene Karten (Icon + Titel + Text);
+        |           die 3. Karte zeigt zusätzlich die 3 Erkenntnis-Fragen
+        +-- 2. Das Wichtigste beim Kalorienzählen: das Aufhören
+              +-- Stützräder-Analogie (Text)
+              +-- JetztZukunftVergleich (neu) — 2 Icons nebeneinander: graues,
+              |     neutrales Gesichts-Icon ("So isst du jetzt") vs. grünes,
+              |     lächelndes Gesichts-Icon ("So wirst du in Zukunft essen")
+              +-- Ausstiegs-Fahrplan + Stress-Tag-Hinweis (Text)
+```
+
+### B) Datenmodell (einfache Sprache)
+
+Kein neues Datenmodell nötig. Genutzt wird exakt dasselbe Muster wie bei den anderen Ernährungs-Guides: Welcher der 2 Punkte als "Verstanden" markiert wurde, wird im Browser gespeichert (eigener Speicher-Schlüssel). Kein Server, kein Nutzerkonto nötig.
+
+### C) Tech-Entscheidungen (Begründung für PM)
+
+- **Kein Backend, keine neue API-Route.** Reiner Lese-Inhalt wie alle bisherigen Ernährungs-Guides.
+- **Bestehende Arbeitspunkte-Komponente wiederverwenden.** Einheitliches Verhalten über alle Ernährungs-Guides hinweg.
+- **"Jetzt vs. Zukunft"-Vergleich mit vorhandenen Gesichts-Icons statt neuer Illustration.** Die bereits installierte Icon-Bibliothek bringt passende Symbole für "neutraler Mundwinkel" und "lächelnder Mundwinkel" direkt mit — kein Custom-Zeichnen, kein neues Paket, schnell umsetzbar und trotzdem klar erkennbar.
+- **Kein Erstbesucher-Onboarding** (Auto-Öffnen/Pulse/Dialog wie bei "Emotionales Essen"). War eine einmalige Einführung ins Akkordeon-Konzept, nicht pro Guide nötig.
+
+### D) Abhängigkeiten (zu installierende Pakete)
+
+Keine neuen Pakete nötig — die verwendeten Icons sind Teil der bereits installierten Icon-Bibliothek, alles Weitere mit shadcn/ui und Tailwind CSS umsetzbar.
 
 ## QA Test Results
 _To be added by /qa_
