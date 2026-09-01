@@ -1,34 +1,78 @@
+import { Timer } from 'lucide-react'
 import { ArbeitspunkteListe, type ArbeitspunkteSektion } from './arbeitspunkte-liste'
+import { FesteMahlzeitenPlaner } from './feste-mahlzeiten-planer'
 
-const SEKTIONEN: ArbeitspunkteSektion[] = [
+interface UeberfordertBeispiel {
+  aufgabe: string
+  prioritaet: number
+  bisWann: string
+  delegieren: string
+}
+
+const UEBERFORDERT_BEISPIELE: UeberfordertBeispiel[] = [
+  { aufgabe: 'Präsentation für Montag vorbereiten', prioritaet: 1, bisWann: 'Sonntag, 20 Uhr', delegieren: 'Nein — nur ich' },
+  { aufgabe: 'Wäsche waschen', prioritaet: 3, bisWann: 'Diese Woche', delegieren: 'Ja — Partner:in' },
+  { aufgabe: 'E-Mails beantworten', prioritaet: 2, bisWann: 'Heute, 18 Uhr', delegieren: 'Teilweise — Kolleg:in' },
+  { aufgabe: 'Geburtstagsgeschenk besorgen', prioritaet: 2, bisWann: 'Freitag', delegieren: 'Ja — Geschwister fragen' },
+]
+
+interface EmotionalesEssenGuideProps {
+  tagesKcal: number | null
+}
+
+export function EmotionalesEssenGuide({ tagesKcal }: EmotionalesEssenGuideProps) {
+  const sektionen: ArbeitspunkteSektion[] = [
   {
     label: 'Direkt an der Emotion ansetzen',
     punkte: [
       {
         id: 1,
-        titel: 'Traurig?',
+        titel: 'Traurig? Dir fehlt Nähe.',
         inhalt: (
           <p className="text-xs text-foreground/80 leading-relaxed">
-            Dir fehlt Nähe. Simon Sinek sagt: 8 Minuten reichen, um sich verstanden zu fühlen. Frag eine Freundin oder einen Freund, ob sie 8 Minuten für dich haben. Ruf an. Tausch dich aus. Lass alles raus. Bist du nicht allein daheim: Frag nach einer Umarmung. Das schüttet Oxytocin, Dopamin und Serotonin aus. Essen löst das zwar auch aus — ist aber mit dem Runterschlucken vorbei. Deswegen die Endlosschleife.
+            Simon Sinek sagt: 8 Minuten reichen, um sich verstanden zu fühlen. Frag eine Freundin oder einen Freund, ob sie 8 Minuten für dich haben. Ruf an. Tausch dich aus. Lass alles raus. Bist du nicht allein daheim: Frag nach einer Umarmung. Das schüttet Oxytocin, Dopamin und Serotonin aus. Essen löst das zwar auch aus — ist aber mit dem Runterschlucken vorbei. Deswegen die Endlosschleife.
           </p>
         ),
       },
       {
         id: 2,
-        titel: 'Wütend?',
+        titel: 'Wütend? Dir fehlt Bewegung.',
         inhalt: (
           <p className="text-xs text-foreground/80 leading-relaxed">
-            Bewegung. Die Wut muss einmal raus. Mach eine Minute Kniebeugen, Liegestütze, Planks — oder geh 10 Minuten um den Block. Wut ist meist ein Kommunikationsproblem bei Meinungsverschiedenheiten, oft von außen angestoßen. Der Körper reagiert mit einem der drei Fs: Fight, Flight oder Freeze. Bei Fight muss die Energie woanders hin — in deinen Körper, mit Bewegung. Flight entgeht der Wut, die kommt wieder. Freeze verlagert sie auf später. Essen ist keine Lösung davon.
+            Die Wut muss einmal raus. Mach eine Minute Kniebeugen, Liegestütze, Planks — oder geh 10 Minuten um den Block. Wut ist meist ein Kommunikationsproblem bei Meinungsverschiedenheiten, oft von außen angestoßen. Der Körper reagiert mit einem der drei Fs: Fight, Flight oder Freeze. Bei Fight muss die Energie woanders hin — in deinen Körper, mit Bewegung. Flight entgeht der Wut, die kommt wieder. Freeze verlagert sie auf später. Essen ist keine Lösung davon.
           </p>
         ),
       },
       {
         id: 3,
-        titel: 'Überfordert / Gestresst?',
+        titel: 'Überfordert / Gestresst? Mach das:',
         inhalt: (
-          <p className="text-xs text-foreground/80 leading-relaxed">
-            Das kennen wir alle. Postfach voll, To-do-Liste quillt über. Nimm dir 5 Minuten und schreib auf, was du alles zu tun hast. Priorisiere von 1–3 (keine 4, keine 0 — nur diese drei). Schreib dahinter, was du alleine machen kannst und bis wann es fertig sein MUSS — nicht sollte. Und dann die Lieblingsspalte: Delegieren. Vielleicht kann dir jemand bei einer Aufgabe helfen oder sie ganz übernehmen. Du musst nicht alles allein machen. Jetzt die Liste sinnvoll abarbeiten — mit einem Snack wird sie nicht kürzer.
-          </p>
+          <>
+            <p className="text-xs text-foreground/80 leading-relaxed">
+              Postfach voll, To-do-Liste quillt über? Nimm dir 5 Minuten und schreib deine Aufgaben so auf:
+            </p>
+            <div className="grid grid-cols-1 gap-2">
+              {UEBERFORDERT_BEISPIELE.map(b => (
+                <div key={b.aufgabe} className="rounded-xl bg-muted/40 p-3 space-y-1.5">
+                  <p className="text-xs font-semibold text-foreground">{b.aufgabe}</p>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+                    <span>🔢 Priorität {b.prioritaet}</span>
+                    <span>⏰ {b.bisWann}</span>
+                    <span>🤝 {b.delegieren}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="space-y-1 text-xs text-foreground/80 leading-relaxed pt-1">
+              <p>📝 <strong>Aufgabe</strong> — schreib auf, was du alles zu tun hast</p>
+              <p>🔢 <strong>Priorität</strong> — vergib 1–3 (keine 4, keine 0)</p>
+              <p>⏰ <strong>Bis wann</strong> — wann es fertig sein MUSS, nicht sollte</p>
+              <p>🤝 <strong>Delegieren</strong> — wer kann dir helfen oder es übernehmen?</p>
+            </div>
+            <p className="text-xs text-foreground/80 leading-relaxed">
+              Du musst nicht alles allein machen. Jetzt die Liste sinnvoll abarbeiten — mit einem Snack wird sie nicht kürzer.
+            </p>
+          </>
         ),
       },
     ],
@@ -42,10 +86,31 @@ const SEKTIONEN: ArbeitspunkteSektion[] = [
         inhalt: (
           <>
             <p className="text-xs text-foreground/80 leading-relaxed">
-              Nimm dir jeden Morgen oder Abend 5 Minuten Zeit für dich. Stell dir einen Timer. Mach eine Tabelle: Spalte 1 mit einem &quot;+&quot;, Spalte 2 mit einem &quot;−&quot;. Unter &quot;+&quot; schreibst du auf, was du gemacht hast, das dir gefallen hat und du wieder tun möchtest. Unter &quot;−&quot; kommen die Dinge, die du nicht nochmal machen willst.
+              Nimm dir jeden Morgen oder Abend Zeit für dich. Schreib auf, was gut lief (&quot;+&quot;) und was nicht (&quot;−&quot;):
             </p>
+            <div className="flex items-center justify-center gap-1.5 text-xs font-medium text-muted-foreground">
+              <Timer className="h-3.5 w-3.5" />
+              5 Minuten
+            </div>
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 space-y-1.5">
+              <p className="text-xs font-semibold text-emerald-700">+ Was lief gut</p>
+              <div className="space-y-1 text-xs text-emerald-800/90 leading-relaxed">
+                <p>😌 Entspannt aufgewacht</p>
+                <p>🍽️ Bewusst Mittag gegessen</p>
+                <p>✅ Alle ToDos abgearbeitet</p>
+              </div>
+            </div>
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 space-y-1.5">
+              <p className="text-xs font-semibold text-amber-700">− Was lief nicht so gut</p>
+              <div className="space-y-1 text-xs text-amber-800/90 leading-relaxed">
+                <p>🏃 Sport übersprungen, weil die Arbeit Vorrang hatte <span className="text-amber-800/60">(ich möchte doch eigentlich zum Sport)</span></p>
+                <p>🍰 Ja zum Kuchen der Kollegin gesagt <span className="text-amber-800/60">(ich möchte doch eigentlich nein sagen)</span></p>
+                <p>🛋️ Auf der Couch versackt <span className="text-amber-800/60">(ich möchte doch eigentlich einen Spaziergang machen)</span></p>
+                <p>📱 Zu lange am Handy verweilt <span className="text-amber-800/60">(ich möchte das reduzieren und stattdessen meinem Hobby nachgehen)</span></p>
+              </div>
+            </div>
             <p className="text-xs text-foreground/80 leading-relaxed">
-              Es geht darum, sichtbar zu machen, was du alles getan hast. Allein durchs Aufschreiben beschäftigst du dich damit. Beim nächsten Mal, wenn du tust, was dir nicht gefallen hat, flüstert eine leise Stimme: &quot;Moment — das hab ich doch aufgeschrieben.&quot; Mit jedem Mal Aufschreiben kannst du diesen Situationen Schritt für Schritt entkommen.
+              Allein durchs Aufschreiben beschäftigst du dich damit. Beim nächsten Mal flüstert eine leise Stimme: &quot;Moment — das hab ich doch aufgeschrieben.&quot; So kannst du dich Schritt für Schritt aus solchen Situationen befreien.
             </p>
           </>
         ),
@@ -119,9 +184,10 @@ const SEKTIONEN: ArbeitspunkteSektion[] = [
         id: 8,
         titel: 'Feste Mahlzeiten planen (ohne Ablenkung)',
         inhalt: (
-          <p className="text-xs text-foreground/80 leading-relaxed">
-            Wenn du &quot;immer&quot; isst, hat dein Körper keinen Rhythmus — und der liebt Rhythmus. Deshalb reden wir oft von 3 Mahlzeiten am Tag; ein Snack kann eingebaut werden, aber eigentlich reicht das. Teile deine Kalorien nach der Formel 20/40/40 auf. Beispiel bei 2000 Tageskalorien: Frühstück 400 kcal, Mittag- und Abendessen je 800 kcal.
-          </p>
+          <FesteMahlzeitenPlaner
+            tagesKcal={tagesKcal ?? 2000}
+            istEigenerWert={tagesKcal != null}
+          />
         ),
       },
       {
@@ -135,9 +201,8 @@ const SEKTIONEN: ArbeitspunkteSektion[] = [
       },
     ],
   },
-]
+  ]
 
-export function EmotionalesEssenGuide() {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
@@ -149,7 +214,7 @@ export function EmotionalesEssenGuide() {
         </p>
       </div>
 
-      <ArbeitspunkteListe storageKey="ee_completed" sektionen={SEKTIONEN} />
+      <ArbeitspunkteListe storageKey="ee_completed" sektionen={sektionen} />
     </div>
   )
 }

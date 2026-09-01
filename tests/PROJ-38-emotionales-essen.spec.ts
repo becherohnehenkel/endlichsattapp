@@ -87,21 +87,25 @@ test.describe('Sektion 1 — Direkt an der Emotion ansetzen', () => {
     await expect(page.getByText(/Fight, Flight oder Freeze/)).toBeVisible()
   })
 
-  test('AC: "Überfordert / Gestresst?" zeigt Priorisierungs-Anleitung (1–3, Delegieren)', async ({ page }) => {
+  test('AC: "Überfordert / Gestresst?" zeigt Beispiel-Aufgaben mit Priorität/Bis-wann/Delegieren', async ({ page }) => {
     await page.goto('/ernaehrung/emotionales-essen')
     await oeffneArbeitspunkt(page, 'Überfordert / Gestresst?')
-    await expect(page.getByText(/Priorisiere von 1–3/)).toBeVisible()
-    await expect(page.getByText(/Lieblingsspalte: Delegieren/)).toBeVisible()
+    await expect(page.getByText('Präsentation für Montag vorbereiten')).toBeVisible()
+    await expect(page.getByText(/vergib 1–3 \(keine 4, keine 0\)/)).toBeVisible()
+    await expect(page.getByText(/wer kann dir helfen oder es übernehmen/)).toBeVisible()
   })
 })
 
 // ─── Sektion 2: Allgemeine Praxis-Übungen ───────────────────────────────────
 
 test.describe('Sektion 2 — Allgemeine Praxis-Übungen', () => {
-  test('AC: "Journaling" zeigt die Plus/Minus-Tabellen-Anleitung', async ({ page }) => {
+  test('AC: "Journaling" zeigt die Plus/Minus-Beispiel-Listen mit 5-Minuten-Timer', async ({ page }) => {
     await page.goto('/ernaehrung/emotionales-essen')
     await oeffneArbeitspunkt(page, 'Journaling')
-    await expect(page.getByText(/5 Minuten Zeit für dich/)).toBeVisible()
+    await expect(page.getByText('5 Minuten', { exact: true })).toBeVisible()
+    await expect(page.getByText('+ Was lief gut')).toBeVisible()
+    await expect(page.getByText('− Was lief nicht so gut')).toBeVisible()
+    await expect(page.getByText('Entspannt aufgewacht')).toBeVisible()
   })
 
   test('AC: "Fragebogen" zeigt genau 7 nummerierte Fragen in der richtigen Reihenfolge', async ({ page }) => {
@@ -128,10 +132,23 @@ test.describe('Sektion 2 — Allgemeine Praxis-Übungen', () => {
     await expect(page.getByText('Haltbares', { exact: true })).toBeVisible()
   })
 
-  test('AC: "Feste Mahlzeiten planen" zeigt die 20/40/40-Regel', async ({ page }) => {
+  test('AC: "Feste Mahlzeiten planen" zeigt die 20/40/40-Regel mit 2000-kcal-Referenzwert', async ({ page }) => {
     await page.goto('/ernaehrung/emotionales-essen')
     await oeffneArbeitspunkt(page, 'Feste Mahlzeiten planen (ohne Ablenkung)')
     await expect(page.getByText(/20\/40\/40/)).toBeVisible()
+    await expect(page.getByText('400 kcal')).toBeVisible()
+    await expect(page.getByText('800 kcal')).toHaveCount(2)
+    await expect(page.getByText(/Referenzwert: 2000 kcal/)).toBeVisible()
+  })
+
+  test('AC: Snack-Schalter bei "Feste Mahlzeiten planen" verteilt 10% von Mittag- und Abendessen auf einen Snack', async ({ page }) => {
+    await page.goto('/ernaehrung/emotionales-essen')
+    await oeffneArbeitspunkt(page, 'Feste Mahlzeiten planen (ohne Ablenkung)')
+    await expect(page.getByText('Snack', { exact: true })).not.toBeVisible()
+    await page.getByRole('switch').click()
+    await expect(page.getByText('Snack', { exact: true })).toBeVisible()
+    await expect(page.getByText('600 kcal')).toHaveCount(2)
+    await expect(page.getByText('400 kcal')).toHaveCount(2)
   })
 
   test('AC: "Screentime planen" zeigt den Tagesdosis-Hinweis', async ({ page }) => {

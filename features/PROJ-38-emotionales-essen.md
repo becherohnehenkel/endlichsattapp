@@ -61,19 +61,19 @@
 >
 > Langeweile gibt es eigentlich nicht wirklich — meistens ist es ein Zeichen für Dauerstimulation. Klebst du ständig am Screen? Kopfhörer immer drin? Deine Sinne (Hören, Sehen, Riechen, Fühlen) sind permanent gereizt. Und was passt da super dazu? Genau: Geschmack, Kauen, ein tolles Mundgefühl. Die vermeintliche Langeweile ist oft nur ein fehlender Reiz, den du mit Essen oder Trinken füllen willst.
 
-### 1. Traurig?
-> Dir fehlt Nähe. Simon Sinek sagt: 8 Minuten reichen, um sich verstanden zu fühlen. Frag eine Freundin oder einen Freund, ob sie 8 Minuten für dich haben. Ruf an. Tausch dich aus. Lass alles raus. Bist du nicht allein daheim: Frag nach einer Umarmung. Das schüttet Oxytocin, Dopamin und Serotonin aus. Essen löst das zwar auch aus — ist aber mit dem Runterschlucken vorbei. Deswegen die Endlosschleife.
+### 1. Traurig? Dir fehlt Nähe.
+> Simon Sinek sagt: 8 Minuten reichen, um sich verstanden zu fühlen. Frag eine Freundin oder einen Freund, ob sie 8 Minuten für dich haben. Ruf an. Tausch dich aus. Lass alles raus. Bist du nicht allein daheim: Frag nach einer Umarmung. Das schüttet Oxytocin, Dopamin und Serotonin aus. Essen löst das zwar auch aus — ist aber mit dem Runterschlucken vorbei. Deswegen die Endlosschleife.
 
-### 2. Wütend?
-> Bewegung. Die Wut muss einmal raus. Mach eine Minute Kniebeugen, Liegestütze, Planks — oder geh 10 Minuten um den Block. Wut ist meist ein Kommunikationsproblem bei Meinungsverschiedenheiten, oft von außen angestoßen. Der Körper reagiert mit einem der drei Fs: Fight, Flight oder Freeze. Bei Fight muss die Energie woanders hin — in deinen Körper, mit Bewegung. Flight entgeht der Wut, die kommt wieder. Freeze verlagert sie auf später. Essen ist keine Lösung davon.
+### 2. Wütend? Dir fehlt Bewegung.
+> Die Wut muss einmal raus. Mach eine Minute Kniebeugen, Liegestütze, Planks — oder geh 10 Minuten um den Block. Wut ist meist ein Kommunikationsproblem bei Meinungsverschiedenheiten, oft von außen angestoßen. Der Körper reagiert mit einem der drei Fs: Fight, Flight oder Freeze. Bei Fight muss die Energie woanders hin — in deinen Körper, mit Bewegung. Flight entgeht der Wut, die kommt wieder. Freeze verlagert sie auf später. Essen ist keine Lösung davon.
 
-### 3. Überfordert / Gestresst?
-> Das kennen wir alle. Postfach voll, To-do-Liste quillt über. Nimm dir 5 Minuten und schreib auf, was du alles zu tun hast. Priorisiere von 1–3 (keine 4, keine 0 — nur diese drei). Schreib dahinter, was du alleine machen kannst und bis wann es fertig sein MUSS — nicht sollte. Und dann die Lieblingsspalte: Delegieren. Vielleicht kann dir jemand bei einer Aufgabe helfen oder sie ganz übernehmen. Du musst nicht alles allein machen. Jetzt die Liste sinnvoll abarbeiten — mit einem Snack wird sie nicht kürzer.
+### 3. Überfordert / Gestresst? Mach das:
+> Postfach voll, To-do-Liste quillt über? Nimm dir 5 Minuten und schreib deine Aufgaben so auf — 4 Beispiel-Aufgaben zeigen das Format (Aufgabe / Priorität / Bis wann / Delegieren), darunter erklärt je ein Bulletpoint eine Spalte: 📝 Aufgabe — schreib auf, was du alles zu tun hast · 🔢 Priorität — vergib 1–3 (keine 4, keine 0) · ⏰ Bis wann — wann es fertig sein MUSS, nicht sollte · 🤝 Delegieren — wer kann dir helfen oder es übernehmen? Du musst nicht alles allein machen. Jetzt die Liste sinnvoll abarbeiten — mit einem Snack wird sie nicht kürzer.
 
 ### 4. Journaling
-> Nimm dir jeden Morgen oder Abend 5 Minuten Zeit für dich. Stell dir einen Timer. Mach eine Tabelle: Spalte 1 mit einem "+", Spalte 2 mit einem "−". Unter "+" schreibst du auf, was du gemacht hast, das dir gefallen hat und du wieder tun möchtest. Unter "−" kommen die Dinge, die du nicht nochmal machen willst.
+> Nimm dir jeden Morgen oder Abend Zeit für dich (⏱ 5 Minuten). Zwei Beispiel-Listen machen sichtbar, was gemeint ist: "+ Was lief gut" (3 Beispiele: entspannt aufgewacht, bewusst Mittag gegessen, alle ToDos abgearbeitet) und "− Was lief nicht so gut" (4 Beispiele, je mit dem eigentlichen Wunsch dahinter in Klammern: Sport übersprungen / Ja zum Kuchen gesagt / auf der Couch versackt / zu lange am Handy).
 >
-> Es geht darum, sichtbar zu machen, was du alles getan hast. Allein durchs Aufschreiben beschäftigst du dich damit. Beim nächsten Mal, wenn du tust, was dir nicht gefallen hat, flüstert eine leise Stimme: "Moment — das hab ich doch aufgeschrieben." Mit jedem Mal Aufschreiben kannst du diesen Situationen Schritt für Schritt entkommen.
+> Allein durchs Aufschreiben beschäftigst du dich damit. Beim nächsten Mal flüstert eine leise Stimme: "Moment — das hab ich doch aufgeschrieben." So kannst du dich Schritt für Schritt aus solchen Situationen befreien.
 
 ### 5. Fragebogen "Hast du wirklich Hunger?"
 > Du stehst vor der Snackschublade oder dem Kühlschrank? Okay. Beantworte dir erst diese Fragen — dann geht's weiter.
@@ -114,13 +114,15 @@
 > - Tiefkühlware (Beeren, Fisch und Fleisch, Erbsen, TK-Gemüsemischung)
 
 ### 8. Feste Mahlzeiten planen (ohne Ablenkung)
-> Wenn du "immer" isst, hat dein Körper keinen Rhythmus — und der liebt Rhythmus. Deshalb reden wir oft von 3 Mahlzeiten am Tag; ein Snack kann eingebaut werden, aber eigentlich reicht das. Teile deine Kalorien nach der Formel 20/40/40 auf. Beispiel bei 2000 Tageskalorien: Frühstück 400 kcal, Mittag- und Abendessen je 800 kcal.
+> Wenn du "immer" isst, hat dein Körper keinen Rhythmus — und der liebt Rhythmus. Deshalb reden wir von 3 festen Mahlzeiten am Tag, aufgeteilt nach der Formel 20/40/40. Interaktiv: ein Balken + 3 Blöcke (Frühstück/Mittag/Abend) zeigen die Aufteilung mit kcal und Prozent — auf Basis des eigenen PROJ-37-Kcal-Rechner-Ergebnisses, sonst Referenzwert 2000 kcal. Ein Schalter "Snack einbauen?" fügt einen 4. Block zwischen Mittag- und Abendessen ein und nimmt dafür je 10 Prozentpunkte der Gesamtkalorien von Mittag- und Abendessen (20/30/20/30 statt 20/40/40).
 
 ### 9. Screentime planen
 > Das Smartphone hat vieles einfacher und schneller gemacht — das ist verständlich. Aber schau in deinen Einstellungen nach, wie lange du in welcher App verbringst. Meist ist es Social Media. Limitiere diese App auf eine "Tagesdosis" — nicht sofort auf 20 Minuten, sondern einfach weniger als gestern. Reduziere weiter, sobald es sich leicht anfühlt. Viele fremde Gedanken, die im Sekundentakt auf dich einprasseln, beeinflussen nicht nur deine Gedanken, sondern auch dein Verhältnis zum Essen.
 
 ## Open Questions
-Keine — Copy für Intro und alle 9 Arbeitspunkte final (Quelle: vom Nutzer bereitgestellte PDFs "Emotionales_Essen.pdf" und "AnatomieDesKühlschranksV2.pdf", Fragebogen von 9 auf 7 Fragen gekürzt).
+- [ ] Visuelle Gestaltung für Arbeitspunkt 9 (Screentime planen) — Nutzer möchte hier ebenfalls eine visuelle Auflockerung, hat aber noch keine konkrete Richtung vorgegeben (Stand 2026-09-01).
+
+Ansonsten: Copy für Intro und alle 9 Arbeitspunkte final (Quelle: vom Nutzer bereitgestellte PDFs "Emotionales_Essen.pdf" und "AnatomieDesKühlschranksV2.pdf", Fragebogen von 9 auf 7 Fragen gekürzt; Punkte 1–4 & 8 am 2026-09-01 visuell überarbeitet, siehe Implementation Notes).
 
 ## Decision Log
 
@@ -190,6 +192,17 @@ Nutzer-Feedback nach erstem Review: zu viel Text auf einmal sichtbar. Umgesetzt:
 - Desktop-Breite der 3 Guide-Seiten von `max-w-sm` (384px) auf `md:max-w-[850px]` erhöht (Mobile bleibt unverändert).
 - Bestehende E2E-Suiten `PROJ-37-so-geht-abnehmen.spec.ts` und `PROJ-36-ernaehrung-hub.spec.ts` angepasst (Accordion-Items müssen vor Sichtbarkeits-Checks erst aufgeklappt werden; `/ernaehrung/emotionales-essen` aus der Platzhalter-Testliste entfernt, da jetzt echter Inhalt). `PROJ-34-art-of-eating.spec.ts` unverändert — testet nur einen Link auf die Guide-Seite, nie deren Inhalt selbst.
 - `npm run build`, `npm run lint`, `npm test` (415/415), sowie `PROJ-37` (17/17) und `PROJ-36` (20/20) E2E-Suiten grün nach der Umstellung.
+
+### Refinement (2026-09-01): Visuelle Überarbeitung Arbeitspunkte 1–4 & 8
+Nutzer-Feedback: Überschriften 1/2 sollten den Kern vorwegnehmen, Arbeitspunkte 3/4 waren reiner Fließtext ("erschlägt einen") und sollten visueller/scanbarer werden, Arbeitspunkt 8 sollte die 3-Mahlzeiten-Aufteilung sichtbar und mit echten kcal-Werten zeigen.
+- **1 (Traurig) & 2 (Wütend):** Überschrift nimmt jetzt die Kernaussage vorweg ("Traurig? Dir fehlt Nähe." / "Wütend? Dir fehlt Bewegung."), der bisher redundante erste Satz/das erste Wort im Fließtext entfernt.
+- **3 (Überfordert/Gestresst):** Von Fließtext auf 4 Beispiel-Aufgaben-Karten (Aufgabe/Priorität/Bis-wann/Delegieren) + 4 erklärende Bulletpoints (mit Emoji) umgestellt — die 4 Spalten des ursprünglichen Konzepts sind jetzt an 4 konkreten Beispielen ablesbar statt nur beschrieben.
+- **4 (Journaling):** Von Fließtext-Anleitung auf ein visuelles Beispiel umgestellt — Timer-Icon mit "5 Minuten", plus eine grüne "+"-Box (3 Beispiele) und eine amber "−"-Box (4 Beispiele, je mit dem eigentlichen Wunsch in Klammern). Konkrete Beispiele vom Nutzer vorgegeben.
+- **8 (Feste Mahlzeiten planen):** Von statischem Text auf eine interaktive Komponente (`src/components/feste-mahlzeiten-planer.tsx`, Client Component) umgestellt — zeigt Frühstück/Mittag/Abend als farbige Balken-Segmente + Karten mit kcal und Prozent, nutzt den zuletzt berechneten PROJ-37-Kcal-Rechner-Wert (`profiles.kcal_*`, serverseitig in `emotionales-essen/page.tsx` geladen und über `berechneKcal()` ausgewertet) oder den Referenzwert 2000 kcal, falls noch nicht berechnet (mit Link zum Kcal-Rechner). Ein shadcn `Switch` "Snack einbauen?" fügt einen 4. Block ein und verschiebt die Aufteilung von 20/40/40 auf 20/30/20/30 (Snack = je 10 Prozentpunkte von Mittag- und Abendessen).
+- Emojis vor Bulletpoints ergänzt, wo neue Listen/Beispiele entstanden sind (Punkte 3 & 4) — bestehender Inhalt (Fragebogen, Atemübung, Einkauf planen) bewusst unangetastet gelassen, da nicht Teil dieser Anfrage.
+- `tests/PROJ-38-emotionales-essen.spec.ts`: 2 Tests an neue Textstruktur angepasst (Punkt 3 & 4), 2 neue Tests ergänzt (statischer 2000-kcal-Referenzwert; Snack-Schalter-Interaktion). Alle 36 E2E-Tests grün (18 Acceptance-Tests × 2 Browser-Projekte).
+- `npm run build`, `npm run lint`, `npm test` (415/415) weiterhin grün.
+- **Punkt 9 (Screentime planen)** bewusst unverändert gelassen — visuelle Gestaltung dafür ist als offene Frage im Decision Log/Open Questions vermerkt, Nutzer hat explizit um Vorschläge gebeten statt eine Richtung vorzugeben.
 
 ## QA Test Results
 
