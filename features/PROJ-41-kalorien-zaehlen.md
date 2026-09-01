@@ -1,6 +1,6 @@
 # PROJ-41: Kalorien zählen
 
-## Status: Planned
+## Status: Deployed
 **Created:** 2026-09-01
 **Last Updated:** 2026-09-01
 
@@ -206,4 +206,6 @@ Keine.
 - **Recommendation:** Deploy
 
 ## Deployment
-_To be added by /deploy_
+- **Production URL:** https://satt.mehralsabnehmen.de/ernaehrung/kalorien-zaehlen
+- **Deployed:** 2026-09-01 (Vercel auto-deploy via Push zu `main`, commits `d9fc95d`..`1159dca`)
+- **Verified in Produktion:** Nutzer hat die Live-Seite geprüft, alles grün ("Alles auf Grün").
