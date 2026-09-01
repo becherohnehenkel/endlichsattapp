@@ -25,21 +25,53 @@ async function loginAs(page: Page) {
 // ─── Ernährung-Hub ──────────────────────────────────────────────────────────
 
 test.describe('Ernährung-Hub', () => {
-  test('AC: zeigt alle 8 Einträge mit den korrekten Ziel-URLs', async ({ page }) => {
+  test('AC: zeigt alle 8 Einträge mit den korrekten Titeln und Ziel-URLs', async ({ page }) => {
     await page.goto('/ernaehrung')
     const expected: [string, string][] = [
-      ['Rezepte', '/ernaehrung/rezepte'],
-      ['Richtig essen', '/ernaehrung/wie-esse-ich-richtig'],
-      ['Sättigungsmatrix', '/ernaehrung/saettigungsmatrix'],
       ['So geht abnehmen', '/ernaehrung/so-geht-abnehmen'],
-      ['Emotionales Essen', '/ernaehrung/emotionales-essen'],
-      ['Heißhunger', '/ernaehrung/heisshunger'],
+      ['Emotionales Essen verstehen', '/ernaehrung/emotionales-essen'],
+      ['Alles über Heißhunger', '/ernaehrung/heisshunger'],
+      ['Kalorien zählen & damit aufhören', '/ernaehrung/kalorien-zaehlen'],
+      ['Rezepte', '/ernaehrung/rezepte'],
+      ['Sättigungsmatrix', '/ernaehrung/saettigungsmatrix'],
+      ['Richtig essen', '/ernaehrung/wie-esse-ich-richtig'],
       ['Kalorien', '/ernaehrung/kalorien'],
-      ['Kalorien zählen', '/ernaehrung/kalorien-zaehlen'],
     ]
     for (const [title, href] of expected) {
-      await expect(page.locator(`a[href="${href}"]`).getByText(title)).toBeVisible()
+      await expect(page.locator(`a[href="${href}"]`).getByText(title, { exact: true })).toBeVisible()
     }
+  })
+
+  test('AC: die ersten 4 Grundpfeiler sind nummeriert (1–4) in der richtigen Reihenfolge', async ({ page }) => {
+    await page.goto('/ernaehrung')
+    const main = page.locator('main')
+    const text = await main.innerText()
+    const titel = [
+      'So geht abnehmen',
+      'Emotionales Essen verstehen',
+      'Alles über Heißhunger',
+      'Kalorien zählen & damit aufhören',
+    ]
+    const positions = titel.map(t => text.indexOf(t))
+    expect(positions.every(p => p >= 0)).toBe(true)
+    expect(positions).toEqual([...positions].sort((a, b) => a - b))
+
+    for (let i = 0; i < titel.length; i++) {
+      const karte = page.getByText(titel[i], { exact: true }).locator('xpath=ancestor::a[1]')
+      await expect(karte.getByText(String(i + 1), { exact: true })).toBeVisible()
+    }
+  })
+
+  test('AC: zeigt die 3 gruppierten Abschnitte mit Überschrift, Text und Trennlinie', async ({ page }) => {
+    await page.goto('/ernaehrung')
+    await expect(page.getByRole('heading', { name: 'So geht es in der Praxis.' })).toBeVisible()
+    await expect(page.getByText(/direkt in die Umsetzung gehen kannst/)).toBeVisible()
+
+    await expect(page.getByRole('heading', { name: 'Satt werden ist kein Zufall' })).toBeVisible()
+    await expect(page.getByText(/wie sättigende Mahlzeiten entstehen/)).toBeVisible()
+
+    await expect(page.getByRole('heading', { name: 'Die nackten Informationen' })).toBeVisible()
+    await expect(page.getByText(/100 Mal gehört hast/)).toBeVisible()
   })
 
   test('AC: Hub hat weder Zurück-Pfeil noch Breadcrumb (Tab-Root)', async ({ page }) => {

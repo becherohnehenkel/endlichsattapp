@@ -134,6 +134,15 @@ Keiner — reines Frontend-/Routing-Feature.
 - Hub-Zeilen-Untertitel sind bewusst vorläufige Platzhalter-Texte (siehe Open Questions) — Icons: `ChefHat`, `Utensils`, `LayoutGrid`, `Calculator`, `HeartHandshake`, `Flame`, `Apple`, `ListChecks` (alle `lucide-react`).
 - `npm run build`, `npm run lint`, `npm test` (390/390) fehlerfrei. Manuell verifiziert: Hub-Liste, Breadcrumb+Zurück auf Unterseite, migrierte Rezepte-Seite (Filter/Gast-Banner/Suche intakt), alle 3 Redirects (308) und alle 8 neuen/verschobenen Routen (200) per curl.
 
+### Refinement (2026-09-01): Hub neu gegliedert (Grundpfeiler, Praxis, Sättigung, Infos)
+Nachdem alle 8 Unterseiten mittlerweile echten Inhalt haben (PROJ-37–41), wurde die bisher flache 8-Zeilen-Liste in 4 thematische Bereiche umstrukturiert:
+- **Nummerierte Grundpfeiler (1–4):** "So geht abnehmen", "Emotionales Essen verstehen" (vorher "Emotionales Essen"), "Alles über Heißhunger" (vorher "Heißhunger"), "Kalorien zählen & damit aufhören" (vorher "Kalorien zählen") — als Einstiegspfad hervorgehoben, mit kleinem grünen Nummern-Badge oben links auf dem bestehenden Icon (kein neues Icon-Set, gleiche Icons wie zuvor).
+- **3 gruppierte Abschnitte**, je mit eigener Überschrift + erklärendem Text + Trennlinie zur Abgrenzung: "So geht es in der Praxis." (Rezepte), "Satt werden ist kein Zufall" (Sättigungsmatrix, Richtig essen), "Die nackten Informationen" (Kalorien).
+- Neue Haupt-Überschrift "Ernährung" + Intro-Text im Seiteninhalt (zusätzlich zum bereits bestehenden mobilen Sticky-Header, der ebenfalls "Ernährung" zeigt — bewusst in Kauf genommene leichte Redundanz auf Mobile, da auf Desktop kein Sticky-Header existiert und der Body-Titel dort die einzige Überschrift ist).
+- Technisch: `HubEntry`-Array in zwei separate Strukturen aufgeteilt (`SCHRITTE` mit `nummer`-Feld, `ABSCHNITTE` mit `titel`/`text`/`eintraege`) statt einer flachen Liste; gemeinsame `HubCard`-Komponente (lokal in der Datei) rendert beide Varianten, um Duplikation zu vermeiden.
+- `tests/PROJ-36-ernaehrung-hub.spec.ts`: Bestehender Titel-Test auf die neuen exakten Titel aktualisiert (vorher nur zufällig durch Substring-Matching grün); 2 neue Tests ergänzt (Nummerierung 1–4 in korrekter Reihenfolge; alle 3 Abschnitts-Überschriften + Texte + Struktur). Volle Suite: 19/19 (chromium), Cross-Browser zusätzlich verifiziert.
+- `npm run build`, `npm run lint`, `npm test` (415/415) weiterhin grün. Visuell auf Desktop (900px) und Mobile (375px) per Screenshot geprüft — langer Titel "Kalorien zählen & damit aufhören" bricht auf Mobile sauber auf 2 Zeilen um, keine Layout-Brüche.
+
 ## QA Test Results
 
 **Tested:** 2026-08-30
