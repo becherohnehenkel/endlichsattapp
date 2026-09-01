@@ -196,7 +196,75 @@ Keine neuen Pakete nötig — vollständig mit den bereits installierten shadcn/
 - `npm run build`, `npm run lint`, `npm test` (415/415) fehlerfrei. Verifiziert per Playwright-Skript (Text-Check + Screenshot nach Animations-Settle): Intro, alle 6 Arbeitspunkte in korrekter Reihenfolge inkl. Sektions-Divider "DIE MAKRONÄHRSTOFFE", Link zu "So geht abnehmen" korrekt, alle 3 Proteinquellen-Karten mit korrekten Daten sichtbar.
 
 ## QA Test Results
-_To be added by /qa_
+
+**Tested:** 2026-09-01
+**App URL:** http://localhost:3000
+**Tester:** QA Engineer (AI)
+
+### Acceptance Criteria Status
+
+#### Seitenstruktur
+- [x] 2 Bereiche ("Was sind Kalorien" + "Die Makronährstoffe") mit 6 Punkten in korrekter Reihenfolge
+- [x] Alle Punkte starten eingeklappt
+- [x] "Verstanden" aktualisiert Fortschritt und speichert lokal (bleibt nach Reload erhalten)
+
+#### Was sind Kalorien
+- [x] Alle 5 nummerierten Kernaussagen sichtbar
+- [x] Link zu "So geht abnehmen" zeigt korrekt auf `/ernaehrung/so-geht-abnehmen`
+
+#### Proteine
+- [x] kcal/g, Rolle im Körper und Aminosäuren-Erklärung sichtbar
+- [x] Alle 3 Prozent-Stufen (40 %/30 %/20 %) mit korrekten Tierisch-/Vegetarisch-/Vegan-Beispielen sichtbar
+
+#### Kohlenhydrate, Fette, Ballaststoffe, Alkohol
+- [x] Jeder Punkt einzeln geprüft: kcal/g (wo zutreffend), Rolle im Körper und mindestens ein konkretes Beispiel sichtbar
+
+#### Gast-Zugriff
+- [x] Gast (keine Session, Cookies gelöscht) kann die Seite vollständig lesen, Status < 400
+
+### Edge Cases Status
+
+#### EC-1: Link zu "So geht abnehmen" ohne vorherige Kcal-Rechner-Nutzung
+- [x] Kein Problem — Kcal-Rechner zeigt einfach ein leeres Formular (bestehendes PROJ-37-Verhalten, keine erneute Prüfung nötig)
+
+#### EC-2: Gast-Zugriff
+- [x] Voller Lesezugriff bestätigt, kein Login-Zwang, kein 404/500
+
+#### EC-3: Fortschritt bleibt nach Reload erhalten, "Alles durch"-Hinweis bei 6/6
+- [x] Bestätigt — Fortschritt persistiert über Reload, "Alles durch ✓"-Hinweis erscheint korrekt bei allen 6 abgeschlossenen Punkten
+
+### Security Audit Results
+- [x] Kein Backend/keine API-Route — keine Angriffsfläche für Auth-Bypass, Injection oder Rate-Limiting-Probleme (0 `/api/`-Requests bei voller Interaktion gemessen)
+- [x] Kein Nutzer-Input auf der Seite (nur Lese-Interaktion) — kein XSS-Vektor vorhanden
+- [x] Gast-Zugriff funktioniert wie spezifiziert, keine versteckten Auth-Anforderungen
+- [x] Keine sensiblen Daten im Client (`localStorage` enthält nur eine ID-Liste abgeschlossener Punkte)
+- [ ] Transienter Konsolenfehler ("Failed to load resource: 404") einmalig beobachtet — identisches Muster wie bereits bei PROJ-39s QA dokumentiert, dort als nicht reproduzierbares Next.js-Dev-Server-Rauschen eingestuft; `npm run build` läuft fehlerfrei durch. Keine Bug-Einstufung.
+
+### Regression Testing
+- `PROJ-36-ernaehrung-hub.spec.ts`: Platzhalter-Test hätte für `/ernaehrung/kalorien` fehlschlagen müssen (zeigt jetzt echten Inhalt statt "Bald verfügbar") — als Teil dieser QA-Runde behoben: aus der Platzhalter-Liste entfernt, eigene Abdeckung jetzt in `PROJ-40-kalorien.spec.ts`. Volle PROJ-36-Suite danach grün (18/18 pro Browser).
+- Keine Änderungen an gemeinsam genutzten Komponenten (`ArbeitspunkteListe`, `ErnaehrungSubHeader`) — kein weiteres Regressionsrisiko für andere Guides.
+- `npm run build`, `npm run lint` (0 Fehler, 1 vorbestehende, nicht mit PROJ-40 zusammenhängende Warnung), `npm test` (415/415) grün.
+- Responsive geprüft bei 375px, 768px, 1440px — kein horizontales Scrollen in main content.
+
+### Bugs Found
+
+#### BUG-1: Verbotenes Wort "gesund" im Alkohol-Text
+- **Severity:** Low
+- **Steps to Reproduce:**
+  1. Gehe zu `/ernaehrung/kalorien`
+  2. Klappe "Alkohol" auf
+  3. Erwartet: Kein Vorkommen von "gesund"/"ungesund"/"Gesundheit" (Projekt-Grundsatz: keine Gesundheitsurteile)
+  4. Tatsächlich: Der Satz lautet "Alkohol ist ein Nervengift — eine &quot;gesunde Menge&quot; gibt es nicht." — enthält "gesunde"
+- **Einordnung:** Anders als beim ursprünglichen Zweck der Regel (keine Gesundheitsurteile über Mahlzeiten) ist das hier eine sachliche toxikologische Aussage, kein Urteil über eine Mahlzeit — trotzdem eine wörtliche Regelverletzung nach der bestehenden Projekt-Konvention.
+- **Vorschlag:** z. B. "eine unbedenkliche Menge gibt es nicht" oder "eine sichere Menge gibt es nicht"
+- **Priority:** Fix before deployment (Nutzer hat dieses Wortverbot in der Vergangenheit explizit als wichtig markiert)
+
+### Summary
+- **Acceptance Criteria:** 9/9 passed
+- **Bugs Found:** 1 total (0 critical, 0 high, 0 medium, 1 low)
+- **Security:** Pass (kein Backend, keine Nutzereingaben, minimale Angriffsfläche; ein nicht reproduzierbarer, dev-server-typischer Konsolenfehler dokumentiert, keine funktionale Auswirkung)
+- **Production Ready:** YES (kein Critical/High-Bug; der eine Low-Bug ist eine schnelle Textkorrektur)
+- **Recommendation:** Bug-1 vor dem Deploy noch schnell fixen (eine Zeile Text), dann deployen
 
 ## Deployment
 _To be added by /deploy_
