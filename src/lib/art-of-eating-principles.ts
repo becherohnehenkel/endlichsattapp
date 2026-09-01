@@ -15,7 +15,7 @@ export const ART_OF_EATING_PRINZIPIEN: readonly ArtOfEatingPrinzip[] = [
     number: 1,
     title: 'Schaffe den richtigen Rahmen',
     body: 'Setz dich hin. Immer. Wer im Gehen isst, verliert den Bezug zur Mahlzeit und damit auch das Sättigungsgefühl. Essen ist kein Anhängsel deines Tages, sondern ein fester Teil davon. Nimm dir die Zeit bewusst — nicht weil du sie hast, sondern weil du sie dir nimmst.',
-    funFact: 'In Japan sieht man niemanden im Gehen essen — nicht umsonst gelten sie als eines der gesündesten Völker der Welt.',
+    funFact: 'In Japan sieht man niemanden im Gehen essen — kein Zufall, dass die Japaner zu den langlebigsten Menschen der Welt zählen.',
   },
   {
     number: 2,
