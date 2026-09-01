@@ -142,12 +142,51 @@ Keine — Inhalt final, inklusive der vom Nutzer bereitgestellten Protein-Quelle
 <!-- Added by /architecture -->
 | Decision | Rationale | Date |
 |----------|-----------|------|
+| Bestehende `ArbeitspunkteListe`-Komponente wiederverwenden statt neu bauen | Einheitliches Verhalten über alle Ernährungs-Guides, kein zusätzlicher Entwicklungsaufwand | 2026-09-01 |
+| Protein-Quellen als 3 gestapelte Karten (eine pro Prozent-Stufe) statt einer Tabelle | Kommagetrennte Lebensmittel-Listen passen besser in breite Zeilen als in schmale Tabellenspalten (anders als bei PROJ-39s kurzen Einzelwerten) | 2026-09-01 |
+| Kein Erstbesucher-Onboarding wie bei PROJ-38 | War eine einmalige, gezielte Einführung ins Akkordeon-Konzept selbst — nicht pro Guide nötig | 2026-09-01 |
+| Kein Backend / keine neue API-Route | Reiner Lese-Inhalt, identisch zum Muster von PROJ-38/39 | 2026-09-01 |
 
 ---
 <!-- Sections below are added by subsequent skills -->
 
 ## Tech Design (Solution Architect)
-_To be added by /architecture_
+
+### A) Komponenten-Struktur
+
+```
+/ernaehrung/kalorien (Seite, ersetzt den bestehenden Platzhalter aus PROJ-36)
++-- ErnaehrungSubHeader ("Kalorien") — bestehende Komponente, unverändert
++-- KalorienGuide (neu, analog zu HeisshungerGuide/EmotionalesEssenGuide)
+    +-- ArbeitspunkteListe (bestehende Komponente)
+        +-- Sektion ohne Label
+        |     +-- 1. Was sind Kalorien (+ Link auf /ernaehrung/so-geht-abnehmen)
+        +-- Sektion "Die Makronährstoffe"
+              +-- 2. Proteine
+              |     +-- Erklärtext + Aminosäuren-Absatz
+              |     +-- ProteinQuellenUebersicht (neu) — 3 gestapelte Karten
+              |           (40 % / 30 % / 20 % Proteinanteil), je 3 Zeilen
+              |           (Tierisch/Vegetarisch/Vegan)
+              +-- 3. Kohlenhydrate
+              +-- 4. Fette
+              +-- 5. Ballaststoffe
+              +-- 6. Alkohol
+```
+
+### B) Datenmodell (einfache Sprache)
+
+Kein neues Datenmodell nötig. Genutzt wird exakt dasselbe Muster wie bei "Heißhunger" und "Emotionales Essen": Welche der 6 Punkte als "Verstanden" markiert wurden, wird im Browser gespeichert (eigener Speicher-Schlüssel). Kein Server, kein Nutzerkonto nötig.
+
+### C) Tech-Entscheidungen (Begründung für PM)
+
+- **Kein Backend, keine neue API-Route.** Reiner Lese-Inhalt wie alle bisherigen Ernährungs-Guides.
+- **Bestehende Arbeitspunkte-Komponente wiederverwenden.** Einheitliches Verhalten über alle 5 Ernährungs-Guides hinweg.
+- **Eine neue, kleine Komponente für die Protein-Quellen-Übersicht.** Die Daten (3 Prozent-Stufen × 3 Kategorien) passen am besten als 3 gestapelte Karten — eine pro Prozent-Stufe, mit je einer Zeile pro Kategorie. Bewusst keine klassische Tabelle wie bei "Heißhunger"s Priorisierungs-Beispiel: dort waren es kurze Einzelwerte pro Zelle, hier sind es längere, kommagetrennte Lebensmittel-Listen — die passen besser in breite Zeilen als in schmale Tabellenspalten.
+- **Kein Erstbesucher-Onboarding** (Auto-Öffnen/Pulse/Dialog wie bei "Emotionales Essen"). War eine einmalige Einführung ins Akkordeon-Konzept, nicht nötig für jeden neuen Guide.
+
+### D) Abhängigkeiten (zu installierende Pakete)
+
+Keine neuen Pakete nötig — vollständig mit den bereits installierten shadcn/ui-Komponenten und Tailwind CSS umsetzbar.
 
 ## QA Test Results
 _To be added by /qa_
