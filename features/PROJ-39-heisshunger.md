@@ -112,6 +112,7 @@
 | Kein Erstbesucher-Onboarding (Auto-Öffnen/Pulse/Dialog) wie bei PROJ-38 | War eine gezielte Einführung ins Akkordeon-Konzept selbst — Nutzer kennen das Muster inzwischen aus 3 anderen Guides, spart Aufwand | 2026-09-01 |
 | Kein Backend / keine neue API-Route | Reiner Lese-Inhalt, identisch zum Muster von PROJ-38 und Teilen von PROJ-37 | 2026-09-01 |
 | **Refinement 2026-09-01:** `ersterPunktOnboarding={{ autoOpenNachMs: 700 }}` doch ergänzt (erster Arbeitspunkt klappt beim Laden automatisch auf) | Löst die Entscheidung "Kein Erstbesucher-Onboarding" (Zeile oben) teilweise ab — Nutzerwunsch nach konsistentem Auto-Open-Verhalten über alle Ernährung-Guides hinweg (ohne Pulse/Dialog, die bleiben PROJ-38-exklusiv). `pulseNachMs` in `ArbeitspunkteListe` dafür optional gemacht. | 2026-09-01 |
+| **Refinement 2026-09-01:** Neue Überschrift "Plötzlich Hunger?" oberhalb des bestehenden Intro-Texts ergänzt (Text selbst unverändert) | War der letzte Ernährungs-Guide ohne eigene H1 — Nutzerwunsch nach konsistenter Überschrift wie bei allen anderen Guides | 2026-09-01 |
 
 ---
 <!-- Sections below are added by subsequent skills -->

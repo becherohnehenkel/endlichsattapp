@@ -45,9 +45,12 @@ const SEKTIONEN: ArbeitspunkteSektion[] = [
 export function KalorienZaehlenGuide() {
   return (
     <div className="space-y-6">
-      <p className="text-foreground leading-relaxed">
-        Kalorienzählen ist ein Werkzeug auf Zeit — kein Dauerzustand.
-      </p>
+      <div className="space-y-2">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Warum das Alles?</h1>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          Kalorien zählen ist ein Werkzeug auf Zeit, damit du wieder lernst was deinen Körper nährt. Hier steht warum es jedoch mehr ist als nur zählen.
+        </p>
+      </div>
 
       <ArbeitspunkteListe
         storageKey="kalz_completed"

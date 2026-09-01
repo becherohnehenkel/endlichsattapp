@@ -98,6 +98,7 @@ Keine — Inhalt final, inklusive der vom Nutzer präzisierten Grafik-Idee für 
 | Kein Erstbesucher-Onboarding wie bei PROJ-38 | War eine einmalige, gezielte Einführung ins Akkordeon-Konzept selbst — nicht pro Guide nötig | 2026-09-01 |
 | Kein Backend / keine neue API-Route | Reiner Lese-Inhalt, identisch zum Muster von PROJ-38/39/40 | 2026-09-01 |
 | **Refinement 2026-09-01:** `ersterPunktOnboarding={{ autoOpenNachMs: 700 }}` doch ergänzt (erster Arbeitspunkt klappt beim Laden automatisch auf) | Löst die Entscheidung "Kein Erstbesucher-Onboarding" (Zeile oben) teilweise ab — Nutzerwunsch nach konsistentem Auto-Open-Verhalten über alle Ernährung-Guides hinweg (ohne Pulse/Dialog, die bleiben PROJ-38-exklusiv). `pulseNachMs` in `ArbeitspunkteListe` dafür optional gemacht. | 2026-09-01 |
+| **Refinement 2026-09-01:** Neue Überschrift "Warum das Alles?" + neuer, kürzerer Intro-Text ("Kalorien zählen ist ein Werkzeug auf Zeit, damit du wieder lernst was deinen Körper nährt...") ersetzt den bisherigen Intro-Satz | War der letzte Ernährungs-Guide ohne eigene H1 — Nutzerwunsch nach konsistenter Überschrift wie bei allen anderen Guides. Betroffene E2E-Tests (Intro-Text-Regex in Seitenstruktur + Gast-Zugriff) auf den neuen Wortlaut aktualisiert. | 2026-09-01 |
 
 ---
 <!-- Sections below are added by subsequent skills -->

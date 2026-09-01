@@ -21,9 +21,10 @@ async function oeffneArbeitspunkt(page: Page, titel: string) {
 // ─── Seitenstruktur ─────────────────────────────────────────────────────────
 
 test.describe('Seitenstruktur', () => {
-  test('AC: zeigt den Intro-Text', async ({ page }) => {
+  test('AC: zeigt Überschrift und Intro-Text', async ({ page }) => {
     await page.goto('/ernaehrung/kalorien-zaehlen')
-    await expect(page.getByText(/Kalorienzählen ist ein Werkzeug auf Zeit/)).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Warum das Alles?' })).toBeVisible()
+    await expect(page.getByText(/Kalorien zählen ist ein Werkzeug auf Zeit/)).toBeVisible()
   })
 
   test('AC: zeigt 2 Punkte in der richtigen Reihenfolge', async ({ page }) => {
@@ -132,6 +133,6 @@ test.describe('Gast-Zugriff', () => {
     await context.clearCookies()
     const response = await page.goto('/ernaehrung/kalorien-zaehlen')
     expect(response?.status()).toBeLessThan(400)
-    await expect(page.getByText(/Kalorienzählen ist ein Werkzeug auf Zeit/)).toBeVisible()
+    await expect(page.getByText(/Kalorien zählen ist ein Werkzeug auf Zeit/)).toBeVisible()
   })
 })

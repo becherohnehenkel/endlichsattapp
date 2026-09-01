@@ -21,8 +21,9 @@ async function oeffneArbeitspunkt(page: Page, titel: string) {
 // ─── Seitenstruktur ─────────────────────────────────────────────────────────
 
 test.describe('Seitenstruktur', () => {
-  test('AC: zeigt den Intro-Text zu Heißhunger', async ({ page }) => {
+  test('AC: zeigt Überschrift und Intro-Text zu Heißhunger', async ({ page }) => {
     await page.goto('/ernaehrung/heisshunger')
+    await expect(page.getByRole('heading', { name: 'Plötzlich Hunger?' })).toBeVisible()
     await expect(page.getByText(/Heißhunger fühlt sich plötzlich an/)).toBeVisible()
     await expect(page.getByText(/Kaloriendefizit zu groß ist/)).toBeVisible()
   })
