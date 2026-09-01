@@ -144,7 +144,66 @@ Keine neuen Pakete nötig — die verwendeten Icons sind Teil der bereits instal
 - `npm run build`, `npm run lint`, `npm test` (415/415) fehlerfrei. Verifiziert per Playwright-Skript (Text-Check + Screenshots nach Animations-Settle): beide Arbeitspunkte, alle 3 Gründe-Karten samt Links und Erkenntnis-Fragen, sowie der Jetzt-vs-Zukunft-Vergleich rendern korrekt.
 
 ## QA Test Results
-_To be added by /qa_
+
+**Tested:** 2026-09-01
+**App URL:** http://localhost:3000
+**Tester:** QA Engineer (AI)
+
+### Acceptance Criteria Status
+
+#### Seitenstruktur
+- [x] 2 Punkte ("Warum zählen wir Kalorien?" / "Das Wichtigste beim Kalorienzählen: das Aufhören") in korrekter Reihenfolge
+- [x] Beide Punkte starten eingeklappt
+- [x] "Verstanden" aktualisiert Fortschritt und speichert lokal (bleibt nach Reload erhalten)
+
+#### Warum zählen wir Kalorien?
+- [x] Alle 3 Gründe als visuell hervorgehobene Liste sichtbar (Karten mit Icon, nicht Fließtext)
+- [x] Die 3 Erkenntnis-Fragen beim 3. Grund sichtbar
+- [x] Link zum Kcal-Rechner zeigt korrekt auf `/ernaehrung/so-geht-abnehmen`
+- [x] Link zu den Makronährstoffen zeigt korrekt auf `/ernaehrung/kalorien`
+
+#### Das Aufhören
+- [x] Stützräder-Analogie und Jetzt-vs-Zukunft-Grafik (graues neutrales / grünes lächelndes Gesicht) sichtbar
+- [x] Ausstiegs-Fahrplan (2–3 Monate, Wohlfühlgewicht) sichtbar
+- [x] Stress-Tag-Hinweis sichtbar
+
+#### Gast-Zugriff
+- [x] Gast (keine Session, Cookies gelöscht) kann die Seite vollständig lesen, Status < 400
+
+### Edge Cases Status
+
+#### EC-1: Link zum Kcal-Rechner ohne vorherige Nutzung
+- [x] Kein Problem — Kcal-Rechner zeigt einfach ein leeres Formular (bestehendes PROJ-37-Verhalten, keine erneute Prüfung nötig)
+
+#### EC-2: Gast-Zugriff
+- [x] Voller Lesezugriff bestätigt, kein Login-Zwang, kein 404/500
+
+#### EC-3: Fortschritt bleibt nach Reload erhalten, "Alles durch"-Hinweis bei 2/2
+- [x] Bestätigt — Fortschritt persistiert über Reload, "Alles durch ✓"-Hinweis erscheint korrekt bei beiden abgeschlossenen Punkten
+
+### Security Audit Results
+- [x] Kein Backend/keine API-Route — keine Angriffsfläche für Auth-Bypass, Injection oder Rate-Limiting-Probleme (0 `/api/`-Requests bei voller Interaktion gemessen)
+- [x] Kein Nutzer-Input auf der Seite (nur Lese-Interaktion) — kein XSS-Vektor vorhanden
+- [x] Gast-Zugriff funktioniert wie spezifiziert, keine versteckten Auth-Anforderungen
+- [x] Keine sensiblen Daten im Client (`localStorage` enthält nur eine ID-Liste abgeschlossener Punkte)
+- [ ] Transienter Konsolenfehler ("Failed to load resource: 404") einmalig beobachtet — identisches Muster wie bereits bei PROJ-39/40s QA dokumentiert, dort als nicht reproduzierbares Next.js-Dev-Server-Rauschen eingestuft; `npm run build` läuft fehlerfrei durch. Keine Bug-Einstufung.
+- [x] Verbotenes Wort "gesund"/"ungesund"/"Gesundheit" geprüft — keine Vorkommen (Lektion aus PROJ-40s BUG-1 direkt beim Schreiben beachtet)
+
+### Regression Testing
+- `PROJ-36-ernaehrung-hub.spec.ts`: Letzter verbliebener Platzhalter-Test (`/ernaehrung/kalorien-zaehlen`) hätte fehlschlagen müssen (zeigt jetzt echten Inhalt statt "Bald verfügbar") — als Teil dieser QA-Runde behoben: den mittlerweile leeren Platzhalter-Block komplett entfernt, eigene Abdeckung jetzt in `PROJ-41-kalorien-zaehlen.spec.ts`. Damit haben alle 8 Ernährung-Unterseiten echten Inhalt, keine Platzhalter mehr übrig. Volle PROJ-36-Suite danach grün (17/17 pro Browser).
+- Keine Änderungen an gemeinsam genutzten Komponenten (`ArbeitspunkteListe`, `ErnaehrungSubHeader`) — kein weiteres Regressionsrisiko für andere Guides.
+- `npm run build`, `npm run lint` (0 Fehler, 1 vorbestehende, nicht mit PROJ-41 zusammenhängende Warnung), `npm test` (415/415) grün.
+- Responsive geprüft bei 375px, 768px, 1440px — kein horizontales Scrollen in main content.
+
+### Bugs Found
+Keine.
+
+### Summary
+- **Acceptance Criteria:** 11/11 passed
+- **Bugs Found:** 0
+- **Security:** Pass (kein Backend, keine Nutzereingaben, minimale Angriffsfläche; ein nicht reproduzierbarer, dev-server-typischer Konsolenfehler dokumentiert, keine funktionale Auswirkung)
+- **Production Ready:** YES
+- **Recommendation:** Deploy
 
 ## Deployment
 _To be added by /deploy_

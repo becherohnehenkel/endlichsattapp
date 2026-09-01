@@ -118,26 +118,13 @@ test.describe('Breadcrumb auf allen 8 Unterseiten', () => {
 })
 
 // ─── Platzhalter-Unterseiten ────────────────────────────────────────────────
-// /ernaehrung/so-geht-abnehmen (PROJ-37), /ernaehrung/emotionales-essen (PROJ-38),
-// /ernaehrung/heisshunger (PROJ-39) und /ernaehrung/kalorien (PROJ-40) haben mittlerweile
-// echten Inhalt und sind daher absichtlich aus dieser Liste raus — eigene Abdeckung in
+// Alle ursprünglich 5 Platzhalter (/ernaehrung/so-geht-abnehmen PROJ-37,
+// /ernaehrung/emotionales-essen PROJ-38, /ernaehrung/heisshunger PROJ-39,
+// /ernaehrung/kalorien PROJ-40, /ernaehrung/kalorien-zaehlen PROJ-41) haben mittlerweile
+// echten Inhalt — dieser Block ist damit leer und wurde entfernt. Eigene Abdeckung in
 // PROJ-37-so-geht-abnehmen.spec.ts, PROJ-38-emotionales-essen.spec.ts,
-// PROJ-39-heisshunger.spec.ts bzw. PROJ-40-kalorien.spec.ts.
-
-test.describe('1 verbleibende Platzhalter-Unterseite', () => {
-  const placeholders = [
-    '/ernaehrung/kalorien-zaehlen',
-  ]
-
-  for (const path of placeholders) {
-    test(`AC: ${path} lädt ohne Login und zeigt "Bald verfügbar"`, async ({ page, context }) => {
-      await context.clearCookies()
-      const response = await page.goto(path)
-      expect(response?.status()).toBeLessThan(400)
-      await expect(page.getByText('Bald verfügbar')).toBeVisible()
-    })
-  }
-})
+// PROJ-39-heisshunger.spec.ts, PROJ-40-kalorien.spec.ts bzw.
+// PROJ-41-kalorien-zaehlen.spec.ts.
 
 // ─── Regression: eingeloggter Nutzer ────────────────────────────────────────
 

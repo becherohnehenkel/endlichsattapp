@@ -56,7 +56,7 @@
 | PROJ-38 | Emotionales Essen (Refinement: Onboarding, Timer, Atemübung, Reiz-Ampel "Complete") | P2 | Deployed | PROJ-36 | [Spec](PROJ-38-emotionales-essen.md) |
 | PROJ-39 | Heißhunger | P2 | Deployed | PROJ-36, PROJ-38 | [Spec](PROJ-39-heisshunger.md) |
 | PROJ-40 | Kalorien | P2 | Deployed | PROJ-36, PROJ-37 | [Spec](PROJ-40-kalorien.md) |
-| PROJ-41 | Kalorien zählen | P2 | In Progress | PROJ-36, PROJ-37, PROJ-40 | [Spec](PROJ-41-kalorien-zaehlen.md) |
+| PROJ-41 | Kalorien zählen | P2 | Approved | PROJ-36, PROJ-37, PROJ-40 | [Spec](PROJ-41-kalorien-zaehlen.md) |
 
 <!-- Add features above this line -->
 
