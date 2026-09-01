@@ -151,10 +151,19 @@ test.describe('Sektion 2 — Allgemeine Praxis-Übungen', () => {
     await expect(page.getByText('400 kcal')).toHaveCount(2)
   })
 
-  test('AC: "Screentime planen" zeigt den Tagesdosis-Hinweis', async ({ page }) => {
+  test('AC: "Screentime planen" zeigt die 45-Minuten-Tagesdosis', async ({ page }) => {
     await page.goto('/ernaehrung/emotionales-essen')
     await oeffneArbeitspunkt(page, 'Screentime planen')
-    await expect(page.getByText(/Tagesdosis/)).toBeVisible()
+    await expect(page.getByText(/Tagesdosis.*von 45 Minuten/)).toBeVisible()
+  })
+
+  test('AC: "Screentime planen" zeigt die Reiz-Ampel mit 5 Sinnen (Hören/Sehen/Fühlen vom Smartphone bedient, Riechen/Schmecken offen)', async ({ page }) => {
+    await page.goto('/ernaehrung/emotionales-essen')
+    await oeffneArbeitspunkt(page, 'Screentime planen')
+    for (const sinn of ['Hören', 'Sehen', 'Fühlen', 'Riechen', 'Schmecken']) {
+      await expect(page.getByText(sinn, { exact: true })).toBeVisible()
+    }
+    await expect(page.getByText('Essen, kauen, leckeres Mundgefühl')).toBeVisible()
   })
 })
 

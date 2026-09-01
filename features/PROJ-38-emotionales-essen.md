@@ -117,12 +117,16 @@
 > Wenn du "immer" isst, hat dein Körper keinen Rhythmus — und der liebt Rhythmus. Deshalb reden wir von 3 festen Mahlzeiten am Tag, aufgeteilt nach der Formel 20/40/40. Interaktiv: ein Balken + 3 Blöcke (Frühstück/Mittag/Abend) zeigen die Aufteilung mit kcal und Prozent — auf Basis des eigenen PROJ-37-Kcal-Rechner-Ergebnisses, sonst Referenzwert 2000 kcal. Ein Schalter "Snack einbauen?" fügt einen 4. Block zwischen Mittag- und Abendessen ein und nimmt dafür je 10 Prozentpunkte der Gesamtkalorien von Mittag- und Abendessen (20/30/20/30 statt 20/40/40).
 
 ### 9. Screentime planen
-> Das Smartphone hat vieles einfacher und schneller gemacht — das ist verständlich. Aber schau in deinen Einstellungen nach, wie lange du in welcher App verbringst. Meist ist es Social Media. Limitiere diese App auf eine "Tagesdosis" — nicht sofort auf 20 Minuten, sondern einfach weniger als gestern. Reduziere weiter, sobald es sich leicht anfühlt. Viele fremde Gedanken, die im Sekundentakt auf dich einprasseln, beeinflussen nicht nur deine Gedanken, sondern auch dein Verhältnis zum Essen.
+> Deine Sinne sind oft permanent gereizt — das erzeugt den Drang nach **mehr** Reiz und kann zu mehr unbewusstem Essen führen.
+>
+> Reiz-Ampel (5 Sinne): Hören ("Kopfhörer immer drin?"), Sehen ("Ständig am Screen?") und Fühlen ("Handy ständig in der Hand?") sind vom Smartphone bedient — als "angetickt" markiert (grüner Haken). Riechen ("Frisches Brot, Kaffeeduft, Gebäck") und Schmecken ("Essen, kauen, leckeres Mundgefühl") bleiben offen/ausgegraut (gestrichelter Kreis) — genau die Lücke, die unbewusstes Essen zu füllen versucht.
+>
+> Limitiere deine Hauptablenkungs-App auf eine "Tagesdosis" von 45 Minuten pro Tag. Glaub mir — du wirst über den Effekt staunen!
 
 ## Open Questions
-- [ ] Visuelle Gestaltung für Arbeitspunkt 9 (Screentime planen) — Nutzer möchte hier ebenfalls eine visuelle Auflockerung, hat aber noch keine konkrete Richtung vorgegeben (Stand 2026-09-01).
+- [x] Visuelle Gestaltung für Arbeitspunkt 9 (Screentime planen) → Reiz-Ampel (5 Sinne, Hören/Sehen/Fühlen "angetickt" vs. Riechen/Schmecken offen), entschieden nach Mockup-Vergleich (2026-09-01).
 
-Ansonsten: Copy für Intro und alle 9 Arbeitspunkte final (Quelle: vom Nutzer bereitgestellte PDFs "Emotionales_Essen.pdf" und "AnatomieDesKühlschranksV2.pdf", Fragebogen von 9 auf 7 Fragen gekürzt; Punkte 1–4 & 8 am 2026-09-01 visuell überarbeitet, siehe Implementation Notes).
+Keine offenen Fragen mehr — Copy für Intro und alle 9 Arbeitspunkte final (Quelle: vom Nutzer bereitgestellte PDFs "Emotionales_Essen.pdf" und "AnatomieDesKühlschranksV2.pdf", Fragebogen von 9 auf 7 Fragen gekürzt; alle 9 Arbeitspunkte am 2026-09-01 visuell überarbeitet, siehe Implementation Notes).
 
 ## Decision Log
 
@@ -134,6 +138,9 @@ Ansonsten: Copy für Intro und alle 9 Arbeitspunkte final (Quelle: vom Nutzer be
 | 3 emotionsspezifische Punkte (Traurig/Wütend/Überfordert) als eigene, separate Arbeitspunkte statt Unterpunkte eines gemeinsamen Punkts | Jede Emotion verdient einen eigenständigen, direkt anspringbaren Punkt | 2026-08-31 |
 | Diese 3 Punkte stehen an erster Stelle und sind optisch von den 6 allgemeinen Praxis-Übungen abgesetzt | Nutzerwunsch — direkter Emotionsbezug soll sich vom eher allgemeinen Rest abheben | 2026-08-31 |
 | Kein Trainingsplan-artiger Verweis wie bei PROJ-37 (Krafttraining → /training) nötig | Diese Seite hat keine thematische Überschneidung mit einem anderen Nav-Bereich | 2026-08-31 |
+| Reiz-Ampel (statische 5-Sinne-Übersicht) statt interaktivem Screentime-Rechner für Punkt 9 | Nutzer lehnte den interaktiven Rechner explizit ab: "Bei B können sich die Leute zu sehr selbst verarschen" — Risiko unehrlicher Selbsteingaben bei einem sensiblen Thema | 2026-09-01 |
+| Riechen & Schmecken bewusst als "offen/ausgegraut" dargestellt, nicht als weitere "angetickte" Punkte | Zeigt die Sinneslücke, die das Smartphone nicht füllen kann — genau die Lücke, die unbewusstes Essen zu füllen versucht (Kernaussage des Arbeitspunkts) | 2026-09-01 |
+| Fester Zielwert "45 Minuten pro Tag" statt der bisherigen vagen "einfach weniger als gestern"-Formulierung | Nutzer-Vorgabe — konkreter, actionable-r Richtwert | 2026-09-01 |
 
 ### Technical Decisions
 <!-- Added by /architecture -->
@@ -202,7 +209,14 @@ Nutzer-Feedback: Überschriften 1/2 sollten den Kern vorwegnehmen, Arbeitspunkte
 - Emojis vor Bulletpoints ergänzt, wo neue Listen/Beispiele entstanden sind (Punkte 3 & 4) — bestehender Inhalt (Fragebogen, Atemübung, Einkauf planen) bewusst unangetastet gelassen, da nicht Teil dieser Anfrage.
 - `tests/PROJ-38-emotionales-essen.spec.ts`: 2 Tests an neue Textstruktur angepasst (Punkt 3 & 4), 2 neue Tests ergänzt (statischer 2000-kcal-Referenzwert; Snack-Schalter-Interaktion). Alle 36 E2E-Tests grün (18 Acceptance-Tests × 2 Browser-Projekte).
 - `npm run build`, `npm run lint`, `npm test` (415/415) weiterhin grün.
-- **Punkt 9 (Screentime planen)** bewusst unverändert gelassen — visuelle Gestaltung dafür ist als offene Frage im Decision Log/Open Questions vermerkt, Nutzer hat explizit um Vorschläge gebeten statt eine Richtung vorzugeben.
+### Refinement (2026-09-01, Teil 2): Reiz-Ampel für Arbeitspunkt 9 (Screentime planen)
+Für Punkt 9 wurden dem Nutzer 3 visuelle Konzepte als Artifact-Mockup vorgelegt (schrumpfender Wochen-Balken / interaktiver Rechner / Reiz-Ampel). Entscheidung: **Reiz-Ampel**, mit Begründung "bei B können sich die Leute zu sehr selbst verarschen" (Ablehnung der interaktiven Selbsteingabe — Risiko unehrlicher/geschönter Werte).
+- Von reinem Fließtext auf eine 5-Sinne-Übersicht umgestellt: Hören/Sehen/Fühlen sind vom Smartphone bedient und als "angetickt" markiert (grüner Kreis mit Haken, `lucide-react` `Check`); Riechen/Schmecken bleiben bewusst offen/ausgegraut (gestrichelter Rahmen, gestrichelter leerer Kreis) — visualisiert die Lücke, die unbewusstes Essen zu füllen versucht.
+- Intro-Satz verschärft: "…kann zu mehr unbewusstem Essen führen" (statt der bisherigen vagen Formulierung) — verbindet Punkt 9 direkter mit dem Kernthema der Seite.
+- Konkreter Zielwert statt vager schrittweiser Reduktion: "Tagesdosis von 45 Minuten pro Tag" (Nutzer-Vorgabe, ersetzt die bisherige "einfach weniger als gestern"-Formulierung).
+- Kein zusätzlicher Client-State nötig (rein statische Darstellung) — anders als bei Punkt 8 blieb `emotionales-essen-guide.tsx` hier eine reine (Server-)Komponente.
+- 2 neue E2E-Tests ergänzt (45-Minuten-Tagesdosis; alle 5 Sinne inkl. Schmecken-Beschreibung sichtbar). `PROJ-38`-Suite: 19/19 (chromium). `npm run build`, `npm run lint`, `npm test` (415/415) weiterhin grün.
+- Damit sind alle 9 Arbeitspunkte final überarbeitet — keine offenen Fragen mehr zu Punkt 9.
 
 ## QA Test Results
 

@@ -1,4 +1,4 @@
-import { Timer } from 'lucide-react'
+import { Check, Timer } from 'lucide-react'
 import { ArbeitspunkteListe, type ArbeitspunkteSektion } from './arbeitspunkte-liste'
 import { FesteMahlzeitenPlaner } from './feste-mahlzeiten-planer'
 
@@ -14,6 +14,23 @@ const UEBERFORDERT_BEISPIELE: UeberfordertBeispiel[] = [
   { aufgabe: 'Wäsche waschen', prioritaet: 3, bisWann: 'Diese Woche', delegieren: 'Ja — Partner:in' },
   { aufgabe: 'E-Mails beantworten', prioritaet: 2, bisWann: 'Heute, 18 Uhr', delegieren: 'Teilweise — Kolleg:in' },
   { aufgabe: 'Geburtstagsgeschenk besorgen', prioritaet: 2, bisWann: 'Freitag', delegieren: 'Ja — Geschwister fragen' },
+]
+
+interface Sinn {
+  emoji: string
+  label: string
+  beschreibung: string
+  // Sinne, die das Smartphone permanent bedient (Hören/Sehen/Fühlen) sind "angetickt".
+  // Riechen & Schmecken bleiben offen — genau die Lücke, die unbewusstes Essen füllt.
+  vomSmartphoneBedient: boolean
+}
+
+const SINNE: Sinn[] = [
+  { emoji: '👂', label: 'Hören', beschreibung: 'Kopfhörer immer drin?', vomSmartphoneBedient: true },
+  { emoji: '👀', label: 'Sehen', beschreibung: 'Ständig am Screen?', vomSmartphoneBedient: true },
+  { emoji: '✋', label: 'Fühlen', beschreibung: 'Handy ständig in der Hand?', vomSmartphoneBedient: true },
+  { emoji: '👃', label: 'Riechen', beschreibung: 'Frisches Brot, Kaffeeduft, Gebäck', vomSmartphoneBedient: false },
+  { emoji: '👅', label: 'Schmecken', beschreibung: 'Essen, kauen, leckeres Mundgefühl', vomSmartphoneBedient: false },
 ]
 
 interface EmotionalesEssenGuideProps {
@@ -194,9 +211,41 @@ export function EmotionalesEssenGuide({ tagesKcal }: EmotionalesEssenGuideProps)
         id: 9,
         titel: 'Screentime planen',
         inhalt: (
-          <p className="text-xs text-foreground/80 leading-relaxed">
-            Das Smartphone hat vieles einfacher und schneller gemacht — das ist verständlich. Aber schau in deinen Einstellungen nach, wie lange du in welcher App verbringst. Meist ist es Social Media. Limitiere diese App auf eine &quot;Tagesdosis&quot; — nicht sofort auf 20 Minuten, sondern einfach weniger als gestern. Reduziere weiter, sobald es sich leicht anfühlt. Viele fremde Gedanken, die im Sekundentakt auf dich einprasseln, beeinflussen nicht nur deine Gedanken, sondern auch dein Verhältnis zum Essen.
-          </p>
+          <>
+            <p className="text-xs text-foreground/80 leading-relaxed">
+              Deine Sinne sind oft permanent gereizt — das erzeugt den Drang nach <strong>mehr</strong> Reiz und kann zu mehr unbewusstem Essen führen.
+            </p>
+            <div className="space-y-1.5">
+              {SINNE.map(s => (
+                <div
+                  key={s.label}
+                  className={
+                    s.vomSmartphoneBedient
+                      ? 'flex items-center gap-2.5 rounded-xl bg-muted/40 p-2.5'
+                      : 'flex items-center gap-2.5 rounded-xl border border-dashed border-border p-2.5'
+                  }
+                >
+                  <span className="text-base flex-shrink-0">{s.emoji}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-xs font-semibold ${s.vomSmartphoneBedient ? 'text-foreground' : 'text-muted-foreground'}`}>
+                      {s.label}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">{s.beschreibung}</p>
+                  </div>
+                  {s.vomSmartphoneBedient ? (
+                    <span className="flex-shrink-0 h-4 w-4 rounded-full bg-[#2E9E6B] flex items-center justify-center">
+                      <Check className="h-2.5 w-2.5 text-white" strokeWidth={3} />
+                    </span>
+                  ) : (
+                    <span className="flex-shrink-0 h-4 w-4 rounded-full border-2 border-dashed border-muted-foreground/40" />
+                  )}
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-foreground/80 leading-relaxed">
+              Limitiere deine Hauptablenkungs-App auf eine &quot;Tagesdosis&quot; von 45 Minuten pro Tag. Glaub mir — du wirst über den Effekt staunen!
+            </p>
+          </>
         ),
       },
     ],
