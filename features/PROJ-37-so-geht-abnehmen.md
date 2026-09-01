@@ -218,6 +218,11 @@ Eine neue API-Route zum Speichern der Rechner-Eingaben für eingeloggte Nutzer (
 - End-to-End gegen die echte (migrierte) Datenbank live verifiziert: Speichern liefert 200, nach Seiten-Reload sind Gewicht/Größe/Alter/Geschlecht korrekt vorausgefüllt (temporäres Playwright-Skript, nicht committed — offizielle E2E-Abdeckung folgt in `/qa`).
 - `npm run build`, `npm run lint`, `npm test` (401/401) fehlerfrei.
 
+### Refinement (2026-09-01): Überschrift + Intro-Text ergänzt
+`SoGehtAbnehmenGuide` war der einzige der 5 Ernährungs-Guides ohne eigene Überschrift/Intro über den Arbeitspunkten (die anderen 4 haben alle mindestens einen Intro-Absatz, der Hub inzwischen sogar eine `<h1>`). Ergänzt: `<h1>So geht abnehmen</h1>` + erklärender Absatz, wieso das Kaloriendefizit das Fundament ist und die anderen 4 Punkte darauf aufbauen — visuell im selben Stil wie die neue Hub-Überschrift (`text-2xl font-semibold tracking-tight`). Keine Layout- oder Logik-Änderung an den Arbeitspunkten selbst.
+- `tests/PROJ-37-so-geht-abnehmen.spec.ts`: 1 neuer Test für Überschrift + Intro-Text. Volle Suite: 36/36 (chromium + Mobile Chrome).
+- `npm run build`, `npm run lint`, `npm test` (415/415) weiterhin grün.
+
 ## QA Test Results
 
 **Tested:** 2026-08-31

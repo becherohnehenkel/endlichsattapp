@@ -109,10 +109,19 @@ export function SoGehtAbnehmenGuide({ kannSpeichern, gespeicherteWerte }: SoGeht
   ]
 
   return (
-    <ArbeitspunkteListe
-      storageKey="sga_completed"
-      sektionen={sektionen}
-      defaultOffenIds={gespeicherteWerte ? [1] : []}
-    />
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">So geht abnehmen</h1>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          An den folgenden 5 Punkten kommen wir nicht dran vorbei. Allen voran das Kaloriendefizit. Trage deine Daten hier und lass dir deine Kalorien für dein Defizit errechnen. Das ist dein Fundament zum Abnehmen. Die restlichen Punkte bauen Schritt für Schritt darauf auf.
+        </p>
+      </div>
+
+      <ArbeitspunkteListe
+        storageKey="sga_completed"
+        sektionen={sektionen}
+        defaultOffenIds={gespeicherteWerte ? [1] : []}
+      />
+    </div>
   )
 }

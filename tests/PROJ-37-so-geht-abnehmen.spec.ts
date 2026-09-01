@@ -199,6 +199,13 @@ test.describe.serial('Speichern für eingeloggte Nutzer', () => {
 // ─── Seiten-Struktur ────────────────────────────────────────────────────────
 
 test.describe('Seiten-Struktur "So geht abnehmen"', () => {
+  test('AC: zeigt die Überschrift und den Intro-Text oberhalb der Arbeitspunkte', async ({ page }) => {
+    await page.goto('/ernaehrung/so-geht-abnehmen')
+    await expect(page.getByRole('heading', { name: 'So geht abnehmen', exact: true })).toBeVisible()
+    await expect(page.getByText(/kommen wir nicht dran vorbei/)).toBeVisible()
+    await expect(page.getByText(/Allen voran das Kaloriendefizit/)).toBeVisible()
+  })
+
   test('AC: zeigt alle 5 Arbeitspunkte in der richtigen Reihenfolge', async ({ page }) => {
     await page.goto('/ernaehrung/so-geht-abnehmen')
     const main = page.locator('main')
