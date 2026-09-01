@@ -73,18 +73,31 @@ test.describe('Seitenstruktur', () => {
 // ─── Sektion 1: Direkt an der Emotion ansetzen ──────────────────────────────
 
 test.describe('Sektion 1 — Direkt an der Emotion ansetzen', () => {
-  test('AC: "Traurig?" zeigt Nähe-Hinweis (8-Minuten-Regel, Oxytocin/Dopamin/Serotonin)', async ({ page }) => {
+  test('AC: "Traurig?" zeigt Nähe-Hinweis (8-Minuten-Regel, Aktions-Kacheln, Hormon-Pills)', async ({ page }) => {
     await page.goto('/ernaehrung/emotionales-essen')
     await oeffneArbeitspunkt(page, 'Traurig?')
     await expect(page.getByText(/8 Minuten reichen, um sich verstanden zu fühlen/)).toBeVisible()
-    await expect(page.getByText(/Oxytocin, Dopamin und Serotonin/)).toBeVisible()
+    await expect(page.getByText('Anrufen & austauschen')).toBeVisible()
+    await expect(page.getByText('Um Umarmung bitten')).toBeVisible()
+    await expect(page.getByText('Das schüttet aus:')).toBeVisible()
+    await expect(page.getByText('Oxytocin', { exact: true })).toBeVisible()
+    await expect(page.getByText('Dopamin', { exact: true })).toBeVisible()
+    await expect(page.getByText('Serotonin', { exact: true })).toBeVisible()
   })
 
-  test('AC: "Wütend?" zeigt Bewegungs-Hinweis (Fight\\/Flight\\/Freeze)', async ({ page }) => {
+  test('AC: "Wütend?" zeigt Bewegungs-Timer (Kniebeugen/Liegestütze/Plank/Runde um den Block) und Fight/Flight/Freeze-Hinweis', async ({ page }) => {
     await page.goto('/ernaehrung/emotionales-essen')
     await oeffneArbeitspunkt(page, 'Wütend?')
-    await expect(page.getByText(/Kniebeugen, Liegestütze, Planks/)).toBeVisible()
+    await expect(page.getByText('Kniebeugen', { exact: true })).toBeVisible()
+    await expect(page.getByText('Liegestütze', { exact: true })).toBeVisible()
+    await expect(page.getByText('Plank', { exact: true })).toBeVisible()
+    await expect(page.getByText('Runde um den Block')).toBeVisible()
     await expect(page.getByText(/Fight, Flight oder Freeze/)).toBeVisible()
+
+    // Timer starten: Button wechselt von "▶ Start" zu einer laufenden Countdown-Anzeige
+    const kniebeugenZeile = page.getByText('Kniebeugen', { exact: true }).locator('xpath=ancestor::div[contains(@class, "rounded-xl")][1]')
+    await kniebeugenZeile.getByRole('button', { name: '▶ Start' }).click()
+    await expect(kniebeugenZeile.getByRole('button', { name: /0:5\d/ })).toBeVisible()
   })
 
   test('AC: "Überfordert / Gestresst?" zeigt Beispiel-Aufgaben mit Priorität/Bis-wann/Delegieren', async ({ page }) => {
@@ -108,21 +121,36 @@ test.describe('Sektion 2 — Allgemeine Praxis-Übungen', () => {
     await expect(page.getByText('Entspannt aufgewacht')).toBeVisible()
   })
 
-  test('AC: "Fragebogen" zeigt genau 7 nummerierte Fragen in der richtigen Reihenfolge', async ({ page }) => {
+  test('AC: "Fragebogen" zeigt die Routine-Grafik (Auslöser → Routine → Belohnung) und genau 7 nummerierte Fragen in der richtigen Reihenfolge', async ({ page }) => {
     await page.goto('/ernaehrung/emotionales-essen')
     await oeffneArbeitspunkt(page, 'Fragebogen: Hast du wirklich Hunger?')
+    await expect(page.getByText('Auslöser', { exact: true })).toBeVisible()
+    await expect(page.getByText('Routine', { exact: true })).toBeVisible()
+    await expect(page.getByText('Belohnung', { exact: true })).toBeVisible()
     const items = page.locator('main ol li')
     await expect(items).toHaveCount(7)
     await expect(items.nth(0)).toContainText('Ich WILL essen')
     await expect(items.nth(6)).toContainText('Was ist eigentlich mein Ziel')
   })
 
-  test('AC: "Atemübung" zeigt die 4-6-8-Technik', async ({ page }) => {
+  test('AC: "Atemübung" zeigt die animierte 4-6-8-Technik (Countdown → Einatmen/Halten/Ausatmen, 5 Runden)', async ({ page }) => {
     await page.goto('/ernaehrung/emotionales-essen')
     await oeffneArbeitspunkt(page, 'Atemübung (4-6-8-Technik)')
-    await expect(page.getByText(/4 Sekunden lang tief durch die Nase/)).toBeVisible()
-    await expect(page.getByText(/6 Sekunden lang anhalten/)).toBeVisible()
-    await expect(page.getByText(/8 Sekunden lang langsam/)).toBeVisible()
+    // Startet mit einem 5-Sekunden-Countdown, dann Phase "Einatmen" (4s), "Halten" (6s), "Ausatmen" (8s)
+    await expect(page.getByText('Einatmen', { exact: true })).toBeVisible({ timeout: 7000 })
+    await expect(page.getByText('Runde 1 von 5')).toBeVisible()
+    await expect(page.getByText('Halten', { exact: true })).toBeVisible({ timeout: 5000 })
+    await expect(page.getByText('Ausatmen', { exact: true })).toBeVisible({ timeout: 7000 })
+  })
+
+  test('AC: "Atemübung" pausiert, wenn das Akkordion-Item geschlossen wird (Radix unmounted den Inhalt)', async ({ page }) => {
+    await page.goto('/ernaehrung/emotionales-essen')
+    const trigger = page.getByRole('button', { name: 'Atemübung (4-6-8-Technik)' })
+    await trigger.click()
+    await expect(page.getByText('Einatmen', { exact: true })).toBeVisible({ timeout: 7000 })
+    await trigger.click()
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false')
+    await expect(page.getByText('Einatmen', { exact: true })).not.toBeVisible()
   })
 
   test('AC: "Einkauf planen" zeigt Frisches- und Haltbares-Kategorien', async ({ page }) => {

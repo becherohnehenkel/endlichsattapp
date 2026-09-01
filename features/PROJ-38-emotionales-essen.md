@@ -62,10 +62,10 @@
 > Langeweile gibt es eigentlich nicht wirklich — meistens ist es ein Zeichen für Dauerstimulation. Klebst du ständig am Screen? Kopfhörer immer drin? Deine Sinne (Hören, Sehen, Riechen, Fühlen) sind permanent gereizt. Und was passt da super dazu? Genau: Geschmack, Kauen, ein tolles Mundgefühl. Die vermeintliche Langeweile ist oft nur ein fehlender Reiz, den du mit Essen oder Trinken füllen willst.
 
 ### 1. Traurig? Dir fehlt Nähe.
-> Simon Sinek sagt: 8 Minuten reichen, um sich verstanden zu fühlen. Frag eine Freundin oder einen Freund, ob sie 8 Minuten für dich haben. Ruf an. Tausch dich aus. Lass alles raus. Bist du nicht allein daheim: Frag nach einer Umarmung. Das schüttet Oxytocin, Dopamin und Serotonin aus. Essen löst das zwar auch aus — ist aber mit dem Runterschlucken vorbei. Deswegen die Endlosschleife.
+> Simon Sinek sagt: 8 Minuten reichen, um sich verstanden zu fühlen. Drei Aktions-Kacheln (📞 Anrufen & austauschen · 💬 Alles rauslassen · 🤗 Um Umarmung bitten), dann: Frag eine Freundin oder einen Freund, ob sie 8 Minuten für dich haben — das reicht schon. Bist du nicht allein daheim: Frag nach einer Umarmung. Das schüttet aus: Oxytocin · Dopamin · Serotonin (als Pills dargestellt). Essen löst das zwar auch aus — ist aber mit dem Runterschlucken vorbei. Deswegen die Endlosschleife.
 
 ### 2. Wütend? Dir fehlt Bewegung.
-> Die Wut muss einmal raus. Mach eine Minute Kniebeugen, Liegestütze, Planks — oder geh 10 Minuten um den Block. Wut ist meist ein Kommunikationsproblem bei Meinungsverschiedenheiten, oft von außen angestoßen. Der Körper reagiert mit einem der drei Fs: Fight, Flight oder Freeze. Bei Fight muss die Energie woanders hin — in deinen Körper, mit Bewegung. Flight entgeht der Wut, die kommt wieder. Freeze verlagert sie auf später. Essen ist keine Lösung davon.
+> Die Wut muss einmal raus. Wähl eine Übung — der Timer läuft direkt mit: interaktiver Bewegungs-Timer mit 4 Optionen (🏋️ Kniebeugen 1 Min. / 💪 Liegestütze 1 Min. / 🧘 Plank 1 Min. / 🚶 Runde um den Block 10 Min.), Klick auf "▶ Start" startet einen echten Countdown pro Übung. Wut ist meist ein Kommunikationsproblem bei Meinungsverschiedenheiten, oft von außen angestoßen. Der Körper reagiert mit einem der drei Fs: Fight, Flight oder Freeze. Bei Fight muss die Energie woanders hin — in deinen Körper, mit Bewegung. Flight entgeht der Wut, die kommt wieder. Freeze verlagert sie auf später. Essen ist keine Lösung davon.
 
 ### 3. Überfordert / Gestresst? Mach das:
 > Postfach voll, To-do-Liste quillt über? Nimm dir 5 Minuten und schreib deine Aufgaben so auf — 4 Beispiel-Aufgaben zeigen das Format (Aufgabe / Priorität / Bis wann / Delegieren), darunter erklärt je ein Bulletpoint eine Spalte: 📝 Aufgabe — schreib auf, was du alles zu tun hast · 🔢 Priorität — vergib 1–3 (keine 4, keine 0) · ⏰ Bis wann — wann es fertig sein MUSS, nicht sollte · 🤝 Delegieren — wer kann dir helfen oder es übernehmen? Du musst nicht alles allein machen. Jetzt die Liste sinnvoll abarbeiten — mit einem Snack wird sie nicht kürzer.
@@ -76,6 +76,8 @@
 > Allein durchs Aufschreiben beschäftigst du dich damit. Beim nächsten Mal flüstert eine leise Stimme: "Moment — das hab ich doch aufgeschrieben." So kannst du dich Schritt für Schritt aus solchen Situationen befreien.
 
 ### 5. Fragebogen "Hast du wirklich Hunger?"
+> Routinen machen dir den Alltag leichter — aber manche stehen dem Abnehmen im Weg, und schwups landest du bei der Snackschublade. Die Auslöser dafür sind endlos. Bevor die Routine "Essen" startet, stell dir diese Fragen. Davor eine kleine Grafik der Routine-Kette: 🧠 Auslöser → 🔄 Routine → 🍫 Belohnung.
+>
 > Du stehst vor der Snackschublade oder dem Kühlschrank? Okay. Beantworte dir erst diese Fragen — dann geht's weiter.
 >
 > 1. Ich WILL essen — warum? Was hatte ich gerade eigentlich vor?
@@ -87,31 +89,28 @@
 > 7. Okay, ich habe wirklich Hunger. Aber: Was ist eigentlich mein Ziel — und wie weit wirft mich das jetzt zurück?
 
 ### 6. Atemübung (4-6-8-Technik)
-> **Einatmen:** 4 Sekunden lang tief durch die Nase in den Bauch einatmen.
-> **Halten:** Den Atem 6 Sekunden lang anhalten.
-> **Ausatmen:** 8 Sekunden lang langsam und vollständig durch den Mund ausatmen.
-> **Wiederholen:** 5 bis 10 Minuten lang, bis der Drang nach Essen nachlässt.
+> Animierter Atem-Block statt reinem Text: startet mit 5-Sekunden-Countdown, dann 5 Runden à Einatmen (4s, Block füllt sich) → Halten (6s, Farbe pulsiert leicht) → Ausatmen (8s, Block leert sich). Rundenzähler daneben ("Runde X von 5"). Läuft nur, während das Akkordion-Item geöffnet ist — schließen pausiert/stoppt die Animation, erneutes Öffnen startet sie neu von vorn.
 
 ### 7. Einkauf planen
 > Was du immer zu Hause haben solltest, damit du unfallfrei und schnell kochen kannst. Das ist nur ein Vorschlag — mach ihn zu deinem!
 >
 > **Frisches**
-> - Gemüse (saisonal, z. B. Frühling: Rhabarber, Radieschen, Spargel, Brokkoli … / Sommer: Paprika, Zucchini, Tomate … / Herbst: Kürbis, Mais … / Winter: Wurzelgemüse, Rotkohl, Grünkohl …), plus Pilze, Zitrone/Limette, Karotte, Knollensellerie, Kartoffel, Zwiebel, Knoblauch
-> - Obst (saisonal, z. B. Beeren, Kirschen, Äpfel, Trauben, Birnen, Zitrusfrüchte je nach Jahreszeit)
-> - Kräuter (Petersilie, Schnittlauch, Basilikum, Rosmarin, Ingwer …)
-> - Milchprodukte (Quark, Harzer Käse, Käse, Joghurt, Butter)
-> - Weitere Proteinquellen (Tofu, Tempeh, Eier)
-> - Gekühltes Haltbares (Sauerkraut, Kimchi, Misopaste, Senf, Currypaste)
+> - 🥦 Gemüse (saisonal, z. B. Frühling: Rhabarber, Radieschen, Spargel, Brokkoli … / Sommer: Paprika, Zucchini, Tomate … / Herbst: Kürbis, Mais … / Winter: Wurzelgemüse, Rotkohl, Grünkohl …), plus Pilze, Zitrone/Limette, Karotte, Knollensellerie, Kartoffel, Zwiebel, Knoblauch
+> - 🍎 Obst (saisonal, z. B. Beeren, Kirschen, Äpfel, Trauben, Birnen, Zitrusfrüchte je nach Jahreszeit)
+> - 🌿 Kräuter (Petersilie, Schnittlauch, Basilikum, Rosmarin, Ingwer …)
+> - 🧀 Milchprodukte (Quark, Harzer Käse, Käse, Joghurt, Butter)
+> - 🥚 Weitere Proteinquellen (Tofu, Tempeh, Eier)
+> - 🫙 Gekühltes Haltbares (Sauerkraut, Kimchi, Misopaste, Senf, Currypaste)
 >
 > **Haltbares**
-> - Konserven (Kichererbsen, Bohnen, Mais, Tomatensoße, Tomatenmark)
-> - Eingekochtes (Marmelade, Apfelmark)
-> - Glasware (Honig, Mandelmus)
-> - Getrocknet (Kräutermischungen, Chillies, Zimt)
-> - Flaschen (natives Öl, raffiniertes Öl/Schmalz, Essige, Sojasauce)
-> - Alles Korn (Hafer-/Dinkel-/Weizenflocken, Müslimix, Vollkornmehl, Brot/Tortillas, Nudeln, Reis)
-> - Süßes in Maßen (dunkle Schokolade, Studentenfutter, zuckerfreie Getränke, Proteinriegel)
-> - Tiefkühlware (Beeren, Fisch und Fleisch, Erbsen, TK-Gemüsemischung)
+> - 🥫 Konserven (Kichererbsen, Bohnen, Mais, Tomatensoße, Tomatenmark)
+> - 🍓 Eingekochtes (Marmelade, Apfelmark)
+> - 🍯 Glasware (Honig, Mandelmus)
+> - 🌶️ Getrocknet (Kräutermischungen, Chillies, Zimt)
+> - 🧴 Flaschen (natives Öl, raffiniertes Öl/Schmalz, Essige, Sojasauce)
+> - 🌾 Alles Korn (Hafer-/Dinkel-/Weizenflocken, Müslimix, Vollkornmehl, Brot/Tortillas, Nudeln, Reis)
+> - 🍫 Süßes in Maßen (dunkle Schokolade, Studentenfutter, zuckerfreie Getränke, Proteinriegel)
+> - 🧊 Tiefkühlware (Beeren, Fisch und Fleisch, Erbsen, TK-Gemüsemischung)
 
 ### 8. Feste Mahlzeiten planen (ohne Ablenkung)
 > Wenn du "immer" isst, hat dein Körper keinen Rhythmus — und der liebt Rhythmus. Deshalb reden wir von 3 festen Mahlzeiten am Tag, aufgeteilt nach der Formel 20/40/40. Interaktiv: ein Balken + 3 Blöcke (Frühstück/Mittag/Abend) zeigen die Aufteilung mit kcal und Prozent — auf Basis des eigenen PROJ-37-Kcal-Rechner-Ergebnisses, sonst Referenzwert 2000 kcal. Ein Schalter "Snack einbauen?" fügt einen 4. Block zwischen Mittag- und Abendessen ein und nimmt dafür je 10 Prozentpunkte der Gesamtkalorien von Mittag- und Abendessen (20/30/20/30 statt 20/40/40).
@@ -217,6 +216,16 @@ Für Punkt 9 wurden dem Nutzer 3 visuelle Konzepte als Artifact-Mockup vorgelegt
 - Kein zusätzlicher Client-State nötig (rein statische Darstellung) — anders als bei Punkt 8 blieb `emotionales-essen-guide.tsx` hier eine reine (Server-)Komponente.
 - 2 neue E2E-Tests ergänzt (45-Minuten-Tagesdosis; alle 5 Sinne inkl. Schmecken-Beschreibung sichtbar). `PROJ-38`-Suite: 19/19 (chromium). `npm run build`, `npm run lint`, `npm test` (415/415) weiterhin grün.
 - Damit sind alle 9 Arbeitspunkte final überarbeitet — keine offenen Fragen mehr zu Punkt 9.
+
+### Refinement (2026-09-01, Teil 3): Visuelle Auflockerung Punkte 1, 2, 5, 6 & Emojis in Punkt 7
+Letzte Anpassungsrunde des Nutzers, um die verbliebenen reinen Text-Arbeitspunkte visueller zu machen.
+- **1 (Traurig):** Design-Entscheidung ohne Rückfrage getroffen (Nutzer bat explizit um Unterstützung): 3 Aktions-Kacheln (📞 Anrufen & austauschen · 💬 Alles rauslassen · 🤗 Um Umarmung bitten) direkt nach der 8-Minuten-Regel, am Ende die 3 ausgeschütteten Hormone als Pills ("Das schüttet aus: Oxytocin · Dopamin · Serotonin") statt als Fließtext-Aufzählung.
+- **2 (Wütend):** Neue Komponente `src/components/bewegungs-timer.tsx` (Client) — 4 Übungs-Zeilen (🏋️ Kniebeugen, 💪 Liegestütze, 🧘 Plank je 1 Min.; 🚶 Runde um den Block 10 Min.), Klick auf "▶ Start" startet einen echten, unabhängigen Sekunden-Countdown pro Zeile (`setInterval`), Anzeige wechselt zu "✅ Fertig" bei 0.
+- **5 (Fragebogen):** Neuer, vereinfacht formulierter Intro-Absatz zur Routine-Mechanik + kleine Habit-Loop-Grafik (🧠 Auslöser → 🔄 Routine → 🍫 Belohnung) vor den 7 Fragen — verbindet das "Warum" der Fragen mit dem eigentlichen Auslöser-Modell.
+- **6 (Atemübung):** Neue Komponente `src/components/atemuebung-animation.tsx` (Client) — animierter Atem-Block statt Text: 5s-Start-Countdown, dann 5 Runden Einatmen (4s, Block füllt sich von unten) → Halten (6s, `animate-pulse` mit 3s-Zyklus) → Ausatmen (8s, Block leert sich). Läuft rein über verkettete `setTimeout`s in einem `useEffect`; da Radix' `AccordionContent` standardmäßig kein `forceMount` nutzt, unmounted es seinen Inhalt automatisch beim Schließen — der Effekt-Cleanup stoppt die Animation dadurch von selbst, kein zusätzlicher "ist Akkordion offen"-Mechanismus nötig. Erneutes Öffnen mounted die Komponente frisch und startet den 5s-Countdown erneut.
+- **7 (Einkauf planen):** Jede der 14 Zeilen (Frisches + Haltbares) um ein passendes Emoji vorangestellt (🥦🍎🌿🧀🥚🫙 / 🥫🍓🍯🌶️🧴🌾🍫🧊).
+- `tests/PROJ-38-emotionales-essen.spec.ts`: Tests für Punkt 1, 2, 5, 6 neu geschrieben (u. a. Timer-Start-Interaktion, Warten auf Animations-Phasenwechsel mit Timeout, sowie ein dedizierter Test, dass die Atemübungs-Animation beim Schließen des Akkordions tatsächlich verschwindet/pausiert). `PROJ-38`-Suite: 20/20 (chromium).
+- `npm run build`, `npm run lint`, `npm test` (415/415) weiterhin grün.
 
 ## QA Test Results
 

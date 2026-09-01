@@ -1,6 +1,16 @@
 import { Check, Timer } from 'lucide-react'
 import { ArbeitspunkteListe, type ArbeitspunkteSektion } from './arbeitspunkte-liste'
 import { FesteMahlzeitenPlaner } from './feste-mahlzeiten-planer'
+import { BewegungsTimer } from './bewegungs-timer'
+import { AtemuebungAnimation } from './atemuebung-animation'
+
+const AUSSCHUETTUNG = ['Oxytocin', 'Dopamin', 'Serotonin']
+
+const ROUTINE_SCHRITTE = [
+  { emoji: '🧠', label: 'Auslöser' },
+  { emoji: '🔄', label: 'Routine' },
+  { emoji: '🍫', label: 'Belohnung' },
+]
 
 interface UeberfordertBeispiel {
   aufgabe: string
@@ -46,18 +56,54 @@ export function EmotionalesEssenGuide({ tagesKcal }: EmotionalesEssenGuideProps)
         id: 1,
         titel: 'Traurig? Dir fehlt Nähe.',
         inhalt: (
-          <p className="text-xs text-foreground/80 leading-relaxed">
-            Simon Sinek sagt: 8 Minuten reichen, um sich verstanden zu fühlen. Frag eine Freundin oder einen Freund, ob sie 8 Minuten für dich haben. Ruf an. Tausch dich aus. Lass alles raus. Bist du nicht allein daheim: Frag nach einer Umarmung. Das schüttet Oxytocin, Dopamin und Serotonin aus. Essen löst das zwar auch aus — ist aber mit dem Runterschlucken vorbei. Deswegen die Endlosschleife.
-          </p>
+          <>
+            <p className="text-xs text-foreground/80 leading-relaxed">
+              Simon Sinek sagt: 8 Minuten reichen, um sich verstanden zu fühlen.
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="space-y-1 rounded-xl bg-muted/40 p-2.5 text-center">
+                <span className="block text-lg">📞</span>
+                <p className="text-[10px] font-medium leading-snug text-foreground">Anrufen &amp; austauschen</p>
+              </div>
+              <div className="space-y-1 rounded-xl bg-muted/40 p-2.5 text-center">
+                <span className="block text-lg">💬</span>
+                <p className="text-[10px] font-medium leading-snug text-foreground">Alles rauslassen</p>
+              </div>
+              <div className="space-y-1 rounded-xl bg-muted/40 p-2.5 text-center">
+                <span className="block text-lg">🤗</span>
+                <p className="text-[10px] font-medium leading-snug text-foreground">Um Umarmung bitten</p>
+              </div>
+            </div>
+            <p className="text-xs text-foreground/80 leading-relaxed">
+              Frag eine Freundin oder einen Freund, ob sie 8 Minuten für dich haben — das reicht schon. Bist du nicht allein daheim: Frag nach einer Umarmung.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-1.5 pt-0.5">
+              <span className="text-[10px] text-muted-foreground">Das schüttet aus:</span>
+              {AUSSCHUETTUNG.map(hormon => (
+                <span key={hormon} className="rounded-full bg-[#DFF0F2] px-2 py-0.5 text-[10px] font-medium text-[#0E7C86]">
+                  {hormon}
+                </span>
+              ))}
+            </div>
+            <p className="text-xs text-foreground/80 leading-relaxed">
+              Essen löst das zwar auch aus — ist aber mit dem Runterschlucken vorbei. Deswegen die Endlosschleife.
+            </p>
+          </>
         ),
       },
       {
         id: 2,
         titel: 'Wütend? Dir fehlt Bewegung.',
         inhalt: (
-          <p className="text-xs text-foreground/80 leading-relaxed">
-            Die Wut muss einmal raus. Mach eine Minute Kniebeugen, Liegestütze, Planks — oder geh 10 Minuten um den Block. Wut ist meist ein Kommunikationsproblem bei Meinungsverschiedenheiten, oft von außen angestoßen. Der Körper reagiert mit einem der drei Fs: Fight, Flight oder Freeze. Bei Fight muss die Energie woanders hin — in deinen Körper, mit Bewegung. Flight entgeht der Wut, die kommt wieder. Freeze verlagert sie auf später. Essen ist keine Lösung davon.
-          </p>
+          <>
+            <p className="text-xs text-foreground/80 leading-relaxed">
+              Die Wut muss einmal raus. Wähl eine Übung — der Timer läuft direkt mit:
+            </p>
+            <BewegungsTimer />
+            <p className="text-xs text-foreground/80 leading-relaxed">
+              Wut ist meist ein Kommunikationsproblem bei Meinungsverschiedenheiten, oft von außen angestoßen. Der Körper reagiert mit einem der drei Fs: Fight, Flight oder Freeze. Bei Fight muss die Energie woanders hin — in deinen Körper, mit Bewegung. Flight entgeht der Wut, die kommt wieder. Freeze verlagert sie auf später. Essen ist keine Lösung davon.
+            </p>
+          </>
         ),
       },
       {
@@ -138,6 +184,22 @@ export function EmotionalesEssenGuide({ tagesKcal }: EmotionalesEssenGuideProps)
         inhalt: (
           <>
             <p className="text-xs text-foreground/80 leading-relaxed">
+              Routinen machen dir den Alltag leichter — aber manche stehen dem Abnehmen im Weg, und schwups landest du bei der Snackschublade. Die Auslöser dafür sind endlos. Bevor die Routine &quot;Essen&quot; startet, stell dir diese Fragen:
+            </p>
+            <div className="flex items-center justify-center gap-2 py-1">
+              {ROUTINE_SCHRITTE.map((schritt, i) => (
+                <div key={schritt.label} className="flex items-center gap-2">
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted/60 text-base">
+                      {schritt.emoji}
+                    </div>
+                    <span className="text-[9px] font-medium text-muted-foreground">{schritt.label}</span>
+                  </div>
+                  {i < ROUTINE_SCHRITTE.length - 1 && <span className="pb-4 text-xs text-muted-foreground/40">→</span>}
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-foreground/80 leading-relaxed">
               Du stehst vor der Snackschublade oder dem Kühlschrank? Okay. Beantworte dir erst diese Fragen — dann geht&apos;s weiter.
             </p>
             <ol className="space-y-2 text-xs text-foreground/80 leading-relaxed list-decimal pl-5">
@@ -156,12 +218,12 @@ export function EmotionalesEssenGuide({ tagesKcal }: EmotionalesEssenGuideProps)
         id: 6,
         titel: 'Atemübung (4-6-8-Technik)',
         inhalt: (
-          <div className="space-y-1.5 text-xs text-foreground/80 leading-relaxed">
-            <p><strong>Einatmen</strong> — 4 Sekunden lang tief durch die Nase in den Bauch einatmen.</p>
-            <p><strong>Halten</strong> — Den Atem 6 Sekunden lang anhalten.</p>
-            <p><strong>Ausatmen</strong> — 8 Sekunden lang langsam und vollständig durch den Mund ausatmen.</p>
-            <p><strong>Wiederholen</strong> — 5 bis 10 Minuten lang, bis der Drang nach Essen nachlässt.</p>
-          </div>
+          <>
+            <p className="text-xs text-foreground/80 leading-relaxed">
+              Atme im Rhythmus des Blocks mit — 5 Runden, bis der Drang nach Essen nachlässt.
+            </p>
+            <AtemuebungAnimation />
+          </>
         ),
       },
       {
@@ -175,23 +237,23 @@ export function EmotionalesEssenGuide({ tagesKcal }: EmotionalesEssenGuideProps)
             <div className="grid grid-cols-1 gap-3 text-xs text-foreground/80 leading-relaxed">
               <div className="rounded-xl bg-muted/40 p-3 space-y-1.5">
                 <p className="font-semibold text-foreground">Frisches</p>
-                <p>Gemüse (saisonal, z. B. Frühling: Rhabarber, Radieschen, Spargel, Brokkoli … / Sommer: Paprika, Zucchini, Tomate … / Herbst: Kürbis, Mais … / Winter: Wurzelgemüse, Rotkohl, Grünkohl …), plus Pilze, Zitrone/Limette, Karotte, Knollensellerie, Kartoffel, Zwiebel, Knoblauch</p>
-                <p>Obst (saisonal — Beeren, Kirschen, Äpfel, Trauben, Birnen, Zitrusfrüchte je nach Jahreszeit)</p>
-                <p>Kräuter (Petersilie, Schnittlauch, Basilikum, Rosmarin, Ingwer …)</p>
-                <p>Milchprodukte (Quark, Harzer Käse, Käse, Joghurt, Butter)</p>
-                <p>Weitere Proteinquellen (Tofu, Tempeh, Eier)</p>
-                <p>Gekühltes Haltbares (Sauerkraut, Kimchi, Misopaste, Senf, Currypaste)</p>
+                <p>🥦 Gemüse (saisonal, z. B. Frühling: Rhabarber, Radieschen, Spargel, Brokkoli … / Sommer: Paprika, Zucchini, Tomate … / Herbst: Kürbis, Mais … / Winter: Wurzelgemüse, Rotkohl, Grünkohl …), plus Pilze, Zitrone/Limette, Karotte, Knollensellerie, Kartoffel, Zwiebel, Knoblauch</p>
+                <p>🍎 Obst (saisonal — Beeren, Kirschen, Äpfel, Trauben, Birnen, Zitrusfrüchte je nach Jahreszeit)</p>
+                <p>🌿 Kräuter (Petersilie, Schnittlauch, Basilikum, Rosmarin, Ingwer …)</p>
+                <p>🧀 Milchprodukte (Quark, Harzer Käse, Käse, Joghurt, Butter)</p>
+                <p>🥚 Weitere Proteinquellen (Tofu, Tempeh, Eier)</p>
+                <p>🫙 Gekühltes Haltbares (Sauerkraut, Kimchi, Misopaste, Senf, Currypaste)</p>
               </div>
               <div className="rounded-xl bg-muted/40 p-3 space-y-1.5">
                 <p className="font-semibold text-foreground">Haltbares</p>
-                <p>Konserven (Kichererbsen, Bohnen, Mais, Tomatensoße, Tomatenmark)</p>
-                <p>Eingekochtes (Marmelade, Apfelmark)</p>
-                <p>Glasware (Honig, Mandelmus)</p>
-                <p>Getrocknet (Kräutermischungen, Chillies, Zimt)</p>
-                <p>Flaschen (natives Öl, raffiniertes Öl/Schmalz, Essige, Sojasauce)</p>
-                <p>Alles Korn (Hafer-/Dinkel-/Weizenflocken, Müslimix, Vollkornmehl, Brot/Tortillas, Nudeln, Reis)</p>
-                <p>Süßes in Maßen (dunkle Schokolade, Studentenfutter, zuckerfreie Getränke, Proteinriegel)</p>
-                <p>Tiefkühlware (Beeren, Fisch und Fleisch, Erbsen, TK-Gemüsemischung)</p>
+                <p>🥫 Konserven (Kichererbsen, Bohnen, Mais, Tomatensoße, Tomatenmark)</p>
+                <p>🍓 Eingekochtes (Marmelade, Apfelmark)</p>
+                <p>🍯 Glasware (Honig, Mandelmus)</p>
+                <p>🌶️ Getrocknet (Kräutermischungen, Chillies, Zimt)</p>
+                <p>🧴 Flaschen (natives Öl, raffiniertes Öl/Schmalz, Essige, Sojasauce)</p>
+                <p>🌾 Alles Korn (Hafer-/Dinkel-/Weizenflocken, Müslimix, Vollkornmehl, Brot/Tortillas, Nudeln, Reis)</p>
+                <p>🍫 Süßes in Maßen (dunkle Schokolade, Studentenfutter, zuckerfreie Getränke, Proteinriegel)</p>
+                <p>🧊 Tiefkühlware (Beeren, Fisch und Fleisch, Erbsen, TK-Gemüsemischung)</p>
               </div>
             </div>
           </>
