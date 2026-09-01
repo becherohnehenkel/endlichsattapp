@@ -121,7 +121,7 @@ const SEKTIONEN: ArbeitspunkteSektion[] = [
               Ein kulturell schwieriges Thema in Deutschland — aber wichtig für die Einordnung.
             </p>
             <p className="text-xs text-foreground/80 leading-relaxed">
-              1g Alkohol = 7 kcal. Alkohol ist ein Nervengift — eine &quot;gesunde Menge&quot; gibt es nicht.
+              1g Alkohol = 7 kcal. Alkohol ist ein Nervengift — eine unbedenkliche Menge gibt es nicht.
             </p>
             <p className="text-xs text-foreground/80 leading-relaxed">
               Sobald Alkohol in deinen Körper gelangt, kümmert sich dein Körper zuerst um dessen Abbau. Gleichzeitig ist Alkohol auch eine Energiequelle: Kalorien, die währenddessen zusätzlich aufgenommen werden, werden erstmal geparkt — meist direkt als Körperfett. Wo genau, entscheidet deine DNA, nicht du.

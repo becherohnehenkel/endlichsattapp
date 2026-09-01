@@ -116,7 +116,7 @@
 ### 6. Alkohol
 > Ein kulturell schwieriges Thema in Deutschland — aber wichtig für die Einordnung.
 >
-> 1g Alkohol = 7 kcal. Alkohol ist ein Nervengift — eine "gesunde Menge" gibt es nicht.
+> 1g Alkohol = 7 kcal. Alkohol ist ein Nervengift — eine unbedenkliche Menge gibt es nicht.
 >
 > Sobald Alkohol in deinen Körper gelangt, kümmert sich dein Körper zuerst um dessen Abbau. Gleichzeitig ist Alkohol auch eine Energiequelle: Kalorien, die währenddessen zusätzlich aufgenommen werden, werden erstmal geparkt — meist direkt als Körperfett. Wo genau, entscheidet deine DNA, nicht du.
 >
@@ -258,13 +258,14 @@ Keine neuen Pakete nötig — vollständig mit den bereits installierten shadcn/
 - **Einordnung:** Anders als beim ursprünglichen Zweck der Regel (keine Gesundheitsurteile über Mahlzeiten) ist das hier eine sachliche toxikologische Aussage, kein Urteil über eine Mahlzeit — trotzdem eine wörtliche Regelverletzung nach der bestehenden Projekt-Konvention.
 - **Vorschlag:** z. B. "eine unbedenkliche Menge gibt es nicht" oder "eine sichere Menge gibt es nicht"
 - **Priority:** Fix before deployment (Nutzer hat dieses Wortverbot in der Vergangenheit explizit als wichtig markiert)
+- **Status:** ✅ Fixed (2026-09-01) — Nutzer hat den vorgeschlagenen Text übernommen: "eine unbedenkliche Menge gibt es nicht"
 
 ### Summary
 - **Acceptance Criteria:** 9/9 passed
-- **Bugs Found:** 1 total (0 critical, 0 high, 0 medium, 1 low)
+- **Bugs Found:** 1 total (0 critical, 0 high, 0 medium, 1 low) — behoben vor Deploy
 - **Security:** Pass (kein Backend, keine Nutzereingaben, minimale Angriffsfläche; ein nicht reproduzierbarer, dev-server-typischer Konsolenfehler dokumentiert, keine funktionale Auswirkung)
 - **Production Ready:** YES (kein Critical/High-Bug; der eine Low-Bug ist eine schnelle Textkorrektur)
-- **Recommendation:** Bug-1 vor dem Deploy noch schnell fixen (eine Zeile Text), dann deployen
+- **Recommendation:** Deploy — Bug-1 wurde vor dem Deploy behoben
 
 ## Deployment
 _To be added by /deploy_
