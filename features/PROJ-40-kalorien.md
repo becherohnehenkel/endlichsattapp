@@ -1,6 +1,6 @@
 # PROJ-40: Kalorien
 
-## Status: Planned
+## Status: Deployed
 **Created:** 2026-09-01
 **Last Updated:** 2026-09-01
 
@@ -268,4 +268,6 @@ Keine neuen Pakete nötig — vollständig mit den bereits installierten shadcn/
 - **Recommendation:** Deploy — Bug-1 wurde vor dem Deploy behoben
 
 ## Deployment
-_To be added by /deploy_
+- **Production URL:** https://satt.mehralsabnehmen.de/ernaehrung/kalorien
+- **Deployed:** 2026-09-01 (Vercel auto-deploy via Push zu `main`, commits `1ef49c2`..`cd24dd4`)
+- **Verified in Produktion:** Nutzer hat die Live-Seite geprüft, alles grün ("Alles auf Grün").
