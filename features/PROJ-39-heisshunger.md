@@ -90,8 +90,8 @@
 > 4. TV/Film/YouTube: Welcher Deal oder welches Trendprodukt wird mir gerade verkauft?
 
 ## Open Questions
-- [ ] Konkrete Visualisierung der 2 Blutzucker-Vergleichsgrafiken (Kurvenform, Achsen, Beschriftung) — wird bei /architecture bzw. /frontend entschieden
-- [ ] Konkrete Visualisierung der Schritt-für-Schritt-Anleitung bei "Screentime und Content" — Nutzer wünscht sich hier explizit eine grafische Aufbereitung, Details offen
+- [x] Konkrete Visualisierung der 2 Blutzucker-Vergleichsgrafiken → bei /frontend umgesetzt: 2 illustrative SVG-Kurven (Achterbahn-Zickzack für 6 Mahlzeiten vs. sanfte 3-Peaks-Kurve für 3 Mahlzeiten), siehe `blutzucker-vergleichs-grafik.tsx` (2026-09-01)
+- [ ] Konkrete Visualisierung der Schritt-für-Schritt-Anleitung bei "Screentime und Content" — aktuell als einfache Fließtext-Liste umgesetzt (konsistent mit den Reflexionsfragen bei "Emotionales Essen"); Nutzer wünschte sich ursprünglich eine grafischere Aufbereitung — kann bei Bedarf in einem /refine nachgezogen werden
 
 ## Decision Log
 
@@ -162,7 +162,65 @@ Keine neuen Pakete nötig — vollständig mit den bereits installierten shadcn/
 - `npm run build`, `npm run lint`, `npm test` (415/415) fehlerfrei. Verifiziert per Playwright-Skript (Text- und Screenshot-Check nach Animations-Settle) statt Browser-Tool-Screenshot, da Letzteres bei diesem Feature zwischenzeitlich Navigations-Probleme zeigte — Playwright bestätigt: Intro sichtbar, alle 4 Arbeitspunkte in korrekter Reihenfolge, beide Blutzucker-Kurven rendern korrekt (Achterbahn-Zickzack vs. sanfte 3-Peaks-Kurve), Stress-Link zeigt auf `/ernaehrung/emotionales-essen`, Screentime-Reflexionsfragen sichtbar, genau 4 nummerierte Beobachtungspunkte bei "Sehen, riechen, schmecken & hören".
 
 ## QA Test Results
-_To be added by /qa_
+
+**Tested:** 2026-09-01
+**App URL:** http://localhost:3000
+**Tester:** QA Engineer (AI)
+
+### Acceptance Criteria Status
+
+#### Seitenstruktur
+- [x] Intro-Text sichtbar
+- [x] 4 Arbeitspunkte in korrekter Reihenfolge (Konstante Energie → Stress → Screentime und Content → Sehen/riechen/schmecken & hören)
+- [x] "Verstanden" aktualisiert Fortschritt und speichert lokal (bleibt nach Reload erhalten)
+
+#### Konstante Energie
+- [x] Blutzucker-Erklärung + beide Vergleichs-Grafiken sichtbar (beide SVGs rendern mit korrekter Beschriftung/ARIA-Label)
+- [x] Bonus-Tipp zu zucker-/kohlenhydratreichen Snacks sichtbar
+
+#### Stress & Screentime (Verlinkung)
+- [x] "Stress"-Link zeigt korrekt auf `/ernaehrung/emotionales-essen`
+- [x] "Screentime und Content" zeigt alle 4 Reflexionsfragen + Handlungsempfehlung
+
+#### Sehen, riechen, schmecken & hören
+- [x] Genau 4 nummerierte Beobachtungspunkte in korrekter Reihenfolge
+
+#### Gast-Zugriff
+- [x] Gast (keine Session, Cookies gelöscht) kann die Seite vollständig lesen, Status < 400
+
+### Edge Cases Status
+
+#### EC-1: Stress-Link ohne vorheriges Lesen von "Emotionales Essen"
+- [x] Kein Problem — Seite ist eigenständig verständlich, Link ist reines Zusatzangebot
+
+#### EC-2: Gast-Zugriff
+- [x] Voller Lesezugriff bestätigt, kein Login-Zwang, kein 404/500
+
+#### EC-3: Fortschritt bleibt nach Reload erhalten, "Alles durch"-Hinweis bei 4/4
+- [x] Bestätigt — Fortschritt persistiert über Reload, "Alles durch ✓"-Hinweis erscheint korrekt bei allen 4 abgeschlossenen Punkten
+
+### Security Audit Results
+- [x] Kein Backend/keine API-Route — keine Angriffsfläche für Auth-Bypass, Injection oder Rate-Limiting-Probleme (0 `/api/`-Requests bei voller Interaktion gemessen)
+- [x] Kein Nutzer-Input auf der Seite (nur Lese-Interaktion: Auf-/Zuklappen, "Verstanden") — kein XSS-Vektor vorhanden
+- [x] Gast-Zugriff funktioniert wie spezifiziert, keine versteckten Auth-Anforderungen
+- [x] Keine sensiblen Daten im Client (rein statischer Content, `localStorage` enthält nur eine ID-Liste abgeschlossener Punkte, keine personenbezogenen Daten)
+- [ ] Transienter Konsolenfehler ("Failed to load resource: 404") einmalig bei einem Testlauf beobachtet, bei Wiederholung mit identischer Interaktionsfolge nicht reproduzierbar; `npm run build` läuft fehlerfrei durch. Sehr wahrscheinlich Next.js-Dev-Server-Rauschen (z. B. HMR/Chunk-Reload durch parallele Änderungen in dieser Session), keine Bug-Einstufung, da nicht reproduzierbar und ohne funktionale Auswirkung — bei erneutem Auftreten in Produktion bitte melden
+
+### Regression Testing
+- `PROJ-36-ernaehrung-hub.spec.ts`: Platzhalter-Test hätte für `/ernaehrung/heisshunger` fehlschlagen müssen (zeigt jetzt echten Inhalt statt "Bald verfügbar") — als Teil dieser QA-Runde behoben: aus der Platzhalter-Liste entfernt, eigene Abdeckung jetzt in `PROJ-39-heisshunger.spec.ts`. Volle PROJ-36-Suite danach grün (19/19 pro Browser).
+- Keine Änderungen an gemeinsam genutzten Komponenten (`ArbeitspunkteListe`, `ErnaehrungSubHeader`) — kein weiteres Regressionsrisiko für andere Guides.
+- `npm run build`, `npm run lint` (0 Fehler, 1 vorbestehende, nicht mit PROJ-39 zusammenhängende Warnung), `npm test` (415/415) grün.
+- Responsive geprüft bei 375px, 768px, 1440px — kein horizontales Scrollen in main content.
+
+### Bugs Found
+Keine.
+
+### Summary
+- **Acceptance Criteria:** 9/9 passed
+- **Bugs Found:** 0
+- **Security:** Pass (kein Backend, keine Nutzereingaben, minimale Angriffsfläche; ein nicht reproduzierbarer, dev-server-typischer Konsolenfehler dokumentiert, keine funktionale Auswirkung)
+- **Production Ready:** YES
+- **Recommendation:** Deploy
 
 ## Deployment
 _To be added by /deploy_

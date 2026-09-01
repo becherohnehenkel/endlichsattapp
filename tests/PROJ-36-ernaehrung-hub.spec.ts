@@ -118,13 +118,13 @@ test.describe('Breadcrumb auf allen 8 Unterseiten', () => {
 })
 
 // ─── Platzhalter-Unterseiten ────────────────────────────────────────────────
-// /ernaehrung/so-geht-abnehmen (PROJ-37) und /ernaehrung/emotionales-essen (PROJ-38) haben
-// mittlerweile echten Inhalt und sind daher absichtlich aus dieser Liste raus — eigene
-// Abdeckung in PROJ-37-so-geht-abnehmen.spec.ts bzw. PROJ-38-emotionales-essen.spec.ts.
+// /ernaehrung/so-geht-abnehmen (PROJ-37), /ernaehrung/emotionales-essen (PROJ-38) und
+// /ernaehrung/heisshunger (PROJ-39) haben mittlerweile echten Inhalt und sind daher
+// absichtlich aus dieser Liste raus — eigene Abdeckung in PROJ-37-so-geht-abnehmen.spec.ts,
+// PROJ-38-emotionales-essen.spec.ts bzw. PROJ-39-heisshunger.spec.ts.
 
-test.describe('3 neue Platzhalter-Unterseiten', () => {
+test.describe('2 verbleibende Platzhalter-Unterseiten', () => {
   const placeholders = [
-    '/ernaehrung/heisshunger',
     '/ernaehrung/kalorien',
     '/ernaehrung/kalorien-zaehlen',
   ]
