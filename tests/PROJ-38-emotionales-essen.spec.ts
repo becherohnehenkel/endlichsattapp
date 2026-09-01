@@ -100,12 +100,24 @@ test.describe('Sektion 1 — Direkt an der Emotion ansetzen', () => {
     await expect(kniebeugenZeile.getByRole('button', { name: /0:5\d/ })).toBeVisible()
   })
 
-  test('AC: "Überfordert / Gestresst?" zeigt Beispiel-Aufgaben mit Priorität/Bis-wann/Delegieren', async ({ page }) => {
+  test('AC: "Überfordert / Gestresst?" erklärt die Struktur (Aufgabe/Priorität/Bis-wann/Delegieren) vor der Tabelle', async ({ page }) => {
     await page.goto('/ernaehrung/emotionales-essen')
     await oeffneArbeitspunkt(page, 'Überfordert / Gestresst?')
-    await expect(page.getByText('Präsentation für Montag vorbereiten')).toBeVisible()
-    await expect(page.getByText(/vergib 1–3 \(keine 4, keine 0\)/)).toBeVisible()
-    await expect(page.getByText(/wer kann dir helfen oder es übernehmen/)).toBeVisible()
+    const inhalt = page.getByRole('button', { name: 'Überfordert / Gestresst? Mach das:' }).locator('xpath=ancestor::div[contains(@class,"rounded-2xl")][1]')
+
+    const struktur = inhalt.getByText(/wer kann dir helfen oder es übernehmen/)
+    const tabelle = inhalt.locator('table')
+    await expect(struktur).toBeVisible()
+    await expect(tabelle).toBeVisible()
+    // Struktur-Erklärung steht laut Anforderung VOR der Tabelle/Visualisierung
+    const strukturBox = await struktur.boundingBox()
+    const tabelleBox = await tabelle.boundingBox()
+    expect(strukturBox!.y).toBeLessThan(tabelleBox!.y)
+
+    // Tabelle zeigt alle 4 Spalten als echtes <table> (kein Karten-Grid mehr)
+    await expect(tabelle.locator('th')).toHaveCount(4)
+    await expect(tabelle.getByText('Präsentation für Montag vorbereiten')).toBeVisible()
+    await expect(tabelle.getByText('Sonntag, 20 Uhr')).toBeVisible()
   })
 })
 
@@ -133,14 +145,26 @@ test.describe('Sektion 2 — Allgemeine Praxis-Übungen', () => {
     await expect(items.nth(6)).toContainText('Was ist eigentlich mein Ziel')
   })
 
-  test('AC: "Atemübung" zeigt die animierte 4-6-8-Technik (Countdown → Einatmen/Halten/Ausatmen, 5 Runden)', async ({ page }) => {
+  test('AC: "Atemübung" erklärt die Technik im Anfangstext und zeigt die animierte 4-6-8-Technik (Countdown → Einatmen/Halten/Ausatmen, 5 Runden) mit Sekunden-Countdown und Rundenzähler als Überschrift', async ({ page }) => {
     await page.goto('/ernaehrung/emotionales-essen')
     await oeffneArbeitspunkt(page, 'Atemübung (4-6-8-Technik)')
+    await expect(page.getByText(/4 Sekunden einatmen, 6 Sekunden halten, 8 Sekunden ausatmen/)).toBeVisible()
+
     // Startet mit einem 5-Sekunden-Countdown, dann Phase "Einatmen" (4s), "Halten" (6s), "Ausatmen" (8s)
     await expect(page.getByText('Einatmen', { exact: true })).toBeVisible({ timeout: 7000 })
     await expect(page.getByText('Runde 1 von 5')).toBeVisible()
+    await expect(page.getByText('Tief durch die Nase in den Bauch')).toBeVisible()
+    await expect(page.getByText(/^\ds$/)).toBeVisible()
     await expect(page.getByText('Halten', { exact: true })).toBeVisible({ timeout: 5000 })
     await expect(page.getByText('Ausatmen', { exact: true })).toBeVisible({ timeout: 7000 })
+
+    // Rundenzähler steht als Überschrift ÜBER dem Block, Block spannt die volle Breite
+    const rundenzaehler = page.getByText(/Runde \d von 5/)
+    const block = rundenzaehler.locator('xpath=following-sibling::div[1]')
+    const rundenBox = await rundenzaehler.boundingBox()
+    const blockBox = await block.boundingBox()
+    expect(rundenBox!.y).toBeLessThan(blockBox!.y)
+    expect(blockBox!.width).toBeGreaterThan(280)
   })
 
   test('AC: "Atemübung" pausiert, wenn das Akkordion-Item geschlossen wird (Radix unmounted den Inhalt)', async ({ page }) => {

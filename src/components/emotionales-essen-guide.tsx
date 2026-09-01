@@ -114,23 +114,33 @@ export function EmotionalesEssenGuide({ tagesKcal }: EmotionalesEssenGuideProps)
             <p className="text-xs text-foreground/80 leading-relaxed">
               Postfach voll, To-do-Liste quillt über? Nimm dir 5 Minuten und schreib deine Aufgaben so auf:
             </p>
-            <div className="grid grid-cols-1 gap-2">
-              {UEBERFORDERT_BEISPIELE.map(b => (
-                <div key={b.aufgabe} className="rounded-xl bg-muted/40 p-3 space-y-1.5">
-                  <p className="text-xs font-semibold text-foreground">{b.aufgabe}</p>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
-                    <span>🔢 Priorität {b.prioritaet}</span>
-                    <span>⏰ {b.bisWann}</span>
-                    <span>🤝 {b.delegieren}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="space-y-1 text-xs text-foreground/80 leading-relaxed pt-1">
+            <div className="space-y-1 text-xs text-foreground/80 leading-relaxed">
               <p>📝 <strong>Aufgabe</strong> — schreib auf, was du alles zu tun hast</p>
               <p>🔢 <strong>Priorität</strong> — vergib 1–3 (keine 4, keine 0)</p>
               <p>⏰ <strong>Bis wann</strong> — wann es fertig sein MUSS, nicht sollte</p>
               <p>🤝 <strong>Delegieren</strong> — wer kann dir helfen oder es übernehmen?</p>
+            </div>
+            <div className="overflow-x-auto rounded-lg border border-border">
+              <table className="w-full border-collapse text-[10px]">
+                <thead>
+                  <tr className="bg-muted/50">
+                    <th className="border-b border-r border-border px-2 py-1.5 text-left font-semibold text-foreground">Aufgabe</th>
+                    <th className="border-b border-r border-border px-2 py-1.5 text-left font-semibold text-foreground">Priorität</th>
+                    <th className="border-b border-r border-border px-2 py-1.5 text-left font-semibold text-foreground">Bis wann</th>
+                    <th className="border-b border-border px-2 py-1.5 text-left font-semibold text-foreground">Delegieren</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {UEBERFORDERT_BEISPIELE.map((b, i) => (
+                    <tr key={b.aufgabe} className={i < UEBERFORDERT_BEISPIELE.length - 1 ? 'border-b border-border' : ''}>
+                      <td className="border-r border-border px-2 py-1.5 text-foreground">{b.aufgabe}</td>
+                      <td className="border-r border-border px-2 py-1.5 text-center text-muted-foreground">{b.prioritaet}</td>
+                      <td className="border-r border-border px-2 py-1.5 text-muted-foreground">{b.bisWann}</td>
+                      <td className="px-2 py-1.5 text-muted-foreground">{b.delegieren}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
             <p className="text-xs text-foreground/80 leading-relaxed">
               Du musst nicht alles allein machen. Jetzt die Liste sinnvoll abarbeiten — mit einem Snack wird sie nicht kürzer.
@@ -184,7 +194,7 @@ export function EmotionalesEssenGuide({ tagesKcal }: EmotionalesEssenGuideProps)
         inhalt: (
           <>
             <p className="text-xs text-foreground/80 leading-relaxed">
-              Routinen machen dir den Alltag leichter — aber manche stehen dem Abnehmen im Weg, und schwups landest du bei der Snackschublade. Die Auslöser dafür sind endlos. Bevor die Routine &quot;Essen&quot; startet, stell dir diese Fragen:
+              Routinen machen dir den Alltag leichter — aber manche stehen dem Abnehmen im Weg, und schwups landest du bei der Snackschublade. Die Auslöser dafür sind endlos. Eine Routine läuft jedoch immer gleich ab:
             </p>
             <div className="flex items-center justify-center gap-2 py-1">
               {ROUTINE_SCHRITTE.map((schritt, i) => (
@@ -200,7 +210,7 @@ export function EmotionalesEssenGuide({ tagesKcal }: EmotionalesEssenGuideProps)
               ))}
             </div>
             <p className="text-xs text-foreground/80 leading-relaxed">
-              Du stehst vor der Snackschublade oder dem Kühlschrank? Okay. Beantworte dir erst diese Fragen — dann geht&apos;s weiter.
+              Okay. Beantworte dir erst diese Fragen — dann geht&apos;s weiter:
             </p>
             <ol className="space-y-2 text-xs text-foreground/80 leading-relaxed list-decimal pl-5">
               <li>Ich WILL essen — warum? Was hatte ich gerade eigentlich vor?</li>
@@ -220,7 +230,7 @@ export function EmotionalesEssenGuide({ tagesKcal }: EmotionalesEssenGuideProps)
         inhalt: (
           <>
             <p className="text-xs text-foreground/80 leading-relaxed">
-              Atme im Rhythmus des Blocks mit — 5 Runden, bis der Drang nach Essen nachlässt.
+              Die 4-6-8-Technik: 4 Sekunden einatmen, 6 Sekunden halten, 8 Sekunden ausatmen. Atme im Rhythmus des Blocks mit — 5 Runden, bis der Drang nach Essen nachlässt.
             </p>
             <AtemuebungAnimation />
           </>

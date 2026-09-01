@@ -68,7 +68,7 @@
 > Die Wut muss einmal raus. Wähl eine Übung — der Timer läuft direkt mit: interaktiver Bewegungs-Timer mit 4 Optionen (🏋️ Kniebeugen 1 Min. / 💪 Liegestütze 1 Min. / 🧘 Plank 1 Min. / 🚶 Runde um den Block 10 Min.), Klick auf "▶ Start" startet einen echten Countdown pro Übung. Wut ist meist ein Kommunikationsproblem bei Meinungsverschiedenheiten, oft von außen angestoßen. Der Körper reagiert mit einem der drei Fs: Fight, Flight oder Freeze. Bei Fight muss die Energie woanders hin — in deinen Körper, mit Bewegung. Flight entgeht der Wut, die kommt wieder. Freeze verlagert sie auf später. Essen ist keine Lösung davon.
 
 ### 3. Überfordert / Gestresst? Mach das:
-> Postfach voll, To-do-Liste quillt über? Nimm dir 5 Minuten und schreib deine Aufgaben so auf — 4 Beispiel-Aufgaben zeigen das Format (Aufgabe / Priorität / Bis wann / Delegieren), darunter erklärt je ein Bulletpoint eine Spalte: 📝 Aufgabe — schreib auf, was du alles zu tun hast · 🔢 Priorität — vergib 1–3 (keine 4, keine 0) · ⏰ Bis wann — wann es fertig sein MUSS, nicht sollte · 🤝 Delegieren — wer kann dir helfen oder es übernehmen? Du musst nicht alles allein machen. Jetzt die Liste sinnvoll abarbeiten — mit einem Snack wird sie nicht kürzer.
+> Postfach voll, To-do-Liste quillt über? Nimm dir 5 Minuten und schreib deine Aufgaben so auf. Reihenfolge: erst die Struktur erklärt (📝 Aufgabe — schreib auf, was du alles zu tun hast · 🔢 Priorität — vergib 1–3 (keine 4, keine 0) · ⏰ Bis wann — wann es fertig sein MUSS, nicht sollte · 🤝 Delegieren — wer kann dir helfen oder es übernehmen?), danach eine echte 4-spaltige Tabelle (wie von Hand/Excel, mit Kopfzeile und Zellrahmen) mit 4 Beispiel-Aufgaben. Du musst nicht alles allein machen. Jetzt die Liste sinnvoll abarbeiten — mit einem Snack wird sie nicht kürzer.
 
 ### 4. Journaling
 > Nimm dir jeden Morgen oder Abend Zeit für dich (⏱ 5 Minuten). Zwei Beispiel-Listen machen sichtbar, was gemeint ist: "+ Was lief gut" (3 Beispiele: entspannt aufgewacht, bewusst Mittag gegessen, alle ToDos abgearbeitet) und "− Was lief nicht so gut" (4 Beispiele, je mit dem eigentlichen Wunsch dahinter in Klammern: Sport übersprungen / Ja zum Kuchen gesagt / auf der Couch versackt / zu lange am Handy).
@@ -76,9 +76,7 @@
 > Allein durchs Aufschreiben beschäftigst du dich damit. Beim nächsten Mal flüstert eine leise Stimme: "Moment — das hab ich doch aufgeschrieben." So kannst du dich Schritt für Schritt aus solchen Situationen befreien.
 
 ### 5. Fragebogen "Hast du wirklich Hunger?"
-> Routinen machen dir den Alltag leichter — aber manche stehen dem Abnehmen im Weg, und schwups landest du bei der Snackschublade. Die Auslöser dafür sind endlos. Bevor die Routine "Essen" startet, stell dir diese Fragen. Davor eine kleine Grafik der Routine-Kette: 🧠 Auslöser → 🔄 Routine → 🍫 Belohnung.
->
-> Du stehst vor der Snackschublade oder dem Kühlschrank? Okay. Beantworte dir erst diese Fragen — dann geht's weiter.
+> Routinen machen dir den Alltag leichter — aber manche stehen dem Abnehmen im Weg, und schwups landest du bei der Snackschublade. Die Auslöser dafür sind endlos. Eine Routine läuft jedoch immer gleich ab: — dann die Grafik der Routine-Kette: 🧠 Auslöser → 🔄 Routine → 🍫 Belohnung — dann: Okay. Beantworte dir erst diese Fragen — dann geht's weiter:
 >
 > 1. Ich WILL essen — warum? Was hatte ich gerade eigentlich vor?
 > 2. Würde ich jetzt auch eine trockene Scheibe Brot essen?
@@ -89,7 +87,7 @@
 > 7. Okay, ich habe wirklich Hunger. Aber: Was ist eigentlich mein Ziel — und wie weit wirft mich das jetzt zurück?
 
 ### 6. Atemübung (4-6-8-Technik)
-> Animierter Atem-Block statt reinem Text: startet mit 5-Sekunden-Countdown, dann 5 Runden à Einatmen (4s, Block füllt sich) → Halten (6s, Farbe pulsiert leicht) → Ausatmen (8s, Block leert sich). Rundenzähler daneben ("Runde X von 5"). Läuft nur, während das Akkordion-Item geöffnet ist — schließen pausiert/stoppt die Animation, erneutes Öffnen startet sie neu von vorn.
+> Kurzer Anfangstext erklärt die Technik einmal ("4 Sekunden einatmen, 6 Sekunden halten, 8 Sekunden ausatmen"). Darunter ein animierter Atem-Block über die volle Breite des Akkordions: Rundenzähler ("Runde X von 5") als Überschrift darüber, dann startet der Block mit 5-Sekunden-Countdown, dann 5 Runden à Einatmen (4s, Block füllt sich, Anweisung "Tief durch die Nase in den Bauch" + herunterzählender Sekunden-Timer) → Halten (6s, Farbe pulsiert leicht, Anweisung "Atem anhalten" + Timer) → Ausatmen (8s, Block leert sich, Anweisung "Langsam durch den Mund" + Timer). Läuft nur, während das Akkordion-Item geöffnet ist — schließen pausiert/stoppt die Animation, erneutes Öffnen startet sie neu von vorn.
 
 ### 7. Einkauf planen
 > Was du immer zu Hause haben solltest, damit du unfallfrei und schnell kochen kannst. Das ist nur ein Vorschlag — mach ihn zu deinem!
@@ -226,6 +224,18 @@ Letzte Anpassungsrunde des Nutzers, um die verbliebenen reinen Text-Arbeitspunkt
 - **7 (Einkauf planen):** Jede der 14 Zeilen (Frisches + Haltbares) um ein passendes Emoji vorangestellt (🥦🍎🌿🧀🥚🫙 / 🥫🍓🍯🌶️🧴🌾🍫🧊).
 - `tests/PROJ-38-emotionales-essen.spec.ts`: Tests für Punkt 1, 2, 5, 6 neu geschrieben (u. a. Timer-Start-Interaktion, Warten auf Animations-Phasenwechsel mit Timeout, sowie ein dedizierter Test, dass die Atemübungs-Animation beim Schließen des Akkordions tatsächlich verschwindet/pausiert). `PROJ-38`-Suite: 20/20 (chromium).
 - `npm run build`, `npm run lint`, `npm test` (415/415) weiterhin grün.
+
+### Refinement (2026-09-01, Teil 4): Reihenfolge Punkt 3, Tabelle statt Karten, Text-Feinschliff Punkt 5, Punkt 6 komplett neu
+- **3 (Überfordert/Gestresst):** Reihenfolge getauscht — die 4 Struktur-Bulletpoints (Aufgabe/Priorität/Bis-wann/Delegieren) stehen jetzt VOR der Visualisierung (Nutzerwunsch: "erst die Struktur erklärt und erst dann die Visualisierung"). Die 4 Karten-Blöcke wurden durch eine echte `<table>` mit Kopfzeile, Zellrahmen und abgerundetem äußeren Rand ersetzt ("Tabelle wie man sie von Hand oder in Excel machen würde") — kein Karten-Grid mehr.
+- **5 (Fragebogen):** Intro-Text 1:1 nach Nutzer-Vorgabe übernommen ("Eine Routine läuft jedoch immer gleich ab:" statt der vorherigen Formulierung). Der Satz vor den Fragen wurde gekürzt ("Okay. Beantworte dir erst diese Fragen — dann geht's weiter:" statt der vorherigen "Du stehst vor der Snackschublade..."-Einleitung, da das jetzt durch den Routine-Absatz + die Grafik bereits abgedeckt ist).
+- **6 (Atemübung):** `atemuebung-animation.tsx` grundlegend überarbeitet:
+  - Block ist jetzt `w-full` (volle Akkordion-Breite) statt einer schmalen `w-16`-Spalte neben Text.
+  - Rundenzähler ("Runde X von 5") steht jetzt als eigene Überschrift ÜBER dem Block (vorher daneben).
+  - Neuer, echter herunterzählender Sekunden-Timer pro Phase (z. B. "4s → 3s → 2s → 1s" bei Einatmen), zusätzlich zur Kurz-Anweisung ("Tief durch die Nase in den Bauch" / "Atem anhalten" / "Langsam durch den Mund") — beides direkt im Block angezeigt.
+  - Technisch: 2 unabhängige `useEffect`s — der bestehende `setTimeout`-Ketten-Effekt orchestriert weiterhin Phasen-/Runden-Wechsel und die CSS-Füllstand-Transition; ein neuer, separater Effekt (Dependency `[phase, runde]`) treibt den sichtbaren Sekunden-Countdown per `setInterval`. Der initiale Anzeigewert wird bewusst per `setTimeout(…, 0)` statt synchron im Effekt-Body gesetzt, um den ESLint-Fehler `react-hooks/set-state-in-effect` zu vermeiden (kaskadierende Renders) — visuell nicht wahrnehmbar (0ms Verzögerung).
+  - Anfangstext vor dem Block erklärt die Technik jetzt einmal kurz ("4 Sekunden einatmen, 6 Sekunden halten, 8 Sekunden ausatmen") — vorher stand dort nur ein genereller Hinweis ohne die konkreten Zeiten.
+- Neue, robustere E2E-Assertions ergänzt: für Punkt 3 wird jetzt per `boundingBox()`-Vergleich echt geprüft, dass die Struktur-Erklärung vor der Tabelle steht und die Tabelle 4 `<th>`-Spalten hat; für Punkt 6 wird per `boundingBox()`-Vergleich geprüft, dass der Rundenzähler über dem Block steht und der Block breiter als 280px ist (echte Vollbreiten-Prüfung statt nur Text-Vorhandensein).
+- `npm run build`, `npm run lint` (0 Fehler, 1 vorbestehende Warnung), `npm test` (415/415) grün. `PROJ-38`-Suite: 20/20 (chromium), volle Cross-Browser-Suite lief zusätzlich grün.
 
 ## QA Test Results
 
