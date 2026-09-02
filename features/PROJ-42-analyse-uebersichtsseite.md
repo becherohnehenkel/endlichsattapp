@@ -1,6 +1,6 @@
 # PROJ-42: Analyse-Übersichtsseite
 
-## Status: Approved
+## Status: Deployed
 **Created:** 2026-09-01
 **Last Updated:** 2026-09-02
 
@@ -311,4 +311,7 @@ Keine PROJ-42-verursachten Bugs mit Deployment-Relevanz gefunden. Drei vorbesteh
 - **Recommendation:** Deploy
 
 ## Deployment
-_To be added by /deploy_
+- **Production URL:** https://satt.mehralsabnehmen.de/analyse
+- **Deployed:** 2026-09-02 (Vercel auto-deploy via Push zu `main`, commits `ec24f1e`..`a00c405`)
+- **Verified in Produktion:** Nutzer hat die Live-Seite geprüft, alles grün ("Alles auf Grün").
+- **Umfang dieses Deploys:** vollständige PROJ-42-Implementierung — neue Analyse-Übersichtsseite (`/analyse`, bisheriger Flow umgezogen auf `/analyse/start`), Tagesübersicht mit individuellem, im Konto einstellbarem Tagesziel (neue `profiles.mahlzeiten_pro_tag`-Spalte + `/api/mahlzeiten-ziel`) und auf-/zuklappbarer Restkalorien-Anzeige, Historie-Sektion mit 3 Kategorie-Tabs (Mahlzeiten aktiv, Training/Check-Ins als Platzhalter, Tab-Labels im Nachgang gegen Mobile-Overlap gekürzt), `/historie`-Redirect, entfernter Startseiten-CTA. Migration wurde vom Nutzer manuell ausgeführt und live verifiziert (siehe Implementation Notes Backend).
