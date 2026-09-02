@@ -1,6 +1,6 @@
 # PROJ-47: Startseite Neu
 
-## Status: Architected
+## Status: In Progress
 **Created:** 2026-09-02
 **Last Updated:** 2026-09-02
 
@@ -146,6 +146,18 @@ Alle anderen Inhalte (Karten-Texte, Links, Coach-URL) sind fest im Code hinterle
 
 ### D) Abhängigkeiten (Pakete)
 Keine neuen Pakete nötig.
+
+## Implementation Notes (Frontend)
+
+**Gebaut:**
+- `src/app/page.tsx` komplett ersetzt: bisherige Mehrfachabfrage (letzte Mahlzeiten, Rezepte, Zähler) entfernt, durch eine einzelne, leichte `profiles.name`-Abfrage für eingeloggte, nicht-anonyme Nutzer ersetzt.
+  - Begrüßung zeigt `Schön, dass du da bist, [Vorname].` (nur der erste Namensteil aus `profiles.name`) bzw. den generischen Fallback ohne Namen für Gäste und Nutzer ohne hinterlegten Namen
+  - Video-Platzhalter als reiner Gradient-Block mit Play-Icon und „So funktioniert die App"-Label, darunter „Video kommt bald" — nicht interaktiv (kein `<button>`/`onClick`, reines `<div>`)
+  - 4 Funktions-Karten (Lucide-Icons `Lightbulb`/`TrendingUp`/`ChefHat`/`CheckCircle2` statt Emoji, passend zum bestehenden Icon-Stil der App) mit exaktem Wortlaut aus der Spec, verlinkt auf `/ernaehrung`, `/analyse`, `/ernaehrung/rezepte`, `/check-in`
+  - Coach-Banner als externer Link (`target="_blank" rel="noopener noreferrer"`, bestehende App-Konvention für externe Links) zu `onlineernaehrungsberater.de`
+- Reine Server-Component, kein `'use client'` nötig — nichts auf der Seite ist interaktiv (nur Links/externer Link)
+
+**Verifiziert:** `npm run build`, `npm run lint`, `npm test` (443/443, unverändert — keine bestehenden Tests hingen an der alten Startseite). Per Playwright verifiziert: alle 4 Karten-Links und der Coach-Link (inkl. `target="_blank"`) korrekt gesetzt, Video-Platzhalter nicht interaktiv, Mobile (375px) kein horizontales Scrollen. Personalisierte Begrüßung live gegen das bestehende QA-Testkonto verifiziert (`profiles.name` auf "Lukas Testerson" gesetzt, bleibt als Fixture für künftige QA-Läufe bestehen) — zeigt korrekt "Schön, dass du da bist, Lukas.". Bottom-Navigation fehlt für einen Nutzer ganz ohne jede Session (nicht mal anonym) — bestätigt als vorbestehendes, unverändertes Verhalten aus `navigation-shell.tsx` (siehe PROJ-35), kein PROJ-47-Bug.
 
 ## QA Test Results
 _To be added by /qa_
