@@ -47,11 +47,13 @@ test.describe('/ernaehrung zeigt vorübergehend den Rezepte-Inhalt', () => {
 // ─── /training und /check-in: bewusst leere Platzhalterseiten ─────────────
 
 test.describe('Training und Check-In: Platzhalterseiten statt 404', () => {
-  test('AC: /training ist ohne Login erreichbar und zeigt "Bald verfügbar"', async ({ page, context }) => {
+  // PROJ-43: /training zeigt seit dem Training-Hub echten Inhalt statt "Bald verfügbar" —
+  // Check-In bleibt vorerst Platzhalter.
+  test('AC: /training ist ohne Login erreichbar und zeigt den Training-Hub', async ({ page, context }) => {
     await clearSession(context)
     const response = await page.goto('/training')
     expect(response?.status()).toBeLessThan(400)
-    await expect(page.getByText('Bald verfügbar')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Krafttraining: Die Basics für deinen Start' })).toBeVisible()
   })
 
   test('AC: /check-in ist ohne Login erreichbar und zeigt "Bald verfügbar"', async ({ page, context }) => {

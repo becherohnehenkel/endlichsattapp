@@ -85,9 +85,11 @@ Ganz unten findest du drei fertige Trainingspläne, mit denen du direkt loslegen
 "Steigere erst, wenn du alle geplanten Wiederholungen in allen Sätzen sauber schaffst – idealerweise zweimal hintereinander. Dann in kleinen Schritten: 2,5 kg bei großen Übungen (Beine, Rücken), 1–2,5 kg oder eine Wiederholung mehr bei kleinen (Arme, Schultern). Geht das Gewicht nicht rauf, steigere Wiederholungen. Fortschritt ist nicht linear – Wochen ohne Steigerung sind normal, kein Grund zur Panik."
 
 **Plan-Karten:**
-1. Titel: "Zu Hause ohne Equipment" — Unterzeile: "Bodyweight-Übungen, kein Gerät nötig"
+1. Titel: "Zu Hause ohne Equipment" — Unterzeile: "Bodyweight, ganz ohne Geräte"
 2. Titel: "Zu Hause mit Widerstandsbändern" — Unterzeile: "Mehr Widerstand, bleibt flexibel"
-3. Titel: "Fitnessstudio" — Unterzeile: "Mit Lang-/Kurzhanteln und Kabelzug"
+3. Titel: "Fitnessstudio" — Unterzeile: "Mit Hanteln und Kabelzug"
+
+_(Unterzeilen 1 und 3 wurden in `/frontend` gegenüber dem ursprünglichen Vorschlag gekürzt — sie wurden auf 375px-Mobile-Viewports abgeschnitten, siehe die zugrunde liegende `HubCard`-Komponente mit `truncate`.)_
 
 ## Open Questions
 - [ ] Exakte Icons für die 3 Plan-Karten — wird bei `/frontend` entschieden (analog zur bestehenden Icon-Auswahl im Ernährung-Hub)
@@ -145,6 +147,17 @@ Keins nötig. Reiner statischer Inhalt. Der "Verstanden"-Fortschritt der 5 Punkt
 
 ### D) Abhängigkeiten (Pakete)
 Keine neuen Pakete.
+
+## Implementation Notes (Frontend)
+- `HubCard` (bisher lokal in `src/app/ernaehrung/page.tsx`) nach `src/components/hub-card.tsx` ausgelagert und dort importiert — jetzt gemeinsam von Ernährung- und Training-Hub genutzt, keine Logik geändert.
+- Neue Komponente `src/components/training-guide.tsx`: H1 + 3-Absatz-Intro, `ArbeitspunkteListe` mit den 5 Grundlagen-Punkten (`ersterPunktOnboarding={{ autoOpenNachMs: 700 }}`, gleiches Muster wie alle Ernährung-Guides), Trennlinie, 3 Plan-Karten (`HubCard`).
+- `src/app/training/page.tsx` ersetzt den "Bald verfügbar"-Platzhalter durch `<TrainingGuide />`, Header (Titel + Konto-Icon) unverändert übernommen.
+- Icons für die 3 Plan-Karten gewählt: `Home` (ohne Equipment), `Zap` (Widerstandsbänder), `Dumbbell` (Fitnessstudio).
+- Plan-Karten-Unterzeilen 1 und 3 gegenüber dem ursprünglichen Vorschlag gekürzt (375px-Mobile-Overlap durch `truncate` in `HubCard`, siehe Content-Sektion oben) — vor dem Ausliefern per Mobile-Screenshot verifiziert, kein Abschneiden mehr.
+- Zielrouten der Plan-Karten (`/training/zuhause-ohne-equipment`, `/training/zuhause-mit-baendern`, `/training/fitnessstudio`) existieren noch nicht — 404 bis PROJ-44 deployed ist, wie in der Spec akzeptiert.
+- Regressionstest: `PROJ-35-bottom-navigation-kontobereich.spec.ts` prüfte bisher, dass `/training` "Bald verfügbar" zeigt — auf den neuen Training-Hub-Inhalt aktualisiert (1 Test). `PROJ-36-ernaehrung-hub.spec.ts` läuft nach der `HubCard`-Auslagerung unverändert durch (18/19 grün, 1 vorbestehender, unabhängiger Befund aus der PROJ-42-QA).
+- `npm run build`, `npm run lint`, `npm test` (423/423) fehlerfrei. Manuell verifiziert: Desktop- und Mobile-Screenshot (kein horizontales Scrollen bei 375px), zweiter Arbeitspunkt („Was bedeutet was?") mit Begriffs-Liste korrekt aufklappbar, "Verstanden"-Fortschritt aktualisiert den Balken.
+- Kein Backend nötig — Frontend ist für PROJ-43 vollständig.
 
 ## QA Test Results
 _To be added by /qa_

@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { UserRound, Dumbbell } from 'lucide-react'
+import { UserRound } from 'lucide-react'
+import { TrainingGuide } from '@/components/training-guide'
 
 export default function TrainingPage() {
   return (
@@ -11,10 +12,8 @@ export default function TrainingPage() {
         </Link>
       </header>
 
-      <main className="max-w-sm md:max-w-[850px] mx-auto px-4 py-16 flex flex-col items-center text-center gap-3">
-        <Dumbbell className="h-8 w-8 text-muted-foreground" />
-        <p className="font-semibold text-foreground">Training</p>
-        <p className="text-sm text-muted-foreground">Bald verfügbar.</p>
+      <main className="max-w-sm md:max-w-[850px] mx-auto px-4 py-6">
+        <TrainingGuide />
       </main>
     </div>
   )
