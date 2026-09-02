@@ -1,6 +1,6 @@
 # PROJ-43: Training-Übersicht (Krafttraining-Basics)
 
-## Status: Architected
+## Status: Approved
 **Created:** 2026-09-02
 **Last Updated:** 2026-09-02
 
@@ -160,7 +160,67 @@ Keine neuen Pakete.
 - Kein Backend nötig — Frontend ist für PROJ-43 vollständig.
 
 ## QA Test Results
-_To be added by /qa_
+
+**Tested:** 2026-09-02
+**App URL:** http://localhost:3000
+**Tester:** QA Engineer (AI)
+
+### Acceptance Criteria Status
+
+#### Seitenstruktur
+- [x] Überschrift "Krafttraining: Die Basics für deinen Start" + Intro-Text sichtbar
+- [x] 5 Grundlagen-Punkte oberhalb, 3 Plan-Karten unterhalb, in korrekter Reihenfolge
+- [x] Fortschrittsbalken startet bei "0 von 5 abgeschlossen"
+- [x] Alle Arbeitspunkte starten eingeklappt
+- [x] Erster Arbeitspunkt öffnet sich automatisch (~700ms)
+
+#### Grundlagen-Arbeitspunkte (Inhalte)
+- [x] "Warum Krafttraining?" zeigt die Stoffwechsel-Erklärung
+- [x] "Was bedeutet was?" zeigt alle 5 Begriffe (Wdh, Satz, Kg, Pause, Stange/Gerät)
+- [x] "Warm-Up" zeigt die 5–10-Minuten-Erklärung
+- [x] "Das richtige Gewicht" zeigt die Faustregel
+- [x] "Richtig steigern" zeigt die Steigerungs-Schritte
+
+#### Ein-/Ausklappen & Fortschritt
+- [x] Aufklappen eines Punkts lässt andere unberührt
+- [x] "Verstanden" aktualisiert den Fortschrittsbalken und bleibt nach Reload erhalten (lokal gespeichert)
+- [x] Alle 5 Punkte "Verstanden" → "Alles durch ✓"-Hinweis erscheint
+
+#### Plan-Karten
+- [x] Alle 3 Karten mit Titel + Unterzeile sichtbar (Zu Hause ohne Equipment / mit Widerstandsbändern / Fitnessstudio)
+- [x] Karten verlinken auf die korrekten (noch nicht gebauten) Zielrouten — 404 bestätigt und akzeptiert bis PROJ-44
+
+#### Gast-Zugriff
+- [x] Gast (keine Session) kann die Seite vollständig lesen, Arbeitspunkte aufklappen, Plan-Karten sehen — keine Einschränkung
+
+### Edge Cases Status
+- [x] Sehr schmale Mobile-Viewports (375px): kein horizontales Scrollen, alle Texte lesbar — inkl. Plan-Karten-Unterzeilen (2 davon während `/frontend` gekürzt, siehe Implementation Notes)
+- [x] 768px (Tablet): ebenfalls kein horizontales Scrollen
+- [x] Klick auf Plan-Karte vor PROJ-44-Deploy: führt zu 404 wie in der Spec akzeptiert
+- [x] "Verstanden"-Reihenfolge beliebig (nicht zwingend 1→5): funktioniert wie erwartet (bestehendes `ArbeitspunkteListe`-Verhalten)
+
+### Security Audit Results
+- [x] Seite lädt ohne Authentifizierung, wie spezifiziert — kein versehentlicher Login-Zwang
+- [x] Keine API-Aufrufe von der Seite (verifiziert: 0 Netzwerk-Requests an `/api/*`) — reiner statischer/lokaler Inhalt, keine Angriffsfläche über den Server hinaus
+- [x] Keine Nutzereingabe auf der Seite (nur Lesen + "Verstanden"-Klick) — kein XSS-Vektor
+- [x] "Verstanden"-Fortschritt liegt ausschließlich in `localStorage`, geräte-lokal, keine PII, kein Cross-User-Zugriff möglich
+- [x] Keine Konsolenfehler beim Laden
+
+### Regression Testing
+- [x] `PROJ-35-bottom-navigation-kontobereich.spec.ts`: 11/12 grün (1 vorbestehender, unabhängiger Befund aus der PROJ-42-QA — `/ernaehrung`-Alias, nicht durch PROJ-43 verursacht)
+- [x] `PROJ-36-ernaehrung-hub.spec.ts`: 18/19 grün (derselbe vorbestehende Befund) — bestätigt, dass die `HubCard`-Auslagerung den Ernährung-Hub nicht beeinträchtigt hat
+- [x] `npm test` (423/423) unverändert grün
+
+### Bugs Found
+Keine.
+
+### Summary
+- **Acceptance Criteria:** 17/17 bestanden
+- **Neue Tests:** `tests/PROJ-43-training-uebersicht.spec.ts` (16 E2E-Tests, chromium + Mobile Chrome grün)
+- **Bugs Found:** 0
+- **Security:** Pass — minimale Angriffsfläche (kein Backend, keine Eingabe, keine Auth-Pflicht wie spezifiziert)
+- **Production Ready:** YES
+- **Recommendation:** Deploy
 
 ## Deployment
 _To be added by /deploy_
