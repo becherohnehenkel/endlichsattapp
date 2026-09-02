@@ -414,29 +414,11 @@ test.describe('v2 — Rezepte für Gäste (is_guest_visible)', () => {
   })
 })
 
-// ─── Gruppe 10: v2 — Startseite zeigt nur guest-visible Rezepte ─────────────
-
-test.describe('v2 — Startseite: nur freigeschaltete Rezepte für Gäste', () => {
-  test.beforeEach(async ({ context }) => {
-    await clearSession(context)
-  })
-
-  test('AC-v2-9: Startseite ohne Session zeigt freigeschaltete Rezepte', async ({ page }) => {
-    await page.goto('/')
-    await page.waitForLoadState('networkidle', { timeout: 10000 })
-    // Power Oats und/oder Shakshuka sollen sichtbar sein
-    const guestRecipe = page.getByText(/Power Oats|Shakshuka/i)
-    await expect(guestRecipe.first()).toBeVisible({ timeout: 8000 })
-  })
-
-  test('AC-v2-10: Startseite ohne Session zeigt KEINE gesperrten Rezepte', async ({ page }) => {
-    await page.goto('/')
-    await page.waitForLoadState('networkidle', { timeout: 10000 })
-    // Fenchelsalat und Berglinsen Salat dürfen NICHT erscheinen (nicht guest-visible)
-    await expect(page.getByText('Fenchelsalat')).not.toBeVisible()
-    await expect(page.getByText('Berglinsen Salat')).not.toBeVisible()
-  })
-})
+// PROJ-47: die bisherige "Gruppe 10" (Rezept-Vorschau auf der Startseite für Gäste) ist
+// entfallen — die Startseite zeigt seit der Willkommens-Neugestaltung keine Rezepte mehr,
+// weder freigeschaltete noch gesperrte. Die zugrunde liegende Gast-Sichtbarkeitslogik
+// (is_guest_visible) bleibt unverändert und ist weiterhin über Gruppe 9 (Rezeptbibliothek)
+// und Gruppe 11 (Regression eingeloggter Nutzer) abgedeckt.
 
 // ─── Gruppe 11: v2 — Regression: eingeloggte Nutzer unverändert ─────────────
 
@@ -458,29 +440,10 @@ test.describe('v2 — Regression: eingeloggte Nutzer sehen alle Rezepte', () => 
   })
 })
 
-// ─── Gruppe 12: v3 — Upsell-Hints auf Startseite ────────────────────────────
-
-test.describe('v3 — Startseite: Upsell-Hint für Gäste', () => {
-  test.beforeEach(async ({ context }) => {
-    await clearSession(context)
-  })
-
-  test('AC-v3-1: Startseite ohne Session zeigt Upsell-Hint mit Rezept-Count', async ({ page }) => {
-    await page.goto('/')
-    await page.waitForLoadState('networkidle', { timeout: 10000 })
-    // Upsell-Hint mit "Anmelden um alle [N] Rezepte zu sehen"
-    await expect(page.getByText(/Anmelden um alle/)).toBeVisible({ timeout: 8000 })
-    // CTA-Link "Jetzt registrieren" daneben
-    await expect(page.getByRole('link', { name: 'Jetzt registrieren' })).toBeVisible()
-  })
-
-  test('AC-v3-2: Startseite eingeloggt — kein Upsell-Hint', async ({ page }) => {
-    await loginAs(page)
-    await page.goto('/')
-    await page.waitForLoadState('networkidle', { timeout: 8000 })
-    await expect(page.getByText(/Anmelden um alle/)).not.toBeVisible()
-  })
-})
+// PROJ-47: die bisherige "Gruppe 12" (Upsell-Hint mit Rezept-Count auf der Startseite) ist
+// entfallen — mit der Rezept-Vorschau ist auch dieser Hinweis von der Startseite
+// verschwunden. Das äquivalente Upsell-Banner auf /rezepte selbst bleibt unverändert
+// bestehen (Gruppe 13).
 
 // ─── Gruppe 13: v3 — Upsell-Banner auf /rezepte ─────────────────────────────
 
@@ -508,27 +471,7 @@ test.describe('v3 — /rezepte: Upsell-Banner für Gäste', () => {
   })
 })
 
-// ─── Gruppe 14: v3 — Art-of-Eating Teaser auf Startseite ────────────────────
-
-test.describe('v3 — Startseite: Art-of-Eating Teaser (alle Nutzer)', () => {
-  test('AC-v3-5: Startseite zeigt Art-of-Eating Teaser-Box', async ({ page }) => {
-    await page.goto('/')
-    await page.waitForLoadState('networkidle', { timeout: 10000 })
-    await expect(page.getByText('Wie du isst entscheidet, wie satt du wirst')).toBeVisible({ timeout: 8000 })
-    await expect(page.getByText('Zur Art of Eating →')).toBeVisible()
-  })
-
-  test('AC-v3-6: Art-of-Eating Teaser navigiert zu /wie-esse-ich-richtig', async ({ page }) => {
-    await page.goto('/')
-    await page.waitForLoadState('networkidle', { timeout: 10000 })
-    await page.getByText('Zur Art of Eating →').click()
-    await expect(page).toHaveURL(/wie-esse-ich-richtig/, { timeout: 5000 })
-  })
-
-  test('AC-v3-5b: Art-of-Eating Teaser auch für eingeloggte Nutzer sichtbar', async ({ page }) => {
-    await loginAs(page)
-    await page.goto('/')
-    await page.waitForLoadState('networkidle', { timeout: 8000 })
-    await expect(page.getByText('Wie du isst entscheidet, wie satt du wirst')).toBeVisible({ timeout: 8000 })
-  })
-})
+// PROJ-47: die bisherige "Gruppe 14" (Art-of-Eating-Teaser-Box auf der Startseite) ist
+// entfallen — die neue Willkommens-Startseite verlinkt stattdessen über die Karte
+// "Wissen wird zur Tat" auf /ernaehrung, wo Art of Eating weiterhin über den bestehenden
+// Ernährung-Hub erreichbar ist (eigene, unveränderte Testabdeckung dort).

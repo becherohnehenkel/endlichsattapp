@@ -133,9 +133,12 @@ test.describe('Sektion 3 — Historie der letzten Tage', () => {
 // ─── Startseite ──────────────────────────────────────────────────────────
 
 test.describe('Startseite', () => {
-  test('AC: "Mahlzeit analysieren"-Button ist aus dem Hero-Bereich entfernt', async ({ page }) => {
+  test('AC: kein "Mahlzeit analysieren"-Button auf der Startseite (Analyse ist eigener Bottom-Nav-Tab)', async ({ page }) => {
+    // PROJ-47: die bisherige Hero-Sektion wurde durch die neue Willkommens-Startseite
+    // ersetzt — die ursprüngliche Kernaussage dieses Tests (kein direkter CTA-Button mehr,
+    // da Analyse ein vollwertiger Tab ist) bleibt weiterhin gültig und geprüft.
     await page.goto('/')
     await expect(page.getByRole('button', { name: 'Mahlzeit analysieren' })).not.toBeVisible()
-    await expect(page.getByRole('heading', { name: /Wie komplett ist/ })).toBeVisible()
+    await expect(page.getByRole('heading', { name: /Schön, dass du da bist/ })).toBeVisible()
   })
 })

@@ -35,12 +35,11 @@ test.describe('AC-2 bis AC-8: Hauptseiten laden ohne Fehler', () => {
     await loginAs(page)
   })
 
-  test('AC-2: Homepage lädt vollständig — Hero-Überschrift sichtbar', async ({ page }) => {
-    // PROJ-42: der direkte "Mahlzeit analysieren"-CTA-Button wurde von der Startseite
-    // entfernt ("Analyse" ist jetzt ein vollwertiger Bottom-Nav-Tab), die Hero-Überschrift
-    // bleibt aber bestehen.
+  test('AC-2: Homepage lädt vollständig — Begrüßung sichtbar', async ({ page }) => {
+    // PROJ-47: die bisherige Hero-Überschrift ("Wie komplett ist deine Mahlzeit?") wurde
+    // durch die neue Willkommens-Startseite ersetzt.
     await page.goto('/')
-    await expect(page.getByRole('heading', { name: /Wie komplett ist/i })).toBeVisible({ timeout: 10000 })
+    await expect(page.getByRole('heading', { name: /Schön, dass du da bist/i })).toBeVisible({ timeout: 10000 })
   })
 
   test('AC-3: /analyse/start lädt und zeigt Eingabe-Oberfläche', async ({ page }) => {
@@ -122,10 +121,9 @@ test.describe('Regression: Parallele Queries + merged getAccessStatus', () => {
     await loginAs(page)
   })
 
-  test('REG-1: Homepage lädt Mahlzeiten-Sektion und Rezept-Teaser', async ({ page }) => {
+  test('REG-1: Homepage lädt ohne Fehler (PROJ-47: Willkommens-Startseite statt Mahlzeiten/Rezept-Teaser)', async ({ page }) => {
     await page.goto('/')
-    // Hero-Überschrift immer vorhanden (CTA-Button seit PROJ-42 entfernt)
-    await expect(page.getByRole('heading', { name: /Wie komplett ist/i })).toBeVisible({ timeout: 8000 })
+    await expect(page.getByRole('heading', { name: /Schön, dass du da bist/i })).toBeVisible({ timeout: 8000 })
   })
 
   test('REG-2: /analyse kein Redirect zu /login für eingeloggten Nutzer', async ({ page }) => {

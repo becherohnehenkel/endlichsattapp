@@ -1,6 +1,6 @@
 # PROJ-47: Startseite Neu
 
-## Status: In Progress
+## Status: Approved
 **Created:** 2026-09-02
 **Last Updated:** 2026-09-02
 
@@ -160,7 +160,71 @@ Keine neuen Pakete nötig.
 **Verifiziert:** `npm run build`, `npm run lint`, `npm test` (443/443, unverändert — keine bestehenden Tests hingen an der alten Startseite). Per Playwright verifiziert: alle 4 Karten-Links und der Coach-Link (inkl. `target="_blank"`) korrekt gesetzt, Video-Platzhalter nicht interaktiv, Mobile (375px) kein horizontales Scrollen. Personalisierte Begrüßung live gegen das bestehende QA-Testkonto verifiziert (`profiles.name` auf "Lukas Testerson" gesetzt, bleibt als Fixture für künftige QA-Läufe bestehen) — zeigt korrekt "Schön, dass du da bist, Lukas.". Bottom-Navigation fehlt für einen Nutzer ganz ohne jede Session (nicht mal anonym) — bestätigt als vorbestehendes, unverändertes Verhalten aus `navigation-shell.tsx` (siehe PROJ-35), kein PROJ-47-Bug.
 
 ## QA Test Results
-_To be added by /qa_
+
+**Tested:** 2026-09-02
+**App URL:** http://localhost:3000
+**Tester:** QA Engineer (AI)
+
+### Acceptance Criteria Status
+
+#### Seitenstruktur
+- [x] Reihenfolge: Begrüßung → Video-Platzhalter → "So legst du los" → 4 Karten → Coach-Banner
+- [x] Eingeloggter Nutzer mit hinterlegtem Namen sieht "Schön, dass du da bist, [Vorname]."
+- [x] Gast bzw. Nutzer ohne hinterlegten Namen sieht die generische Begrüßung ohne Namen
+
+#### Video-Platzhalter
+- [x] Zeigt den Ankündigungstext "Video kommt bald"
+- [x] Nicht interaktiv — kein `<a>`/`<button>` im Elternpfad, Klick löst keine Navigation aus
+
+#### Funktions-Karten
+- [x] Alle 4 Karten erscheinen in der vorgegebenen Reihenfolge mit den korrekten `href`-Zielen
+- [x] Klick auf eine Karte navigiert tatsächlich zur Zielseite (end-to-end mit "Wissen wird zur Tat" → `/ernaehrung` geprüft)
+
+#### Coach-Banner
+- [x] Verlinkt korrekt auf `onlineernaehrungsberater.de/#coachingstart`, öffnet echt in einem neuen Tab (`target="_blank"`, `rel="noopener noreferrer"`)
+
+#### Gast-Verhalten
+- [x] Gast sieht exakt denselben Inhalt und dieselbe Funktionalität wie ein eingeloggter Nutzer, bis auf die Namens-Personalisierung
+
+### Edge Cases Status
+- [x] Sehr langer Vorname: bricht um, kein horizontales Scrollen (getestet mit "Maximilian-Alexander-Konstantin")
+- [x] Name mit Sonderzeichen/Emoji inkl. `<script>`-Payload: wird ausschließlich als Text gerendert, kein XSS ausgeführt
+- [x] Sehr kleine Bildschirme (375px): kein horizontales Scrollen
+- [x] Anonyme Gast-Session (`user.is_anonymous === true`, ausgelöst über `/analyse/start`): verhält sich identisch zu einem Gast ohne jede Session
+- [x] Mehrfache schnelle Klicks auf das Coach-Banner: durch Design nicht getestet — Standard-Browser-Linkverhalten, bewusst kein Debounce laut Spec, kein app-spezifisches Verhalten zu prüfen
+
+### Security Audit Results
+- [x] Kein `dangerouslySetInnerHTML`/`innerHTML` im neuen Code — Name wird ausschließlich als React-Text gerendert (XSS-Payload-Test bestätigt: kein Skript ausgeführt)
+- [x] Keine client-seitige Profil-Abfrage im Netzwerk-Traffic — der Name wird ausschließlich server-seitig gerendert, keine separate `/rest/v1/profiles`-Anfrage vom Client aus sichtbar
+- [x] Kein Auth-Bypass relevant — Seite ist für Gäste und eingeloggte Nutzer bewusst identisch zugänglich, keine privilegierte Aktion vorhanden
+- [x] Keine sensiblen Daten exponiert — es wird ausschließlich `profiles.name` gelesen, kein anderes Profilfeld
+- [x] Rate Limiting: nicht anwendbar (keine neuen Server-Requests, nur eine bestehende, leichte Profil-Abfrage)
+
+### Regression Testing
+- [x] Vitest-Gesamtsuite: 443/443 grün, unverändert
+- [x] PROJ-19 (Gast-Modus): 3 Testgruppen (Rezept-Vorschau, Upsell-Hint, Art-of-Eating-Teaser auf der Startseite) testeten Inhalte, die durch PROJ-47 bewusst von der Startseite entfernt wurden — entfernt und durch Kommentare mit Verweis auf PROJ-47 dokumentiert, restliche 40 Tests unverändert grün (68/68 nach Bereinigung)
+- [x] PROJ-22 (App-Performance): 2 Tests prüften die alte Hero-Überschrift — auf die neue Begrüßung umgestellt, gleiche Kernaussage ("Seite lädt fehlerfrei") bleibt erhalten
+- [x] PROJ-42 (Analyse-Übersichtsseite): 1 Test prüfte die alte Hero-Überschrift — auf die neue Begrüßung umgestellt, ursprüngliche Kernaussage (kein "Mahlzeit analysieren"-Button mehr) bleibt geprüft
+- [x] PROJ-35 (Bottom-Navigation): einziger verbleibender Fehlschlag ist der bereits bei der PROJ-45-QA dokumentierte, vorbestehende `/ernaehrung`-Test (unabhängig von PROJ-47, in separatem Branch bereits behoben)
+
+**1 vorbestehender, nicht mit PROJ-47 zusammenhängender Befund entdeckt:**
+- `tests/PROJ-14-konto-widerruf.spec.ts`: Test "unauthenticated → Redirect zu /login" schlägt fehl — `/konto` leitet ohne Session nicht mehr zu `/login` weiter. Reproduziert auch mit vollständig gestashten PROJ-47-Änderungen auf `main` (identischer Fehlschlag ohne jeden Code dieses Features). Als separaten Task ausgelagert.
+
+### Bugs Found
+
+Keine Bugs im PROJ-47-Scope gefunden. Zwei Test-Timing-Probleme in den eigenen neuen Tests gefunden und behoben (verfrühtes `innerText()`-Lesen vor vollständigem Rendern; `innerText()` spiegelt CSS-`uppercase`-Transformation wider, wodurch ein Case-sensitiver String-Vergleich fälschlich fehlschlug) — beides reine Test-Bugs, kein Produktcode betroffen.
+
+### E2E-Testsuite
+
+Neu: `tests/PROJ-47-startseite-neu.spec.ts` — 15 Tests, decken alle 9 Acceptance Criteria und 4 der 5 Edge Cases automatisiert ab. Struktur-/Karten-/Video-/Coach-Tests laufen ohne Login; die Namens-Personalisierung nutzt das bestehende QA-Testkonto (jetzt mit hinterlegtem Namen als dauerhafte Fixture) sowie einen temporären, nach dem Lauf wieder gelöschten Testnutzer für den "kein Name"-Fall und die Edge Cases. Grün auf Chromium und Mobile Chrome (375px).
+
+### Summary
+- **Acceptance Criteria:** 9/9 passed
+- **Edge Cases:** 4/5 automatisiert getestet, 1/5 durch Design nicht anwendbar
+- **Bugs Found:** 0 (0 critical, 0 high, 0 medium, 0 low) im PROJ-47-Scope; 1 vorbestehender, unabhängiger Befund in einem anderen Feature dokumentiert und ausgelagert
+- **Security:** Pass
+- **Production Ready:** YES
+- **Recommendation:** Deploy
 
 ## Deployment
 _To be added by /deploy_
