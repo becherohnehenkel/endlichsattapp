@@ -1,6 +1,6 @@
 # PROJ-45: Wochen-Check-In
 
-## Status: Approved
+## Status: Deployed
 **Created:** 2026-09-02
 **Last Updated:** 2026-09-02
 
@@ -317,4 +317,7 @@ Neu: `tests/PROJ-45-wochen-check-in.spec.ts` — 23 Tests, je einer pro Akzeptan
 - **Recommendation:** Deploy
 
 ## Deployment
-_To be added by /deploy_
+- **Production URL:** https://satt.mehralsabnehmen.de/check-in
+- **Deployed:** 2026-09-02 (Vercel auto-deploy via Push zu `main`, commits `7c50fd2`..`cf83c96`)
+- **Verified in Produktion:** Nutzer hat die Live-Seite geprüft, alles grün ("Alles auf Grün").
+- **Umfang dieses Deploys:** vollständige PROJ-45-Implementierung — Wochen-Check-In-Formular unter `/check-in` mit allen 12 Fragen (5 Freitextfelder, 6 Slider, Trainings-Auswahl mit bedingtem Feedback), neue Tabelle `wochen_check_ins` (ein Eintrag pro Nutzer pro Kalenderwoche, per Unique-Constraint erzwungen) + `POST /api/check-in/wochen` zum wochenbasierten Upsert, Vorausfüllung der aktuellen Woche, ausklappbare Mini-Historie zum Laden/Bearbeiten vergangener Einträge, Gast-Hinweistext statt Speichern-Button. `getWeekStartIso` aus der PROJ-17-Route nach `src/lib/wochen-grenzen.ts` ausgelagert (jetzt von PROJ-17 und PROJ-45 geteilt). Migration wurde vom Nutzer manuell ausgeführt und live verifiziert (siehe Implementation Notes Backend).
