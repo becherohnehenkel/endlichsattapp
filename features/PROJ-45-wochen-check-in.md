@@ -226,8 +226,13 @@ Keine DELETE-Policy — laut Spec werden Einträge nie gelöscht, nur angelegt/b
   - Gast-Hinweistext (1:1 Wortlaut aus der Spec) ersetzt den Speichern-Button für Gäste — bewusst kein Login-Vorschlag wie bei `LoginHinweis`, Gäste füllen die Felder weiterhin vollständig aus.
 - `src/types/database.ts`: `wochen_check_ins`-Tabelle (Row/Insert/Update) ergänzt.
 - Integrationstest: `src/app/api/check-in/wochen/route.test.ts` — 401 / 403 / 400 (fehlerhafter Body, Wochenstart nicht Sonntag-ausgerichtet, Wochenstart in der Zukunft) / 500 / Erfolgsfall aktuelle Woche / Erfolgsfall vergangene Woche aus der Historie, 8 neue Tests.
-- `npm run build`, `npm run lint`, `npm test` (438/438) fehlerfrei. Live per Playwright verifiziert (noch vor Migration): Gast sieht alle Felder voll nutzbar, Hinweistext statt Speichern-Button, keine Mini-Historie.
-- **Noch offen:** Live-Verifikation des kompletten Speichern-/Vorausfüll-/Mini-Historie-Zyklus für eingeloggte Nutzer steht aus, bis die Migration ausgeführt ist.
+- `npm run build`, `npm run lint`, `npm test` (438/438) fehlerfrei.
+- Migration vom Nutzer manuell ausgeführt und anschließend live gegen die echte Datenbank verifiziert: temporärer QA-Testnutzer per Supabase Admin API angelegt, per Playwright über das echte Login-Formular eingeloggt, kompletter Zyklus durchgespielt und danach direkt in der Datenbank gegengeprüft — Testnutzer und alle zugehörigen Zeilen (`ON DELETE CASCADE`) im Anschluss wieder gelöscht.
+  - Gast: alle Felder voll nutzbar, Hinweistext statt Speichern-Button, keine Mini-Historie.
+  - Eingeloggt, aktuelle Woche ohne Eintrag: Formular leer, Badge „Aktuelle Woche", Leer-Hinweis statt Historie.
+  - Speichern legt einen neuen Datensatz an, Erfolgsmeldung + „Heute aktualisiert" erscheinen, Seiten-Reload lädt die gespeicherten Werte serverseitig korrekt vor.
+  - Erneutes Bearbeiten + Speichern aktualisiert denselben Datensatz (Zeilenzahl in der DB bleibt bei 1, per Admin-Query bestätigt) statt einen zweiten anzulegen.
+  - Zweiter Eintrag für eine vergangene Woche direkt in der DB angelegt: Mini-Historie zeigt beide Einträge korrekt sortiert; Klick auf den vergangenen Eintrag lädt ihn vollständig ins Formular (Badge wechselt zu „Vergangene Woche" + korrekte Datumsspanne), Speichern aktualisiert exakt diesen Datensatz (Zeilenzahl bleibt bei 2, Inhalt per Admin-Query bestätigt).
 
 ## QA Test Results
 _To be added by /qa_
