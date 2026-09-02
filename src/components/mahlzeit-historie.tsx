@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -19,7 +20,14 @@ import MahlzeitKarte, { type MealEntry } from '@/components/mahlzeit-karte'
 import WochenRecapSektion from '@/components/wochen-recap-sektion'
 import { Plus } from 'lucide-react'
 
-export default function MahlzeitHistorie() {
+interface MahlzeitHistorieProps {
+  // PROJ-42: true, wenn die Komponente innerhalb der Analyse-Übersicht eingebettet wird
+  // (dort erzwingt die volle Viewport-Mindesthöhe unnötigen Leerraum unterhalb von
+  // Sektion 1/2 und der Tab-Leiste).
+  embedded?: boolean
+}
+
+export default function MahlzeitHistorie({ embedded = false }: MahlzeitHistorieProps) {
   // Display oldest-first (ascending) — API returns newest-first, so reverse
   const [meals, setMeals] = useState<MealEntry[]>([])
   const [hasMore, setHasMore] = useState(false)
@@ -81,7 +89,7 @@ export default function MahlzeitHistorie() {
   }
 
   return (
-    <div className="relative min-h-[calc(100vh-57px)] pb-28">
+    <div className={cn('relative pb-28', !embedded && 'min-h-[calc(100vh-57px)]')}>
       <WochenRecapSektion />
 
       {isLoading && (
@@ -130,7 +138,7 @@ export default function MahlzeitHistorie() {
           <p className="text-muted-foreground text-sm mb-6 max-w-xs">
             Was hast du heute gegessen? Foto hochladen oder kurz beschreiben — fertig.
           </p>
-          <Link href="/analyse">
+          <Link href="/analyse/start">
             <Button>
               <Plus className="h-4 w-4 mr-2" />
               Mahlzeit analysieren
@@ -151,7 +159,7 @@ export default function MahlzeitHistorie() {
       {/* Fixed "Neue Mahlzeit" button — only when list has entries */}
       {!isLoading && meals.length > 0 && (
         <div className="fixed bottom-6 right-4 z-10">
-          <Link href="/analyse">
+          <Link href="/analyse/start">
             <Button
               size="lg"
               className="rounded-full shadow-lg h-14 px-6"

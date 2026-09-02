@@ -1,28 +1,7 @@
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
-import { ChevronLeft } from 'lucide-react'
-import { createClient } from '@/lib/supabase/server'
-import MahlzeitHistorie from '@/components/mahlzeit-historie'
 
-export default async function HistoriePage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  // PROJ-19: no user → middleware already redirected; anonymous users see conversion screen
-  if (!user || user.is_anonymous) {
-    redirect('/konto?reason=historie')
-  }
-
-  return (
-    <div className="min-h-screen bg-background">
-      <header className="md:hidden sticky top-0 z-10 border-b border-border bg-card/80 backdrop-blur-sm px-4 py-3 flex items-center">
-        <Link href="/" className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors w-16">
-          <ChevronLeft className="h-4 w-4" />
-          Zurück
-        </Link>
-        <span className="font-semibold text-foreground tracking-tight flex-1 text-center">Meine Analysen</span>
-        <div className="w-16" />
-      </header>
-      <MahlzeitHistorie />
-    </div>
-  )
+// PROJ-42: /historie ist in Sektion 3 der Analyse-Übersicht aufgegangen.
+// Weiterleitung statt Löschen, damit alte Lesezeichen/Links nicht ins Leere laufen.
+export default function HistoriePage() {
+  redirect('/analyse')
 }

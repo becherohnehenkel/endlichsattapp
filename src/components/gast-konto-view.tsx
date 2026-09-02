@@ -51,6 +51,14 @@ export default function GastKontoView({ reason }: GastKontoViewProps) {
           </div>
         )}
 
+        {reason === 'tagesuebersicht' && (
+          <div className="rounded-xl bg-[#DFF0F2] px-4 py-3 text-center">
+            <p className="text-sm text-[#2E9E6B] font-medium">
+              Erstelle einen kostenlosen Account um deinen täglichen Fortschritt zu sehen.
+            </p>
+          </div>
+        )}
+
         <Card>
           <CardContent className="pt-6 space-y-6">
             <div className="space-y-4">

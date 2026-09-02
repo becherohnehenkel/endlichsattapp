@@ -33,7 +33,7 @@ export default function MahlzeitDetail({ result, assumptions, analysisId, photoU
       <SaettigungsErgebnis
         result={result}
         assumptions={assumptions}
-        onReset={() => router.push('/analyse')}
+        onReset={() => router.push('/analyse/start')}
         analysisId={analysisId}
         photoUrl={photoUrl}
         mealId={mealId}

@@ -1,6 +1,6 @@
 # PROJ-42: Analyse-Übersichtsseite
 
-## Status: Architected
+## Status: In Progress
 **Created:** 2026-09-01
 **Last Updated:** 2026-09-02
 
@@ -131,6 +131,26 @@
 
 ---
 <!-- Sections below are added by subsequent skills -->
+
+## Implementation Notes (Frontend)
+
+**Gebaut:**
+- Routen-Umzug: bestehender Analyse-Flow liegt jetzt unter `/analyse/start` (`src/app/analyse/start/page.tsx`, inhaltlich unverändert, nur neuer gemeinsamer Sub-Header `src/components/analyse-sub-header.tsx` statt der alten "← Startseite"-Zeile)
+- Neue Hub-Seite `src/app/analyse/page.tsx` mit allen 3 Sektionen + Trennlinien, exakt dem finalen Wortlaut aus der Spec
+- Sektion 2 (`src/components/analyse-tagesuebersicht.tsx`): Tagesfortschritt + Auf-/Zuklapp-Element für die Restkalorien (Collapsible), live berechnet aus `meals`/`meal_analyses` (heutiger UTC-Kalendertag, nur `analysis_typ = 'mahlzeit'`/`'standard'`) und dem bestehenden Kcal-Rechner (`berechneKcal()` aus `src/lib/kcal-rechner.ts`, mit den 5 gespeicherten Profil-Feldern serverseitig neu berechnet — `profiles.kcal_ziel` speichert wie sich herausstellte nur den Ziel-*Typ*, nicht die kcal-Zahl)
+- Sektion 3 (`src/components/analyse-historie-tabs.tsx`): 3 Tabs, "Analysierte Mahlzeiten" bettet die bestehende `MahlzeitHistorie`-Komponente unverändert ein (inkl. des darin bereits enthaltenen `WochenRecapSektion`), "Trainingseinheiten"/"Check-Ins" zeigen den bestehenden "Bald verfügbar"-Stil von `/training`/`/check-in`
+- `MahlzeitHistorie` bekam eine neue optionale `embedded`-Prop, die die für die eigenständige Seite gedachte `min-h-[calc(100vh-57px)]` unterdrückt, wenn die Komponente in der Hub-Seite eingebettet ist
+- Gemeinsame Login-Hinweis-Karte (`src/components/analyse-login-hinweis.tsx`) für Gäste in Sektion 2/3, verlinkt auf die bestehende `/konto?reason=...`-Konversionsseite (neuer `reason=tagesuebersicht` in `gast-konto-view.tsx` ergänzt)
+- `/historie` ist jetzt ein reiner Redirect auf `/analyse` (`src/app/historie/page.tsx`)
+- Startseite: Hero-CTA-Button entfernt (Überschrift/Text bleiben), "Letzte Analysen → Alle" verlinkt jetzt direkt auf `/analyse` statt `/historie`
+- Alle internen Links auf den alten `/analyse`-Flow wurden auf ihre jeweils richtige Zielroute umgestellt: "Direkt weiter analysieren"-Stellen (`mahlzeit-detail.tsx` Reset-Button, `upgrade-view.tsx` Erfolgsansichten, `mahlzeit-historie.tsx` Empty-State/FAB) zeigen jetzt auf `/analyse/start`; generische Post-Login-Landingpoints (`auth/callback`, `passwort-neu`, `konto-view.tsx`-Zurück-Pfeil) zeigen weiterhin auf `/analyse`, was jetzt korrekt auf dem Hub landet
+- Verifiziert per Playwright-Screenshot-Skript (Gast, eingeloggt, Kcal-Collapsible, Tab-Wechsel, `/analyse/start`, `/historie`-Redirect, Startseite, Mobile-Viewport) — alle Szenarien funktionieren wie spezifiziert
+
+**Bewusst nicht gebaut (braucht `/backend`):**
+- Individuelles Tagesziel ("Mahlzeiten pro Tag") ist noch keine echte Nutzer-Einstellung — es gibt weder das neue `profiles`-Feld noch die Konto-UI dafür noch eine Speicher-API. Sektion 2 verwendet aktuell fest den Default-Wert 3 für alle eingeloggten Nutzer.
+
+**Bekannte Test-Schulden (für `/qa`):**
+- Der Routen-Umzug hat einen großen Blast-Radius: mindestens `PROJ-6`, `PROJ-11`, `PROJ-12`, `PROJ-14`, `PROJ-16`, `PROJ-17`, `PROJ-19`, `PROJ-22`, `PROJ-2`, `PROJ-34`, `PROJ-35`, `PROJ-8` referenzieren `/analyse` oder `/historie` direkt in ihren E2E-Suiten. Stichprobe mit `PROJ-6-mahlzeit-historie.spec.ts` zeigt 4 erwartete Fehlschläge (FAB-/Empty-State-Href jetzt `/analyse/start` statt `/analyse`, `/historie` leitet jetzt auf `/analyse` statt `/konto`) — diese und die übrigen Suiten müssen systematisch auf die neue Struktur angepasst werden.
 
 ## Tech Design (Solution Architect)
 

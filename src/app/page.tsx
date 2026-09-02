@@ -3,7 +3,7 @@ import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Plus, ChevronRight, Clock, ChefHat, UtensilsCrossed, UserRound } from 'lucide-react'
+import { ChevronRight, Clock, ChefHat, UtensilsCrossed, UserRound } from 'lucide-react'
 
 function formatRecipeCount(n: number): string {
   return n === 1 ? '1 Rezept' : `${n} Rezepte`
@@ -108,22 +108,16 @@ export default async function StartPage() {
 
       <main className="max-w-sm md:max-w-[850px] mx-auto px-4 pb-10 space-y-8">
 
-        {/* ── Hero: Analyse CTA ─────────────────────────────── */}
-        <section className="pt-8 space-y-6">
-          <div className="space-y-1">
-            <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-              Wie komplett ist<br />deine Mahlzeit?
-            </h1>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Foto oder Beschreibung — wir zeigen dir warum du hungrig wirst und wie du das änderst.
-            </p>
-          </div>
-          <Link href="/analyse">
-            <Button className="w-full h-12 text-base font-medium rounded-xl">
-              <Plus className="h-5 w-5 mr-2" />
-              Mahlzeit analysieren
-            </Button>
-          </Link>
+        {/* ── Hero ──────────────────────────────────────────── */}
+        {/* PROJ-42: CTA-Button entfernt — "Analyse" ist jetzt ein vollwertiger */}
+        {/* Bottom-Nav-Tab, ein zusätzlicher Direkteinstieg hier wäre redundant. */}
+        <section className="pt-8 space-y-1">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+            Wie komplett ist<br />deine Mahlzeit?
+          </h1>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Foto oder Beschreibung — wir zeigen dir warum du hungrig wirst und wie du das änderst.
+          </p>
         </section>
 
         {/* ── Letzte Analysen ──────────────────────────────── */}
@@ -132,7 +126,7 @@ export default async function StartPage() {
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold text-foreground">Letzte Analysen</h2>
               <Link
-                href="/historie"
+                href="/analyse"
                 className="text-xs text-[#2E9E6B] hover:underline flex items-center gap-0.5"
               >
                 Alle <ChevronRight className="h-3 w-3" />

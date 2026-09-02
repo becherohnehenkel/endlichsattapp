@@ -132,7 +132,7 @@ export default function UpgradeView({ subscriptionStatus, hasInviteAccess, hasFu
         return
       }
       // Erfolg: kurz bestätigen, dann weiterleiten
-      window.location.href = '/analyse'
+      window.location.href = '/analyse/start'
     } catch {
       setCodeError('Etwas ist schiefgelaufen — bitte versuche es erneut.')
     } finally {
@@ -162,7 +162,7 @@ export default function UpgradeView({ subscriptionStatus, hasInviteAccess, hasFu
               Du hast dauerhaften Zugriff auf Freitext-Analyse und Rezeptbibliothek.
             </p>
           </div>
-          <Link href="/analyse" className="block w-full">
+          <Link href="/analyse/start" className="block w-full">
             <Button className="w-full" size="lg">Zur Mahlzeit-Eingabe →</Button>
           </Link>
         </div>
@@ -184,7 +184,7 @@ export default function UpgradeView({ subscriptionStatus, hasInviteAccess, hasFu
           <Button className="w-full" size="lg" onClick={handlePortal} disabled={actionLoading}>
             {actionLoading ? 'Wird geöffnet…' : 'Abo verwalten'}
           </Button>
-          <Link href="/analyse" className="text-sm text-[#2E9E6B] hover:underline block">
+          <Link href="/analyse/start" className="text-sm text-[#2E9E6B] hover:underline block">
             Zur Mahlzeit-Eingabe →
           </Link>
         </div>
