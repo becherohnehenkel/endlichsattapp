@@ -236,7 +236,7 @@ Keine UPDATE/DELETE-Policy — laut Spec werden vergangene Einträge nie bearbei
 - `src/types/database.ts`: `training_sessions`-Tabelle (Row/Insert/Update) ergänzt.
 - Integrationstest: `src/app/api/training/[plan]/route.test.ts` — 404 (unbekannter Plan) / 401 / 403 / 400 (fehlerhafter Body, unbekannte Übungs-ID) / 500 / Erfolgsfall, 7 neue Tests.
 - `npm run build`, `npm run lint`, `npm test` (430/430) fehlerfrei. Live verifiziert (noch vor Migration): Gast sieht Login-Hinweis statt Button, eingeloggter Nutzer sieht den Button, Klick zeigt aktuell erwartungsgemäß "Speichern fehlgeschlagen" (Tabelle fehlt noch), Fehlerbehandlung funktioniert sauber (Werte bleiben erhalten, Button bleibt nutzbar).
-- **Noch offen:** Live-Verifikation des kompletten Speichern-/Vorausfüll-Zyklus steht aus, bis die Migration ausgeführt ist.
+- **Migration ausgeführt und live verifiziert** (2026-09-02, temporäres Playwright-Skript, nicht committed — offizielle E2E-Abdeckung folgt in `/qa`): Satz-1-Wiederholungen bei "Kniebeuge" auf einen Testwert gesetzt → "Training abschließen" → "Training gespeichert ✓" → Reload lädt den Wert korrekt aus der echten DB zurück (Vorausfüllung mit dem zuletzt gespeicherten Stand bestätigt) → zurückgesetzt auf den Plan-Standardwert und erneut gespeichert (QA-Testkonto sauber hinterlassen).
 
 ## QA Test Results
 _To be added by /qa_
