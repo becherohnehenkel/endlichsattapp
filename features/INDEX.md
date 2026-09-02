@@ -62,10 +62,11 @@
 | PROJ-44 | Trainingspläne (Detailseiten + Gewicht-Logging) | P1 | Deployed | PROJ-43, PROJ-2, PROJ-19, PROJ-42 | [Spec](PROJ-44-trainingsplaene.md) |
 | PROJ-45 | Wochen-Check-In | P1 | Deployed | PROJ-2, PROJ-19, PROJ-35, PROJ-17, PROJ-42 | [Spec](PROJ-45-wochen-check-in.md) |
 | PROJ-46 | Gewohnheiten | P1 | Deployed | PROJ-45, PROJ-35 | [Spec](PROJ-46-gewohnheiten.md) |
+| PROJ-47 | Startseite Neu | P1 | Planned | PROJ-2, PROJ-19 | [Spec](PROJ-47-startseite-neu.md) |
 
 <!-- Add features above this line -->
 
-## Next Available ID: PROJ-47
+## Next Available ID: PROJ-48
 
 ## Empfohlene Build-Reihenfolge
 
