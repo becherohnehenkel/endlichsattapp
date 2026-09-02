@@ -455,6 +455,33 @@ export type Database = {
         }
         Relationships: []
       }
+      wochen_check_ins: {
+        Row: {
+          antworten: Json
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+          woche_start: string
+        }
+        Insert: {
+          antworten: Json
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+          woche_start: string
+        }
+        Update: {
+          antworten?: Json
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+          woche_start?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

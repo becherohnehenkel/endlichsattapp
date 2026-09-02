@@ -186,6 +186,49 @@ Ein neues shadcn/ui-Paket: `slider` (offizielle Radix-basierte Komponente, wie a
 
 **Verifiziert:** `npm run build`, `npm run lint` (0 Fehler, 1 vorbestehende, unabhängige Warnung), `npm test` (430/430 grün). Visuell per Playwright-Screenshot auf Desktop und Mobile (375px, kein horizontales Scrollen) geprüft: alle Slider, der bedingte Hinweistext ab Wert 5, die Trainings-Chips mit Feedback-Text und das bedingte Textfeld bei „0x" funktionieren wie spezifiziert.
 
+## Implementation Notes (Backend)
+
+**Migration (manuell im Supabase SQL Editor auszuführen — MCP-Zugriff diese Session getrennt):**
+```sql
+CREATE TABLE wochen_check_ins (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  woche_start DATE NOT NULL,
+  antworten JSONB NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  UNIQUE (user_id, woche_start)
+);
+
+ALTER TABLE wochen_check_ins ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users see own wochen check-ins" ON wochen_check_ins
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users insert own wochen check-ins" ON wochen_check_ins
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users update own wochen check-ins" ON wochen_check_ins
+  FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+CREATE INDEX idx_wochen_check_ins_user_woche ON wochen_check_ins(user_id, woche_start DESC);
+```
+Keine DELETE-Policy — laut Spec werden Einträge nie gelöscht, nur angelegt/bearbeitet (siehe Out of Scope). Die Unique-Constraint auf `(user_id, woche_start)` ist der technische Upsert-Mechanismus: „neuer Eintrag" und „bestehenden bearbeiten" sind serverseitig derselbe Vorgang, nie ein Unterschied im Code.
+
+**Gebaut:**
+- Neu: `POST /api/check-in/wochen` (`src/app/api/check-in/wochen/route.ts`) — Auth-Check (401 ohne Session, 403 für anonyme Gast-Sessions), Zod-Validierung aller 12 Antworten (Freitextfelder auf 2000 Zeichen begrenzt, Slider-Werte auf ihren jeweiligen Wertebereich, Trainings-Frage 0–3 oder `null`). Der Client schickt immer den Ziel-Wochenstart mit (aktuelle Woche oder eine aus der Mini-Historie geladene Woche) — die Route validiert serverseitig, dass dieser Wochenstart exakt auf einen Sonntag fällt (`getWeekStartIso`-Normalisierung) und nicht in der Zukunft liegt, bevor sie per Service-Role-Client upserted (`onConflict: 'user_id,woche_start'`). Diese serverseitige Erzwingung folgt der bestehenden Projekt-Erkenntnis, dass reine Prompt-/Client-Hinweise nicht für Dateintegrität ausreichen.
+- `src/app/check-in/page.tsx` ist jetzt eine async Server-Component: liest Session, lädt bei eingeloggten Nutzern die letzten 5 Check-Ins direkt per Supabase-Query (kein eigener Lese-Endpoint, wie in der Architektur festgelegt) und übergibt sie ans Formular. Fehler (z. B. Tabelle existiert noch nicht) werden ignoriert — Formular fällt dann auf leer zurück.
+- `src/components/wochen-check-in-form.tsx` erweitert:
+  - Vorausfüllung mit dem Eintrag der aktuellen Woche, falls vorhanden.
+  - „Speichern"-Button für eingeloggte, nicht-anonyme Nutzer mit Erfolgs-/Fehlerbehandlung (Werte bleiben bei Fehler erhalten).
+  - Mini-Historie: ausklappbare Liste der letzten 5 Einträge (Datum + „vor X Tagen aktualisiert"), Klick auf einen Eintrag lädt ihn ins Formular und wird zum neuen Speichern-Ziel; freundlicher Leer-Hinweis, wenn noch kein Eintrag existiert.
+  - Zusätzlich zur Spec (Nutzerwunsch beim `/backend`-Kickoff): kleiner Hinweis-Chip über dem Formular zeigt „Aktuelle Woche" oder „Vergangene Woche" plus Datumsspanne, sowie „vor X Tagen aktualisiert" bei einem bereits gespeicherten Eintrag — funktioniert unabhängig vom Wochentag.
+  - Gast-Hinweistext (1:1 Wortlaut aus der Spec) ersetzt den Speichern-Button für Gäste — bewusst kein Login-Vorschlag wie bei `LoginHinweis`, Gäste füllen die Felder weiterhin vollständig aus.
+- `src/types/database.ts`: `wochen_check_ins`-Tabelle (Row/Insert/Update) ergänzt.
+- Integrationstest: `src/app/api/check-in/wochen/route.test.ts` — 401 / 403 / 400 (fehlerhafter Body, Wochenstart nicht Sonntag-ausgerichtet, Wochenstart in der Zukunft) / 500 / Erfolgsfall aktuelle Woche / Erfolgsfall vergangene Woche aus der Historie, 8 neue Tests.
+- `npm run build`, `npm run lint`, `npm test` (438/438) fehlerfrei. Live per Playwright verifiziert (noch vor Migration): Gast sieht alle Felder voll nutzbar, Hinweistext statt Speichern-Button, keine Mini-Historie.
+- **Noch offen:** Live-Verifikation des kompletten Speichern-/Vorausfüll-/Mini-Historie-Zyklus für eingeloggte Nutzer steht aus, bis die Migration ausgeführt ist.
+
 ## QA Test Results
 _To be added by /qa_
 
