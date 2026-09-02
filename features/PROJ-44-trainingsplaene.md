@@ -203,6 +203,41 @@ Keine neuen Pakete.
 - Vorausfüllung mit dem zuletzt gespeicherten Stand — setzt die Speicherung voraus, folgt in `/backend`.
 - `npm run build`, `npm run lint`, `npm test` (423/423) fehlerfrei.
 
+## Implementation Notes (Backend)
+
+**Migration (vom Nutzer manuell im Supabase SQL Editor auszuführen, MCP-Zugriff diese Session getrennt):**
+```sql
+CREATE TABLE training_sessions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  plan_slug TEXT NOT NULL,
+  uebungen JSONB NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+ALTER TABLE training_sessions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users see own training sessions" ON training_sessions
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users insert own training sessions" ON training_sessions
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE INDEX idx_training_sessions_user_plan ON training_sessions(user_id, plan_slug, created_at DESC);
+```
+Keine UPDATE/DELETE-Policy — laut Spec werden vergangene Einträge nie bearbeitet oder gelöscht, nur neue angelegt (siehe Out of Scope). `uebungen` ist ein JSONB-Blob, gebündelt pro Übung (`{ [uebungId]: { pause, saetze: [{wiederholungen, gewicht}, ...] } }`), da die Übungsliste pro Plan fest vorgegeben ist (siehe Architektur-Entscheidung).
+
+**Gebaut:**
+- Neu: `POST /api/training/[plan]` (`src/app/api/training/[plan]/route.ts`) — 404 bei unbekanntem Plan-Slug, Auth-Check (401 ohne Session, 403 für anonyme Gast-Sessions), Zod-Validierung (Freitextfelder auf 50 Zeichen begrenzt, max. 20 Sätze — reine Struktur-/Längenprüfung, keine Wertebereichs-Validierung laut Spec), zusätzliche Prüfung, dass nur bekannte Übungs-IDs des jeweiligen Plans eingereicht werden. Schreiben über den Service-Role-Client mit explizitem `user_id` — identisches Muster zu `/api/kcal-rechner` und `/api/mahlzeiten-ziel`.
+- `src/app/training/[plan]/page.tsx` liest jetzt den zuletzt gespeicherten Stand direkt per Supabase-Query (kein eigener Lese-Endpoint, wie in der Architektur festgelegt) — Fehler (z. B. Tabelle existiert noch nicht) werden bewusst ignoriert, die Seite fällt dann auf die Plan-Standardwerte zurück statt zu crashen.
+- `src/components/trainingsplan-detail.tsx`: Feld-State liegt jetzt in der Elternkomponente (kontrollierte `UebungsKarte`n statt eigenem lokalem State), damit "Training abschließen" auf alle Werte zugreifen kann. Button ruft `POST /api/training/[plan]` auf, zeigt Erfolgs-/Fehlermeldung, Werte bleiben bei Fehler erhalten.
+- Gast-Hinweis (`LoginHinweis`, `reason=training`) ersetzt den Button für Gäste — neuer `reason === 'training'`-Fall in `gast-konto-view.tsx`.
+- `AnalyseLoginHinweis` in `LoginHinweis` umbenannt (`src/components/login-hinweis.tsx`) und `/analyse`-Seite entsprechend angepasst, da die Komponente jetzt von PROJ-42 UND PROJ-44 genutzt wird — analog zur `HubCard`-Auslagerung in PROJ-43.
+- `src/types/database.ts`: `training_sessions`-Tabelle (Row/Insert/Update) ergänzt.
+- Integrationstest: `src/app/api/training/[plan]/route.test.ts` — 404 (unbekannter Plan) / 401 / 403 / 400 (fehlerhafter Body, unbekannte Übungs-ID) / 500 / Erfolgsfall, 7 neue Tests.
+- `npm run build`, `npm run lint`, `npm test` (430/430) fehlerfrei. Live verifiziert (noch vor Migration): Gast sieht Login-Hinweis statt Button, eingeloggter Nutzer sieht den Button, Klick zeigt aktuell erwartungsgemäß "Speichern fehlgeschlagen" (Tabelle fehlt noch), Fehlerbehandlung funktioniert sauber (Werte bleiben erhalten, Button bleibt nutzbar).
+- **Noch offen:** Live-Verifikation des kompletten Speichern-/Vorausfüll-Zyklus steht aus, bis die Migration ausgeführt ist.
+
 ## QA Test Results
 _To be added by /qa_
 

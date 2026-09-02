@@ -1,16 +1,24 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, Dumbbell } from 'lucide-react'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { LoginHinweis } from '@/components/login-hinweis'
 import { cn } from '@/lib/utils'
 import type { Trainingsplan, TrainingsUebung } from '@/lib/trainingsplaene'
 
-interface SatzFelder {
+export interface SatzFelder {
   wiederholungen: string
   gewicht: string
+}
+
+export interface UebungsWerte {
+  pause: string
+  saetze: SatzFelder[]
 }
 
 function leereSaetze(plan: Trainingsplan): SatzFelder[] {
@@ -21,13 +29,24 @@ function leereSaetze(plan: Trainingsplan): SatzFelder[] {
   }))
 }
 
-function UebungsKarte({ uebung, plan }: { uebung: TrainingsUebung; plan: Trainingsplan }) {
+function UebungsKarte({
+  uebung,
+  plan,
+  werte,
+  onChange,
+}: {
+  uebung: TrainingsUebung
+  plan: Trainingsplan
+  werte: UebungsWerte
+  onChange: (werte: UebungsWerte) => void
+}) {
   const [offen, setOffen] = useState(false)
-  const [pause, setPause] = useState(plan.schemaPause)
-  const [saetze, setSaetze] = useState<SatzFelder[]>(() => leereSaetze(plan))
 
   function setSatzFeld(index: number, key: keyof SatzFelder, value: string) {
-    setSaetze(prev => prev.map((satz, i) => (i === index ? { ...satz, [key]: value } : satz)))
+    onChange({
+      ...werte,
+      saetze: werte.saetze.map((satz, i) => (i === index ? { ...satz, [key]: value } : satz)),
+    })
   }
 
   return (
@@ -47,7 +66,7 @@ function UebungsKarte({ uebung, plan }: { uebung: TrainingsUebung; plan: Trainin
 
       <div className="space-y-1 max-w-[140px]">
         <Label htmlFor={`${uebung.id}-pause`} className="text-[11px] text-muted-foreground uppercase tracking-wide">Pause</Label>
-        <Input id={`${uebung.id}-pause`} value={pause} onChange={e => setPause(e.target.value)} className="h-9 text-sm" />
+        <Input id={`${uebung.id}-pause`} value={werte.pause} onChange={e => onChange({ ...werte, pause: e.target.value })} className="h-9 text-sm" />
       </div>
 
       <div className="space-y-2">
@@ -56,7 +75,7 @@ function UebungsKarte({ uebung, plan }: { uebung: TrainingsUebung; plan: Trainin
           <span>Wdh.</span>
           {plan.zeigtGewichtsfeld && <span>Gewicht</span>}
         </div>
-        {saetze.map((satz, index) => (
+        {werte.saetze.map((satz, index) => (
           <div key={index} className={cn('grid gap-2 items-center', plan.zeigtGewichtsfeld ? 'grid-cols-[2rem_1fr_1fr]' : 'grid-cols-[2rem_1fr]')}>
             <span className="text-sm font-medium text-foreground">{index + 1}</span>
             <Input
@@ -81,11 +100,52 @@ function UebungsKarte({ uebung, plan }: { uebung: TrainingsUebung; plan: Trainin
   )
 }
 
-// PROJ-44: Trainingsplan-Detailseite. Felder sind aktuell rein lokaler Component-State
-// (vorausgefüllt mit dem Plan-Schema) — Speichern als Trainingseinheit, Vorausfüllung mit
-// dem zuletzt gespeicherten Stand und der Gast-Hinweis kommen erst mit /backend
-// (neue Tabelle + API-Route, siehe Spec Implementation Notes).
-export function TrainingsplanDetail({ plan }: { plan: Trainingsplan }) {
+interface TrainingsplanDetailProps {
+  plan: Trainingsplan
+  isGuest: boolean
+  letzterStand: Record<string, UebungsWerte> | null
+}
+
+// PROJ-44: Trainingsplan-Detailseite. Für eingeloggte Nutzer werden die Felder mit dem
+// zuletzt gespeicherten Stand vorausgefüllt (falls vorhanden), sonst mit dem Plan-Schema.
+// "Training abschließen" legt einen neuen, datierten Verlaufs-Eintrag an. Gäste sehen
+// statt des Buttons einen Login-Hinweis — ihre Eingaben werden nie gespeichert.
+export function TrainingsplanDetail({ plan, isGuest, letzterStand }: TrainingsplanDetailProps) {
+  const [werte, setWerte] = useState<Record<string, UebungsWerte>>(() =>
+    Object.fromEntries(
+      plan.uebungen.map(uebung => [
+        uebung.id,
+        letzterStand?.[uebung.id] ?? { pause: plan.schemaPause, saetze: leereSaetze(plan) },
+      ])
+    )
+  )
+  const [speichern, setSpeichern] = useState(false)
+  const [fehler, setFehler] = useState(false)
+  const [erfolg, setErfolg] = useState(false)
+
+  function updateUebung(id: string, neueWerte: UebungsWerte) {
+    setWerte(prev => ({ ...prev, [id]: neueWerte }))
+    setErfolg(false)
+  }
+
+  async function handleAbschliessen() {
+    setSpeichern(true)
+    setFehler(false)
+    try {
+      const res = await fetch(`/api/training/${plan.slug}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uebungen: werte }),
+      })
+      if (!res.ok) throw new Error()
+      setErfolg(true)
+    } catch {
+      setFehler(true)
+    } finally {
+      setSpeichern(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="space-y-2">
@@ -100,9 +160,39 @@ export function TrainingsplanDetail({ plan }: { plan: Trainingsplan }) {
 
       <div className="space-y-3">
         {plan.uebungen.map(uebung => (
-          <UebungsKarte key={uebung.id} uebung={uebung} plan={plan} />
+          <UebungsKarte
+            key={uebung.id}
+            uebung={uebung}
+            plan={plan}
+            werte={werte[uebung.id]}
+            onChange={w => updateUebung(uebung.id, w)}
+          />
         ))}
       </div>
+
+      {isGuest ? (
+        <LoginHinweis
+          icon={Dumbbell}
+          text="Melde dich an, um dein Training zu speichern."
+          reason="training"
+        />
+      ) : (
+        <div className="space-y-2">
+          {fehler && (
+            <Alert variant="destructive">
+              <AlertDescription>Speichern fehlgeschlagen. Bitte erneut versuchen.</AlertDescription>
+            </Alert>
+          )}
+          {erfolg && (
+            <Alert>
+              <AlertDescription>Training gespeichert ✓</AlertDescription>
+            </Alert>
+          )}
+          <Button className="w-full h-12" onClick={handleAbschliessen} disabled={speichern}>
+            {speichern ? 'Wird gespeichert…' : 'Training abschließen'}
+          </Button>
+        </div>
+      )}
     </div>
   )
 }

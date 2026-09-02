@@ -5,7 +5,7 @@ import { berechneKcal, type Geschlecht, type Aktivitaetslevel, type Ziel } from 
 import { MAHLZEITEN_ZIEL_DEFAULT } from '@/lib/mahlzeiten-ziel'
 import { AnalyseTagesuebersicht } from '@/components/analyse-tagesuebersicht'
 import { AnalyseHistorieTabs } from '@/components/analyse-historie-tabs'
-import { AnalyseLoginHinweis } from '@/components/analyse-login-hinweis'
+import { LoginHinweis } from '@/components/login-hinweis'
 
 interface RawAnalyse {
   analysis_typ: string | null
@@ -117,7 +117,7 @@ export default async function AnalyseHubPage() {
             </p>
           </div>
           {isGuest ? (
-            <AnalyseLoginHinweis
+            <LoginHinweis
               icon={UtensilsCrossed}
               text="Melde dich an, um deinen Tagesfortschritt zu sehen."
               reason="tagesuebersicht"
@@ -142,7 +142,7 @@ export default async function AnalyseHubPage() {
             </p>
           </div>
           {isGuest ? (
-            <AnalyseLoginHinweis
+            <LoginHinweis
               icon={Clock}
               text="Melde dich an, um deine Analyse-Historie zu sehen."
               reason="historie"
