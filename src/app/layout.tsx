@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { createClient } from "@/lib/supabase/server";
 import { NavigationShell } from "@/components/navigation-shell";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -22,16 +21,11 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  const isLoggedIn = !!user;
-
   return (
     <html lang="de">
       <head>
@@ -43,7 +37,7 @@ export default async function RootLayout({
         />
       </head>
       <body className={`${inter.className} antialiased`}>
-        <NavigationShell isLoggedIn={isLoggedIn}>
+        <NavigationShell>
           {children}
         </NavigationShell>
       </body>

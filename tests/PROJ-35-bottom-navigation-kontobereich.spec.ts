@@ -82,17 +82,22 @@ test.describe('Training und Check-In: Platzhalterseiten statt 404', () => {
 
 // ─── Konto-Icon auf Mobile: Seiten-Header statt globaler Leiste ───────────
 
+// Seit dem Nav-Fix (Navigation unabhängig vom Session-Zustand sichtbar, ausgelöst durch
+// Nutzer-Feedback zu PROJ-47) steht die globale TopNav (data-testid="top-nav") immer im
+// DOM — auf Mobile nur per CSS ausgeblendet (hidden md:flex), nicht entfernt. Der
+// Konto-Link-Selektor muss die TopNav deshalb explizit ausschließen, um eindeutig den
+// eigenen mobilen Seiten-Header jeder Page zu treffen.
 test.describe('Konto-Icon oben rechts auf Mobile (bestehendes Seiten-Header-Muster)', () => {
   test.use({ viewport: { width: 375, height: 812 } })
 
   test('AC: /training zeigt Konto-Icon im mobilen Seiten-Header', async ({ page }) => {
     await page.goto('/training')
-    await expect(page.locator('header a[href="/konto"]')).toBeVisible()
+    await expect(page.locator('header:not([data-testid="top-nav"]) a[href="/konto"]')).toBeVisible()
   })
 
   test('AC: /check-in zeigt Konto-Icon im mobilen Seiten-Header', async ({ page }) => {
     await page.goto('/check-in')
-    await expect(page.locator('header a[href="/konto"]')).toBeVisible()
+    await expect(page.locator('header:not([data-testid="top-nav"]) a[href="/konto"]')).toBeVisible()
   })
 })
 
@@ -123,7 +128,7 @@ test.describe('Gast-Modus (PROJ-19) bleibt mit neuer Nav-Struktur intakt', () =>
   test('AC: Gast tippt Konto-Icon im Seiten-Header → Conversion-Screen (nicht KontoView)', async ({ page, context }) => {
     await clearSession(context)
     await page.goto('/')
-    await page.locator('header a[href="/konto"]').click()
+    await page.locator('header:not([data-testid="top-nav"]) a[href="/konto"]').click()
     await expect(page).toHaveURL(/\/konto/)
     await expect(page.getByText('Kostenlos registrieren')).toBeVisible()
   })

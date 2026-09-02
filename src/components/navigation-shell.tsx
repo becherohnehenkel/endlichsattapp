@@ -8,15 +8,17 @@ const HIDDEN_PATHS = ['/login', '/registrieren', '/upgrade']
 const HIDDEN_PREFIXES = ['/admin', '/auth']
 
 interface NavigationShellProps {
-  isLoggedIn: boolean
   children: React.ReactNode
 }
 
-export function NavigationShell({ isLoggedIn, children }: NavigationShellProps) {
+// Nav ist unabhängig vom Session-Zustand sichtbar (Fix: Gäste ohne anonyme Session — die
+// erst client-seitig beim Besuch von /analyse/start entsteht, siehe PROJ-19 — sahen sonst
+// gar keine Navigation, z. B. direkt auf der Startseite). BottomNav/TopNav selbst zeigen
+// für Gast und eingeloggten Nutzer ohnehin identische Inhalte (kein Lock-Icon, siehe PROJ-35).
+export function NavigationShell({ children }: NavigationShellProps) {
   const pathname = usePathname()
 
   const shouldHideNav =
-    !isLoggedIn ||
     HIDDEN_PATHS.includes(pathname) ||
     HIDDEN_PREFIXES.some((prefix) => pathname.startsWith(prefix))
 
