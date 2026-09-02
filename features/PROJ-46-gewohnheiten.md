@@ -1,6 +1,6 @@
 # PROJ-46: Gewohnheiten
 
-## Status: Planned
+## Status: Architected
 **Created:** 2026-09-02
 **Last Updated:** 2026-09-02
 
@@ -77,7 +77,7 @@
 8. **Richtig essen** — "Ich esse heute bewusst 1 Mahlzeit in Ruhe. Ohne Bildschirm, Musik, Podcast oder andere Ablenkungen."
 
 ## Open Questions
-- [ ] Exakte Wiederverwendung von `ArbeitspunkteListe` vs. neue, angepasste Komponente (Checkbox statt "Verstanden"-Button, Trennung von Auf-/Zuklappen und Abhaken) — wird bei `/architecture` entschieden
+- [x] Exakte Wiederverwendung von `ArbeitspunkteListe` vs. neue, angepasste Komponente → neue, eigene Komponente (siehe Technical Decisions) — Interaktionsmuster unterscheidet sich zu weit für sinnvolle Wiederverwendung (2026-09-02)
 
 ## Decision Log
 
@@ -94,12 +94,48 @@
 ### Technical Decisions
 <!-- Added by /architecture -->
 | Decision | Rationale | Date |
+|----------|-----------|------|
+| Kein Backend, kein API-Aufruf — reine Frontend-Komponente | Setzt die Product Decision "stateless" technisch um; keine Ladezustände oder Netzwerk-Fehlerbehandlung nötig, anders als bei PROJ-45 | 2026-09-02 |
+| Neue, eigene Komponente statt Wiederverwendung von `ArbeitspunkteListe` | Interaktionsmuster unterscheidet sich: dort ist der "Verstanden"-Button erst nach dem Aufklappen sichtbar, hier soll die Checkbox permanent sichtbar sein, unabhängig vom Auf-/Zuklappen. Grundprinzip (lokal gespeicherte Häkchen, manueller Reset) bleibt dasselbe wie bei den bestehenden Guides | 2026-09-02 |
+| Keine neuen Pakete nötig | Checkbox und Collapsible/Accordion sind bereits im Projekt installiert (`src/components/ui/checkbox.tsx`, `accordion.tsx`, `collapsible.tsx`) | 2026-09-02 |
 
 ---
 <!-- Sections below are added by subsequent skills -->
 
 ## Tech Design (Solution Architect)
-_To be added by /architecture_
+
+### A) Komponenten-Struktur (Visuell)
+
+```
+/check-in Seite (PROJ-45 baut bereits die erste Sektion)
+├── Wochen-Check-In-Sektion (PROJ-45)
+└── Gewohnheiten-Sektion (NEU)
+    ├── Überschrift "Gewohnheiten" + Intro-Text
+    ├── Merksatz (umrahmte Infobox)
+    ├── Fortschrittsanzeige ("X von 8 erledigt")
+    ├── 8 Gewohnheiten-Karten, je mit:
+    │   ├── Checkbox (Abhaken, sofort wirksam)
+    │   ├── Titel
+    │   └── unabhängig auf-/zuklappbarer Hinweistext
+    └── "Fortschritt zurücksetzen"-Link (nur sichtbar, wenn mind. 1 Häkchen gesetzt)
+```
+
+### B) Datenmodell (in Worten)
+
+Kein Server-Datenmodell — keine Tabelle, keine API-Route. Gespeichert wird ausschließlich im Browser (`localStorage`) des jeweiligen Geräts:
+- Welche der 8 Gewohnheiten aktuell abgehakt sind (einfache Liste von IDs)
+- Kein Datum, kein Nutzer-Bezug, keine Historie
+
+Gilt identisch für Gäste und eingeloggte Nutzer — es gibt keinen Unterschied im Verhalten.
+
+### C) Tech-Entscheidungen (Begründung)
+
+1. **Kein Backend** — reine Frontend-Komponente, `localStorage` statt Datenbank, setzt die Product Decision "stateless" um.
+2. **Neue, eigene Komponente statt Wiederverwendung von `ArbeitspunkteListe`** — das Interaktionsmuster passt nicht 1:1 (Checkbox permanent sichtbar vs. Button erst nach Aufklappen), das Grundprinzip (lokal gespeicherte Häkchen, manueller Reset) bleibt aber dasselbe für ein vertrautes Verhalten.
+3. **Kein API-Aufruf, keine Ladezustände** — alles passiert synchron im Browser.
+
+### D) Abhängigkeiten (Pakete)
+Keine neuen Pakete nötig.
 
 ## QA Test Results
 _To be added by /qa_
