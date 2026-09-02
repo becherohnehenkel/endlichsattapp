@@ -163,7 +163,7 @@
 - `src/types/database.ts`: `mahlzeiten_pro_tag` in die `profiles`-Typdefinition (Row/Insert/Update) ergänzt.
 - Integrationstest: `src/app/api/mahlzeiten-ziel/route.test.ts` — 401/403/400 (Wertebereich + Nicht-Ganzzahl)/500/Erfolgsfall, 8 neue Tests.
 - `npm run build`, `npm run lint`, `npm test` (423/423) fehlerfrei.
-- **Noch offen:** Live-Verifikation gegen die echte Datenbank steht aus, bis der Nutzer die Migration ausgeführt hat — bis dahin schlägt jede Query, die die neue Spalte anfragt, in Produktion/lokal gegen die echte DB fehl (Build/Tests laufen unabhängig davon grün, da sie gemockt sind bzw. gegen die generierten Typen kompilieren).
+- **Migration ausgeführt und live verifiziert** (2026-09-02, temporäres Playwright-Skript, nicht committed — offizielle E2E-Abdeckung folgt in `/qa`): Konto-Einstellung auf 5 gesetzt → `POST /api/mahlzeiten-ziel` liefert 200 → Wert bleibt nach Reload erhalten (echte DB, nicht nur lokaler State) → Analyse-Übersicht zeigt korrekt "0 von 5 Mahlzeiten heute" → zurückgesetzt auf 3 (QA-Testkonto sauber hinterlassen).
 
 ## Tech Design (Solution Architect)
 
