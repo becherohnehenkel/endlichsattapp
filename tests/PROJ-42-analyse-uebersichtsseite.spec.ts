@@ -101,23 +101,23 @@ test.describe('Sektion 3 — Historie der letzten Tage', () => {
     await expect(anmelden).toHaveAttribute('href', '/konto?reason=historie')
   })
 
-  test('AC: 3 Kategorie-Tabs sichtbar, "Analysierte Mahlzeiten" ist standardmäßig aktiv', async ({ page }) => {
+  test('AC: 3 Kategorie-Tabs sichtbar, "Mahlzeiten" ist standardmäßig aktiv', async ({ page }) => {
     await loginAs(page)
     const tabs = page.getByRole('tab')
     await expect(tabs).toHaveCount(3)
-    await expect(page.getByRole('tab', { name: 'Analysierte Mahlzeiten' })).toHaveAttribute('aria-selected', 'true')
-    await expect(page.getByRole('tab', { name: 'Trainingseinheiten' })).toBeVisible()
+    await expect(page.getByRole('tab', { name: 'Mahlzeiten' })).toHaveAttribute('aria-selected', 'true')
+    await expect(page.getByRole('tab', { name: 'Training' })).toBeVisible()
     await expect(page.getByRole('tab', { name: 'Check-Ins' })).toBeVisible()
   })
 
-  test('AC: aktiver Tab "Analysierte Mahlzeiten" zeigt Wochenrückblick + Mahlzeiten-Liste (PROJ-6/17)', async ({ page }) => {
+  test('AC: aktiver Tab "Mahlzeiten" zeigt Wochenrückblick + Mahlzeiten-Liste (PROJ-6/17)', async ({ page }) => {
     await loginAs(page)
     await expect(page.getByText('Wochenrückblick', { exact: true })).toBeVisible({ timeout: 8000 })
   })
 
-  test('AC: Klick auf "Trainingseinheiten" zeigt "Bald verfügbar", keine Navigation, kein Fehler', async ({ page }) => {
+  test('AC: Klick auf "Training" zeigt "Bald verfügbar", keine Navigation, kein Fehler', async ({ page }) => {
     await loginAs(page)
-    await page.getByRole('tab', { name: 'Trainingseinheiten' }).click()
+    await page.getByRole('tab', { name: 'Training' }).click()
     await expect(page.getByText('Bald verfügbar.')).toBeVisible()
     await expect(page).toHaveURL(/\/analyse$/)
   })

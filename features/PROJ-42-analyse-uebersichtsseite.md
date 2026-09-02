@@ -54,11 +54,11 @@
 - [ ] Angenommen ein eingeloggter Nutzer hat heute noch keine Mahlzeit analysiert, wenn Sektion 2 angezeigt wird, dann zeigt sie "0 von Y abgeschlossen"
 
 ### Sektion 3 — Historie der letzten Tage
-- [ ] Angenommen die Übersichtsseite wird angezeigt, wenn Sektion 3 lädt, dann erscheinen 3 Kategorie-Tabs: "Analysierte Mahlzeiten" (aktiv/ausgewählt), "Trainingseinheiten" und "Check-Ins" (beide sichtbar, aber deaktiviert mit "Bald verfügbar"-Hinweis)
-- [ ] Angenommen der Tab "Analysierte Mahlzeiten" ist aktiv, wenn er angezeigt wird, dann erscheinen darunter der bestehende Wochen-Rückblick (PROJ-17) sowie die chronologische Mahlzeiten-Timeline (PROJ-6), inhaltlich unverändert zur bisherigen `/historie`-Seite
-- [ ] Angenommen ein Nutzer klickt auf "Trainingseinheiten" oder "Check-Ins", wenn der Tab angeklickt wird, dann bleibt der Inhaltsbereich auf einem "Bald verfügbar"-Hinweis (kein Fehler, keine Navigation)
+- [ ] Angenommen die Übersichtsseite wird angezeigt, wenn Sektion 3 lädt, dann erscheinen 3 Kategorie-Tabs: "Mahlzeiten" (aktiv/ausgewählt), "Training" und "Check-Ins" (beide sichtbar, aber deaktiviert mit "Bald verfügbar"-Hinweis)
+- [ ] Angenommen der Tab "Mahlzeiten" ist aktiv, wenn er angezeigt wird, dann erscheinen darunter der bestehende Wochen-Rückblick (PROJ-17) sowie die chronologische Mahlzeiten-Timeline (PROJ-6), inhaltlich unverändert zur bisherigen `/historie`-Seite
+- [ ] Angenommen ein Nutzer klickt auf "Training" oder "Check-Ins", wenn der Tab angeklickt wird, dann bleibt der Inhaltsbereich auf einem "Bald verfügbar"-Hinweis (kein Fehler, keine Navigation)
 - [ ] Angenommen ein Gast (kein Login) besucht die Seite, wenn Sektion 3 angezeigt wird, dann erscheint dieselbe Login-Aufforderung wie bisher bei `/historie` (siehe PROJ-6)
-- [ ] Angenommen ein eingeloggter Nutzer hat noch keine Mahlzeit analysiert, wenn Sektion 3 / Tab "Analysierte Mahlzeiten" angezeigt wird, dann erscheint der bestehende freundliche Empty-State aus PROJ-6
+- [ ] Angenommen ein eingeloggter Nutzer hat noch keine Mahlzeit analysiert, wenn Sektion 3 / Tab "Mahlzeiten" angezeigt wird, dann erscheint der bestehende freundliche Empty-State aus PROJ-6
 
 ### Startseite
 - [ ] Angenommen ein Nutzer besucht die Startseite, wenn sie lädt, dann ist der bisherige "Mahlzeit analysieren"-Button aus dem Hero-Bereich entfernt
@@ -128,6 +128,7 @@
 | `/historie` wird eine serverseitige Weiterleitung auf `/analyse` statt gelöscht zu werden | Verhindert kaputte Lesezeichen/Links ohne Zusatzaufwand | 2026-09-02 |
 | Restkalorien-Berechnung folgt demselben Join-Muster (`meals` → `meal_analyses`, `macros_before.kcal` summiert) wie die bestehende Wochenauswertung, nur gefiltert auf den heutigen Kalendertag statt eine Woche | Wiederverwendung eines bereits verifizierten Berechnungsmusters statt einer neuen Implementierung | 2026-09-02 |
 | Keine neuen npm-Pakete | Tabs, Cards, Buttons sind bereits als shadcn/ui-Komponenten installiert | 2026-09-02 |
+| **Refinement 2026-09-02:** Tab-Labels in Sektion 3 gekürzt — "Analysierte Mahlzeiten" → "Mahlzeiten", "Trainingseinheiten" → "Training" (Check-Ins unverändert) | Die drei Tab-Labels nebeneinander in einem `grid-cols-3` überschnitten sich auf schmalen Mobil-Viewports und waren nicht mehr lesbar. Die "Bald verfügbar"-Panel-Überschrift für Training bleibt bewusst "Trainingseinheiten" (dort ist genug Platz, beschreibt den Bereich präziser) | 2026-09-02 |
 
 ---
 <!-- Sections below are added by subsequent skills -->
@@ -243,9 +244,9 @@ Keine neuen — alles läuft über bereits installierte shadcn/ui-Komponenten (C
 - [x] "0 von Y" bei noch keiner heutigen Mahlzeit (struktureller Test, da das QA-Konto reale Historie ansammelt)
 
 #### Sektion 3 — Historie der letzten Tage
-- [x] 3 Kategorie-Tabs sichtbar, "Analysierte Mahlzeiten" standardmäßig aktiv (`aria-selected="true"`)
+- [x] 3 Kategorie-Tabs sichtbar, "Mahlzeiten" standardmäßig aktiv (`aria-selected="true"`)
 - [x] Aktiver Tab zeigt Wochen-Rückblick (PROJ-17) + Mahlzeiten-Timeline (PROJ-6) unverändert eingebettet
-- [x] "Trainingseinheiten"/"Check-Ins" zeigen "Bald verfügbar", keine Navigation, kein Fehler
+- [x] "Training"/"Check-Ins" zeigen "Bald verfügbar", keine Navigation, kein Fehler
 - [x] Gast sieht Login-Hinweis-Karte statt Inhalt, Link zeigt korrekt auf `/konto?reason=historie`
 - [x] Empty-State aus PROJ-6 bleibt erhalten (nicht separat erneut getestet, unverändert wiederverwendete Komponente)
 

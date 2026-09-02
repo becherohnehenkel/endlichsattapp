@@ -22,7 +22,7 @@ async function loginAndGoToHistorie(page: Page) {
   await page.click('button[type="submit"]')
   await page.waitForURL('**/', { timeout: 8000 })
   // PROJ-42: /historie leitet jetzt auf /analyse weiter, die Historie lebt dort in
-  // Sektion 3 (Tab "Analysierte Mahlzeiten", standardmäßig aktiv).
+  // Sektion 3 (Tab "Mahlzeiten", standardmäßig aktiv).
   await page.goto('/analyse')
 }
 

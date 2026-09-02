@@ -21,8 +21,8 @@ export function AnalyseHistorieTabs() {
   return (
     <Tabs defaultValue="mahlzeiten">
       <TabsList className="w-full grid grid-cols-3">
-        <TabsTrigger value="mahlzeiten">Analysierte Mahlzeiten</TabsTrigger>
-        <TabsTrigger value="training">Trainingseinheiten</TabsTrigger>
+        <TabsTrigger value="mahlzeiten">Mahlzeiten</TabsTrigger>
+        <TabsTrigger value="training">Training</TabsTrigger>
         <TabsTrigger value="checkin">Check-Ins</TabsTrigger>
       </TabsList>
       <TabsContent value="mahlzeiten" className="mt-4">
