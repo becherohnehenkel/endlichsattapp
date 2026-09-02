@@ -1,6 +1,6 @@
 # PROJ-46: Gewohnheiten
 
-## Status: In Progress
+## Status: Approved
 **Created:** 2026-09-02
 **Last Updated:** 2026-09-02
 
@@ -153,7 +153,67 @@ Keine neuen Pakete nötig.
 **Verifiziert:** `npm run build`, `npm run lint` (0 Fehler/Warnungen in den geänderten Dateien — ein Lint-Fehler in `.claude/worktrees/.../sidebar.tsx` stammt aus einem parallel laufenden, unabhängigen Task in einem separaten Git-Worktree), `npm test` (443/443 grün, unverändert). Per Playwright verifiziert: Checkbox und Aufklappen sind unabhängig voneinander, Fortschrittsanzeige aktualisiert sich live, Zustand übersteht einen Reload (localStorage), Reset setzt zuverlässig zurück. Mobile (375px): kein horizontales Scrollen, alle 8 Karten korrekt lesbar.
 
 ## QA Test Results
-_To be added by /qa_
+
+**Tested:** 2026-09-02
+**App URL:** http://localhost:3000
+**Tester:** QA Engineer (AI)
+
+### Acceptance Criteria Status
+
+#### Seitenstruktur
+- [x] Erscheint unterhalb der Wochen-Check-In-Sektion mit Überschrift "Gewohnheiten", Intro-Text und Merksatz in umrahmter Infobox
+- [x] Alle 8 Gewohnheiten erscheinen als Checkbox-Infoboxen in der vorgegebenen Reihenfolge
+
+#### Interaktion
+- [x] Checkbox anklicken markiert sofort als erledigt, kein Speichern-Button
+- [x] Erneutes Anklicken entfernt die Markierung wieder
+- [x] Aufklappen zeigt den Hinweistext, erneutes Klicken klappt ihn wieder zu
+- [x] Auf-/Zuklappen ist unabhängig vom Abhak-Status (in beide Richtungen geprüft)
+- [x] "Fortschritt zurücksetzen" entfernt alle Häkchen (Link verschwindet danach wieder, bis erneut abgehakt wird)
+
+#### Persistenz
+- [x] Häkchen bleiben nach Reload im selben Browser erhalten
+- [x] Ohne je abgehakte Gewohnheit sind beim Laden alle Checkboxen leer
+
+#### Gast-Verhalten
+- [x] Funktioniert für Gäste identisch zu eingeloggten Nutzern, kein Hinweistext zu fehlender Speicherung (anders als bei der Wochen-Check-In-Sektion, dort korrekt weiterhin vorhanden)
+
+### Edge Cases Status
+
+- [x] `localStorage` nicht verfügbar (simuliert: Zugriff wirft einen Fehler): Checkbox bleibt bedienbar, kein Absturz/keine Konsolenfehler, Zustand geht beim Reload erwartungsgemäß verloren
+- [x] Nutzung auf zwei Geräten: kein Sync (durch Design — reine `localStorage`-Speicherung, nichts zu testen außer der Abwesenheit von Sync-Code)
+- [x] Browser-Daten löschen: identisch zu manuellem Reset (durch Design, `localStorage.removeItem` ist der einzige Lösch-Pfad)
+- [x] Aufklappen ohne Abhaken bzw. Abhaken ohne Aufklappen: beide Zustände unabhängig geprüft
+- [x] Alle 8 Gewohnheiten abgehakt: zeigt "Alles erledigt ✓"
+
+### Security Audit Results
+- [x] Kein Backend, keine API-Route, keine Netzwerkaufrufe — kein Endpunkt zum Angreifen (`fetch` kommt im neuen Code nicht vor)
+- [x] Kein `dangerouslySetInnerHTML`/`innerHTML` — alle Inhalte sind statischer, hart codierter Text, kein Injection-Vektor
+- [x] Keine sensiblen Daten im `localStorage` — nur eine Liste von Item-IDs (1–8), kein Nutzer- oder Datums-Bezug
+- [x] Kein Auth-Bypass relevant — Feature ist für Gäste und eingeloggte Nutzer bewusst identisch zugänglich, keine privilegierte Aktion vorhanden
+- [x] Rate Limiting: nicht anwendbar (keine Server-Requests)
+
+### Regression Testing
+- [x] Vitest-Gesamtsuite: 443/443 grün, unverändert
+- [x] PROJ-45 (Wochen-Check-In, dieselbe `/check-in`-Seite): alle 23 Tests weiterhin grün — die neue Sektion darunter stört das bestehende Formular nicht
+- [x] PROJ-35 (Bottom-Navigation): 11/12 grün — einziger Fehlschlag ist der bereits bei der PROJ-45-QA dokumentierte, vorbestehende `/ernaehrung`-Test (unabhängig, mittlerweile in einem separaten Branch/Worktree bereits behoben, siehe `ef315d4`, nur noch nicht in `main` gemerged)
+- [x] Mobile (375px) und Desktop: alle 12 PROJ-46-Tests auf beiden Projekten grün
+
+### Bugs Found
+
+Keine Bugs im PROJ-46-Scope gefunden. Beim Schreiben der E2E-Tests wurde ein Test-Timing-Fehler (zu frühes `innerText()`-Lesen vor vollständigem Rendern) in den eigenen neuen Tests gefunden und behoben — kein Produktbug.
+
+### E2E-Testsuite
+
+Neu: `tests/PROJ-46-gewohnheiten.spec.ts` — 12 Tests, je einer pro Akzeptanzkriterium/Edge-Case. Kein QA-Testkonto nötig (kein Backend) — jeder Test läuft in einer frischen, isolierten Browser-Context. Grün auf Chromium und Mobile Chrome (375px).
+
+### Summary
+- **Acceptance Criteria:** 8/8 passed
+- **Edge Cases:** 5/5 passed
+- **Bugs Found:** 0 (0 critical, 0 high, 0 medium, 0 low)
+- **Security:** Pass (minimaler Angriffsfläche durch Backend-freies Design)
+- **Production Ready:** YES
+- **Recommendation:** Deploy
 
 ## Deployment
 _To be added by /deploy_
