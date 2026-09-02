@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // sharp lädt ein natives Binary (libvips) je Plattform — muss vom Bundler unangetastet
+  // bleiben, sonst versucht Turbopack es zu bundlen und findet zur Laufzeit auf Vercels
+  // Linux-Runtime das falsche/kein Binary (ERR_DLOPEN_FAILED). Offizieller Next.js-Fix
+  // für native-Binary-Pakete in Server-Routen.
+  serverExternalPackages: ['sharp'],
   images: {
     remotePatterns: [
       {

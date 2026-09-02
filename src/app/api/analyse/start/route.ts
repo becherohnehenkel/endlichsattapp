@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import Anthropic from '@anthropic-ai/sdk'
-import sharp from 'sharp'
 import { createClient } from '@/lib/supabase/server'
 
 const schema = z.object({
@@ -69,14 +68,21 @@ export async function POST(request: Request) {
 
     if (!imgError && imageData) {
       // FIX-2: resize to max 768px before encoding — reduces vision tokens ~20×
+      // Dynamischer Import statt top-level: sharp lädt ein plattformspezifisches natives
+      // Binary — schlägt das fehl (z. B. fehlendes libvips-Binary in der Laufzeitumgebung),
+      // darf das nur die Foto-Verkleinerung betreffen, nicht die ganze Route (inkl.
+      // reiner Text-Analysen, die sharp nie brauchen).
       let imageBuffer = Buffer.from(await imageData.arrayBuffer())
       try {
+        const sharp = (await import('sharp')).default
         imageBuffer = await sharp(imageBuffer)
           .resize(768, 768, { fit: 'inside', withoutEnlargement: true })
           .jpeg({ quality: 85 })
           .toBuffer()
-      } catch {
-        // corrupted image — send original, don't abort analysis
+      } catch (err) {
+        // sharp nicht verfügbar oder Bild beschädigt — Original unverkleinert senden,
+        // Analyse nicht abbrechen
+        console.error('[analyse/start] sharp resize failed, sending original image', err)
       }
       const base64 = imageBuffer.toString('base64')
       userMessageParts.push({
