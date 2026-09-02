@@ -185,6 +185,23 @@ Beim Öffnen einer Plan-Seite wird für eingeloggte Nutzer der neueste Eintrag f
 ### D) Abhängigkeiten (Pakete)
 Keine neuen Pakete.
 
+## Implementation Notes (Frontend)
+
+**Gebaut:**
+- Statischer Plan-/Übungs-Content in `src/lib/trainingsplaene.ts` — 3 Pläne, 21 Übungen mit Ausführungs-Erklärung, Plan-Schema (Sätze/Wdh/Pause-Startwerte), `zeigtGewichtsfeld` pro Plan (Plan 1 = `false`).
+- Neuer gemeinsamer `TrainingSubHeader` (`src/components/training-sub-header.tsx`), analog zu `AnalyseSubHeader`/`ErnaehrungSubHeader`.
+- `src/components/trainingsplan-detail.tsx`: H1 + Intro, Warm-Up-Hinweis, Übungskarten mit Name, einklappbarer Ausführung (Collapsible) und den Freitextfeldern Sätze/Wiederholungen/Pause (+ Gewicht/Widerstand bei Plan 2/3), vorausgefüllt mit dem Plan-Schema.
+- Neue dynamische Route `src/app/training/[plan]/page.tsx` — löst den Slug gegen `findTrainingsplan()` auf, `notFound()` bei ungültigem Slug (verifiziert: zeigt die Next.js-404-Seite).
+- Verifiziert per Playwright-Screenshot-Skript: Plan 1 (kein Gewicht-Feld), Plan 3 auf Mobile 375px (2×2-Feldraster, kein horizontales Scrollen), Ausführung-Aufklappen, Feld-Bearbeitung, End-to-End-Navigation Hub → Plan-Detailseite → Breadcrumb zurück zum Hub.
+- `tests/PROJ-43-training-uebersicht.spec.ts`: Testname einer Assertion aktualisiert ("noch nicht gebaute" → "richtige" Detailrouten, da die Routen jetzt existieren) — Suite weiterhin 16/16 grün.
+
+**Bewusst nicht gebaut (braucht `/backend`):**
+- Persistenz vollständig ausständig — die Felder sind aktuell reiner lokaler Component-State (immer das Plan-Schema als Startwert), nichts wird gespeichert oder gelesen.
+- Kein "Training abschließen"-Button — würde eine Speicher-API voraussetzen, die noch nicht existiert (fehlende Tabelle "Trainingseinheiten"). Analog zum Vorgehen bei PROJ-42s "Mahlzeiten pro Tag"-Einstellung wird die komplette Speicher-UI (Button + API-Anbindung) gebündelt in `/backend` gebaut, statt jetzt einen nicht-funktionalen Button auszuliefern.
+- Kein Gast-Hinweis-Banner ("Eingaben gehen verloren") — ohne echte Persistenz gibt es aktuell keinen Unterschied zwischen Gast und eingeloggtem Nutzer; der Hinweis ergibt erst Sinn, sobald eingeloggte Nutzer tatsächlich speichern können. Kommt zusammen mit dem Speichern in `/backend`.
+- Vorausfüllung mit dem zuletzt gespeicherten Stand — setzt die Speicherung voraus, folgt in `/backend`.
+- `npm run build`, `npm run lint`, `npm test` (423/423) fehlerfrei.
+
 ## QA Test Results
 _To be added by /qa_
 

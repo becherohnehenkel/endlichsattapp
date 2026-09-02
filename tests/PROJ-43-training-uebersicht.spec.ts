@@ -154,7 +154,7 @@ test.describe('Plan-Karten', () => {
     await expect(page.getByText('Mit Hanteln und Kabelzug')).toBeVisible()
   })
 
-  test('AC: Plan-Karten verlinken auf die (noch nicht gebauten) Detailrouten', async ({ page }) => {
+  test('AC: Plan-Karten verlinken auf die richtigen Detailrouten', async ({ page }) => {
     await page.goto('/training')
     await expect(page.getByRole('link', { name: /Zu Hause ohne Equipment/ })).toHaveAttribute('href', '/training/zuhause-ohne-equipment')
     await expect(page.getByRole('link', { name: /Zu Hause mit Widerstandsbändern/ })).toHaveAttribute('href', '/training/zuhause-mit-baendern')
