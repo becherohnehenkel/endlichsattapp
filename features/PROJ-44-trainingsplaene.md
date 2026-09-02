@@ -37,9 +37,9 @@
 
 ### Übungskarten
 - [ ] Angenommen eine Übungskarte wird angezeigt, wenn sie lädt, dann zeigt sie den Übungsnamen und eine eingeklappte Ausführungs-Erklärung, die sich per Klick aufklappen lässt
-- [ ] Angenommen eine Übungskarte wird angezeigt, wenn die Felder geladen werden, dann sind Sätze und Wiederholungen mit dem Plan-Schema vorausgefüllt (3x12 bei Plan 1 & 2, 3x10 bei Plan 3) und die Pause mit "60 Sek."
-- [ ] Angenommen Plan 2 oder Plan 3 wird angezeigt, wenn eine Übungskarte lädt, dann zeigt sie zusätzlich ein leeres Freitextfeld "Gewicht/Widerstand"
-- [ ] Angenommen Plan 1 wird angezeigt, wenn eine Übungskarte lädt, dann zeigt sie KEIN Gewicht/Widerstand-Feld
+- [ ] Angenommen eine Übungskarte wird angezeigt, wenn die Felder geladen werden, dann zeigt sie eine Zeile pro Satz (3 Zeilen bei allen 3 Plänen), jede Zeile mit Wiederholungen vorausgefüllt aus dem Plan-Schema (12 bei Plan 1 & 2, 10 bei Plan 3), sowie ein gemeinsames Pause-Feld mit "60 Sek."
+- [ ] Angenommen Plan 2 oder Plan 3 wird angezeigt, wenn eine Übungskarte lädt, dann zeigt jede Satz-Zeile zusätzlich ein leeres Freitextfeld "Gewicht"
+- [ ] Angenommen Plan 1 wird angezeigt, wenn eine Übungskarte lädt, dann zeigen die Satz-Zeilen KEIN Gewicht-Feld
 
 ### Felder anpassen
 - [ ] Angenommen ein Nutzer möchte von der Vorgabe abweichen, wenn er ein Sätze-/Wiederholungs-/Pause-/Gewicht-Feld bearbeitet, dann wird die Eingabe direkt im Feld übernommen (Freitext, keine Formatvorgabe)
@@ -71,7 +71,7 @@
 ### Plan 1 — Zu Hause ohne Equipment
 **Intro:** "Bodyweight-Training für zu Hause — sechs Übungen, die du ohne jegliches Equipment machen kannst."
 **Warm-Up-Hinweis:** "5–10 Minuten: Hampelmann, Highknees oder eine Runde um den Block gehen."
-**Schema (Startwert aller Übungen):** 3 Sätze × 12 Wiederholungen, 60 Sek. Pause. Kein Gewicht/Widerstand-Feld.
+**Schema (Startwert aller Übungen):** 3 Sätze × 12 Wiederholungen, 60 Sek. Pause. Keine Gewicht-Felder.
 
 | # | Übung | Ausführungs-Erklärung |
 |---|-------|------------------------|
@@ -85,7 +85,7 @@
 ### Plan 2 — Zu Hause mit Widerstandsbändern
 **Intro:** "Trainiere zu Hause mit einem einfachen Widerstandsband — mehr Spannung als bei reinem Bodyweight, ohne großes Equipment."
 **Warm-Up-Hinweis:** "5–10 Minuten: Hampelmann, Highknees oder eine Runde um den Block gehen."
-**Schema (Startwert aller Übungen):** 3 Sätze × 12 Wiederholungen, 60 Sek. Pause. Zusätzliches Freitextfeld "Gewicht/Widerstand".
+**Schema (Startwert aller Übungen):** 3 Sätze × 12 Wiederholungen, 60 Sek. Pause. Zusätzliches Freitextfeld "Gewicht" pro Satz-Zeile.
 
 | # | Übung | Ausführungs-Erklärung |
 |---|-------|------------------------|
@@ -101,7 +101,7 @@
 ### Plan 3 — Fitnessstudio
 **Intro:** "Der klassische Fitnessstudio-Plan mit Lang- und Kurzhanteln sowie Kabelzug."
 **Warm-Up-Hinweis:** "5–10 Minuten am Rad-/Ruderergometer, Fahrrad oder Laufband."
-**Schema (Startwert aller Übungen):** 3 Sätze × 10 Wiederholungen, 60 Sek. Pause. Zusätzliches Freitextfeld "Gewicht/Widerstand".
+**Schema (Startwert aller Übungen):** 3 Sätze × 10 Wiederholungen, 60 Sek. Pause. Zusätzliches Freitextfeld "Gewicht" pro Satz-Zeile.
 
 | # | Übung | Ausführungs-Erklärung |
 |---|-------|------------------------|
@@ -130,6 +130,7 @@
 | Gäste nutzen alle Felder wie eingeloggte Nutzer, aber ganz ohne Persistenz (kein Button, kein Zwischenspeicher, auch nicht lokal) | Konsistent mit dem bereits in PROJ-42/PROJ-43 etablierten Gast-Modus-Muster | 2026-09-02 |
 | Übungs-Ausführungs-Erklärungen von Claude entworfen (generische, weit verbreitete Form-Hinweise, keine Trainer-Zertifizierung), vom Nutzer vor Freigabe geprüft und bestätigt | Sicherheitsrelevanter Content — Nutzer wollte selbst prüfen statt blind zu übernehmen | 2026-09-02 |
 | Bewusste Ausnahme vom PRD-Non-Goal "Kein Sport-/Workout-Tracking": echtes, dauerhaftes Logging für eingeloggte Nutzer, zustandslos für Gäste | Bereits in PROJ-43 als Kontext-Entscheidung festgehalten — Nutzerwunsch, verbunden mit dem "Trainingseinheiten"-Tab aus PROJ-42 | 2026-09-02 |
+| **Refinement 2026-09-02 (vor `/backend`):** Statt eines einzelnen "Sätze"-Zählfelds zeigt jede Übungskarte eine Zeile pro Satz (3 Zeilen), jede mit eigenem Wiederholungen- (und bei Plan 2/3 Gewicht-)Feld; Pause bleibt ein gemeinsames Feld. Das Feld-Label "Gewicht/Widerstand" wurde zu "Gewicht" gekürzt | Nutzerwunsch: realistischeres Logging, da sich Wiederholungen/Gewicht zwischen den Sätzen einer Übung typischerweise unterscheiden (Ermüdung); kürzeres Label ist eindeutig genug und passt besser in die schmalen Felder auf Mobile | 2026-09-02 |
 
 ### Technical Decisions
 <!-- Added by /architecture -->
@@ -158,8 +159,8 @@
 ├── Übungsliste
 │   └── Übungskarte (je Übung)
 │       ├── Name + einklappbare Ausführungs-Erklärung
-│       ├── Freitextfelder: Sätze, Wiederholungen, Pause
-│       └── Freitextfeld "Gewicht/Widerstand" (nur Plan 2 & 3)
+│       ├── Freitextfeld: Pause (ein gemeinsamer Wert)
+│       └── eine Zeile pro Satz: Wiederholungen + Gewicht (nur Plan 2 & 3)
 ├── Gäste: Hinweis-Karte "Eingaben gehen verloren" + Link zum Konto
 └── Eingeloggt: "Training abschließen"-Button
 ```
@@ -190,9 +191,9 @@ Keine neuen Pakete.
 **Gebaut:**
 - Statischer Plan-/Übungs-Content in `src/lib/trainingsplaene.ts` — 3 Pläne, 21 Übungen mit Ausführungs-Erklärung, Plan-Schema (Sätze/Wdh/Pause-Startwerte), `zeigtGewichtsfeld` pro Plan (Plan 1 = `false`).
 - Neuer gemeinsamer `TrainingSubHeader` (`src/components/training-sub-header.tsx`), analog zu `AnalyseSubHeader`/`ErnaehrungSubHeader`.
-- `src/components/trainingsplan-detail.tsx`: H1 + Intro, Warm-Up-Hinweis, Übungskarten mit Name, einklappbarer Ausführung (Collapsible) und den Freitextfeldern Sätze/Wiederholungen/Pause (+ Gewicht/Widerstand bei Plan 2/3), vorausgefüllt mit dem Plan-Schema.
+- `src/components/trainingsplan-detail.tsx`: H1 + Intro, Warm-Up-Hinweis, Übungskarten mit Name, einklappbarer Ausführung (Collapsible), einem gemeinsamen Pause-Feld sowie einer Zeile pro Satz (Wiederholungen + Gewicht bei Plan 2/3), vorausgefüllt mit dem Plan-Schema (Refinement 2026-09-02, siehe Decision Log).
 - Neue dynamische Route `src/app/training/[plan]/page.tsx` — löst den Slug gegen `findTrainingsplan()` auf, `notFound()` bei ungültigem Slug (verifiziert: zeigt die Next.js-404-Seite).
-- Verifiziert per Playwright-Screenshot-Skript: Plan 1 (kein Gewicht-Feld), Plan 3 auf Mobile 375px (2×2-Feldraster, kein horizontales Scrollen), Ausführung-Aufklappen, Feld-Bearbeitung, End-to-End-Navigation Hub → Plan-Detailseite → Breadcrumb zurück zum Hub.
+- Verifiziert per Playwright-Screenshot-Skript: Plan 1 (keine Gewicht-Spalte), Plan 3 auf Mobile 375px (3 Satz-Zeilen mit Wiederholungen + Gewicht, kein horizontales Scrollen), Ausführung-Aufklappen, Feld-Bearbeitung, End-to-End-Navigation Hub → Plan-Detailseite → Breadcrumb zurück zum Hub.
 - `tests/PROJ-43-training-uebersicht.spec.ts`: Testname einer Assertion aktualisiert ("noch nicht gebaute" → "richtige" Detailrouten, da die Routen jetzt existieren) — Suite weiterhin 16/16 grün.
 
 **Bewusst nicht gebaut (braucht `/backend`):**

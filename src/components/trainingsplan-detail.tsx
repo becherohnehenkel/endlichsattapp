@@ -8,24 +8,26 @@ import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 import type { Trainingsplan, TrainingsUebung } from '@/lib/trainingsplaene'
 
-interface UebungsFelder {
-  saetze: string
+interface SatzFelder {
   wiederholungen: string
-  pause: string
   gewicht: string
+}
+
+function leereSaetze(plan: Trainingsplan): SatzFelder[] {
+  const anzahl = parseInt(plan.schemaSaetze, 10) || 3
+  return Array.from({ length: anzahl }, () => ({
+    wiederholungen: plan.schemaWiederholungen,
+    gewicht: '',
+  }))
 }
 
 function UebungsKarte({ uebung, plan }: { uebung: TrainingsUebung; plan: Trainingsplan }) {
   const [offen, setOffen] = useState(false)
-  const [felder, setFelder] = useState<UebungsFelder>({
-    saetze: plan.schemaSaetze,
-    wiederholungen: plan.schemaWiederholungen,
-    pause: plan.schemaPause,
-    gewicht: '',
-  })
+  const [pause, setPause] = useState(plan.schemaPause)
+  const [saetze, setSaetze] = useState<SatzFelder[]>(() => leereSaetze(plan))
 
-  function setFeld(key: keyof UebungsFelder, value: string) {
-    setFelder(prev => ({ ...prev, [key]: value }))
+  function setSatzFeld(index: number, key: keyof SatzFelder, value: string) {
+    setSaetze(prev => prev.map((satz, i) => (i === index ? { ...satz, [key]: value } : satz)))
   }
 
   return (
@@ -43,25 +45,37 @@ function UebungsKarte({ uebung, plan }: { uebung: TrainingsUebung; plan: Trainin
         </Collapsible>
       </div>
 
-      <div className={cn('grid grid-cols-2 gap-2', plan.zeigtGewichtsfeld ? 'sm:grid-cols-4' : 'sm:grid-cols-3')}>
-        <div className="space-y-1">
-          <Label htmlFor={`${uebung.id}-saetze`} className="text-[11px] text-muted-foreground uppercase tracking-wide">Sätze</Label>
-          <Input id={`${uebung.id}-saetze`} value={felder.saetze} onChange={e => setFeld('saetze', e.target.value)} className="h-9 text-sm" />
+      <div className="space-y-1 max-w-[140px]">
+        <Label htmlFor={`${uebung.id}-pause`} className="text-[11px] text-muted-foreground uppercase tracking-wide">Pause</Label>
+        <Input id={`${uebung.id}-pause`} value={pause} onChange={e => setPause(e.target.value)} className="h-9 text-sm" />
+      </div>
+
+      <div className="space-y-2">
+        <div className={cn('grid gap-2 text-[11px] text-muted-foreground uppercase tracking-wide px-0.5', plan.zeigtGewichtsfeld ? 'grid-cols-[2rem_1fr_1fr]' : 'grid-cols-[2rem_1fr]')}>
+          <span>Satz</span>
+          <span>Wdh.</span>
+          {plan.zeigtGewichtsfeld && <span>Gewicht</span>}
         </div>
-        <div className="space-y-1">
-          <Label htmlFor={`${uebung.id}-wdh`} className="text-[11px] text-muted-foreground uppercase tracking-wide">Wdh.</Label>
-          <Input id={`${uebung.id}-wdh`} value={felder.wiederholungen} onChange={e => setFeld('wiederholungen', e.target.value)} className="h-9 text-sm" />
-        </div>
-        <div className="space-y-1">
-          <Label htmlFor={`${uebung.id}-pause`} className="text-[11px] text-muted-foreground uppercase tracking-wide">Pause</Label>
-          <Input id={`${uebung.id}-pause`} value={felder.pause} onChange={e => setFeld('pause', e.target.value)} className="h-9 text-sm" />
-        </div>
-        {plan.zeigtGewichtsfeld && (
-          <div className="space-y-1">
-            <Label htmlFor={`${uebung.id}-gewicht`} className="text-[11px] text-muted-foreground uppercase tracking-wide">Gewicht/Widerstand</Label>
-            <Input id={`${uebung.id}-gewicht`} value={felder.gewicht} onChange={e => setFeld('gewicht', e.target.value)} placeholder="z. B. 20 kg" className="h-9 text-sm" />
+        {saetze.map((satz, index) => (
+          <div key={index} className={cn('grid gap-2 items-center', plan.zeigtGewichtsfeld ? 'grid-cols-[2rem_1fr_1fr]' : 'grid-cols-[2rem_1fr]')}>
+            <span className="text-sm font-medium text-foreground">{index + 1}</span>
+            <Input
+              aria-label={`${uebung.name} Satz ${index + 1} Wiederholungen`}
+              value={satz.wiederholungen}
+              onChange={e => setSatzFeld(index, 'wiederholungen', e.target.value)}
+              className="h-9 text-sm"
+            />
+            {plan.zeigtGewichtsfeld && (
+              <Input
+                aria-label={`${uebung.name} Satz ${index + 1} Gewicht`}
+                value={satz.gewicht}
+                onChange={e => setSatzFeld(index, 'gewicht', e.target.value)}
+                placeholder="z. B. 20 kg"
+                className="h-9 text-sm"
+              />
+            )}
           </div>
-        )}
+        ))}
       </div>
     </div>
   )
