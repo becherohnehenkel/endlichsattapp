@@ -2,13 +2,10 @@ import Link from 'next/link'
 import { ArrowRight, Plus, UserRound, UtensilsCrossed, Clock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { berechneKcal, type Geschlecht, type Aktivitaetslevel, type Ziel } from '@/lib/kcal-rechner'
+import { MAHLZEITEN_ZIEL_DEFAULT } from '@/lib/mahlzeiten-ziel'
 import { AnalyseTagesuebersicht } from '@/components/analyse-tagesuebersicht'
 import { AnalyseHistorieTabs } from '@/components/analyse-historie-tabs'
 import { AnalyseLoginHinweis } from '@/components/analyse-login-hinweis'
-
-// PROJ-42: Standard-Tagesziel, solange das individuelle Profil-Feld noch nicht existiert
-// (siehe Spec Open Questions / Decision Log — Persistenz ist Aufgabe von /backend).
-const MAHLZEITEN_ZIEL_DEFAULT = 3
 
 interface RawAnalyse {
   analysis_typ: string | null
@@ -27,7 +24,7 @@ export default async function AnalyseHubPage() {
 
   let mahlzeitenHeute = 0
   let kcalRest: number | null = null
-  const mahlzeitenZiel = MAHLZEITEN_ZIEL_DEFAULT
+  let mahlzeitenZiel = MAHLZEITEN_ZIEL_DEFAULT
 
   if (!isGuest && user) {
     // Vereinfachung: Kalendertag in UTC, analog zum bestehenden Scan-Limit-Reset
@@ -42,10 +39,12 @@ export default async function AnalyseHubPage() {
         .gte('created_at', todayStart),
       supabase
         .from('profiles')
-        .select('kcal_gewicht_kg, kcal_groesse_cm, kcal_alter_jahre, kcal_geschlecht, kcal_aktivitaetslevel, kcal_ziel')
+        .select('kcal_gewicht_kg, kcal_groesse_cm, kcal_alter_jahre, kcal_geschlecht, kcal_aktivitaetslevel, kcal_ziel, mahlzeiten_pro_tag')
         .eq('id', user.id)
         .single(),
     ])
+
+    mahlzeitenZiel = profile?.mahlzeiten_pro_tag ?? MAHLZEITEN_ZIEL_DEFAULT
 
     // Nur Typ "Mahlzeit" zählt zum Tagesfortschritt (siehe Spec Decision Log) —
     // "standard" ist der ältere Name desselben Typs (siehe /api/recap/wochen).

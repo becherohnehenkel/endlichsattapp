@@ -20,10 +20,11 @@ export default async function KontoPage({ searchParams }: KontoPageProps) {
 
   const [access, profileResult] = await Promise.all([
     getAccessStatus(supabase, user.id),
-    supabase.from('profiles').select('stripe_customer_id').eq('id', user.id).single(),
+    supabase.from('profiles').select('stripe_customer_id, mahlzeiten_pro_tag').eq('id', user.id).single(),
   ])
 
   const stripeCustomerId = profileResult.data?.stripe_customer_id ?? null
+  const mahlzeitenProTag = profileResult.data?.mahlzeiten_pro_tag ?? null
   const isAdmin = user.email === process.env.ADMIN_EMAIL
   const isSubscribed = access.subscriptionStatus != null &&
     ['active', 'trialing'].includes(access.subscriptionStatus)
@@ -59,6 +60,7 @@ export default async function KontoPage({ searchParams }: KontoPageProps) {
       trialDaysRemaining={access.trialDaysRemaining}
       isAdmin={isAdmin}
       stripeDetails={stripeDetails}
+      mahlzeitenProTag={mahlzeitenProTag}
     />
   )
 }

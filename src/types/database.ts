@@ -269,6 +269,7 @@ export type Database = {
           kcal_groesse_cm: number | null
           kcal_gewicht_kg: number | null
           kcal_ziel: string | null
+          mahlzeiten_pro_tag: number | null
           name: string | null
           photo_scans_remaining: number
           photo_scans_today_count: number
@@ -290,6 +291,7 @@ export type Database = {
           kcal_groesse_cm?: number | null
           kcal_gewicht_kg?: number | null
           kcal_ziel?: string | null
+          mahlzeiten_pro_tag?: number | null
           name?: string | null
           photo_scans_remaining?: number
           photo_scans_today_count?: number
@@ -311,6 +313,7 @@ export type Database = {
           kcal_groesse_cm?: number | null
           kcal_gewicht_kg?: number | null
           kcal_ziel?: string | null
+          mahlzeiten_pro_tag?: number | null
           name?: string | null
           photo_scans_remaining?: number
           photo_scans_today_count?: number

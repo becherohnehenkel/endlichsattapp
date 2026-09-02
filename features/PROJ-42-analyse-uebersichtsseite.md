@@ -146,11 +146,24 @@
 - Alle internen Links auf den alten `/analyse`-Flow wurden auf ihre jeweils richtige Zielroute umgestellt: "Direkt weiter analysieren"-Stellen (`mahlzeit-detail.tsx` Reset-Button, `upgrade-view.tsx` Erfolgsansichten, `mahlzeit-historie.tsx` Empty-State/FAB) zeigen jetzt auf `/analyse/start`; generische Post-Login-Landingpoints (`auth/callback`, `passwort-neu`, `konto-view.tsx`-Zurück-Pfeil) zeigen weiterhin auf `/analyse`, was jetzt korrekt auf dem Hub landet
 - Verifiziert per Playwright-Screenshot-Skript (Gast, eingeloggt, Kcal-Collapsible, Tab-Wechsel, `/analyse/start`, `/historie`-Redirect, Startseite, Mobile-Viewport) — alle Szenarien funktionieren wie spezifiziert
 
-**Bewusst nicht gebaut (braucht `/backend`):**
-- Individuelles Tagesziel ("Mahlzeiten pro Tag") ist noch keine echte Nutzer-Einstellung — es gibt weder das neue `profiles`-Feld noch die Konto-UI dafür noch eine Speicher-API. Sektion 2 verwendet aktuell fest den Default-Wert 3 für alle eingeloggten Nutzer.
-
 **Bekannte Test-Schulden (für `/qa`):**
 - Der Routen-Umzug hat einen großen Blast-Radius: mindestens `PROJ-6`, `PROJ-11`, `PROJ-12`, `PROJ-14`, `PROJ-16`, `PROJ-17`, `PROJ-19`, `PROJ-22`, `PROJ-2`, `PROJ-34`, `PROJ-35`, `PROJ-8` referenzieren `/analyse` oder `/historie` direkt in ihren E2E-Suiten. Stichprobe mit `PROJ-6-mahlzeit-historie.spec.ts` zeigt 4 erwartete Fehlschläge (FAB-/Empty-State-Href jetzt `/analyse/start` statt `/analyse`, `/historie` leitet jetzt auf `/analyse` statt `/konto`) — diese und die übrigen Suiten müssen systematisch auf die neue Struktur angepasst werden.
+
+## Implementation Notes (Backend)
+- **Migration (vom Nutzer manuell in Supabase SQL Editor auszuführen, MCP-Zugriff diese Session getrennt):**
+  ```sql
+  ALTER TABLE profiles
+    ADD COLUMN mahlzeiten_pro_tag INTEGER CHECK (mahlzeiten_pro_tag BETWEEN 1 AND 6);
+  ```
+  Optional, kein Default in der DB (Frontend/Backend behandeln `NULL` einheitlich als "noch nicht eingestellt" → Default 3, siehe `src/lib/mahlzeiten-ziel.ts`). Keine neue RLS-Policy nötig — die bestehenden `profiles`-Policies decken die neue Spalte automatisch ab (selbes Muster wie die `kcal_*`-Spalten aus PROJ-37).
+- Neu: `POST /api/mahlzeiten-ziel` (`src/app/api/mahlzeiten-ziel/route.ts`) — Zod-Validierung (1–6, ganzzahlig), Auth-Check (401 ohne Session, 403 für anonyme Gast-Sessions), Schreiben über den Service-Role-Client mit explizitem `.eq('id', user.id)` — identisches Muster zu `/api/kcal-rechner`.
+- Gemeinsame Konstanten (`MAHLZEITEN_ZIEL_DEFAULT`/`MIN`/`MAX`) in `src/lib/mahlzeiten-ziel.ts` ausgelagert, damit Route, Konto-Einstellung und Analyse-Übersicht nicht auseinanderlaufen können.
+- Konto-Einstellung: neue Karte "Einstellungen" in `konto-view.tsx` mit einem Select (1–6), speichert sofort bei Auswahl über die neue Route; bei Fehlschlag springt die Anzeige auf den vorherigen Wert zurück und zeigt eine Fehlermeldung. `konto/page.tsx` lädt `mahlzeiten_pro_tag` zusätzlich zur bestehenden `stripe_customer_id`-Query.
+- `src/app/analyse/page.tsx`: liest jetzt `profile.mahlzeiten_pro_tag` (statt des harten Default-Werts aus der Frontend-Phase) und fällt auf `MAHLZEITEN_ZIEL_DEFAULT` zurück, wenn der Nutzer noch nichts eingestellt hat.
+- `src/types/database.ts`: `mahlzeiten_pro_tag` in die `profiles`-Typdefinition (Row/Insert/Update) ergänzt.
+- Integrationstest: `src/app/api/mahlzeiten-ziel/route.test.ts` — 401/403/400 (Wertebereich + Nicht-Ganzzahl)/500/Erfolgsfall, 8 neue Tests.
+- `npm run build`, `npm run lint`, `npm test` (423/423) fehlerfrei.
+- **Noch offen:** Live-Verifikation gegen die echte Datenbank steht aus, bis der Nutzer die Migration ausgeführt hat — bis dahin schlägt jede Query, die die neue Spalte anfragt, in Produktion/lokal gegen die echte DB fehl (Build/Tests laufen unabhängig davon grün, da sie gemockt sind bzw. gegen die generierten Typen kompilieren).
 
 ## Tech Design (Solution Architect)
 

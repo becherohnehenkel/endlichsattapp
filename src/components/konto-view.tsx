@@ -7,6 +7,8 @@ import { ChevronLeft, ShieldAlert } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { MAHLZEITEN_ZIEL_DEFAULT, MAHLZEITEN_ZIEL_MIN, MAHLZEITEN_ZIEL_MAX } from '@/lib/mahlzeiten-ziel'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,6 +33,7 @@ interface KontoViewProps {
   trialDaysRemaining: number | null
   isAdmin: boolean
   stripeDetails: StripeDetails | null
+  mahlzeitenProTag: number | null
 }
 
 const ACTIVE_STATUSES = ['active', 'trialing']
@@ -46,6 +49,7 @@ export default function KontoView({
   trialDaysRemaining,
   isAdmin,
   stripeDetails,
+  mahlzeitenProTag,
 }: KontoViewProps) {
   const router = useRouter()
   const [logoutLoading, setLogoutLoading] = useState(false)
@@ -55,6 +59,8 @@ export default function KontoView({
   const [widerrufLoading, setWiderrufLoading] = useState(false)
   const [widerrufError, setWiderrufError] = useState<string | null>(null)
   const [widerrufSuccess, setWiderrufSuccess] = useState(false)
+  const [mahlzeitenZiel, setMahlzeitenZiel] = useState(mahlzeitenProTag ?? MAHLZEITEN_ZIEL_DEFAULT)
+  const [zielSpeichernFehler, setZielSpeichernFehler] = useState(false)
 
   const isSubscribed = subscriptionStatus != null && ACTIVE_STATUSES.includes(subscriptionStatus)
 
@@ -91,6 +97,24 @@ export default function KontoView({
     } catch (err) {
       setWiderrufError(err instanceof Error ? err.message : 'Widerruf konnte nicht verarbeitet werden.')
       setWiderrufLoading(false)
+    }
+  }
+
+  async function handleMahlzeitenZielChange(value: string) {
+    const neuesZiel = Number(value)
+    const vorherigesZiel = mahlzeitenZiel
+    setMahlzeitenZiel(neuesZiel)
+    setZielSpeichernFehler(false)
+    try {
+      const res = await fetch('/api/mahlzeiten-ziel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mahlzeitenProTag: neuesZiel }),
+      })
+      if (!res.ok) throw new Error()
+    } catch {
+      setMahlzeitenZiel(vorherigesZiel)
+      setZielSpeichernFehler(true)
     }
   }
 
@@ -132,6 +156,30 @@ export default function KontoView({
             <p className="text-sm text-foreground font-medium">{email}</p>
             <StatusBadge />
           </div>
+        </div>
+
+        {/* Einstellungen */}
+        <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
+          <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Einstellungen</p>
+          <div className="flex items-center justify-between gap-3">
+            <div className="space-y-0.5">
+              <p className="text-sm text-foreground font-medium">Mahlzeiten pro Tag</p>
+              <p className="text-xs text-muted-foreground">Bestimmt dein Tagesziel auf der Analyse-Übersicht.</p>
+            </div>
+            <Select value={String(mahlzeitenZiel)} onValueChange={handleMahlzeitenZielChange}>
+              <SelectTrigger className="w-16 shrink-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: MAHLZEITEN_ZIEL_MAX - MAHLZEITEN_ZIEL_MIN + 1 }, (_, i) => MAHLZEITEN_ZIEL_MIN + i).map(n => (
+                  <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {zielSpeichernFehler && (
+            <p className="text-xs text-destructive">Speichern fehlgeschlagen. Bitte erneut versuchen.</p>
+          )}
         </div>
 
         {/* Abo-Details */}
