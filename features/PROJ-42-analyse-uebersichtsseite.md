@@ -1,8 +1,8 @@
 # PROJ-42: Analyse-Übersichtsseite
 
-## Status: Planned
+## Status: Architected
 **Created:** 2026-09-01
-**Last Updated:** 2026-09-01
+**Last Updated:** 2026-09-02
 
 ## Dependencies
 - PROJ-2 (User Authentication) — Login-Status steuert, was in Sektion 2/3 sichtbar ist
@@ -97,6 +97,7 @@
 ## Open Questions
 - [ ] Exakte Darstellung bei Übererfüllung des Tagesziels (z. B. 4 von 3) — wird bei `/frontend` entschieden
 - [ ] Sollen die Trainingseinheiten-/Check-In-Tabs beim Klick einen Toast/Tooltip zeigen oder nur visuell deaktiviert sein? — Detail für `/frontend`
+- [ ] Restkalorien-Anzeige als Auf-/Zuklapp-Element statt einfachem Ein-/Ausblend-Button: eingeklappt ein allgemeiner Hinweis ("du kannst noch etwas essen"), ausgeklappt der genaue Zählerstand — exakte Formulierung/Umsetzung wird bei `/frontend` entschieden (Berechnung/Datenmodell unverändert)
 
 ## Decision Log
 
@@ -118,12 +119,70 @@
 <!-- Added by /architecture -->
 | Decision | Rationale | Date |
 |----------|-----------|------|
+| Bestehender Analyse-Flow zieht von `/analyse` auf `/analyse/start` um, `/analyse` wird neu die Hub-Seite | Bottom-Navigation erkennt Unterrouten (`/analyse/*`) automatisch weiterhin als "Analyse" (bestehende `pathname.startsWith(href)`-Logik) — kein Zusatzaufwand an der Navigation | 2026-09-02 |
+| Tagesfortschritt und Restkalorien werden bei jedem Seitenaufruf live aus bestehenden `meals`/`meal_analyses`-Daten berechnet, kein eigener Zähler wird gespeichert | Folgt demselben Muster wie der bestehende Wochen-Rückblick (PROJ-17); vermeidet Synchronisationsrisiken zwischen einem separaten Zähler und den tatsächlichen Analysen | 2026-09-02 |
+| Nur Analysen mit Typ "Mahlzeit" (`analysis_typ = 'mahlzeit'`/`'standard'`) zählen zum Tagesfortschritt | Bestehendes Feld aus PROJ-16/17, exakt die Unterscheidung, die die Spec verlangt (Komponenten/Snacks zählen nicht) — keine neue Klassifikation nötig | 2026-09-02 |
+| Genau ein neues Datenfeld: individuelles Tagesziel am Nutzerprofil (Default 3) | Einzige Größe in dieser Spec, die eine bewusste Nutzer-Einstellung ist, statt aus bestehenden Daten ableitbar zu sein | 2026-09-02 |
+| Neue kleine API-Route zum Speichern des Tagesziels, analog zur bestehenden `/api/kcal-rechner`-Route | Folgt dem etablierten Muster: jedes Profil-Feld hat seine eigene, kleine Auto-Save-Route statt einer generischen "Profil aktualisieren"-Route (kein generischer Endpoint existiert bisher) | 2026-09-02 |
+| Bestehende Komponenten für Wochen-Rückblick (PROJ-17) und Mahlzeiten-Liste (PROJ-6) werden unverändert in Sektion 3 eingebettet, nicht neu gebaut | Vermeidet Logik-Duplizierung, hält die bewährte Historie-Berechnung an einer Stelle | 2026-09-02 |
+| `/historie` wird eine serverseitige Weiterleitung auf `/analyse` statt gelöscht zu werden | Verhindert kaputte Lesezeichen/Links ohne Zusatzaufwand | 2026-09-02 |
+| Restkalorien-Berechnung folgt demselben Join-Muster (`meals` → `meal_analyses`, `macros_before.kcal` summiert) wie die bestehende Wochenauswertung, nur gefiltert auf den heutigen Kalendertag statt eine Woche | Wiederverwendung eines bereits verifizierten Berechnungsmusters statt einer neuen Implementierung | 2026-09-02 |
+| Keine neuen npm-Pakete | Tabs, Cards, Buttons sind bereits als shadcn/ui-Komponenten installiert | 2026-09-02 |
 
 ---
 <!-- Sections below are added by subsequent skills -->
 
 ## Tech Design (Solution Architect)
-_To be added by /architecture_
+
+### A) Komponenten-Struktur (Visuell)
+
+```
+/analyse (NEU: Hub-Seite)
+├── H1 "Lerne deine Ernährung kennen"
+├── Sektion 1 — Karte "Ernährungsanalyse starten" → Link zu /analyse/start
+├── Trennlinie
+├── Sektion 2 — Tagesübersicht (nur eingeloggt)
+│   ├── Gäste: Login-Hinweis-Karte
+│   └── Eingeloggt: "X von Y Mahlzeiten heute" + Restkalorien-Auf-/Zuklapp-Element
+├── Trennlinie
+└── Sektion 3 — Historie der letzten Tage
+    ├── 3 Kategorie-Tabs: Analysierte Mahlzeiten | Trainingseinheiten | Check-Ins
+    ├── Tab "Analysierte Mahlzeiten" (aktiv): bestehender Wochen-Recap (PROJ-17) +
+    │   Mahlzeiten-Liste (PROJ-6), unverändert eingebettet
+    └── Tabs "Trainingseinheiten"/"Check-Ins": "Bald verfügbar"-Platzhalter
+        (gleicher Stil wie die bestehenden Seiten /training, /check-in)
+
+/analyse/start (bestehender Analyse-Flow, umgezogen von /analyse — inhaltlich unverändert)
+/historie → serverseitige Weiterleitung auf /analyse
+
+/konto
+└── neues Feld "Mahlzeiten pro Tag" (Default 3)
+
+Startseite (/)
+└── "Mahlzeit analysieren"-Button entfernt
+```
+
+### B) Datenmodell (in Worten)
+
+**Ein neues, dauerhaft gespeichertes Feld am Nutzerprofil:**
+- `Mahlzeiten pro Tag` — Zahl, Default 3, vom Nutzer im Konto einstellbar. Bestimmt den Nenner in Sektion 2.
+
+**Alles andere wird live berechnet, nichts wird neu gespeichert:**
+- Tagesfortschritt ("X von Y"): bei jedem Seitenaufruf frisch gezählt — wie viele der heutigen Analysen vom Typ "Mahlzeit" sind (Komponenten/Snacks zählen nicht mit). Läuft nach demselben Muster wie der bestehende Wochen-Rückblick, nur für den heutigen Kalendertag statt für eine Woche.
+- Restkalorien: bestehendes Kalorienziel (aus "So geht abnehmen") minus die Kalorien der heute analysierten Mahlzeiten — ebenfalls reine Berechnung im Moment des Seitenaufrufs, nichts wird gespeichert.
+- Sektion 3 / Tab "Analysierte Mahlzeiten": exakt dieselben Daten, die heute schon unter `/historie` erscheinen — keine neue Datenquelle, nur ein neuer Ort.
+
+### C) Tech-Entscheidungen (Begründung)
+
+1. **Routen-Umzug statt Parallelstruktur:** Der bestehende Analyse-Flow zieht von `/analyse` auf `/analyse/start`. Die Bottom-Navigation erkennt Unterseiten automatisch als "Analyse" — keine Zusatzarbeit an der Navigation nötig.
+2. **Kein neuer Zähler-Speicher:** Der Tagesfortschritt wird immer frisch aus den vorhandenen Analyse-Daten berechnet statt in einem separaten Zähler mitgeführt zu werden — kein Risiko, dass er aus dem Ruder läuft oder manuell synchronisiert werden muss.
+3. **Genau ein neues Datenfeld:** Nur das persönliche Tagesziel wird gespeichert, weil es eine bewusste Einstellung ist. Alles andere lässt sich aus bestehenden Daten ableiten.
+4. **Bestehende Komponenten wiederverwendet, nicht neu gebaut:** Wochen-Rückblick und Mahlzeiten-Liste werden unverändert eingebettet — spart Aufwand und lässt die bewährte Historie-Logik unangetastet.
+5. **Alte `/historie`-Adresse bleibt als Weiterleitung nutzbar** — keine kaputten Lesezeichen.
+6. **Restkalorien-Anzeige bleibt passiv:** keine Warnfarben, keine Erinnerungen — auf-/zuklappbar, nichts, was sich wie aktives Kalorienzählen anfühlt.
+
+### D) Abhängigkeiten (Pakete)
+Keine neuen — alles läuft über bereits installierte shadcn/ui-Komponenten (Card, Tabs, Button) und die bestehende Supabase-Anbindung.
 
 ## QA Test Results
 _To be added by /qa_
