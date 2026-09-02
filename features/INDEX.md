@@ -58,7 +58,7 @@
 | PROJ-40 | Kalorien | P2 | Deployed | PROJ-36, PROJ-37 | [Spec](PROJ-40-kalorien.md) |
 | PROJ-41 | Kalorien zählen | P2 | Deployed | PROJ-36, PROJ-37, PROJ-40 | [Spec](PROJ-41-kalorien-zaehlen.md) |
 | PROJ-42 | Analyse-Übersichtsseite | P1 | Deployed | PROJ-2, PROJ-4, PROJ-5, PROJ-6, PROJ-8, PROJ-17, PROJ-19, PROJ-35, PROJ-37 | [Spec](PROJ-42-analyse-uebersichtsseite.md) |
-| PROJ-43 | Training-Übersicht (Krafttraining-Basics) | P1 | Planned | PROJ-35, PROJ-19 | [Spec](PROJ-43-training-uebersicht.md) |
+| PROJ-43 | Training-Übersicht (Krafttraining-Basics) | P1 | Architected | PROJ-35, PROJ-19 | [Spec](PROJ-43-training-uebersicht.md) |
 
 <!-- Add features above this line -->
 

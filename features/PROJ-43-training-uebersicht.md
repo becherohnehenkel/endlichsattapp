@@ -1,6 +1,6 @@
 # PROJ-43: Training-Übersicht (Krafttraining-Basics)
 
-## Status: Planned
+## Status: Architected
 **Created:** 2026-09-02
 **Last Updated:** 2026-09-02
 
@@ -107,12 +107,44 @@ Ganz unten findest du drei fertige Trainingspläne, mit denen du direkt loslegen
 <!-- Added by /architecture -->
 | Decision | Rationale | Date |
 |----------|-----------|------|
+| Bestehende `ArbeitspunkteListe`-Komponente wiederverwenden statt neu bauen | Identisches Verhalten (Fortschrittsbalken, "Verstanden"-Haken, Auto-Open) wie bei allen Ernährung-Guides, kein Zusatzaufwand | 2026-09-02 |
+| Das "Icon + Titel + Unterzeile"-Kartenmuster (bisher nur lokal in `src/app/ernaehrung/page.tsx` definiert) wird in eine gemeinsame, wiederverwendbare Komponente ausgelagert | Wird jetzt zum zweiten Mal gebraucht (Ernährung-Hub + Training-Hub) — vermeidet doppelten Code an zwei Stellen | 2026-09-02 |
+| Kein Backend | Reiner Lerninhalt, keine Speicherung über den bestehenden lokalen "Verstanden"-Mechanismus hinaus | 2026-09-02 |
+| Plan-Karten verlinken bewusst auf Routen, die erst mit PROJ-44 entstehen | Kurzzeitiger 404 zwischen den beiden Deploys akzeptiert, da PROJ-44 als direkt nächstes Feature folgt | 2026-09-02 |
+| Keine neuen npm-Pakete | Alles läuft über bereits installierte shadcn/ui-Komponenten und bestehende Projekt-Komponenten | 2026-09-02 |
 
 ---
 <!-- Sections below are added by subsequent skills -->
 
 ## Tech Design (Solution Architect)
-_To be added by /architecture_
+
+### A) Komponenten-Struktur (Visuell)
+
+```
+/training (Hub-Seite, ersetzt Platzhalter)
+├── H1 "Krafttraining: Die Basics für deinen Start" + Intro-Text
+├── ArbeitspunkteListe (bestehende Komponente, unverändert wiederverwendet)
+│   └── 5 Grundlagen-Punkte: Warum Krafttraining? / Was bedeutet was? /
+│       Warm-Up / Das richtige Gewicht / Richtig steigern
+├── Trennlinie
+└── 3 Plan-Karten (Icon + Titel + Unterzeile + Chevron)
+    ├── Zu Hause ohne Equipment        → Zielroute folgt in PROJ-44
+    ├── Zu Hause mit Widerstandsbändern → Zielroute folgt in PROJ-44
+    └── Fitnessstudio                  → Zielroute folgt in PROJ-44
+```
+
+### B) Datenmodell (in Worten)
+Keins nötig. Reiner statischer Inhalt. Der "Verstanden"-Fortschritt der 5 Punkte wird lokal im Browser gespeichert — exakt derselbe Mechanismus, den alle Ernährung-Guides schon nutzen, keine neue Speicherform.
+
+### C) Tech-Entscheidungen (Begründung)
+
+1. **Bestehende `ArbeitspunkteListe`-Komponente wiederverwenden** statt neu zu bauen — identisches Verhalten wie bei allen Ernährung-Guides, kein Zusatzaufwand.
+2. **Karten-Muster wird in eine gemeinsame Komponente ausgelagert:** wird jetzt zum zweiten Mal gebraucht, vermeidet doppelten Code an zwei Stellen.
+3. **Kein Backend** — reiner Lerninhalt, keine Speicherung über den bestehenden "Verstanden"-Mechanismus hinaus.
+4. **Plan-Karten verlinken bewusst auf Routen, die erst mit PROJ-44 entstehen** — ein kurzzeitiger 404 zwischen den beiden Deploys ist akzeptiert, da PROJ-44 als direkt nächstes Feature folgt.
+
+### D) Abhängigkeiten (Pakete)
+Keine neuen Pakete.
 
 ## QA Test Results
 _To be added by /qa_
