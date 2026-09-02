@@ -1,6 +1,6 @@
 # PROJ-47: Startseite Neu
 
-## Status: Planned
+## Status: Architected
 **Created:** 2026-09-02
 **Last Updated:** 2026-09-02
 
@@ -105,12 +105,47 @@
 ### Technical Decisions
 <!-- Added by /architecture -->
 | Decision | Rationale | Date |
+|----------|-----------|------|
+| Kein neuer API-Endpunkt, keine neue Tabelle — nur eine leichte Profil-Abfrage (`profiles.name`) für eingeloggte Nutzer | Deutlich schlanker als die bisherige Startseite mit parallelen Abfragen für Mahlzeiten, Rezepte und Zähler; alle anderen Inhalte sind fest im Code hinterlegt | 2026-09-02 |
+| Ersetzt die bestehende `/`-Route direkt, statt eine neue Route anzulegen | Die Startseite bleibt weiterhin unter `/` erreichbar, kein Routing-Wechsel nötig | 2026-09-02 |
+| Coach-Link als einfacher externer Link (`target="_blank"`, `rel="noopener"`) | Kein eigener Coaching-Flow oder Tracking in dieser Version geplant | 2026-09-02 |
+| Video-Platzhalter ist rein visuell, kein `<video>`-Tag oder Player-Setup | Spart Komplexität, bis das echte Video existiert — wird beim späteren Refinement ergänzt | 2026-09-02 |
 
 ---
 <!-- Sections below are added by subsequent skills -->
 
 ## Tech Design (Solution Architect)
-_To be added by /architecture_
+
+### A) Komponenten-Struktur (Visuell)
+
+```
+/ (Startseite, ersetzt den bestehenden Inhalt)
+├── Mobile-Kopfzeile (unverändert: App-Name + Konto-Icon)
+├── Begrüßungs-Bereich (Überschrift + Subline)
+├── Video-Platzhalter (rein visuell, nicht interaktiv)
+├── "So legst du los"-Sektion
+│   └── 4 Funktions-Karten (Icon + Titel + Kurztext + Link)
+├── Coach-Banner (externer Link, neuer Tab)
+└── Bottom-Navigation (unverändert)
+```
+
+### B) Datenmodell (in Worten)
+
+Kein neues Datenbank-Schema. Die Seite liest nur:
+- Ist der Nutzer eingeloggt (Session)?
+- Falls ja: Vorname aus dem bestehenden Profil (`profiles.name`), falls hinterlegt
+
+Alle anderen Inhalte (Karten-Texte, Links, Coach-URL) sind fest im Code hinterlegt, kein Datenbankbezug.
+
+### C) Tech-Entscheidungen (Begründung)
+
+1. **Kein neuer API-Endpunkt, keine neue Tabelle** — nur eine einzelne, sehr leichte Profil-Abfrage statt der bisherigen Mehrfachabfrage.
+2. **Ersetzt die bestehende `/`-Route direkt**, statt eine neue Route anzulegen.
+3. **Coach-Link als einfacher externer Link**, kein eigenes Tracking in dieser Version.
+4. **Video-Platzhalter ist rein visuell** — spart Komplexität, bis das echte Video existiert.
+
+### D) Abhängigkeiten (Pakete)
+Keine neuen Pakete nötig.
 
 ## QA Test Results
 _To be added by /qa_
