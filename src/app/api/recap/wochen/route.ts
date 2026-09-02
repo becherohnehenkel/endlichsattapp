@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { unstable_cache } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getWeekStartIso } from '@/lib/wochen-grenzen'
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -55,14 +56,6 @@ interface RawMeal {
 }
 
 // ─── Week helpers ──────────────────────────────────────────────
-
-export function getWeekStartIso(date: Date): string {
-  const d = new Date(date)
-  const day = d.getUTCDay() // 0 = Sunday
-  d.setUTCDate(d.getUTCDate() - day)
-  d.setUTCHours(0, 0, 0, 0)
-  return d.toISOString().split('T')[0]
-}
 
 function getWeekEndIso(weekStart: string): string {
   const d = new Date(weekStart + 'T00:00:00Z')

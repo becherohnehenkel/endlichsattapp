@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { UserRound, ClipboardCheck } from 'lucide-react'
+import { UserRound } from 'lucide-react'
+import { WochenCheckInForm } from '@/components/wochen-check-in-form'
 
 export default function CheckInPage() {
   return (
@@ -11,10 +12,8 @@ export default function CheckInPage() {
         </Link>
       </header>
 
-      <main className="max-w-sm md:max-w-[850px] mx-auto px-4 py-16 flex flex-col items-center text-center gap-3">
-        <ClipboardCheck className="h-8 w-8 text-muted-foreground" />
-        <p className="font-semibold text-foreground">Check-In</p>
-        <p className="text-sm text-muted-foreground">Bald verfügbar.</p>
+      <main className="max-w-sm md:max-w-[850px] mx-auto px-4 py-6">
+        <WochenCheckInForm />
       </main>
     </div>
   )

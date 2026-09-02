@@ -1,6 +1,6 @@
 # PROJ-45: Wochen-Check-In
 
-## Status: Architected
+## Status: In Progress
 **Created:** 2026-09-02
 **Last Updated:** 2026-09-02
 
@@ -166,6 +166,25 @@ Speichern läuft immer über denselben Mechanismus: "leg diesen Eintrag für die
 
 ### D) Abhängigkeiten (Pakete)
 Ein neues shadcn/ui-Paket: `slider` (offizielle Radix-basierte Komponente, wie alle anderen UI-Bausteine im Projekt).
+
+## Implementation Notes (Frontend)
+
+**Gebaut:**
+- `src/lib/wochen-grenzen.ts`: `getWeekStartIso` aus `src/app/api/recap/wochen/route.ts` ausgelagert (Technical Decision aus der Architektur), beide Nutzstellen (Route + zugehöriger Test) umgestellt, `npm test` bestätigt unverändertes Verhalten (323 Tests grün vor dem restlichen Frontend-Build).
+- shadcn/ui-Komponente `slider` installiert (`npm exec shadcn@latest -- add slider --yes` — `npx` ist in dieser Umgebung defekt, siehe bekannte Workaround-Notiz).
+- `src/components/wochen-check-in-form.tsx`: alle 12 Fragen als reiner lokaler Component-State (`useState`), exakter Wortlaut aus der Content-Sektion übernommen.
+  - 5 Freitextfelder (Textarea, mehrzeilig, kein Format-Constraint)
+  - 6 Slider (Radix-basiert) mit Endpunkt-/Zwischen-Beschriftungen; Sicherheits-Slider zeigt den Hinweistext automatisch ab Wert 5
+  - Trainings-Frage als 4 auswählbare Chips (0–3), mit passendem Feedback-Text bei 1–3 und zusätzlichem Textfeld bei 0
+- `src/app/check-in/page.tsx`: Platzhalter durch `WochenCheckInForm` ersetzt (Header/Nav-Struktur unverändert).
+
+**Bewusst NICHT gebaut (verschoben auf `/backend`, gleiches Muster wie PROJ-42/PROJ-44):**
+- „Speichern"-Button und der komplette Upsert-Mechanismus (neuer Eintrag vs. Update)
+- Vorbefüllung mit dem bestehenden Eintrag der aktuellen Woche
+- Mini-Historie (letzte 5 Einträge, ausklappbar, anklickbar zum Laden)
+- Gast- vs. eingeloggt-Unterscheidung inkl. Gast-Hinweistext (hängt von der Session ab, die serverseitig ermittelt wird)
+
+**Verifiziert:** `npm run build`, `npm run lint` (0 Fehler, 1 vorbestehende, unabhängige Warnung), `npm test` (430/430 grün). Visuell per Playwright-Screenshot auf Desktop und Mobile (375px, kein horizontales Scrollen) geprüft: alle Slider, der bedingte Hinweistext ab Wert 5, die Trainings-Chips mit Feedback-Text und das bedingte Textfeld bei „0x" funktionieren wie spezifiziert.
 
 ## QA Test Results
 _To be added by /qa_

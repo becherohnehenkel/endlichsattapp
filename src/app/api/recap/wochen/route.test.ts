@@ -31,13 +31,13 @@ vi.mock('@/lib/supabase/admin', () => ({
 }))
 
 import {
-  getWeekStartIso,
   pillarMajority,
   bewertungMajority,
   getSchwächsterBaustein,
   getTopZutaten,
   getMakrosAvg,
 } from './route'
+import { getWeekStartIso } from '@/lib/wochen-grenzen'
 
 // ─── Fixtures ─────────────────────────────────────────────────
 
