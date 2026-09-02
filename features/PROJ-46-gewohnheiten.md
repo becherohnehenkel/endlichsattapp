@@ -1,6 +1,6 @@
 # PROJ-46: Gewohnheiten
 
-## Status: Architected
+## Status: In Progress
 **Created:** 2026-09-02
 **Last Updated:** 2026-09-02
 
@@ -136,6 +136,21 @@ Gilt identisch für Gäste und eingeloggte Nutzer — es gibt keinen Unterschied
 
 ### D) Abhängigkeiten (Pakete)
 Keine neuen Pakete nötig.
+
+## Implementation Notes (Frontend)
+
+**Gebaut:**
+- `src/components/gewohnheiten-liste.tsx`: neue Komponente, exakter Wortlaut aus der Content-Sektion übernommen.
+  - Fortschrittsanzeige ("X von 8 erledigt" + Balken), analog zum bestehenden Guide-Muster
+  - 8 Karten mit Checkbox (sofortiges Abhaken/Entfernen) links, Titel + Chevron als eigener Klickbereich zum unabhängigen Auf-/Zuklappen des Hinweistexts rechts
+  - Persistenz über `localStorage` (Key `gewohnheiten_completed`, gleiche Namenskonvention wie `aoe_completed`/`hh_completed` etc.), SSR-sicher via `useSyncExternalStore`-Hydration-Guard (gleiches Muster wie in `arbeitspunkte-liste.tsx`, verhindert einen Hydration-Mismatch, da `localStorage` serverseitig nicht existiert)
+  - "Fortschritt zurücksetzen"-Link, nur sichtbar wenn mindestens ein Häkchen gesetzt ist
+  - Kein Unterschied zwischen Gast und eingeloggtem Nutzer (keine Session-Abfrage nötig)
+- `src/app/check-in/page.tsx`: `GewohnheitenListe` als zweite Sektion unterhalb des Wochen-Check-Ins ergänzt, durch eine dünne Trennlinie abgesetzt (gleiches Muster wie auf der Analyse-Übersichtsseite).
+
+**Kein Backend nötig** — vollständig frontend-only umgesetzt, wie in der Architektur festgelegt. Damit ist dieses Feature nach dem Frontend bereits vollständig.
+
+**Verifiziert:** `npm run build`, `npm run lint` (0 Fehler/Warnungen in den geänderten Dateien — ein Lint-Fehler in `.claude/worktrees/.../sidebar.tsx` stammt aus einem parallel laufenden, unabhängigen Task in einem separaten Git-Worktree), `npm test` (443/443 grün, unverändert). Per Playwright verifiziert: Checkbox und Aufklappen sind unabhängig voneinander, Fortschrittsanzeige aktualisiert sich live, Zustand übersteht einen Reload (localStorage), Reset setzt zuverlässig zurück. Mobile (375px): kein horizontales Scrollen, alle 8 Karten korrekt lesbar.
 
 ## QA Test Results
 _To be added by /qa_
