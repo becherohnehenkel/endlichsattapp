@@ -6,7 +6,7 @@
  *   für Hrefs/Reihenfolge/Admin-Ausschluss liegen bereits in
  *   tests/PROJ-15-pwa-native-navigation.spec.ts (dort im Zuge von PROJ-35 aktualisiert).
  * - Diese Datei deckt die PROJ-35-spezifischen neuen Routen und das
- *   Gast-Verhalten ab: /ernaehrung (Alias), /training, /check-in (Platzhalter).
+ *   Gast-Verhalten ab: /ernaehrung (Hub, siehe PROJ-36), /training, /check-in (Platzhalter).
  */
 
 import { test, expect, type Page, type BrowserContext } from '@playwright/test'
@@ -26,13 +26,14 @@ async function loginAs(page: Page) {
   await page.waitForURL((url) => !url.toString().includes('/login'), { timeout: 8000 })
 }
 
-// ─── /ernaehrung: temporärer Alias auf /rezepte ────────────────────────────
+// ─── /ernaehrung: Ernährung-Hub (PROJ-36) ──────────────────────────────────
 
-test.describe('/ernaehrung zeigt vorübergehend den Rezepte-Inhalt', () => {
-  test('AC: /ernaehrung rendert dieselbe Rezeptbibliothek wie /rezepte, URL bleibt /ernaehrung', async ({ page }) => {
+test.describe('/ernaehrung zeigt den Ernährung-Hub', () => {
+  test('AC: /ernaehrung rendert den Ernährung-Hub mit den Grundpfeiler-Kacheln', async ({ page }) => {
     await page.goto('/ernaehrung')
     expect(page.url()).toContain('/ernaehrung')
-    await expect(page.getByPlaceholder('Rezept suchen…')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Ernährung', exact: true })).toBeVisible()
+    await expect(page.getByRole('link', { name: /So geht abnehmen/ })).toBeVisible()
   })
 
   test('AC: Ernährung-Tab in Bottom-Nav ist auf /ernaehrung aktiv markiert', async ({ page }) => {
