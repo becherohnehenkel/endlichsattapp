@@ -26,9 +26,13 @@ async function loginAs(page: Page) {
 // ─── Zugriffskontrolle ─────────────────────────────────────────────────────
 
 test.describe('Zugriffskontrolle: /konto', () => {
-  test('unauthenticated → Redirect zu /login', async ({ page }) => {
+  // Seit PROJ-19 (Gast-Modus) wird /konto ohne Session NICHT mehr zu /login
+  // umgeleitet, sondern zeigt den GastKontoView-Conversion-Screen an
+  // (siehe features/PROJ-19-gast-modus.md, AC-8a und tests/PROJ-19-gast-modus.spec.ts).
+  test('unauthenticated → Gast-Konto-Conversion-Screen (kein Redirect zu /login)', async ({ page }) => {
     await page.goto('/konto')
-    await expect(page).toHaveURL(/\/login/, { timeout: 5000 })
+    await expect(page).toHaveURL(/\/konto/, { timeout: 5000 })
+    await expect(page.getByRole('link', { name: 'Kostenlos registrieren' })).toBeVisible()
   })
 
   test('eingeloggter Nutzer sieht Kontoübersicht mit seiner E-Mail-Adresse', async ({ page }) => {
