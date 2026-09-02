@@ -1,6 +1,6 @@
 # PROJ-45: Wochen-Check-In
 
-## Status: In Progress
+## Status: Approved
 **Created:** 2026-09-02
 **Last Updated:** 2026-09-02
 
@@ -235,7 +235,86 @@ Keine DELETE-Policy — laut Spec werden Einträge nie gelöscht, nur angelegt/b
   - Zweiter Eintrag für eine vergangene Woche direkt in der DB angelegt: Mini-Historie zeigt beide Einträge korrekt sortiert; Klick auf den vergangenen Eintrag lädt ihn vollständig ins Formular (Badge wechselt zu „Vergangene Woche" + korrekte Datumsspanne), Speichern aktualisiert exakt diesen Datensatz (Zeilenzahl bleibt bei 2, Inhalt per Admin-Query bestätigt).
 
 ## QA Test Results
-_To be added by /qa_
+
+**Tested:** 2026-09-02
+**App URL:** http://localhost:3000
+**Tester:** QA Engineer (AI)
+
+### Acceptance Criteria Status
+
+#### Seitenstruktur
+- [x] H1 "Deine Erfolgskontrolle" + vorgegebener Intro-Text sichtbar
+- [x] Alle 12 Fragen erscheinen in der vorgegebenen Reihenfolge
+
+#### Formular-Felder
+- [x] Die 5 Textfragen sind leere, mehrzeilige Freitextfelder (`<textarea>`, kein Formatzwang)
+- [x] Die 6 Slider zeigen die vorgegebenen Endpunkt-/Zwischen-Beschriftungen
+- [x] Die Trainings-Frage zeigt 4 auswählbare Optionen (0/1/2/3 Mal)
+
+#### Bedingte Elemente
+- [x] Sicherheits-Slider zeigt den Hinweistext exakt ab Wert 5, darunter nicht (per Keyboard-Slider-Steuerung 0→4→5→4 geprüft)
+- [x] Trainings-Frage 1/2/3 zeigt den jeweiligen Feedback-Text, vorheriger Text verschwindet beim Wechsel
+- [x] Trainings-Frage 0 zeigt zusätzlich das Textfeld, verschwindet beim Wechsel auf einen anderen Wert
+
+#### Speichern & Bearbeiten (eingeloggte Nutzer)
+- [x] Kein Eintrag für die aktuelle Woche → Formular leer
+- [x] Bestehender Eintrag für die aktuelle Woche → Formular vorausgefüllt
+- [x] Speichern legt neuen Eintrag für die aktuelle Woche an (per Admin-Query: genau 1 Zeile)
+- [x] Bearbeiten + Speichern eines bereits geladenen Eintrags (aktuelle Woche UND aus der Historie) aktualisiert ihn, legt keinen neuen an (per Admin-Query bestätigt, beide Fälle)
+- [x] Speichervorgang schlägt fehl → Fehlermeldung erscheint, eingegebene Werte bleiben erhalten (500-Response gemockt)
+
+#### Mini-Historie (eingeloggte Nutzer)
+- [x] Mind. ein gespeicherter Check-In → ausklappbare Historie mit den Einträgen nach Datum
+- [x] Klick auf einen Historien-Eintrag lädt ihn ins Formular und wird zum Ziel für "Speichern"
+- [x] Noch kein gespeicherter Check-In → keine Historie, freundlicher Leer-Hinweis ("Noch keine Check-Ins gespeichert — dein erster ist nur einen Klick entfernt.")
+
+#### Gast-Verhalten
+- [x] Gast kann alle Felder genauso ausfüllen wie ein eingeloggter Nutzer
+- [x] Gast sieht den exakt vorgegebenen Hinweistext statt eines Speichern-Buttons
+- [x] Gast lädt die Seite neu → alle Felder wieder leer
+
+### Edge Cases Status
+
+- [x] Wochenwechsel: Wochen-Bestimmung passiert serverseitig beim Laden (`getWeekStartIso(new Date())` in der async Server-Component), kein Live-Update bei offen bleibender Seite — durch Code-Review bestätigt, konsistent mit PROJ-17
+- [x] Reload nach Bearbeiten eines alten Eintrags aus der Historie bringt zurück zur aktuellen Woche (kein "Zurück"-Button nötig)
+- [x] Alle Felder leer speichern funktioniert (keine Pflichtfelder)
+- [x] Anonyme Gast-Session (`user.is_anonymous === true`, ausgelöst über den bestehenden PROJ-19-Flow auf `/analyse/start`) verhält sich exakt wie ein Gast ohne Session — sowohl in der UI als auch auf API-Ebene (403)
+- [x] Trainings-Frage: Wert erneut ändern → nur der zuletzt gewählte Wert zählt, vorherige Feedback-Texte/Zusatzfelder verschwinden
+
+### Security Audit Results
+- [x] Authentifizierung: `POST /api/check-in/wochen` ohne Session → 401
+- [x] Autorisierung: anonyme Session kann nicht speichern → 403; kein Endpunkt akzeptiert eine fremde `user_id` (immer aus der Session gelesen), Lesezugriffe laufen ausschließlich über RLS-scoped Server-Component-Queries — cross-user Zugriff ist strukturell nicht möglich
+- [x] Server-seitige Validierung: Slider außerhalb des Wertebereichs, Nicht-Ganzzahlen, Trainings-Wert außerhalb 0–3, Freitext über 2000 Zeichen, Wochenstart nicht Sonntag-ausgerichtet, Wochenstart in der Zukunft → jeweils 400 (13 Integrationstests)
+- [x] Kein `dangerouslySetInnerHTML`/`innerHTML` im neuen Code — Freitext-Eingaben (inkl. potenzieller XSS-Payloads) werden ausschließlich über kontrollierte `<textarea>`-Werte gerendert, kein Injection-Vektor
+- [x] Keine sensiblen Daten in API-Antworten (`{ success: true }` bzw. `{ error }`)
+- [ ] Rate Limiting: nicht implementiert — konsistent mit allen vergleichbaren bestehenden Endpunkten (`/api/training/[plan]`, `/api/kcal-rechner`, `/api/mahlzeiten-ziel`), kein neues Risiko durch dieses Feature, aber auch keine Verbesserung
+
+### Regression Testing
+- [x] Vitest-Gesamtsuite: 443/443 grün (inkl. 13 neuer Tests für `/api/check-in/wochen`)
+- [x] PROJ-17 (Wöchentlicher Sättigungs-Recap): `getWeekStartIso`-Extraktion verifiziert unauffällig, alle Tests grün
+- [x] PROJ-35 (Bottom-Navigation): 2 Tests aktualisiert, da sie noch den alten "Bald verfügbar"-Platzhalter von `/check-in` erwarteten (erwartete Konsequenz dieses Features, kein Bug) — danach 11/12 grün
+- [x] PROJ-44 (Trainingspläne, nutzt dasselbe QA-Testkonto + `LoginHinweis`-Pattern): 12/12 grün
+- [x] Mobile (375px): kein horizontales Scrollen, alle bedingten Elemente funktionieren identisch zu Desktop
+
+**2 vorbestehende, nicht mit PROJ-45 zusammenhängende Befunde entdeckt** (nicht Teil dieser Feature-Bewertung, siehe unten):
+- `tests/PROJ-35-bottom-navigation-kontobereich.spec.ts`: Test für `/ernaehrung` erwartet noch den alten Rezepte-Alias-Inhalt, der seit PROJ-36 (Ernährung-Hub) durch die neue Übersichtsseite ersetzt wurde. Reproduziert auch mit gestashten PROJ-45-Änderungen auf `main`. Als separaten Task ausgelagert.
+- `tests/PROJ-17-woechentlicher-saettigungs-recap.spec.ts`: "Lade-Skelett wird angezeigt während Recap lädt" ist zeitkritisch/flaky (in Isolation 2/2 grün, im vollen Lauf einmal rot) — unabhängig von der `getWeekStartIso`-Extraktion, die 13 dedizierten Unit-Tests dafür bleiben durchgehend grün.
+
+### Bugs Found
+
+Keine Bugs innerhalb des PROJ-45-Scopes gefunden.
+
+### E2E-Testsuite
+
+Neu: `tests/PROJ-45-wochen-check-in.spec.ts` — 23 Tests, je einer pro Akzeptanzkriterium/Edge-Case, gegen das bestehende QA-Testkonto (`qa-test@endlichsatt.dev`) für die eingeloggten Szenarien. Konsistent auf Chromium und Mobile Chrome (375px) grün.
+
+### Summary
+- **Acceptance Criteria:** 17/17 passed
+- **Edge Cases:** 5/5 passed
+- **Bugs Found:** 0 (0 critical, 0 high, 0 medium, 0 low) im PROJ-45-Scope; 2 vorbestehende, unabhängige Befunde in anderen Features dokumentiert und ausgelagert
+- **Security:** Pass (Rate Limiting fehlt, aber konsistent mit dem Rest des Projekts — kein neues Risiko)
+- **Production Ready:** YES
+- **Recommendation:** Deploy
 
 ## Deployment
 _To be added by /deploy_

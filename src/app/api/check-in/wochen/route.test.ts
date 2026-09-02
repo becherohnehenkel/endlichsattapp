@@ -82,6 +82,48 @@ describe('POST /api/check-in/wochen', () => {
     expect(adminFrom).not.toHaveBeenCalled()
   })
 
+  it('returns 400 when a slider value is out of range', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1', is_anonymous: false } } })
+    const { POST } = await import('./route')
+    const res = await POST(makeRequest({ wocheStart: AKTUELLE_WOCHE, antworten: { ...VALID_ANTWORTEN, schlaf: 99 } }))
+    expect(res.status).toBe(400)
+    expect(adminFrom).not.toHaveBeenCalled()
+  })
+
+  it('returns 400 when a slider value is not an integer', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1', is_anonymous: false } } })
+    const { POST } = await import('./route')
+    const res = await POST(makeRequest({ wocheStart: AKTUELLE_WOCHE, antworten: { ...VALID_ANTWORTEN, energielevel: 5.5 } }))
+    expect(res.status).toBe(400)
+    expect(adminFrom).not.toHaveBeenCalled()
+  })
+
+  it('returns 400 when training is outside 0-3', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1', is_anonymous: false } } })
+    const { POST } = await import('./route')
+    const res = await POST(makeRequest({ wocheStart: AKTUELLE_WOCHE, antworten: { ...VALID_ANTWORTEN, training: 5 } }))
+    expect(res.status).toBe(400)
+    expect(adminFrom).not.toHaveBeenCalled()
+  })
+
+  it('returns 400 when a text field exceeds the max length', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1', is_anonymous: false } } })
+    const { POST } = await import('./route')
+    const res = await POST(makeRequest({ wocheStart: AKTUELLE_WOCHE, antworten: { ...VALID_ANTWORTEN, highlights: 'x'.repeat(2001) } }))
+    expect(res.status).toBe(400)
+    expect(adminFrom).not.toHaveBeenCalled()
+  })
+
+  it('accepts training: null (no field is required)', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1', is_anonymous: false } } })
+    const { _upsertFn, chain } = upsertChain()
+    adminFrom.mockReturnValueOnce(chain)
+    const { POST } = await import('./route')
+    const res = await POST(makeRequest({ wocheStart: AKTUELLE_WOCHE, antworten: { ...VALID_ANTWORTEN, training: null } }))
+    expect(res.status).toBe(200)
+    expect(_upsertFn).toHaveBeenCalled()
+  })
+
   it('returns 400 when wocheStart is not Sunday-aligned', async () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1', is_anonymous: false } } })
     const { POST } = await import('./route')

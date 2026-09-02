@@ -56,11 +56,11 @@ test.describe('Training und Check-In: Platzhalterseiten statt 404', () => {
     await expect(page.getByRole('heading', { name: 'Krafttraining: Die Basics für deinen Start' })).toBeVisible()
   })
 
-  test('AC: /check-in ist ohne Login erreichbar und zeigt "Bald verfügbar"', async ({ page, context }) => {
+  test('AC: /check-in ist ohne Login erreichbar und zeigt die Wochen-Check-In-Sektion (PROJ-45)', async ({ page, context }) => {
     await clearSession(context)
     const response = await page.goto('/check-in')
     expect(response?.status()).toBeLessThan(400)
-    await expect(page.getByText('Bald verfügbar')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Deine Erfolgskontrolle' })).toBeVisible()
   })
 
   test('AC: Training-Tab in Bottom-Nav ist auf /training aktiv markiert', async ({ page }) => {
@@ -128,10 +128,14 @@ test.describe('Gast-Modus (PROJ-19) bleibt mit neuer Nav-Struktur intakt', () =>
     await expect(page.getByText('Kostenlos registrieren')).toBeVisible()
   })
 
-  test('AC: Gast tippt Training/Check-In → normale Platzhalterseite, kein Conversion-Screen', async ({ page, context }) => {
+  test('AC: Gast tippt Training/Check-In → normale Seite, kein Conversion-Screen', async ({ page, context }) => {
     await clearSession(context)
     await page.goto('/check-in')
-    await expect(page.getByText('Bald verfügbar')).toBeVisible()
+    // Seit PROJ-45 zeigt /check-in die echte Wochen-Check-In-Sektion statt des
+    // früheren "Bald verfügbar"-Platzhalters — die Kern-Aussage dieses Tests bleibt
+    // unverändert: Gäste landen auf der normalen Seite, nicht auf dem Conversion-Screen.
+    await expect(page.getByRole('heading', { name: 'Deine Erfolgskontrolle' })).toBeVisible()
+    await expect(page.getByText('Kostenlos registrieren')).toHaveCount(0)
     expect(page.url()).toContain('/check-in')
   })
 })
