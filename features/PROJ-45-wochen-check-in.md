@@ -1,6 +1,6 @@
 # PROJ-45: Wochen-Check-In
 
-## Status: Planned
+## Status: Architected
 **Created:** 2026-09-02
 **Last Updated:** 2026-09-02
 
@@ -121,12 +121,51 @@
 <!-- Added by /architecture -->
 | Decision | Rationale | Date |
 |----------|-----------|------|
+| Eine Woche = ein Datensatz, technisch über eine Unique-Constraint (Nutzer + Wochenstart) erzwungen, nicht nur Konvention | Verhindert zuverlässig Duplikate; Speichern und Bearbeiten werden dadurch zum selben Upsert-Vorgang, kein Unterschied im Code zwischen "neu" und "aktualisieren" | 2026-09-02 |
+| Alle 12 Antworten gebündelt in einem JSON-Datenblock statt 12 einzelnen Spalten | Fragen sind fest vorgegeben, werden nie einzeln abgefragt — gebündelt einfacher zu pflegen, gleiches Muster wie bei den Trainingseinheiten (PROJ-44) | 2026-09-02 |
+| Wochen-Grenzen-Berechnung (`getWeekStartIso`) aus der PROJ-17-Route in eine gemeinsame Datei ausgelagert | Wird jetzt von PROJ-17 UND PROJ-45 gebraucht, war bisher nur lokal in `/api/recap/wochen/route.ts` definiert — vermeidet Duplizierung | 2026-09-02 |
+| Laden der aktuellen Woche und der letzten 5 Einträge passiert direkt in der Seite selbst (Server-Component-Query), keine eigene Lese-Route | Gleiches Muster wie bei der Analyse-Übersicht (PROJ-42) und den Trainingsplänen (PROJ-44) | 2026-09-02 |
+| Neue shadcn/ui-Komponente "Slider" installieren | Offizieller, Radix-basierter Baustein, bisher nicht im Projekt vorhanden, für 6 der 12 Fragen benötigt | 2026-09-02 |
 
 ---
 <!-- Sections below are added by subsequent skills -->
 
 ## Tech Design (Solution Architect)
-_To be added by /architecture_
+
+### A) Komponenten-Struktur (Visuell)
+
+```
+/check-in (bestehende Platzhalterseite — PROJ-45 baut die erste Sektion)
+├── H1 "Deine Erfolgskontrolle" + Intro-Text
+├── Formular (12 Fragen)
+│   ├── 5 Freitextfelder
+│   ├── 6 Slider (einer davon mit bedingtem Hinweistext ab Wert 5)
+│   └── 1 Auswahl-Frage (4 Optionen + bedingtes Textfeld bei "0")
+├── Mini-Historie (ausklappbar, letzte 5 Einträge nach Datum, anklickbar zum Laden/Bearbeiten)
+├── Gäste: Hinweistext statt Speichern-Button
+└── Eingeloggt: "Speichern"-Button
+```
+
+### B) Datenmodell (in Worten)
+
+**Eine neue Tabelle "Wochen-Check-Ins":** genau EIN Eintrag pro Nutzer pro Kalenderwoche (technisch erzwungen, nicht nur per Konvention).
+- Wer (Nutzer)
+- Welche Woche (Wochenstart-Datum, Sonntag — dieselbe Berechnung wie beim bestehenden Wochen-Rückblick)
+- Alle 12 Antworten gebündelt in einem Datensatz
+- Wann zuletzt gespeichert
+
+Speichern läuft immer über denselben Mechanismus: "leg diesen Eintrag für diese Woche an, oder überschreibe ihn, falls es ihn schon gibt" — dadurch ist "neuer Eintrag" und "bestehenden bearbeiten" technisch derselbe Vorgang.
+
+### C) Tech-Entscheidungen (Begründung)
+
+1. **Eine Woche = ein Datensatz, technisch erzwungen** — verhindert zuverlässig Duplikate, macht Speichern und Bearbeiten zum selben einfachen Vorgang.
+2. **Alle 12 Antworten gebündelt** statt 12 einzelnen Spalten — die Fragen sind fest vorgegeben, gebündelt ist einfacher zu pflegen.
+3. **Wochen-Grenzen-Berechnung aus PROJ-17 wird ausgelagert**, statt sie zu duplizieren.
+4. **Laden der aktuellen Woche und der Historie passiert direkt in der Seite selbst**, keine eigene Lese-Route.
+5. **Neue shadcn/ui-Komponente "Slider"** muss installiert werden.
+
+### D) Abhängigkeiten (Pakete)
+Ein neues shadcn/ui-Paket: `slider` (offizielle Radix-basierte Komponente, wie alle anderen UI-Bausteine im Projekt).
 
 ## QA Test Results
 _To be added by /qa_
