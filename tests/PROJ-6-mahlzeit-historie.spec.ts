@@ -75,7 +75,7 @@ test.describe('Leerer Zustand', () => {
     await loginAndGoToHistorie(page)
     const cta = page.getByRole('link', { name: /mahlzeit analysieren/i })
     await expect(cta).toBeVisible({ timeout: 5000 })
-    await expect(cta).toHaveAttribute('href', '/analyse')
+    await expect(cta).toHaveAttribute('href', '/analyse/start')
   })
 
   test('kein FAB-Button im leeren Zustand', async ({ page }) => {
@@ -113,7 +113,7 @@ test.describe('Timeline-Ansicht', () => {
     await expect(page.getByText('Linsensalat mit Avocado')).toBeVisible({ timeout: 5000 })
     const fab = page.getByRole('link', { name: /neue mahlzeit/i })
     await expect(fab).toBeVisible()
-    await expect(fab).toHaveAttribute('href', '/analyse')
+    await expect(fab).toHaveAttribute('href', '/analyse/start')
   })
 
   test('FAB-Button navigiert zur Analyse-Seite', async ({ page }) => {
@@ -134,7 +134,11 @@ test.describe('Timeline-Ansicht', () => {
       })
     })
     await loginAndGoToHistorie(page)
-    const skeleton = page.locator('.animate-pulse').first()
+    // PROJ-42: seit die Historie in der Analyse-Übersicht eingebettet ist, rendert auch
+    // der (hier ungemockte) WochenRecapSektion-Ladezustand eigene .animate-pulse-Elemente
+    // auf derselben Seite — Selektor daher auf die Mahlzeit-Karten-Skelette (w-16 h-16)
+    // eingegrenzt statt auf ".animate-pulse" allgemein.
+    const skeleton = page.locator('.animate-pulse.w-16.h-16').first()
     await expect(skeleton).toBeVisible({ timeout: 5000 })
     resolveDelay()
     await expect(page.getByText('Linsensalat mit Avocado')).toBeVisible({ timeout: 5000 })
@@ -266,12 +270,12 @@ test.describe('Fehlerfall', () => {
 // AUTHENTIFIZIERUNG
 // ─────────────────────────────────────────────────────────────
 test.describe('Authentifizierung', () => {
-  // Seit PROJ-19 (Gast-Modus) ist "/" öffentlich zugänglich (anonyme Session) — nicht mehr
-  // login-geschützt. Nur "/historie" selbst verlangt weiterhin ein volles Konto und leitet
-  // unauthentifizierte Besucher zu "/konto" um (nicht "/login", siehe middleware.ts).
-  // Vorbestehender Test-Bug (Annahme war vor PROJ-19 korrekt), unabhängig vom Refinement 2026-08-11.
-  test('nicht eingeloggter Nutzer wird bei /historie zu /konto weitergeleitet', async ({ page }) => {
+  // PROJ-42: /historie leitet jetzt bedingungslos auf /analyse weiter (die Historie lebt
+  // dort in Sektion 3) — der Login-Zwang greift erst innerhalb der Sektion selbst
+  // (Login-Hinweis-Karte statt Inhalt für Gäste), nicht mehr als Seiten-Redirect zu /konto.
+  test('nicht eingeloggter Nutzer wird bei /historie zu /analyse weitergeleitet, sieht dort einen Login-Hinweis', async ({ page }) => {
     await page.goto('/historie')
-    await expect(page).toHaveURL(/\/konto/, { timeout: 5000 })
+    await expect(page).toHaveURL(/\/analyse$/, { timeout: 5000 })
+    await expect(page.getByText('Melde dich an, um deine Analyse-Historie zu sehen.')).toBeVisible()
   })
 })

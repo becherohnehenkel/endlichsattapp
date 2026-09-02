@@ -35,10 +35,12 @@ test.describe('Zugangsschutz', () => {
     expect(page.url()).not.toContain('/login')
   })
 
-  test('/historie ohne Session leitet mit redirectTo-Kontext zu /konto weiter', async ({ page }) => {
+  // PROJ-42: /historie ist in die Analyse-Übersicht (Sektion 3) aufgegangen und leitet
+  // jetzt bedingungslos auf /analyse weiter (nicht mehr auf /konto) — der Login-Zwang
+  // greift erst innerhalb der Sektion selbst, siehe PROJ-19 AC-11a/b.
+  test('/historie leitet auf /analyse weiter', async ({ page }) => {
     await page.goto('/historie')
-    await page.waitForURL(/\/konto/, { timeout: 5000 })
-    expect(new URL(page.url()).searchParams.get('reason')).toBe('historie')
+    await page.waitForURL(/\/analyse$/, { timeout: 5000 })
   })
 
   // BUG-4 (gefunden 2026-06-16, siehe Decision Log in features/PROJ-2-user-authentication.md):
@@ -170,10 +172,12 @@ test.describe('Logout', () => {
     await page.goto('/konto') // Abmelden-Button ist seit PROJ-14 auf /konto
     await page.getByRole('button', { name: 'Abmelden' }).click()
     await expect(page).toHaveURL(/\/login/, { timeout: 8000 })
-    // Verify session is gone — eine wirklich geschützte Route (nicht /analyse, das ist seit
-    // PROJ-19 bewusst öffentlich, siehe "Zugangsschutz"-Block oben) muss weiterhin abweisen
-    await page.goto('/historie')
-    await expect(page).toHaveURL(/\/konto/)
+    // Verify session is gone — /konto zeigt jetzt wieder den Gast-Conversion-Screen statt
+    // der echten Kontoübersicht (nicht mehr über /historie geprüft, das seit PROJ-42
+    // bedingungslos auf die öffentliche Analyse-Übersicht weiterleitet, siehe
+    // "Zugangsschutz"-Block oben)
+    await page.goto('/konto')
+    await expect(page.getByText('Kostenlos registrieren')).toBeVisible()
   })
 })
 

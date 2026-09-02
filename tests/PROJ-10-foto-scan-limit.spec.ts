@@ -17,11 +17,11 @@ async function loginAs(page: Page) {
   // weiter, nicht mehr nach "/analyse" — der explizite redirectTo-Parameter (von der Login-Seite
   // bereits unterstützt) wird hier genutzt, um den bestehenden loginAs()-Bug in anderen
   // Spec-Dateien (PROJ-3/4/5/8) nicht zu wiederholen.
-  await page.goto('/login?redirectTo=%2Fanalyse')
+  await page.goto('/login?redirectTo=%2Fanalyse%2Fstart')
   await page.fill('#email', TEST_EMAIL)
   await page.fill('#password', TEST_PASSWORD)
   await page.click('button[type="submit"]')
-  await page.waitForURL('**/analyse', { timeout: 8000 })
+  await page.waitForURL('**/analyse/start', { timeout: 8000 })
 }
 
 // PROJ-10: Tests in dieser Datei nutzen page.route(), um /api/meal zu mocken — sie verändern

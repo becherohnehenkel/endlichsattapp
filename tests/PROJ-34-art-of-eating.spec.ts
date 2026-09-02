@@ -17,11 +17,11 @@ const TEST_PASSWORD = 'QaTest123!'
 const LEGACY_MAHLZEIT_ID = '44444444-4444-4444-4444-444444444444'
 
 async function loginAs(page: Page) {
-  await page.goto('/login?redirectTo=%2Fanalyse')
+  await page.goto('/login?redirectTo=%2Fanalyse%2Fstart')
   await page.fill('#email', TEST_EMAIL)
   await page.fill('#password', TEST_PASSWORD)
   await page.click('button[type="submit"]')
-  await page.waitForURL('**/analyse', { timeout: 8000 })
+  await page.waitForURL('**/analyse/start', { timeout: 8000 })
 }
 
 function setupAnalyseMocks(page: Page, confirmResult: object) {
@@ -152,7 +152,7 @@ test.describe('Art of Eating: Rotation', () => {
 
     for (let i = 0; i < 8; i++) {
       setupAnalyseMocks(page, { ...MAHLZEIT_RESULT, analysisId: `aoe-rotation-${i}` })
-      await page.goto('/analyse')
+      await page.goto('/analyse/start')
       await page.locator('textarea').waitFor({ timeout: 10000 })
       await page.fill('textarea', 'Hähnchenbrust')
       await page.getByRole('button', { name: /^analysieren/i }).click()

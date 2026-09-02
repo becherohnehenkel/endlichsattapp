@@ -38,15 +38,15 @@ test.describe.serial('Reduzierter Zugriff (Trial abgelaufen, kein Abo, kein Invi
   // invite_code_redeemed_at = NULL (temporär von der permanenten Baseline abweichend!),
   // photo_scans_remaining > 0
 
-  test('/analyse bleibt erreichbar, kein Redirect zu /upgrade', async ({ page }) => {
+  test('/analyse/start bleibt erreichbar, kein Redirect zu /upgrade', async ({ page }) => {
     await loginAs(page)
-    await page.goto('/analyse')
-    await expect(page).toHaveURL(/\/analyse/)
+    await page.goto('/analyse/start')
+    await expect(page).toHaveURL(/\/analyse\/start/)
   })
 
-  test('/analyse zeigt das Foto-Kontingent als Lifetime-Zähler ("übrig" statt "heute")', async ({ page }) => {
+  test('/analyse/start zeigt das Foto-Kontingent als Lifetime-Zähler ("übrig" statt "heute")', async ({ page }) => {
     await loginAs(page)
-    await page.goto('/analyse')
+    await page.goto('/analyse/start')
     await expect(page.getByText(/von 5 Foto-Scans übrig/)).toBeVisible()
   })
 
@@ -87,9 +87,9 @@ test.describe.serial('Voller Zugriff — 7-Tage-Trial aktiv', () => {
   // invite_code_redeemed_at = NULL (temporär — sonst nicht von der permanenten
   // Baseline unterscheidbar, siehe Kommentar am Dateianfang)
 
-  test('/analyse zeigt den Trial-Countdown und das tägliche Foto-Kontingent', async ({ page }) => {
+  test('/analyse/start zeigt den Trial-Countdown und das tägliche Foto-Kontingent', async ({ page }) => {
     await loginAs(page)
-    await page.goto('/analyse')
+    await page.goto('/analyse/start')
     await expect(page.getByText(/Noch 3 Tage tägliche Foto-Analysen/)).toBeVisible()
     await expect(page.getByText(/Heute noch .* von 5 Foto-Scans/)).toBeVisible()
   })
@@ -112,10 +112,10 @@ test.describe.serial('Voller Zugriff — 7-Tage-Trial aktiv', () => {
 test.describe.serial('Aktives Abo', () => {
   // PRECONDITION: subscription_status = 'active', trial_ends_at = Vergangenheit (Trial irrelevant bei aktivem Abo)
 
-  test('/analyse ist trotz abgelaufenem Trial erreichbar, ohne Redirect', async ({ page }) => {
+  test('/analyse/start ist trotz abgelaufenem Trial erreichbar, ohne Redirect', async ({ page }) => {
     await loginAs(page)
-    await page.goto('/analyse')
-    await expect(page).toHaveURL(/\/analyse/)
+    await page.goto('/analyse/start')
+    await expect(page).toHaveURL(/\/analyse\/start/)
   })
 
   test('/rezepte ist trotz abgelaufenem Trial vollständig erreichbar, keine gesperrten Karten', async ({ page }) => {
@@ -140,7 +140,7 @@ test.describe('Sicherheit — Rezept-API-Bypass (Regressionstest für BUG-2)', (
   // Sperrbildschirm zeigte — die API-Route prüfte nur "ist überhaupt eine Session da?",
   // nicht `is_guest_visible`/`hasAccess`. Siehe QA Test Results, BUG-2.
   test('GET /api/rezepte/[id] liefert 403 für ein nicht gast-sichtbares Rezept, wenn die UI den Sperrbildschirm zeigt', async ({ page }) => {
-    await page.goto('/analyse')
+    await page.goto('/analyse/start')
     await page.waitForFunction(() => document.cookie.includes('sb-'), { timeout: 10000 })
 
     await page.goto(`/rezept/${NON_GUEST_RECIPE_ID}`)

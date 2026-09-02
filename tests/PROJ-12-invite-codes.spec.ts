@@ -89,7 +89,7 @@ test.describe.serial('Code-Formular: Toggle und Anzeige', () => {
 // ─── Code-Einlösung (API gemockt) ─────────────────────────────────────────
 
 test.describe.serial('Code-Einlösung: Erfolg', () => {
-  test('gültiger Code → Erfolgsmeldung und Weiterleitung zu /analyse', async ({ page }) => {
+  test('gültiger Code → Erfolgsmeldung und Weiterleitung zu /analyse/start', async ({ page }) => {
     await loginAndGoToUpgrade(page)
 
     // API mocken: Erfolg simulieren
@@ -101,8 +101,8 @@ test.describe.serial('Code-Einlösung: Erfolg', () => {
     await page.getByPlaceholder('Einladungscode eingeben').fill('VALID-CODE')
     await page.getByRole('button', { name: /einlösen/i }).click()
 
-    await page.waitForURL('**/analyse', { timeout: 8000 })
-    await expect(page).toHaveURL(/\/analyse/)
+    await page.waitForURL('**/analyse/start', { timeout: 8000 })
+    await expect(page).toHaveURL(/\/analyse\/start/)
   })
 })
 
@@ -215,7 +215,7 @@ test.describe('Countdown-Banner: "Code einlösen →"-Link', () => {
 
   test('Link im Countdown-Hinweis führt zu /upgrade?showCode=1', async ({ page }) => {
     await loginAs(page)
-    await page.goto('/analyse')
+    await page.goto('/analyse/start')
     await page.waitForLoadState('networkidle')
 
     // Falls kein Trial aktiv: Der Link existiert nur wenn trialDaysRemaining != null.

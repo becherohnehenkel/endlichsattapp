@@ -101,9 +101,11 @@ test.describe('Gast-Modus (PROJ-19) bleibt mit neuer Nav-Struktur intakt', () =>
 
   test('AC: Gast sieht alle 5 Tabs uneingeschränkt (kein Lock-Icon)', async ({ page, context }) => {
     await clearSession(context)
-    // Anonyme Session entsteht client-seitig erst beim Besuch von /analyse (AnonSignInInit) —
-    // ohne Session ist die Nav grundsätzlich ausgeblendet (siehe navigation-shell.tsx).
-    await page.goto('/analyse')
+    // Anonyme Session entsteht client-seitig erst beim Besuch von /analyse/start
+    // (AnonSignInInit, seit PROJ-42 nicht mehr auf /analyse selbst, das ist jetzt die
+    // Übersichtsseite) — ohne Session ist die Nav grundsätzlich ausgeblendet (siehe
+    // navigation-shell.tsx).
+    await page.goto('/analyse/start')
     await page.waitForSelector('text=Was hast du gegessen?', { timeout: 8000 })
     await page.goto('/')
     const nav = page.locator('[data-testid="bottom-nav"]')

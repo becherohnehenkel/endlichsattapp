@@ -35,13 +35,16 @@ test.describe('AC-2 bis AC-8: Hauptseiten laden ohne Fehler', () => {
     await loginAs(page)
   })
 
-  test('AC-2: Homepage lädt vollständig — Analyse-CTA sichtbar', async ({ page }) => {
+  test('AC-2: Homepage lädt vollständig — Hero-Überschrift sichtbar', async ({ page }) => {
+    // PROJ-42: der direkte "Mahlzeit analysieren"-CTA-Button wurde von der Startseite
+    // entfernt ("Analyse" ist jetzt ein vollwertiger Bottom-Nav-Tab), die Hero-Überschrift
+    // bleibt aber bestehen.
     await page.goto('/')
-    await expect(page.getByRole('link', { name: /Mahlzeit analysieren/i })).toBeVisible({ timeout: 10000 })
+    await expect(page.getByRole('heading', { name: /Wie komplett ist/i })).toBeVisible({ timeout: 10000 })
   })
 
-  test('AC-3: /analyse lädt und zeigt Eingabe-Oberfläche', async ({ page }) => {
-    await page.goto('/analyse')
+  test('AC-3: /analyse/start lädt und zeigt Eingabe-Oberfläche', async ({ page }) => {
+    await page.goto('/analyse/start')
     await expect(page).not.toHaveURL(/\/login/, { timeout: 3000 })
     // Analyse-Seite hat einen Absenden-Button oder Scan-Bereich
     await expect(page.getByRole('main')).toBeVisible({ timeout: 8000 })
@@ -80,9 +83,11 @@ test.describe('AC-2 bis AC-8: Hauptseiten laden ohne Fehler', () => {
     await expect(page.getByText(TEST_EMAIL)).toBeVisible({ timeout: 8000 })
   })
 
-  test('AC-8: /historie lädt — Header "Meine Analysen" sofort sichtbar', async ({ page }) => {
+  // PROJ-42: /historie leitet jetzt auf die Analyse-Übersicht weiter (kein eigener
+  // "Meine Analysen"-Header mehr), die Historie lebt dort in Sektion 3.
+  test('AC-8: /historie leitet auf /analyse weiter — Übersicht sofort sichtbar', async ({ page }) => {
     await page.goto('/historie')
-    await expect(page.getByText('Meine Analysen')).toBeVisible({ timeout: 5000 })
+    await expect(page.getByRole('heading', { name: 'Lerne deine Ernährung kennen' })).toBeVisible({ timeout: 5000 })
   })
 })
 
@@ -119,8 +124,8 @@ test.describe('Regression: Parallele Queries + merged getAccessStatus', () => {
 
   test('REG-1: Homepage lädt Mahlzeiten-Sektion und Rezept-Teaser', async ({ page }) => {
     await page.goto('/')
-    // Hero CTA immer vorhanden
-    await expect(page.getByRole('link', { name: /Mahlzeit analysieren/i })).toBeVisible({ timeout: 8000 })
+    // Hero-Überschrift immer vorhanden (CTA-Button seit PROJ-42 entfernt)
+    await expect(page.getByRole('heading', { name: /Wie komplett ist/i })).toBeVisible({ timeout: 8000 })
   })
 
   test('REG-2: /analyse kein Redirect zu /login für eingeloggten Nutzer', async ({ page }) => {

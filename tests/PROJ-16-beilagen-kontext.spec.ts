@@ -14,11 +14,11 @@ const TEST_EMAIL = 'qa-test@endlichsatt.dev'
 const TEST_PASSWORD = 'QaTest123!'
 
 async function loginAs(page: Page) {
-  await page.goto('/login?redirectTo=%2Fanalyse')
+  await page.goto('/login?redirectTo=%2Fanalyse%2Fstart')
   await page.fill('#email', TEST_EMAIL)
   await page.fill('#password', TEST_PASSWORD)
   await page.click('button[type="submit"]')
-  await page.waitForURL('**/analyse', { timeout: 8000 })
+  await page.waitForURL('**/analyse/start', { timeout: 8000 })
 }
 
 // Refinement 2026-08-11 ("Complete"-Umstrukturierung): Mock-Ergebnis spiegelt jetzt das

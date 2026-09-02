@@ -10,8 +10,9 @@ async function loginAs(page: Page) {
   await page.click('button[type="submit"]')
   // Wait for redirect away from /login (may go to / or /analyse depending on user state)
   await page.waitForURL(url => !url.toString().includes('/login'), { timeout: 8000 })
-  // Then navigate to /analyse for the analysis flow tests
-  await page.goto('/analyse')
+  // Then navigate to /analyse/start for the analysis flow tests (PROJ-42: /analyse
+  // itself is now the overview page, the input flow lives at /analyse/start)
+  await page.goto('/analyse/start')
 }
 
 // ─── Mock helpers for the analyse flow ────────────────────────

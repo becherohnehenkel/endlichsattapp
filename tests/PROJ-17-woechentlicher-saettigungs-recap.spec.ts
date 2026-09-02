@@ -21,7 +21,9 @@ async function loginAndGoToHistorie(page: Page) {
   await page.fill('#password', TEST_PASSWORD)
   await page.click('button[type="submit"]')
   await page.waitForURL('**/', { timeout: 8000 })
-  await page.goto('/historie')
+  // PROJ-42: /historie leitet jetzt auf /analyse weiter, die Historie lebt dort in
+  // Sektion 3 (Tab "Analysierte Mahlzeiten", standardmäßig aktiv).
+  await page.goto('/analyse')
 }
 
 // ─── Mock-Daten ───────────────────────────────────────────────

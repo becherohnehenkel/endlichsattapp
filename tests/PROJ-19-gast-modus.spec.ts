@@ -60,14 +60,16 @@ test.describe('Öffentliche Seiten — ohne Session zugänglich', () => {
     await expect(page.locator('body')).toBeVisible()
   })
 
-  test('AC-2b: /analyse zeigt Skeleton-Ladescreen während Anon-Session aufgebaut wird', async ({ page }) => {
+  test('AC-2b: /analyse/start zeigt Skeleton-Ladescreen während Anon-Session aufgebaut wird', async ({ page }) => {
+    // PROJ-42: Anon-Session-Bootstrapping lebt jetzt auf /analyse/start (dem Flow),
+    // nicht mehr auf /analyse (das ist jetzt die Übersichtsseite ohne Login-Zwang).
     // Anon-Auth verlangsamen, damit der Skeleton-Zustand (server-rendered) sichtbar bleibt
     await page.route('**/auth/v1/signup**', async (route) => {
       await new Promise((resolve) => setTimeout(resolve, 1500))
       await route.continue()
     })
 
-    await page.goto('/analyse')
+    await page.goto('/analyse/start')
     // Skeleton soll sichtbar sein: shadcn/ui Skeleton rendert .animate-pulse
     const skeleton = page.locator('.animate-pulse').first()
     await expect(skeleton).toBeVisible({ timeout: 3000 })
@@ -138,17 +140,17 @@ test.describe('Navigation & Redirects', () => {
     await clearSession(context)
   })
 
-  test('AC-11a: /historie ohne Session → Redirect zu /konto?reason=historie', async ({ page }) => {
+  test('AC-11a: /historie leitet auf /analyse weiter (Historie ist in PROJ-42 dorthin umgezogen)', async ({ page }) => {
     await page.goto('/historie')
-    await expect(page).toHaveURL(/\/konto\?reason=historie/)
+    await expect(page).toHaveURL(/\/analyse$/)
   })
 
-  test('AC-11b: Nach Redirect von /historie ist der kontextuelle Banner sichtbar', async ({ page }) => {
+  test('AC-11b: Historie-Sektion auf /analyse zeigt für Gäste einen Login-Hinweis statt Inhalt', async ({ page }) => {
     await page.goto('/historie')
-    await expect(page).toHaveURL(/\/konto\?reason=historie/)
-    await expect(
-      page.getByText('Erstelle einen kostenlosen Account um deine Analyse-Historie zu sehen.')
-    ).toBeVisible()
+    await expect(page).toHaveURL(/\/analyse$/)
+    await expect(page.getByText('Melde dich an, um deine Analyse-Historie zu sehen.')).toBeVisible()
+    const anmeldenLinks = page.getByRole('link', { name: 'Anmelden' })
+    await expect(anmeldenLinks.last()).toHaveAttribute('href', '/konto?reason=historie')
   })
 
   test('AC-12: /registrieren ohne Session zugänglich (kein Redirect)', async ({ page }) => {
@@ -254,7 +256,7 @@ test.describe('Foto-Scan Konversionsblock bei Limit (UI-Mock)', () => {
       }
     })
 
-    await page.goto('/analyse')
+    await page.goto('/analyse/start')
     // Seite lädt ohne Fehler und ohne Redirect zu /login
     await expect(page.locator('body')).toBeVisible()
     expect(page.url()).not.toContain('/login')
@@ -264,16 +266,16 @@ test.describe('Foto-Scan Konversionsblock bei Limit (UI-Mock)', () => {
 // ─── Gruppe 6: Free-User Regression (PROJ-10-Limit-Erhöhung) ────────────────
 
 test.describe('Free-User Scan-Limit Regression', () => {
-  test('AC-16: Eingeloggter Free-User kann /analyse aufrufen (kein Redirect zu /upgrade)', async ({ page }) => {
+  test('AC-16: Eingeloggter Free-User kann /analyse/start aufrufen (kein Redirect zu /upgrade)', async ({ page }) => {
     await loginAs(page)
-    await page.goto('/analyse')
+    await page.goto('/analyse/start')
     expect(page.url()).not.toContain('/upgrade')
     await expect(page.locator('body')).toBeVisible()
   })
 
   test('AC-17: Eingeloggter Free-User sieht Foto-Scan-Zähler mit Maximalwert 5', async ({ page }) => {
     await loginAs(page)
-    await page.goto('/analyse')
+    await page.goto('/analyse/start')
     // Scan-Counter zeigt "von 5 Foto-Scans" (neues Limit)
     const counter = page.getByText(/von 5 Foto-Scans/)
     // Nur prüfen wenn Scans noch vorhanden (User hat > 0 Scans übrig)
