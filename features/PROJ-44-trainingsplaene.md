@@ -1,6 +1,6 @@
 # PROJ-44: Trainingspläne (Detailseiten + Gewicht-Logging)
 
-## Status: Approved
+## Status: Deployed
 **Created:** 2026-09-02
 **Last Updated:** 2026-09-02
 
@@ -315,4 +315,7 @@ Keine UPDATE/DELETE-Policy — laut Spec werden vergangene Einträge nie bearbei
 - **Recommendation:** Deploy (BUG-1 als Low-Priority-Doku-Nachtrag für die Spec vermerken, nicht blockierend)
 
 ## Deployment
-_To be added by /deploy_
+- **Production URL:** https://satt.mehralsabnehmen.de/training/zuhause-ohne-equipment
+- **Deployed:** 2026-09-02 (Vercel auto-deploy via Push zu `main`, commits `16a28f1`..`930dac0`)
+- **Verified in Produktion:** Nutzer hat die Live-Seite geprüft, alles grün ("Alles auf Grün").
+- **Umfang dieses Deploys:** vollständige PROJ-44-Implementierung — 3 Trainingsplan-Detailseiten unter `/training/[plan]` mit Übungskarten (einklappbare Ausführungs-Erklärung, editierbare Satz-Zeilen für Wiederholungen + Gewicht bei Plan 2/3, gemeinsames Pause-Feld), neue Tabelle `training_sessions` + `POST /api/training/[plan]` zum Speichern, Vorausfüllung mit dem zuletzt gespeicherten Stand für eingeloggte Nutzer, zustandslose Nutzung für Gäste. `AnalyseLoginHinweis` in `LoginHinweis` umbenannt (jetzt von PROJ-42 und PROJ-44 geteilt). Migration wurde vom Nutzer manuell ausgeführt und live verifiziert (siehe Implementation Notes Backend).
