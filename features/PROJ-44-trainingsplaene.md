@@ -1,6 +1,6 @@
 # PROJ-44: Trainingspläne (Detailseiten + Gewicht-Logging)
 
-## Status: Planned
+## Status: Architected
 **Created:** 2026-09-02
 **Last Updated:** 2026-09-02
 
@@ -135,12 +135,55 @@
 <!-- Added by /architecture -->
 | Decision | Rationale | Date |
 |----------|-----------|------|
+| Eine dynamische Route `/training/[plan]` statt 3 einzelner Seiten | Abweichung vom Ernährung-Guide-Muster (dort inhaltlich/interaktiv unterschiedlich) — hier sind alle 3 Pläne strukturell identisch (gleiche Übungskarten-Logik, gleiche Felder), nur Übungsliste und Gewicht-Feld-Sichtbarkeit unterscheiden sich. Eine gemeinsame Seite mit Plan-Daten spart dreifachen Code | 2026-09-02 |
+| Neue Tabelle "Trainingseinheiten": ein Datensatz pro "Training abschließen"-Klick, Übungswerte aller Übungen dieses Trainings in einem Datensatz gebündelt (nicht eine Zeile pro Übung) | Übungsliste ist pro Plan fest vorgegeben, nie nutzerdefiniert — nie ein Bedarf, einzelne Übungen unabhängig abzufragen; gebündelt ist einfacher zu schreiben/lesen | 2026-09-02 |
+| Neue API-Route nur zum Speichern (POST, "Training abschließen") | Das Lesen des zuletzt gespeicherten Stands passiert direkt in der Seite selbst (Server-Component-Query), wie bei der Analyse-Übersicht (PROJ-42) — keine eigene Lese-Route nötig | 2026-09-02 |
+| Übungstexte und Plan-Schema (Sätze/Wdh/Pause-Startwerte) bleiben statischer Code-Content, nicht in der Datenbank | Ändern sich nicht pro Nutzer, gleiches Muster wie bei den Ernährung-Guides und PROJ-43 | 2026-09-02 |
+| Neuer gemeinsamer `TrainingSubHeader` für die Breadcrumb-Navigation | Analog zu den bestehenden `AnalyseSubHeader`/`ErnaehrungSubHeader`, konsistentes Navigationsmuster | 2026-09-02 |
+| Keine neuen npm-Pakete | Alles läuft über bereits installierte shadcn/ui-Komponenten und bestehende Projekt-Muster | 2026-09-02 |
 
 ---
 <!-- Sections below are added by subsequent skills -->
 
 ## Tech Design (Solution Architect)
-_To be added by /architecture_
+
+### A) Komponenten-Struktur (Visuell)
+
+```
+/training/[plan] (eine dynamische Route für alle 3 Pläne)
+├── TrainingSubHeader (neu, analog zu AnalyseSubHeader/ErnaehrungSubHeader)
+│   └── Breadcrumb "Training / [Planname]"
+├── H1 (Planname) + Intro-Satz
+├── Warm-Up-Hinweis (Text)
+├── Übungsliste
+│   └── Übungskarte (je Übung)
+│       ├── Name + einklappbare Ausführungs-Erklärung
+│       ├── Freitextfelder: Sätze, Wiederholungen, Pause
+│       └── Freitextfeld "Gewicht/Widerstand" (nur Plan 2 & 3)
+├── Gäste: Hinweis-Karte "Eingaben gehen verloren" + Link zum Konto
+└── Eingeloggt: "Training abschließen"-Button
+```
+
+### B) Datenmodell (in Worten)
+
+**Eine neue Tabelle "Trainingseinheiten":** Jede Zeile ist EIN abgeschlossenes Training.
+- Wer (Nutzer)
+- Welcher Plan (zuhause-ohne-equipment / zuhause-mit-baendern / fitnessstudio)
+- Wann (Zeitstempel)
+- Die eingetragenen Werte aller Übungen dieses Trainings, gebündelt in einem Datensatz
+
+Beim Öffnen einer Plan-Seite wird für eingeloggte Nutzer der neueste Eintrag für diesen Plan gelesen und als Vorausfüllung genutzt. Gäste lösen gar keine Datenbank-Abfrage aus.
+
+### C) Tech-Entscheidungen (Begründung)
+
+1. **Eine dynamische Route statt 3 einzelner Seiten** — alle 3 Pläne sind strukturell identisch, eine gemeinsame Seite mit Plan-Daten spart dreifachen Code.
+2. **Ein Datensatz pro Trainingseinheit, Übungswerte gebündelt** — einfacher zu schreiben/lesen, da nie einzelne Übungen unabhängig abgefragt werden.
+3. **Neue API-Route nur zum Speichern** — das Lesen passiert direkt in der Seite selbst, wie bei der Analyse-Übersicht.
+4. **Übungstexte und Plan-Schema bleiben statischer Code-Content**, nicht in der Datenbank.
+5. **Neuer gemeinsamer `TrainingSubHeader`** für die Breadcrumb-Navigation.
+
+### D) Abhängigkeiten (Pakete)
+Keine neuen Pakete.
 
 ## QA Test Results
 _To be added by /qa_
