@@ -1,6 +1,6 @@
 # PROJ-48: Startseite: Ultimatives Ziel
 
-## Status: Planned
+## Status: Architected
 **Created:** 2026-09-03
 **Last Updated:** 2026-09-03
 
@@ -60,7 +60,7 @@
 6. Körpergefühl schärfen
 
 ## Open Questions
-- [ ] Exakte visuelle Gestaltung der 6 Punkte (Liste, Icons, Karten-Stil wie bei den 4 Funktions-Karten?) — wird bei `/architecture` bzw. `/frontend` entschieden
+- [x] Exakte visuelle Gestaltung der 6 Punkte → kompakte Liste, bewusst ohne Rahmen-Boxen/Hover-Effekt wie bei den 4 Funktions-Karten, damit sofort klar ist: lesen statt klicken (siehe Tech Design, 2026-09-03)
 
 ## Decision Log
 
@@ -75,12 +75,42 @@
 ### Technical Decisions
 <!-- Added by /architecture -->
 | Decision | Rationale | Date |
+|----------|-----------|------|
+| Rein statischer Text-/Listen-Block, keine neue interaktive Komponente | Kein Client-State nötig — Inhalt ist fest im Code hinterlegt, identisch für alle Nutzer | 2026-09-03 |
+| Visuell bewusst anders gestaltet als die 4 Funktions-Karten aus PROJ-47 (keine Rahmen-Box, kein Hover-Effekt) | Löst die offene Frage aus der Spec: sofort erkennbar, dass diese Sektion zum Lesen ist, nicht zum Klicken wie die Karten darunter | 2026-09-03 |
+| 6 Punkte als kompakte Liste statt einzelne Karten | Passt zum informativen, nicht-aktionsorientierten Charakter der Sektion | 2026-09-03 |
 
 ---
 <!-- Sections below are added by subsequent skills -->
 
 ## Tech Design (Solution Architect)
-_To be added by /architecture_
+
+### A) Komponenten-Struktur (Visuell)
+
+```
+Startseite (/) — PROJ-47 Bestand
+├── Begrüßung (PROJ-47)
+├── Video-Platzhalter (PROJ-47)
+├── Ultimatives-Ziel-Sektion (NEU)
+│   ├── Überschrift "Ein Ziel für uns alle"
+│   ├── Intro-Text (2 Absätze)
+│   └── Liste der 6 Ziel-Punkte
+├── "So legst du los"-Sektion (PROJ-47, 4 Karten)
+└── Coach-Banner (PROJ-47)
+```
+
+### B) Datenmodell (in Worten)
+
+Keins — reiner, fest im Code hinterlegter Text, kein Datenbankbezug, keine API.
+
+### C) Tech-Entscheidungen (Begründung)
+
+1. **Rein statischer Text-/Listen-Block** — keine neue interaktive Komponente nötig, kein Client-State.
+2. **Visuell bewusst anders als die 4 Funktions-Karten darunter** (keine Rahmen-Boxen, kein Hover-Effekt) — auf den ersten Blick klar: lesen statt klicken.
+3. **6 Punkte als kompakte Liste statt einzelne Karten** — passt zum informativen Charakter.
+
+### D) Abhängigkeiten (Pakete)
+Keine neuen Pakete.
 
 ## QA Test Results
 _To be added by /qa_
