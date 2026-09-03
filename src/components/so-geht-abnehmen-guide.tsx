@@ -8,6 +8,7 @@ import {
   GesundAlternIcons,
   KoerperFormenIcons,
   SchlafIcon,
+  SchlafTippsIconLeiste,
 } from './arbeitspunkt-icons'
 
 // PROJ-37 (Refinement): auf die gemeinsame ArbeitspunkteListe umgestellt (Ein-/Ausklappen
@@ -110,22 +111,29 @@ export function SoGehtAbnehmenGuide({ kannSpeichern, gespeicherteWerte }: SoGeht
           titel: 'Krafttraining',
           inhalt: (
             <>
-              <div className="space-y-3 text-xs text-foreground/80 leading-relaxed">
-                <div className="flex items-start gap-3">
+              {/* PROJ-37 (Refinement 2026-09-03, Icon-Layout-Feinschliff): Icon-Spalte + Text-Spalte
+                  als ein gemeinsames Grid (nicht 4 unabhängige Reihen) — dadurch bleiben die Icons
+                  über alle 4 Punkte hinweg exakt spaltenbündig. Jeder Punkt-Wrapper wird ab `sm:`
+                  zu `contents` (verschwindet aus dem Box-Modell), wodurch Icon + Text direkt zu
+                  Grid-Kindern werden und sich vertikal zum Text zentrieren. Unterhalb `sm:` bleibt
+                  der Wrapper eine normale Spalte: Icon mittig über dem Text, Text linksbündig über
+                  die volle Breite. */}
+              <div className="grid grid-cols-1 gap-y-[22px] text-xs text-foreground/80 leading-relaxed sm:grid-cols-[110px_1fr] sm:items-center sm:gap-x-4 sm:gap-y-[18px]">
+                <div className="flex flex-col items-center gap-2 sm:contents">
                   <MuskelnErhaltenIcons />
-                  <p><strong>1. Muskeln erhalten</strong> — Im Kaloriendefizit denkt dein Körper sonst: „Das brauche ich nicht, kostet nur Energie.“ Krafttraining signalisiert ihm: Diese Muskulatur wird gebraucht — die bleibt.</p>
+                  <p className="self-stretch text-left"><strong>1. Muskeln erhalten</strong> — Im Kaloriendefizit denkt dein Körper sonst: „Das brauche ich nicht, kostet nur Energie.“ Krafttraining signalisiert ihm: Diese Muskulatur wird gebraucht — die bleibt.</p>
                 </div>
-                <div className="flex items-start gap-3">
+                <div className="flex flex-col items-center gap-2 sm:contents">
                   <GrundumsatzIcons />
-                  <p><strong>2. Grundumsatz</strong> — Mehr Muskelmasse erhöht deinen Grundumsatz (nicht überbewerten, aber ein netter Nebeneffekt).</p>
+                  <p className="self-stretch text-left"><strong>2. Grundumsatz</strong> — Mehr Muskelmasse erhöht deinen Grundumsatz (nicht überbewerten, aber ein netter Nebeneffekt).</p>
                 </div>
-                <div className="flex items-start gap-3">
+                <div className="flex flex-col items-center gap-2 sm:contents">
                   <GesundAlternIcons />
-                  <p><strong>3. Gesund altern</strong> — Jede Bewegung bleibt mit steigendem Alter leichter. Eine halbe Kniebeuge ist ein Toilettengang, den du mit 80 noch selbstständig schaffen willst.</p>
+                  <p className="self-stretch text-left"><strong>3. Gesund altern</strong> — Jede Bewegung bleibt mit steigendem Alter leichter. Eine halbe Kniebeuge ist ein Toilettengang, den du mit 80 noch selbstständig schaffen willst.</p>
                 </div>
-                <div className="flex items-start gap-3">
+                <div className="flex flex-col items-center gap-2 sm:contents">
                   <KoerperFormenIcons />
-                  <p><strong>4. Körper formen</strong> — Kleidung sitzt leichter, du fühlst dich wohler in deiner Haut.</p>
+                  <p className="self-stretch text-left"><strong>4. Körper formen</strong> — Kleidung sitzt leichter, du fühlst dich wohler in deiner Haut.</p>
                 </div>
               </div>
               <Link href="/training" className="inline-block text-xs text-muted-foreground hover:text-foreground transition-colors">
@@ -139,9 +147,11 @@ export function SoGehtAbnehmenGuide({ kannSpeichern, gespeicherteWerte }: SoGeht
           titel: 'Schlaf / Erholung',
           inhalt: (
             <>
-              <div className="flex items-start gap-3">
+              {/* PROJ-37 (Refinement 2026-09-03, Icon-Layout-Feinschliff): Icon größer, mittig über
+                  dem Text (Mobile) bzw. vertikal zum Text zentriert daneben (Desktop/Tablet). */}
+              <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-center">
                 <SchlafIcon />
-                <div className="space-y-2 flex-1">
+                <div className="w-full space-y-2 text-left sm:flex-1">
                   <p className="text-xs text-foreground/80 leading-relaxed">
                     Ein übermüdeter Körper hat mehr Hunger — Schlafmangel bringt deine Sättigungshormone durcheinander (mehr Ghrelin, weniger Leptin). Das Ergebnis: mehr Appetit, und unbewusst greifst du eher zu schnellen Kalorien wie Süßigkeiten und Snacks statt zu einer sättigenden Mahlzeit.
                   </p>
@@ -150,6 +160,9 @@ export function SoGehtAbnehmenGuide({ kannSpeichern, gespeicherteWerte }: SoGeht
                   </p>
                 </div>
               </div>
+              {/* PROJ-37 (Refinement 2026-09-03, Icon-Layout-Feinschliff): kombinierte Übersicht der
+                  4 Tipps, alle Icons aus lucide-react (wie "Muskeln erhalten") für ein einheitliches Bild. */}
+              <SchlafTippsIconLeiste />
               <div className="space-y-2.5 text-xs text-foreground/80 leading-relaxed pt-1">
                 <p><strong>1. 3-2-1-Regel</strong> — 3h vorher nichts Schweres mehr essen, 2h vorher keine Arbeit/Aufregung/laute Musik mehr, 1h vorher keine Bildschirme mehr (blaues Licht vermeiden).</p>
                 <p><strong>2. Kühle Umgebung</strong> — hilft deinem Körper, besser zu entspannen.</p>

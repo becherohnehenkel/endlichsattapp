@@ -373,7 +373,7 @@ test.describe('Arbeitspunkt 5: Krafttraining-Vergleichsicons', () => {
       /4\. Körper formen/,
     ]
     for (const text of zeilen) {
-      const zeile = page.locator('div.flex.items-start.gap-3', { hasText: text })
+      const zeile = page.locator('div.flex.flex-col.items-center.gap-2', { hasText: text })
       await expect(zeile.locator('svg')).toHaveCount(2)
     }
   })
@@ -400,7 +400,21 @@ test.describe('Arbeitspunkt 6: Schlaf-Icon', () => {
     await page.goto('/ernaehrung/so-geht-abnehmen')
     await oeffneArbeitspunkt(page, 'Schlaf / Erholung')
     await expect(page.getByText(/Ein übermüdeter Körper hat mehr Hunger/)).toBeVisible()
-    const row = page.locator('div.flex.items-start.gap-3', { hasText: /Ein übermüdeter Körper hat mehr Hunger/ })
+    const row = page.locator('div.flex.flex-col.items-center.gap-3', { hasText: /Ein übermüdeter Körper hat mehr Hunger/ })
     await expect(row.locator('svg')).toHaveCount(1)
+  })
+
+  test('AC (Refinement 2026-09-03, Icon-Layout-Feinschliff): kombinierte Grafik zeigt alle 4 Schlaf-Tipps als Icon-Kacheln', async ({ page }) => {
+    await page.goto('/ernaehrung/so-geht-abnehmen')
+    await oeffneArbeitspunkt(page, 'Schlaf / Erholung')
+    await expect(page.getByText('3·2·1', { exact: true })).toBeVisible()
+    await expect(page.getByText('3-2-1-Regel', { exact: true })).toBeVisible()
+    await expect(page.getByText('Kühle Umgebung', { exact: true })).toBeVisible()
+    await expect(page.getByText('Dunkelheit', { exact: true })).toBeVisible()
+    await expect(page.getByText('Kreisende Gedanken', { exact: true })).toBeVisible()
+    // 3 der 4 Kacheln nutzen ein Lucide-SVG (Snowflake, Moon, LoaderPinwheel) — die 3-2-1-Kachel ist Text.
+    await expect(page.locator('svg.lucide-snowflake')).toHaveCount(1)
+    await expect(page.locator('svg.lucide-moon')).toHaveCount(1)
+    await expect(page.locator('svg.lucide-loader-pinwheel')).toHaveCount(1)
   })
 })
