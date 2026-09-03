@@ -69,9 +69,16 @@ export function berechneGrundumsatz(gewichtKg: number, groesseCm: number, alterJ
   return geschlecht === 'maennlich' ? basis + 5 : basis - 161
 }
 
+// Refinement 2026-09-03: tägliche Eiweißmenge, unabhängig vom gewählten Ziel — siehe
+// Spec Decision Log. Mindestmenge und optimale Menge sind reine Vielfache des Gewichts.
+export const EIWEISS_FAKTOR_MINDEST = 1.2
+export const EIWEISS_FAKTOR_OPTIMAL = 1.5
+
 export interface KcalRechnerErgebnis {
   erhaltungsbedarf: number
   zielKcal: number
+  eiweissMindestG: number
+  eiweissOptimalG: number
 }
 
 export function berechneKcal(input: KcalRechnerInput): KcalRechnerErgebnis {
@@ -81,6 +88,8 @@ export function berechneKcal(input: KcalRechnerInput): KcalRechnerErgebnis {
   return {
     erhaltungsbedarf: Math.round(erhaltungsbedarf),
     zielKcal: Math.round(zielKcal),
+    eiweissMindestG: Math.round(input.gewichtKg * EIWEISS_FAKTOR_MINDEST),
+    eiweissOptimalG: Math.round(input.gewichtKg * EIWEISS_FAKTOR_OPTIMAL),
   }
 }
 

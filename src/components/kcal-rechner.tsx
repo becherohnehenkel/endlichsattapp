@@ -241,6 +241,8 @@ export function KcalRechner({ kannSpeichern, gespeicherteWerte, onBerechnet }: K
           <p className="text-xs text-[#2E9E6B]/80">Dein Kalorienbedarf</p>
           <p className="text-2xl font-bold text-[#0E7C86]">{ergebnis.zielKcal} kcal</p>
           <p className="text-xs text-[#2E9E6B]/70">Erhaltungsbedarf: {ergebnis.erhaltungsbedarf} kcal</p>
+          <p className="text-xs text-[#2E9E6B]/70">Mindestens {ergebnis.eiweissMindestG}g Eiweiß/Tag</p>
+          <p className="text-xs text-[#2E9E6B]/70">Optimal {ergebnis.eiweissOptimalG}g Eiweiß/Tag</p>
         </div>
       )}
 

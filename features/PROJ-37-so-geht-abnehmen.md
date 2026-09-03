@@ -230,6 +230,12 @@ Eine neue API-Route zum Speichern der Rechner-Eingaben für eingeloggte Nutzer (
 - `tests/PROJ-37-so-geht-abnehmen.spec.ts`: 1 neuer Test für Überschrift + Intro-Text. Volle Suite: 36/36 (chromium + Mobile Chrome).
 - `npm run build`, `npm run lint`, `npm test` (415/415) weiterhin grün.
 
+### Refinement (2026-09-03): Eiweißbedarf im Kcal-Rechner-Ergebnis
+`src/lib/kcal-rechner.ts`: `KcalRechnerErgebnis` um `eiweissMindestG` und `eiweissOptimalG` erweitert (Gewicht × 1,2 bzw. × 1,5, auf ganze Gramm gerundet, neue Konstanten `EIWEISS_FAKTOR_MINDEST`/`EIWEISS_FAKTOR_OPTIMAL`), berechnet in `berechneKcal` — reine Erweiterung der bestehenden, rein client-seitigen Funktion, kein neuer Speicherbedarf (Eiweißmenge wird bei jedem Aufruf aus dem ohnehin erfassten Gewicht neu berechnet, nicht separat gespeichert).
+`src/components/kcal-rechner.tsx`: zwei neue Zeilen im bestehenden Ergebnis-Kästchen unter "Erhaltungsbedarf: X kcal" — "Mindestens Xg Eiweiß/Tag" und "Optimal Xg Eiweiß/Tag", gleicher Textstil wie die bestehende Erhaltungsbedarf-Zeile.
+- `npm run build`, `npm run lint`, `npm test` (443/443) weiterhin grün — bestehende `kcal-rechner.test.ts`-Tests unverändert grün (prüfen einzelne Felder, keine Deep-Equality auf `KcalRechnerErgebnis`, daher keine Anpassung nötig).
+- Per Playwright verifiziert: 80 kg/180 cm/30 Jahre/männlich/moderat aktiv/Gewicht halten → "Mindestens 96g Eiweiß/Tag", "Optimal 120g Eiweiß/Tag" (80 × 1,2 = 96, 80 × 1,5 = 120 — exakt wie erwartet).
+
 ## QA Test Results
 
 **Tested:** 2026-08-31
