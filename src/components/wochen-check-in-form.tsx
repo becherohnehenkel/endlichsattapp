@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { cn } from '@/lib/utils'
+import { SCREENTIME_MINUTEN_SCHRITTE } from '@/lib/screentime-schritte'
 
 export interface WochenCheckInAntworten {
   highlights: string
@@ -71,14 +72,6 @@ function SliderFrage({ id, frage, min, max, minLabel, maxLabel, value, onChange,
     </div>
   )
 }
-
-// PROJ-45 (Refinement 2026-09-03): Screentime läuft nicht linear 0–10, sondern in
-// unterschiedlich großen Minuten-Schritten. Die Slider-UI arbeitet intern über einen
-// Index in dieses Array, gespeichert/übergeben wird immer der tatsächliche Minutenwert.
-const SCREENTIME_MINUTEN_SCHRITTE = [
-  0, 15, 30, 45, 60,
-  90, 120, 150, 180, 210, 240, 270, 300, 330, 360, 390, 420, 450, 480, 510, 540, 570, 600,
-]
 
 function formatScreentime(minuten: number): string {
   if (minuten < 60) return `${minuten} Min`

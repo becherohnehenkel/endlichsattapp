@@ -30,7 +30,7 @@ const VALID_ANTWORTEN = {
   lowlightsUrsache: 'Zu spät ins Bett',
   naechsteWocheAnders: 'Früher schlafen',
   schlaf: 6,
-  screentime: 4,
+  screentime: 90,
   energielevel: 7,
   achtsamkeit: 8,
   bewusstEssen: 5,
@@ -96,6 +96,30 @@ describe('POST /api/check-in/wochen', () => {
     const res = await POST(makeRequest({ wocheStart: AKTUELLE_WOCHE, antworten: { ...VALID_ANTWORTEN, energielevel: 5.5 } }))
     expect(res.status).toBe(400)
     expect(adminFrom).not.toHaveBeenCalled()
+  })
+
+  it('returns 400 for a screentime value that is not one of the allowed step values (Refinement 2026-09-03)', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1', is_anonymous: false } } })
+    const { POST } = await import('./route')
+    // 37 liegt zwischen zwei erlaubten Stufen (30 und 45) und kann von der UI nie erzeugt werden
+    const res = await POST(makeRequest({ wocheStart: AKTUELLE_WOCHE, antworten: { ...VALID_ANTWORTEN, screentime: 37 } }))
+    expect(res.status).toBe(400)
+    expect(adminFrom).not.toHaveBeenCalled()
+  })
+
+  it('accepts every allowed screentime step value, including the new range above 10 (Refinement 2026-09-03)', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1', is_anonymous: false } } })
+    const { POST } = await import('./route')
+    for (const screentime of [0, 15, 45, 600]) {
+      const { _upsertFn, chain } = upsertChain()
+      adminFrom.mockReturnValueOnce(chain)
+      const res = await POST(makeRequest({ wocheStart: AKTUELLE_WOCHE, antworten: { ...VALID_ANTWORTEN, screentime } }))
+      expect(res.status).toBe(200)
+      expect(_upsertFn).toHaveBeenCalledWith(
+        expect.objectContaining({ antworten: expect.objectContaining({ screentime }) }),
+        { onConflict: 'user_id,woche_start' }
+      )
+    }
   })
 
   it('returns 400 when training is outside 0-3', async () => {

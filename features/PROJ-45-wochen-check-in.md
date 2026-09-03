@@ -1,6 +1,6 @@
 # PROJ-45: Wochen-Check-In
 
-## Status: Deployed (Refinement: Slider-Feinschliff "In Progress" — Frontend fertig, Backend-Validierung für Screentime steht noch aus)
+## Status: Deployed (Refinement: Slider-Feinschliff "In Progress" — Frontend+Backend fertig, bereit für /qa)
 **Created:** 2026-09-02
 **Last Updated:** 2026-09-03
 
@@ -296,6 +296,19 @@ Keine DELETE-Policy — laut Spec werden Einträge nie gelöscht, nur angelegt/b
   - Speichern legt einen neuen Datensatz an, Erfolgsmeldung + „Heute aktualisiert" erscheinen, Seiten-Reload lädt die gespeicherten Werte serverseitig korrekt vor.
   - Erneutes Bearbeiten + Speichern aktualisiert denselben Datensatz (Zeilenzahl in der DB bleibt bei 1, per Admin-Query bestätigt) statt einen zweiten anzulegen.
   - Zweiter Eintrag für eine vergangene Woche direkt in der DB angelegt: Mini-Historie zeigt beide Einträge korrekt sortiert; Klick auf den vergangenen Eintrag lädt ihn vollständig ins Formular (Badge wechselt zu „Vergangene Woche" + korrekte Datumsspanne), Speichern aktualisiert exakt diesen Datensatz (Zeilenzahl bleibt bei 2, Inhalt per Admin-Query bestätigt).
+
+## Implementation Notes (Backend) — Refinement 2026-09-03: Slider-Feinschliff
+
+**Gebaut:**
+- `src/lib/screentime-schritte.ts` (neu): `SCREENTIME_MINUTEN_SCHRITTE` — dieselbe 23-Werte-Liste, die im Frontend schon für den Slider-Index galt, jetzt in eine geteilte Datei ausgelagert, damit Formular und API-Route garantiert dieselben erlaubten Werte kennen (keine zwei unabhängig gepflegten Listen, die auseinanderlaufen könnten).
+- `src/app/api/check-in/wochen/route.ts`: `screentime`-Feld im Zod-Schema von `z.number().int().min(0).max(10)` auf `z.number().int().refine(v => SCREENTIME_MINUTEN_SCHRITTE.includes(v))` umgestellt — bewusst eine exakte Werte-Prüfung statt nur `min`/`max`, da eine reine Bereichsprüfung (0–600) auch Zwischenwerte durchgelassen hätte, die die UI nie erzeugen kann (z. B. 37). Die anderen 5 Slider-Felder (weiterhin 0–10 bzw. 1–10) sind unverändert.
+- Integrationstests ergänzt: „lehnt einen nicht erlaubten Screentime-Zwischenwert ab" (z. B. 37 → 400) und „akzeptiert jede erlaubte Screentime-Stufe inkl. der neuen Werte über 10" (0/15/45/600 → 200, je in der DB-Payload verifiziert). Bestehender `VALID_ANTWORTEN`-Fixture-Wert für `screentime` von `4` (unter der neuen Validierung ungültig) auf `90` korrigiert.
+- **Keine Schema-/Migrations-Änderung** — `screentime` war und bleibt eine einzelne Zahl im bestehenden `antworten`-JSONB-Feld, nur der Wertebereich der Validierung hat sich geändert.
+
+**Verifiziert:**
+- `npm test`: 464/464 grün (2 neue Tests für die Screentime-Validierung)
+- `tsc --noEmit`, `eslint`: sauber (unverändert 1 vorbestehender, unabhängiger Fehler in `PROJ-2-user-authentication.spec.ts`)
+- Live gegen die echte Datenbank verifiziert (bestehendes QA-Testkonto `qa-test@endlichsatt.dev`, keine neue Migration nötig): Screentime-Slider per Tastatur auf „10 Std" (600 Minuten) gestellt — ein Wert, der vor diesem Refinement mit 400 abgelehnt worden wäre —, gespeichert, Erfolgsmeldung erschien, Seiten-Reload lud denselben Wert korrekt aus der Datenbank vor.
 
 ## QA Test Results
 

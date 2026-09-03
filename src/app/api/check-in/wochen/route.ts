@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getWeekStartIso } from '@/lib/wochen-grenzen'
+import { SCREENTIME_MINUTEN_SCHRITTE } from '@/lib/screentime-schritte'
 
 const antwortenSchema = z.object({
   highlights: z.string().max(2000),
@@ -10,7 +11,13 @@ const antwortenSchema = z.object({
   lowlightsUrsache: z.string().max(2000),
   naechsteWocheAnders: z.string().max(2000),
   schlaf: z.number().int().min(1).max(10),
-  screentime: z.number().int().min(0).max(10),
+  // PROJ-45 (Refinement 2026-09-03): Screentime ist keine lineare 0–10-Skala mehr, sondern
+  // eine der 23 vorgegebenen Minuten-Stufen (15-Min-Schritte bis 60, danach 30-Min-Schritte
+  // bis 600) — exakte Werte-Prüfung statt nur min/max, da min/max auch Zwischenwerte
+  // zulassen würde, die die UI nie erzeugen kann (z. B. 37).
+  screentime: z.number().int().refine(v => SCREENTIME_MINUTEN_SCHRITTE.includes(v), {
+    message: 'Ungültiger Screentime-Wert',
+  }),
   energielevel: z.number().int().min(0).max(10),
   achtsamkeit: z.number().int().min(0).max(10),
   bewusstEssen: z.number().int().min(0).max(10),
