@@ -1,6 +1,6 @@
 # PROJ-45: Wochen-Check-In
 
-## Status: Deployed (Refinement: Slider-Feinschliff "Approved")
+## Status: Deployed (Refinement: Slider-Feinschliff "Deployed")
 **Created:** 2026-09-02
 **Last Updated:** 2026-09-03
 
@@ -397,6 +397,14 @@ Neu: `tests/PROJ-45-wochen-check-in.spec.ts` — 23 Tests, je einer pro Akzeptan
 - **Deployed:** 2026-09-02 (Vercel auto-deploy via Push zu `main`, commits `7c50fd2`..`cf83c96`)
 - **Verified in Produktion:** Nutzer hat die Live-Seite geprüft, alles grün ("Alles auf Grün").
 - **Umfang dieses Deploys:** vollständige PROJ-45-Implementierung — Wochen-Check-In-Formular unter `/check-in` mit allen 12 Fragen (5 Freitextfelder, 6 Slider, Trainings-Auswahl mit bedingtem Feedback), neue Tabelle `wochen_check_ins` (ein Eintrag pro Nutzer pro Kalenderwoche, per Unique-Constraint erzwungen) + `POST /api/check-in/wochen` zum wochenbasierten Upsert, Vorausfüllung der aktuellen Woche, ausklappbare Mini-Historie zum Laden/Bearbeiten vergangener Einträge, Gast-Hinweistext statt Speichern-Button. `getWeekStartIso` aus der PROJ-17-Route nach `src/lib/wochen-grenzen.ts` ausgelagert (jetzt von PROJ-17 und PROJ-45 geteilt). Migration wurde vom Nutzer manuell ausgeführt und live verifiziert (siehe Implementation Notes Backend).
+
+### Refinement: Slider-Feinschliff
+- **Deployed:** 2026-09-03 (Vercel auto-deploy via Push zu `main`, commits `bd1fb1c`..`0f7b244`)
+- **Production URL:** https://app.mehralsabnehmen.de/check-in
+- **Verified in Produktion:** Nutzer hat die Live-Seite geprüft, alles grün ("Ja, alles grün").
+- **Neue Env-Variablen:** keine
+- **DB-Migrationen:** keine (reine Validierungsänderung auf bestehendem `antworten`-JSONB-Feld, siehe Implementation Notes Backend)
+- **Umfang:** 5 qualitative Slider (Schlaf, Energielevel, Ernährung, Bewusstes Essen, Tracking-Sicherheit) zeigen jetzt pro Stufe ein eigenes Wort als live-adaptiven Ergebnistext; Screentime-Slider auf nicht-lineare Minuten-Skala (0–600 Min) umgestellt mit formatierter Zeit-Anzeige; Backend-Validierung für den erweiterten Screentime-Wertebereich entsprechend erweitert (`src/lib/screentime-schritte.ts` als geteilte Werte-Liste).
 
 ---
 
