@@ -1,8 +1,10 @@
 # PROJ-16: Beilagen-Kontext
 
-## Status: Deployed (Refinement: Komponente & Snack "Complete" — Approved, bereit für /deploy)
+## Status: Deployed (Refinement: Snack-Rezepttyp + Typ-Filter "Planned")
 **Created:** 2026-07-03
-**Last Updated:** 2026-08-11
+**Last Updated:** 2026-09-03
+
+**Refinement (2026-09-03, Snack-Rezepttyp + Typ-Filter):** Betrifft **Teil 1+2** (Admin-`recipe_typ`, Rezept-Detailseiten-Hinweis) sowie neu **Teil 6** (Typ-Filter in Rezeptübersicht & Adminseite). `recipe_typ` bekommt einen vierten Wert `'snack'` (bisher nur `null`/`'beilage'`/`'grundlage'`); die Detailseite zeigt dafür denselben Kontext-Hinweis wie bei Beilage/Grundlage. Zusätzlich bekommt sowohl die öffentliche Rezeptbibliothek als auch die separate Admin-Rezeptliste einen neuen Typ-Filter (Alle/Mahlzeiten/Beilagen/Grundrezepte/Snacks), der das seit 2026-07-03 in Out of Scope stehende Deferred-Item einlöst. Teil 3–5 (KI-Analyse-Komponente/Snack-Output) sind von diesem Refinement nicht betroffen. Nächster Schritt: `/architecture`.
 
 **Refinement (2026-08-11, "Complete"-Umstrukturierung):** Betrifft ausschließlich **Teil 3+4** dieses Specs (KI-Analyse bei fotografierten/beschriebenen Mahlzeiten). **Teil 1+2** (Admin-`recipe_typ` auf Rezepten in der Rezeptbibliothek, Rezept-Detailseiten-Hinweis) sind vom Umbau nicht betroffen und bleiben unverändert live. Die bisherige Rückfrage-Trigger-Logik in Teil 3 wird durch PROJ-4s neue Schritt-0-Klassifikation ersetzt (PROJ-16 ist nicht mehr für die Erkennung zuständig, nur noch für die Darstellung). Der bisherige Beilagen-Output in Teil 4 wird zum Komponente-Output; ein komplett neuer Snack-Output kommt dazu. Nächster Schritt: `/architecture`, dann `/backend`+`/frontend`.
 
@@ -10,6 +12,7 @@
 - PROJ-8 (Rezeptbibliothek) — Beilage-Flag auf Rezepten, Rezept-Detailseite (Teil 1+2, unverändert)
 - PROJ-4 (KI-Analyse-Agent) — **Refinement 2026-08-11:** liefert jetzt das `typ`-Feld (`mahlzeit`/`komponente`/`snack`) aus der Schritt-0-Klassifikation; PROJ-16 hat keine eigene Trigger-Logik mehr, konsumiert nur noch
 - PROJ-5 (Sättigungs-Einschätzung) — Analyse-Output in confirm/route.ts
+- PROJ-30 (Rezept-Eigentümerschaft & Filter) — **Refinement 2026-09-03:** der neue Typ-Filter (Teil 6) sitzt in derselben Filter-Leiste wie PROJ-30s Besitzer-Filter (`rezept-bibliothek.tsx`) und ist frei damit kombinierbar; kein Eingriff in PROJ-30s eigene Logik
 
 ## User Stories
 - Als Nutzer, der ein Beilagen-Rezept aufruft, möchte ich sofort verstehen, dass dieses Gericht allein keine sättigende Mahlzeit ergibt — und was gut dazu passt
@@ -17,10 +20,13 @@
 - Als Admin möchte ich beim Anlegen oder Bearbeiten eines Rezepts schnell markieren können, dass es sich um eine Beilage handelt
 - Als Nutzer möchte ich durch die App lernen, was eine vollständige Mahlzeit ausmacht — ohne belehrt zu werden
 - Als Nutzer, der einen Snack (Apfel, Stück Kuchen) fotografiert, möchte ich eine kurze, wertfreie Bestätigung statt einer vollständigen Analyse, damit ich nicht das Gefühl habe, jeden Bissen rechtfertigen zu müssen. *(Refinement 2026-08-11 — neu)*
+- Als Admin möchte ich ein Rezept auch als „Snack" markieren können, wenn es sich weder für ein vollständiges Gericht noch für Beilage/Grundlage eignet (z.B. Energiebällchen, Studentenfutter-Mischung). *(Refinement 2026-09-03 — neu)*
+- Als Nutzer möchte ich in der Rezeptbibliothek gezielt nach Snacks, Beilagen, Grundrezepten oder vollständigen Mahlzeiten filtern können, statt alle Rezepte durchsuchen zu müssen. *(Refinement 2026-09-03 — neu)*
+- Als Admin möchte ich auf der Admin-Rezeptliste denselben Typ-Filter nutzen können, um z.B. gezielt nur Grundrezepte zu pflegen. *(Refinement 2026-09-03 — neu)*
 
 ## Out of Scope
 - Automatische KI-Erkennung ob ein Rezept eine Beilage ist (Admin entscheidet manuell via Checkbox)
-- Beilage-Kategorie als Filter in der Rezeptbibliothek — deferred
+- ~~Beilage-Kategorie als Filter in der Rezeptbibliothek — deferred~~ → **eingelöst durch Refinement 2026-09-03 (Teil 6)**, jetzt als vollständiger Typ-Filter (nicht nur Beilage, sondern alle 4 Typen)
 - Kombinierter Sättigungs-Score für "Beilage + Hauptgericht zusammen" — zu komplex für MVP
 - Mahlzeiten-Kombinations-Funktion ("analysiere Salat + Hähnchen zusammen") — deferred
 - **Erkennung/Klassifikation (mahlzeit/komponente/snack)** (Refinement 2026-08-11) — das ist PROJ-4 (Schritt 0), PROJ-16 konsumiert nur das Ergebnis
@@ -34,6 +40,8 @@
 - [ ] Angenommen der Admin öffnet ein bestehendes Rezept zum Bearbeiten, wenn er die Seite lädt, dann zeigt die Auswahl den aktuell gespeicherten Typ
 - [ ] Angenommen der Admin wählt „Beilage" oder „Grundlagen-Rezept" und speichert, dann wird `recipe_typ: 'beilage'` bzw. `recipe_typ: 'grundlage'` in der Datenbank gespeichert
 - [ ] Angenommen der Admin wählt „Vollständiges Gericht" und speichert, dann wird `recipe_typ: null` gespeichert
+- [ ] **(Refinement 2026-09-03)** Angenommen der Admin öffnet das Formular für ein neues Rezept, dann gibt es eine **vierte** Option „Snack" (z.B. Energiebällchen, Studentenfutter) zusätzlich zu Vollständiges Gericht/Beilage/Grundlagen-Rezept
+- [ ] **(Refinement 2026-09-03)** Angenommen der Admin wählt „Snack" und speichert, dann wird `recipe_typ: 'snack'` in der Datenbank gespeichert
 
 ### Teil 2: Rezept-Detailseite — Kontext-Hinweis
 
@@ -41,6 +49,7 @@
 - [ ] Angenommen ein Rezept hat `recipe_typ: 'grundlage'`, wenn ein Nutzer die Detailseite öffnet, dann erscheint ein Hinweisblock mit Badge „Grundlagen-Rezept" anstelle der normalen Sättigungs-Bewertung
 - [ ] Angenommen der Hinweisblock wird angezeigt, dann kommuniziert er: dieses Rezept allein macht noch keine vollständige Mahlzeit — mit passender Formulierung je nach Typ (Beilage vs. Grundlage)
 - [ ] Angenommen ein Rezept hat `recipe_typ: null`, wenn ein Nutzer die Detailseite öffnet, dann erscheint die normale Sättigungs-Bewertung unverändert
+- [ ] **(Refinement 2026-09-03)** Angenommen ein Rezept hat `recipe_typ: 'snack'`, wenn ein Nutzer die Detailseite öffnet, dann erscheint ein Hinweisblock mit Badge „Snack" und dem Text „Ein Snack für zwischendurch — muss keine vollständige Mahlzeit sein." anstelle der normalen Sättigungs-Bewertung
 
 ### Teil 3: KI-Analyse — Erkennung (Refinement 2026-08-11: verschoben nach PROJ-4)
 
@@ -60,6 +69,16 @@
 - [ ] Angenommen `typ: snack`, dann erscheinen kein Sättigungs-Score, kein Geschmacks-Score, keine Verbesserungs- oder Kombinationsvorschläge
 - [ ] Angenommen ein Snack analysiert wurde, dann wird er trotzdem normal in der Mahlzeit-Historie geloggt und soll im künftigen Wochenrückblick (PROJ-17) als eigene Kategorie erscheinen — zählt aber nicht in die Komplett-Quote der Mahlzeiten (weder positiv noch negativ)
 
+### Teil 6: Rezept-Typ-Filter in Rezeptübersicht & Adminseite (Refinement 2026-09-03 — komplett neu)
+
+- [ ] Angenommen ein Nutzer öffnet die Rezeptbibliothek (`/ernaehrung/rezepte`), dann sieht er über den bestehenden Filtern (Besitzer-Filter, Suche, Cuisine-Tags) eine neue Filter-Leiste mit fünf Optionen: „Alle" (Standard, aktiv), „Mahlzeiten", „Beilagen", „Grundrezepte", „Snacks"
+- [ ] Angenommen der Nutzer wählt „Mahlzeiten", dann werden nur Rezepte mit `recipe_typ: null` angezeigt
+- [ ] Angenommen der Nutzer wählt „Beilagen"/„Grundrezepte"/„Snacks", dann werden nur Rezepte mit `recipe_typ: 'beilage'`/`'grundlage'`/`'snack'` angezeigt
+- [ ] Angenommen der Nutzer wählt „Alle", dann werden wieder Rezepte aller Typen angezeigt (kein Typ-Filter aktiv)
+- [ ] Angenommen der Nutzer hat einen Typ-Filter aktiv, wenn er zusätzlich den Besitzer-Filter wechselt oder einen Suchbegriff/Cuisine-Tag eingibt, dann werden beide Filter kombiniert angewendet (UND-Verknüpfung) — der Typ-Filter bleibt dabei aktiv
+- [ ] Angenommen ein Admin öffnet die Admin-Rezeptliste (`/admin/rezepte`), dann sieht er dieselbe Typ-Filter-Leiste (Alle/Mahlzeiten/Beilagen/Grundrezepte/Snacks) wie in der öffentlichen Bibliothek
+- [ ] Angenommen für einen gewählten Typ-Filter existiert kein passendes Rezept, dann erscheint ein Leerer-Zustand-Hinweis (kein leerer, unkommentierter Bildschirm)
+
 ## Edge Cases
 
 - **Beilage + echter Hauptgang zusammen fotografiert:** Wenn Nutzer z.B. Salat + Schnitzel fotografiert, ist das keine Komponente-Situation — wird von PROJ-4s Schritt 0 als `mahlzeit` klassifiziert, normale Analyse
@@ -67,6 +86,8 @@
 - **Admin markiert ein vollständiges Gericht versehentlich als Beilage/Grundlage:** Der Kontext-Hinweis erscheint trotzdem — Admin muss den Typ manuell zurücksetzen (Teil 1+2, unverändert)
 - **Historische Analyse-Ergebnisse mit `typ: "beilage"`** (Refinement 2026-08-11, neu): Alte, vor diesem Refinement gespeicherte `meal_analyses`-Datensätze behalten den Wert `"beilage"` dauerhaft in ihrem gespeicherten JSON — die Anzeige-Komponente muss sowohl den alten Wert `"beilage"` als auch den neuen Wert `"komponente"` gleich behandeln (keine Migration bestehender Datensätze nötig, reine Vorwärtskompatibilität in der Rendering-Logik)
 - ~~Grenzfälle (z.B. Avocado-Toast)~~ → **entfällt hier (Refinement 2026-08-11):** Grenzfall-Verhalten ist jetzt Teil von PROJ-4s Schritt 0 (Grauzone 250–400 kcal → eine Rückfrage), nicht mehr PROJ-16s Zuständigkeit
+- **Bestehende Rezepte ohne `recipe_typ` (Refinement 2026-09-03):** Zählen unverändert als „Mahlzeiten" im neuen Filter (kein Migrations-Zwang, `null` war schon immer der Default)
+- **Typ-Filter + Besitzer-Filter liefern zusammen 0 Treffer (Refinement 2026-09-03):** z.B. „Eigene" + „Grundrezepte" wenn der Nutzer noch keine eigenen Grundrezepte hat — Leerer-Zustand-Hinweis, kein Fehler
 
 ## Technical Requirements
 - Neues Datenbankfeld: `recipe_typ text DEFAULT NULL CHECK (recipe_typ IN ('beilage', 'grundlage'))` auf der `recipes`-Tabelle (Teil 1+2, unverändert)
@@ -76,11 +97,23 @@
 - KI-Prompt: `confirm/route.ts` — Output-Typ `beilage` wird zu `komponente` erweitert (neuer Wert, alter Wert bleibt für historische Datensätze gültig, siehe Edge Cases), plus komplett neuer Output-Typ `snack`
 - Frontend: `BeilagenErgebnis`-Komponente (oder Nachfolger) muss beide Werte (`typ === 'beilage'` für Altbestand, `typ === 'komponente'` neu) gleich rendern; neue Komponente/Zweig für `typ === 'snack'`
 
+### Refinement (2026-09-03): Snack-Rezepttyp + Typ-Filter
+- **DB-Migration nötig:** `recipes.recipe_typ`-CHECK-Constraint additiv um `'snack'` erweitern: `CHECK (recipe_typ IN ('beilage', 'grundlage', 'snack'))`. Da Supabase-MCP diese Session getrennt ist, muss der Nutzer die Migration wie gewohnt manuell in Supabase ausführen (siehe `/backend`-Skill-Notiz)
+- **API-Erweiterung:** `recipe_typ`-Zod-Enum in allen 4 Stellen (`src/app/api/admin/rezepte/route.ts`, `src/app/api/admin/rezepte/[id]/route.ts`, `src/app/api/rezepte/route.ts`, `src/app/api/rezepte/[id]/route.ts`) um `'snack'` erweitern — aktuell jeweils separat dupliziert, kein gemeinsamer Typ in `src/lib`
+- **Formular:** `RecipeTyp`-Type in `src/components/rezept-formular.tsx` (aktuell `'vollstaendig' | 'beilage' | 'grundlage'`) um `'snack'` erweitern, vierte Radio-Option „Snack"
+- **Detailseite:** `RezeptKontextHinweis`-Komponente (oder Nachfolger) um `recipe_typ === 'snack'`-Zweig erweitern (Badge „Snack" + Hinweistext)
+- **Filter:** Neue Typ-Filter-Leiste in `src/components/rezept-bibliothek.tsx` (analog zum bestehenden `OwnerFilter`-Muster) — Client-seitige Filterung auf bereits geladenen Rezepten, kein neuer API-Parameter nötig
+- **Admin-Seite:** `src/app/admin/rezepte/page.tsx` ist aktuell eine eigene, einfache Server-Component-Liste (kein Filter, keine Suche) — bekommt entweder denselben Typ-Filter client-seitig nachgerüstet, oder wird (Architektur-Entscheidung, siehe `/architecture`) auf dieselbe Filter-Logik wie `rezept-bibliothek.tsx` umgestellt
+
 ## Open Questions
 - [x] Welchen genauen Wortlaut soll der Beilagen-Hinweis auf der Rezept-Detailseite haben? → Definiert: Badge "Als Beilage gedacht" + Erklärungstext "Als Beilage top — allein noch keine vollständige Mahlzeit. Kombiniere es mit einer Proteinquelle (Quark, Ei, Fleisch) und ggf. Brot oder Stärke." Exakter Wortlaut final beim /frontend-Skill
 - [x] Welche Pairing-Kategorien sollen im Beilagen-Output genannt werden? → Definiert in docs/system-prompt.md: Milchprodukte (Skyr, Quark), Eier, Fleisch/Fisch, Pflanzenprotein, Brot-Kombination — kontextabhängig 2–3 Kategorien nennen, je nach Gericht
 - [ ] Geschmacks-Score im Komponente-Output: läuft erst mit, sobald das Geschmack-Feature selbst existiert — dieses Refinement bereitet nur die Datenstruktur vor (kein Score verfügbar), tatsächliche Anzeige folgt bei `/write-spec` für Geschmack
 - [ ] Exakter Wortlaut der Snack-Bestätigung (Refinement 2026-08-11) → Richtwert aus `docs/saettigungsmatrix.md`: "Alles klar, Snack — der braucht keine Analyse." Final beim `/frontend`-Skill
+- [x] Sollen die 4 Filter-Optionen (Snacks/Beilagen/Mahlzeiten/Grundrezepte) oder nur 3 (ohne Mahlzeiten) angeboten werden? (Refinement 2026-09-03) → 4 Optionen, siehe Decision Log (2026-09-03)
+- [x] Bekommt die separate Admin-Rezeptliste denselben Typ-Filter wie die öffentliche Bibliothek? (Refinement 2026-09-03) → Ja, siehe Decision Log (2026-09-03)
+- [x] Bekommt ein Snack-Rezept einen Kontext-Hinweis auf der Detailseite? (Refinement 2026-09-03) → Ja, Badge „Snack" analog zu Beilage/Grundlage, siehe Decision Log (2026-09-03)
+- [ ] Genaue technische Umsetzung der Admin-Filter (client-seitiges Nachrüsten der bestehenden einfachen Liste vs. Umstellung auf `rezept-bibliothek.tsx`-Logik) — final bei `/architecture`
 
 ## Decision Log
 
@@ -102,6 +135,15 @@
 | Pairing-Vorschläge von 2–3 auf maximal 1 reduziert | Direkt aus der fachlichen Neufassung übernommen — schlankerer, fokussierterer Output | 2026-08-11 |
 | Historischer Wert `"beilage"` bleibt gültig, kein Migrations-Zwang | `meal_analyses`-Datensätze sind eingefroren zum Analysezeitpunkt; eine Migration bestehender Zeilen ist unnötiger Aufwand, wenn die Rendering-Logik einfach beide Werte kennt | 2026-08-11 |
 | Geschmacks-Score im Komponente-Output ist vorbereitet, aber nicht Teil dieses Refinements | Geschmack-Feature existiert noch nicht — ein Acceptance Criterion dafür wäre nicht testbar | 2026-08-11 |
+
+#### Refinement (2026-09-03): Snack-Rezepttyp + Typ-Filter
+
+| Decision | Rationale | Date |
+|----------|-----------|------|
+| 4 Filter-Optionen (Alle/Mahlzeiten/Beilagen/Grundrezepte/Snacks), nicht nur 3 | Nutzer bat um 4 konkrete Kategorien; "Mahlzeiten" als eigener Filter-Button macht die vollständigen Gerichte genauso gezielt auffindbar wie die anderen Typen, statt nur implizit über "Alle" sichtbar zu sein | 2026-09-03 |
+| Typ-Filter auch auf der separaten Admin-Rezeptliste (`/admin/rezepte`) | Nutzer verwaltet dort gezielt einzelne Typen (z.B. nur Grundrezepte pflegen) — dieselbe Filter-Leiste wie in der öffentlichen Bibliothek spart Suchaufwand | 2026-09-03 |
+| Snack-Rezepte bekommen denselben Kontext-Hinweis-Mechanismus wie Beilage/Grundlage (Badge statt Sättigungs-Bewertung) | Konsistentes Muster — eine Sättigungs-Bewertung für einen Snack wäre ohnehin nicht sinnvoll, genau wie bei Beilage/Grundlage | 2026-09-03 |
+| Typ-Filter und Besitzer-Filter sind frei kombinierbar (UND-Verknüpfung) | Beide Filter-Dimensionen sind unabhängig voneinander (wer vs. was) — Nutzer soll z.B. "Eigene Grundrezepte" filtern können | 2026-09-03 |
 
 ### Domain Decisions (/fachbereich)
 | Decision | Rationale | Date |
