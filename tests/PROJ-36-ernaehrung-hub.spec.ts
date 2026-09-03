@@ -136,7 +136,7 @@ test.describe('Breadcrumb auf allen 8 Unterseiten', () => {
       const breadcrumb = page.getByRole('navigation', { name: 'breadcrumb' })
       await expect(breadcrumb.getByRole('link', { name: 'Ernährung' })).toHaveAttribute('href', '/ernaehrung')
       await expect(breadcrumb.getByText(title, { exact: true })).toBeVisible()
-      await expect(page.locator('header a[href="/konto"]')).toBeVisible()
+      await expect(page.locator('header:not([data-testid="top-nav"]) a[href="/konto"]')).toBeVisible()
     })
   }
 
