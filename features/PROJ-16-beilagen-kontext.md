@@ -520,7 +520,7 @@ Keine kritischen oder hohen Bugs gefunden. PROJ-16 ist production-ready.
 
 ### Refinement: Snack-Rezepttyp + Typ-Filter
 **Deployed:** 2026-09-03
-**Production URL:** https://satt.mehralsabnehmen.de/ernaehrung/rezepte
+**Production URL:** https://app.mehralsabnehmen.de/ernaehrung/rezepte
 **Git Tag:** v3.7.0-PROJ-16-refinement
 **Neue Env-Variablen:** keine
 **DB-Migrationen:** additive CHECK-Constraint-Erweiterung auf `recipes.recipe_typ` um `'snack'` (vom Nutzer manuell in Supabase ausgeführt und bestätigt, vor `/qa`)
