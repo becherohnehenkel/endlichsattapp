@@ -2,7 +2,7 @@
 
 ## Status: Deployed
 **Created:** 2026-08-31
-**Last Updated:** 2026-08-31
+**Last Updated:** 2026-09-03
 
 ## Dependencies
 - Requires: PROJ-36 (Ernährung-Hub) — Zielseite `/ernaehrung/so-geht-abnehmen` existiert bereits als Platzhalter, wird hier mit echtem Inhalt befüllt
@@ -41,6 +41,10 @@
 - [ ] Angenommen das Ziel "Gewicht halten" ist gewählt, dann zeigt das Ergebnis exakt den Erhaltungsbedarf (100 %).
 - [ ] Angenommen das Ziel "Muskeln aufbauen" ist gewählt, dann zeigt das Ergebnis 110 % des Erhaltungsbedarfs.
 - [ ] Angenommen ein Ergebnis wird angezeigt, dann ist die kcal-Zahl auf ganze Zahlen gerundet.
+
+### Eiweißbedarf (Refinement 2026-09-03)
+- [ ] Angenommen ein Ergebnis wird angezeigt, dann zeigt das Ergebnis-Kästchen zusätzlich zwei neue Zeilen unter "Erhaltungsbedarf: X kcal": "Mindestens {Gewicht × 1,2}g Eiweiß/Tag" und "Optimal {Gewicht × 1,5}g Eiweiß/Tag", beide auf ganze Gramm gerundet.
+- [ ] Angenommen ein Nutzer wechselt das Ziel (Fett verlieren / Gewicht halten / Muskeln aufbauen), ohne das Gewicht zu ändern, dann bleiben beide Eiweißmengen unverändert — sie hängen ausschließlich vom Gewicht ab, nicht vom Ziel.
 
 ### Speichern (eingeloggte Nutzer)
 - [ ] Angenommen ein eingeloggter Nutzer klickt auf "Berechnen", dann werden Gewicht, Größe, Alter, Geschlecht, Aktivitätslevel und Ziel automatisch gespeichert (kein separater Speichern-Schritt).
@@ -156,6 +160,9 @@ Am Ende: dezenter Text-Link *"Trainingspläne findest du im Training-Bereich →
 | Diagramme nutzen die bestehende App-Farbpalette statt neuer Farben | Visuelle Konsistenz mit dem Rest der App | 2026-08-31 |
 | Arbeitspunkte 3 und 5 (Proteine, Schlaf) ohne Schaubild, nur Text/Listen | Nutzer-Entscheidung — bei diesen zwei Themen trägt eine Liste die Information klarer als eine Grafik | 2026-08-31 |
 | Krafttraining-Arbeitspunkt verlinkt nur dezent (Text-Link, kein Button) auf `/training`, ohne weitere Erklärung dort | Nutzer will vermeiden, dass der Fokus vom Ernährungs-Bereich wegwandert — der Link soll auffindbar, aber nicht werblich sein | 2026-08-31 |
+| **Refinement 2026-09-03:** Mindest- (1,2×Gewicht) und optimale (1,5×Gewicht) tägliche Eiweißmenge zusätzlich zum Kalorien-Ergebnis anzeigen | Nutzerwunsch — Eiweiß ist für Sättigung und Muskelerhalt zentral (siehe bereits bestehender Arbeitspunkt 3 "Warum auf Proteine achten"), soll direkt neben dem Kalorienergebnis sichtbar sein statt nur als separater Lerninhalt | 2026-09-03 |
+| Eiweiß-Faktoren gelten unabhängig vom gewählten Ziel (Fett verlieren/Halten/Muskeln aufbauen) | Nutzerentscheidung — einfachste Umsetzung, entspricht der Original-Vorgabe ohne zusätzliche Ziel-abhängige Faktoren | 2026-09-03 |
+| Anzeige als zwei zusätzliche Zeilen im bestehenden Ergebnis-Kästchen statt eigener Karte oder Spannen-Darstellung | Nutzerentscheidung nach 3 vorgestellten Optionen — bleibt im bestehenden, kompakten Kästchen-Stil, kein neues UI-Element nötig | 2026-09-03 |
 
 ### Technical Decisions
 <!-- Added by /architecture -->
