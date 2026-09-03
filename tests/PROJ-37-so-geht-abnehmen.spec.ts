@@ -123,6 +123,38 @@ test.describe('Berechnung', () => {
   })
 })
 
+// ─── Eiweißbedarf (Refinement 2026-09-03) ──────────────────────────────────
+
+test.describe('Eiweißbedarf', () => {
+  test('AC: zeigt Mindest- (96g) und optimale (120g) Eiweißmenge bei 80kg im 2-spaltigen Ergebnis-Layout', async ({ page, context }) => {
+    await context.clearCookies()
+    await page.goto('/ernaehrung/so-geht-abnehmen')
+    await fillValidesFormular(page)
+    await page.getByRole('button', { name: 'Berechnen' }).click()
+
+    await expect(page.getByText('Dein Kalorienbedarf')).toBeVisible()
+    await expect(page.getByText('Mindestens')).toBeVisible()
+    await expect(page.getByText('96g', { exact: true })).toBeVisible()
+    await expect(page.getByText('Optimal')).toBeVisible()
+    await expect(page.getByText('120g', { exact: true })).toBeVisible()
+    await expect(page.getByText('Eiweiß/Tag')).toHaveCount(2)
+  })
+
+  test('AC: Eiweißmenge bleibt beim Wechsel des Ziels unverändert (nur vom Gewicht abhängig)', async ({ page, context }) => {
+    await context.clearCookies()
+    await page.goto('/ernaehrung/so-geht-abnehmen')
+    await fillValidesFormular(page)
+    await page.getByRole('button', { name: 'Berechnen' }).click()
+    await expect(page.getByText('96g', { exact: true })).toBeVisible()
+
+    await page.getByRole('button', { name: 'Muskeln aufbauen' }).click()
+    await page.getByRole('button', { name: 'Berechnen' }).click()
+    await expect(page.getByText('3035 kcal', { exact: true })).toBeVisible() // bestätigt: Ziel hat wirklich gewechselt
+    await expect(page.getByText('96g', { exact: true })).toBeVisible()
+    await expect(page.getByText('120g', { exact: true })).toBeVisible()
+  })
+})
+
 // ─── Gäste (zustandslos) ────────────────────────────────────────────────────
 
 test.describe('Gäste', () => {
@@ -208,7 +240,10 @@ test.describe('Seiten-Struktur "So geht abnehmen"', () => {
 
   test('AC: zeigt alle 5 Arbeitspunkte in der richtigen Reihenfolge', async ({ page }) => {
     await page.goto('/ernaehrung/so-geht-abnehmen')
-    const main = page.locator('main')
+    // Wartet auf den letzten Arbeitspunkt (nicht nur die Überschrift), damit die komplette
+    // Arbeitspunkte-Liste sicher gerendert ist, bevor main.innerText() gelesen wird.
+    await expect(page.getByRole('button', { name: 'Schlaf / Erholung' })).toBeVisible()
+    const main = page.getByRole('main')
     const text = await main.innerText()
     const positions = [
       'Kcal-Rechner',

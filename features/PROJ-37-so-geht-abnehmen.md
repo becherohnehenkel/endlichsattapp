@@ -310,6 +310,50 @@ Eine neue API-Route zum Speichern der Rechner-Eingaben für eingeloggte Nutzer (
 - **Production Ready:** YES
 - **Recommendation:** Deploy. Hinweis: Die DB-Migration (6 neue `profiles`-Spalten) ist bereits live angewendet (vom Nutzer manuell ausgeführt, da Supabase-MCP diese Session getrennt war) — kein zusätzlicher Deploy-Schritt für die Datenbank nötig.
 
+### QA Test Results (Refinement 2026-09-03): Eiweißbedarf im Kcal-Rechner
+
+**Tested:** 2026-09-03
+**App URL:** http://localhost:3000
+**Tester:** QA Engineer (AI)
+
+#### Acceptance Criteria Status
+- [x] Ergebnis-Kästchen zeigt Mindest- und optimale Eiweißmenge im finalen 2-spaltigen Layout (links Kalorien, rechts oben Mindestmenge, rechts unten optimale Menge), beide auf ganze Gramm gerundet
+- [x] Eiweißmenge bleibt beim Wechsel des Ziels unverändert (nur vom Gewicht abhängig, geprüft über alle 3 Ziel-Optionen)
+
+#### Unit Tests (Vitest)
+4 neue Tests in `src/lib/kcal-rechner.test.ts` (`describe('berechneKcal', ...)`):
+- Exakte Werte bei 80 kg → 96 g (Mindest) / 120 g (Optimal)
+- Faktoren sind exakt 1,2 und 1,5
+- Eiweißmenge ist unabhängig vom gewählten Ziel (Fett verlieren / Gewicht halten / Muskeln aufbauen liefern denselben Wert)
+- Rundung auf ganze Gramm bei nicht-ganzzahligem Gewicht (77,3 kg → 93 g / 116 g)
+
+#### E2E Tests (Playwright)
+2 neue Tests in `tests/PROJ-37-so-geht-abnehmen.spec.ts` (`describe('Eiweißbedarf', ...)`):
+- Zeigt 96 g / 120 g bei 80 kg im 2-spaltigen Layout ("Mindestens" / "Optimal", je "Eiweiß/Tag")
+- Werte bleiben nach Zielwechsel unverändert (Ziel-Wechsel selbst über die geänderte Kalorienzahl verifiziert)
+
+#### Visuelle Prüfung
+Screenshots bei Desktop- und Mobile-Breakpoint (375px) geprüft — 3-geteiltes Kästchen (links Kalorien, rechts oben/unten Eiweiß) rendert korrekt, kein Overflow, keine abgeschnittenen Werte.
+
+#### Security Audit
+Pass (trivial) — reine Client-seitige Arithmetik auf bereits validiertem `gewichtKg` (bestehende Zod-Validierung der API-Route unverändert), keine neue API-Route, kein neues Nutzereingabefeld, keine neuen Berechtigungs- oder Auth-Pfade.
+
+#### Regressionstest
+- **Vitest (Gesamtsuite):** 447/447 grün (43 Testdateien).
+- **E2E — `tests/PROJ-37-so-geht-abnehmen.spec.ts` (eigene Suite, 20 Tests):** 20/20 grün, dreifach wiederholt zur Stabilitätsprüfung.
+  - Dabei einen vorbestehenden, nicht mit diesem Refinement zusammenhängenden Flake in `'AC: zeigt alle 5 Arbeitspunkte in der richtigen Reihenfolge'` gefunden und gefixt: `main.innerText()` wurde ohne vorherigen Wait auf ein stabiles Element gelesen (bekanntes Timing-Bug-Muster aus dieser Session) — jetzt behoben durch expliziten Wait auf den letzten Arbeitspunkt-Button vor dem Lesevorgang.
+- **E2E — angrenzende Suiten (PROJ-36 Ernährung-Hub, PROJ-40 Kalorien, PROJ-41 Kalorien zählen):** 38/47 grün. 9 Fehlschläge identifiziert, aber beide Ursachen sind **vorbestehende, von diesem Refinement unabhängige Bugs** (nicht durch die Eiweiß-Änderung verursacht — betreffen andere Seiten und wurden nicht von diesem Refinement berührt):
+  - PROJ-36 (8 Tests): Konto-Icon-Locator `header a[href="/konto"]` ist seit der Nav-Bugfix-Session (TopNav jetzt immer sichtbar) mehrdeutig — derselbe Root-Cause, der in `tests/PROJ-35-...spec.ts` diese Session bereits gefixt wurde, aber in PROJ-36s Testdatei noch offen ist.
+  - PROJ-41 (1 Test): Derselbe `main.innerText()`-Timing-Bug wie oben, in einer unabhängigen Testdatei.
+  - Beide als Hintergrund-Task geflaggt (nicht Teil dieses Refinements, separater Scope).
+
+#### Summary
+- **Acceptance Criteria:** 2/2 passed
+- **Bugs Found:** 0 im Feature selbst; 1 vorbestehender Test-Timing-Bug in der eigenen Suite gefixt (siehe oben); 2 vorbestehende, unabhängige Bugs in Nachbar-Suiten gefunden und als separate Tasks ausgelagert
+- **Security:** Pass (trivial, keine neue Angriffsfläche)
+- **Production Ready:** YES
+- **Recommendation:** Deploy.
+
 ## Deployment
 
 - **Production URL:** https://satt.mehralsabnehmen.de/ernaehrung/so-geht-abnehmen

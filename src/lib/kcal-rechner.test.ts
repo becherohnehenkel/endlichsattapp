@@ -13,6 +13,8 @@ import {
   ALTER_MIN_JAHRE,
   ALTER_MAX_JAHRE,
   GEWICHT_ABWEICHUNG_HINWEIS_KG,
+  EIWEISS_FAKTOR_MINDEST,
+  EIWEISS_FAKTOR_OPTIMAL,
 } from './kcal-rechner'
 
 describe('berechneGrundumsatz (Mifflin-St-Jeor)', () => {
@@ -65,6 +67,36 @@ describe('berechneKcal', () => {
     const sitzend = berechneKcal({ ...basis, aktivitaetslevel: 'sitzend', ziel: 'gewicht_halten' })
     const extrem = berechneKcal({ ...basis, aktivitaetslevel: 'extrem_aktiv', ziel: 'gewicht_halten' })
     expect(sitzend.erhaltungsbedarf).toBeLessThan(extrem.erhaltungsbedarf)
+  })
+
+  // Refinement 2026-09-03: Eiweißbedarf (Mindest = 1,2×Gewicht, Optimal = 1,5×Gewicht)
+  it('Eiweiß: Mindestmenge = Gewicht × 1,2, optimale Menge = Gewicht × 1,5', () => {
+    const ergebnis = berechneKcal({ ...basis, gewichtKg: 80, ziel: 'gewicht_halten' })
+    expect(ergebnis.eiweissMindestG).toBe(96) // 80 * 1.2
+    expect(ergebnis.eiweissOptimalG).toBe(120) // 80 * 1.5
+  })
+
+  it('Eiweiß-Faktoren sind exakt 1,2 und 1,5', () => {
+    expect(EIWEISS_FAKTOR_MINDEST).toBe(1.2)
+    expect(EIWEISS_FAKTOR_OPTIMAL).toBe(1.5)
+  })
+
+  it('Eiweißmenge ist unabhängig vom gewählten Ziel', () => {
+    const fettVerlieren = berechneKcal({ ...basis, ziel: 'fett_verlieren' })
+    const gewichtHalten = berechneKcal({ ...basis, ziel: 'gewicht_halten' })
+    const muskelnAufbauen = berechneKcal({ ...basis, ziel: 'muskeln_aufbauen' })
+    expect(fettVerlieren.eiweissMindestG).toBe(gewichtHalten.eiweissMindestG)
+    expect(gewichtHalten.eiweissMindestG).toBe(muskelnAufbauen.eiweissMindestG)
+    expect(fettVerlieren.eiweissOptimalG).toBe(gewichtHalten.eiweissOptimalG)
+    expect(gewichtHalten.eiweissOptimalG).toBe(muskelnAufbauen.eiweissOptimalG)
+  })
+
+  it('Eiweißmenge rundet auf ganze Gramm', () => {
+    const ergebnis = berechneKcal({ ...basis, gewichtKg: 77.3, ziel: 'gewicht_halten' })
+    expect(Number.isInteger(ergebnis.eiweissMindestG)).toBe(true)
+    expect(Number.isInteger(ergebnis.eiweissOptimalG)).toBe(true)
+    expect(ergebnis.eiweissMindestG).toBe(Math.round(77.3 * 1.2)) // 93
+    expect(ergebnis.eiweissOptimalG).toBe(Math.round(77.3 * 1.5)) // 116
   })
 })
 
