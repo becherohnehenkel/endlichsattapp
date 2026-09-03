@@ -1,11 +1,12 @@
 import { Skeleton } from '@/components/ui/skeleton'
-import { ErnaehrungSubHeader } from '@/components/ernaehrung-sub-header'
 
+// PROJ-36 (Fix): Kein Header mehr hier — die Seite (page.tsx) rendert den Header
+// jetzt synchron außerhalb der Suspense-Grenze, damit er nie doppelt im DOM
+// landen kann. Dieser Fallback deckt nur noch die kurze Route-Transition ab,
+// die eigentliche Lade-Grenze ist der <Suspense> in page.tsx.
 export default function RezepteLoading() {
   return (
     <div className="min-h-screen bg-background">
-      <ErnaehrungSubHeader title="Rezepte" />
-
       <main className="max-w-sm md:max-w-[850px] mx-auto px-4 py-6 space-y-4">
         {/* Filter Chips */}
         <div className="flex gap-2 overflow-hidden">
