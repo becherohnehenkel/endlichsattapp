@@ -1,6 +1,6 @@
 # PROJ-37: So geht abnehmen (inkl. Kcal-Rechner)
 
-## Status: Deployed (Refinement: Arbeitspunkte-Feinschliff "Approved")
+## Status: Deployed (Refinement: Arbeitspunkte-Feinschliff "Deployed")
 **Created:** 2026-08-31
 **Last Updated:** 2026-09-03
 
@@ -485,3 +485,4 @@ Ein wiederkehrender 404-Konsolenfehler beim Laden der Seite geprüft — reprodu
 - DB-Migration (6 neue `profiles`-Spalten) war bereits vor diesem Deploy live angewendet (manuell vom Nutzer, da Supabase-MCP getrennt war) — kein zusätzlicher DB-Schritt bei diesem Deploy nötig.
 - **Refinement-Deploy 2026-09-01** (Vercel auto-deploy via Push zu `main`, commits `3e0fb64`..`2e7aae4`, Tag `v2.8.0-ernaehrung-guides`): Teil eines gebündelten Deploys über PROJ-34/37/38/39/40/41 — Erstbesucher-Auto-Open + neue Überschriften auf mehreren Ernährungs-Guides. Nutzer hat auf Produktion visuell bestätigt ("Alles auf Grün").
 - **Refinement-Deploy 2026-09-03** (Vercel auto-deploy via Push zu `main`, commits `771a2d3`..`db8c027`, Tag `v3.6.0-PROJ-37-refinement`): Eiweißbedarf im Kcal-Rechner — Mindest- (×1,2 Gewicht) und optimale (×1,5 Gewicht) tägliche Eiweißmenge, im 2-spaltigen Ergebnis-Layout neben den Kalorien. Reine Client-seitige Berechnung, keine DB-Migration nötig. Nutzer hat auf Produktion visuell bestätigt ("alles grün").
+- **Refinement-Deploy 2026-09-03** (Vercel auto-deploy via Push zu `main`, commits `a4b6a44`..`50caae2`, Tag `v3.9.0-PROJ-37-refinement`): Arbeitspunkte-Feinschliff — gestapelte Wochen-Diagramme mit Mo–So-Labels, neuer Arbeitspunkt 4 "Warum auf Ballaststoffe achten", 4 neue Krafttraining-Vergleichsicons + Schlaf-Icon. Reine Frontend-Änderung, keine DB-Migration nötig. Automatisiert auf Produktion verifiziert (Page-Text- und Console-Check, kein Fehler) — **Nutzer-Bestätigung im eigenen Browser noch ausstehend.**
