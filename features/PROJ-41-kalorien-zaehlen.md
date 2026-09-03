@@ -207,6 +207,15 @@ Keine.
 - **Production Ready:** YES
 - **Recommendation:** Deploy
 
+## Post-Deployment Fixes
+
+### E2E-Test-Timing-Bug (2026-09-03)
+- `tests/PROJ-41-kalorien-zaehlen.spec.ts` — Test "AC: zeigt 2 Punkte in der richtigen Reihenfolge" schlug konsistent fehl: `main.innerText()` wurde direkt nach `page.goto()` gelesen, bevor `ArbeitspunkteListe` nach dem Client-Mount (Hydration) fertig gerendert war. Reiner Test-Bug, kein Produkt-Bug — die Titel waren korrekt vorhanden.
+- Fix: Vor dem `innerText()`-Lesevorgang auf den letzten Arbeitspunkt-Trigger-Button warten (`await expect(page.getByRole('button', { name: '...' })).toBeVisible()`), analog zum bereits bestehenden Muster in `PROJ-37-so-geht-abnehmen.spec.ts` und `PROJ-43-training-uebersicht.spec.ts`.
+- Gleiches Timing-Muster (ohne Wait vor `innerText()`) auch in `PROJ-36-ernaehrung-hub.spec.ts`, `PROJ-39-heisshunger.spec.ts` und `PROJ-45-wochen-check-in.spec.ts` gefunden und identisch behoben.
+- Verifiziert: alle vier Tests bestehen 3/3 Wiederholungen (`--repeat-each=3`).
+- PR: [#2](https://github.com/becherohnehenkel/endlichsattapp/pull/2)
+
 ## Deployment
 - **Production URL:** https://satt.mehralsabnehmen.de/ernaehrung/kalorien-zaehlen
 - **Deployed:** 2026-09-01 (Vercel auto-deploy via Push zu `main`, commits `d9fc95d`..`1159dca`)
