@@ -7,6 +7,7 @@ import { calculateMacrosPerServing } from '@/lib/nutrition'
 import { calculateRezeptMatrix } from '@/lib/saettigungs-matrix-rezept'
 import { computeGeschmack } from '@/lib/geschmack'
 import { RecipeIngredientsSchema, isZutat } from '@/lib/recipe-ingredients-schema'
+import { RECIPE_TYP_DB_VALUES } from '@/lib/recipe-typ'
 
 function imageUrl(path: string | null): string | null {
   if (!path) return null
@@ -24,7 +25,7 @@ const RecipeSchema = z.object({
   ingredient_tags: z.array(z.string().min(1)).min(1, 'Mindestens ein Zutaten-Tag erforderlich'),
   cuisine_tags: z.array(z.string()).optional().default([]),
   ingredients: RecipeIngredientsSchema,
-  recipe_typ: z.enum(['beilage', 'grundlage']).nullable().optional(),
+  recipe_typ: z.enum(RECIPE_TYP_DB_VALUES).nullable().optional(),
   is_guest_visible: z.boolean().optional().default(false),
 })
 

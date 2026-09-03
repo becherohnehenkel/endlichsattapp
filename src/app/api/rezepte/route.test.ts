@@ -108,6 +108,29 @@ describe('POST /api/rezepte', () => {
     expect(finalUpdateMock.mock.calls[0][0].geschmack_score).toEqual({ status: 'ok', score: 40, label: 'fad', verbesserungen: [], unklarHinweis: null })
   })
 
+  it('accepts recipe_typ snack on create (Refinement 2026-09-03)', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1', is_anonymous: false } } })
+    const insertMock = vi.fn().mockReturnValue({ select: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValue({ data: { id: 'new-recipe-1' }, error: null }) }) })
+    const blsMock = { select: vi.fn().mockReturnValue({ ilike: vi.fn().mockReturnValue({ limit: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValue({ data: null }) }) }) }) }
+    serverFrom
+      .mockReturnValueOnce({ insert: insertMock })
+      .mockReturnValueOnce({ insert: vi.fn().mockResolvedValue({ error: null }) })
+      .mockReturnValueOnce({ update: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }) })
+    adminFrom.mockReturnValueOnce(blsMock)
+
+    const { POST } = await import('./route')
+    const res = await POST(makeRequest({ ...VALID_RECIPE, recipe_typ: 'snack' }))
+    expect(res.status).toBe(201)
+    expect(insertMock.mock.calls[0][0].recipe_typ).toBe('snack')
+  })
+
+  it('rejects an invalid recipe_typ value', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1', is_anonymous: false } } })
+    const { POST } = await import('./route')
+    const res = await POST(makeRequest({ ...VALID_RECIPE, recipe_typ: 'nicht-existent' }))
+    expect(res.status).toBe(400)
+  })
+
   it('does not accept an is_guest_visible field even if sent by the client', async () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1', is_anonymous: false } } })
     const insertMock = vi.fn().mockReturnValue({ select: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValue({ data: { id: 'new-recipe-1' }, error: null }) }) })

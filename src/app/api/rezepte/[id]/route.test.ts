@@ -228,6 +228,32 @@ describe('PUT /api/rezepte/[id]', () => {
     expect(finalUpdateMock.mock.calls[0][0].geschmack_score).toEqual({ status: 'ok', score: 88, label: 'richtig_gut', verbesserungen: [], unklarHinweis: null })
   })
 
+  it('updates recipe_typ to snack (Refinement 2026-09-03)', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
+    const updateMock = vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) })
+    const blsMock = { select: vi.fn().mockReturnValue({ ilike: vi.fn().mockReturnValue({ limit: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValue({ data: null }) }) }) }) }
+    serverFrom
+      .mockReturnValueOnce(singleFrom({ owner_id: 'user-1' }))
+      .mockReturnValueOnce({ update: updateMock })
+      .mockReturnValueOnce({ delete: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }) })
+      .mockReturnValueOnce({ insert: vi.fn().mockResolvedValue({ error: null }) })
+      .mockReturnValueOnce({ update: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }) })
+    adminFrom.mockReturnValueOnce(blsMock)
+
+    const { PUT } = await import('./route')
+    const res = await PUT(new Request('http://localhost', { method: 'PUT', body: JSON.stringify({ ...VALID_UPDATE, recipe_typ: 'snack' }) }), makeParams('recipe-1'))
+    expect(res.status).toBe(200)
+    const updatePayload = updateMock.mock.calls[0][0]
+    expect(updatePayload.recipe_typ).toBe('snack')
+  })
+
+  it('rejects an invalid recipe_typ value', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
+    const { PUT } = await import('./route')
+    const res = await PUT(new Request('http://localhost', { method: 'PUT', body: JSON.stringify({ ...VALID_UPDATE, recipe_typ: 'nicht-existent' }) }), makeParams('recipe-1'))
+    expect(res.status).toBe(400)
+  })
+
   it('does not accept an is_guest_visible field even if sent by the client', async () => {
     // Zod-Schema kennt das Feld gar nicht — es wird stillschweigend ignoriert, kein Fehler
     mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })

@@ -1,10 +1,10 @@
 # PROJ-16: Beilagen-Kontext
 
-## Status: Deployed (Refinement: Snack-Rezepttyp + Typ-Filter "In Progress")
+## Status: Deployed (Refinement: Snack-Rezepttyp + Typ-Filter "In Progress" — Backend-Code fertig, DB-Migration steht noch aus)
 **Created:** 2026-07-03
 **Last Updated:** 2026-09-03
 
-**Refinement (2026-09-03, Snack-Rezepttyp + Typ-Filter):** Betrifft **Teil 1+2** (Admin-`recipe_typ`, Rezept-Detailseiten-Hinweis) sowie neu **Teil 6** (Typ-Filter in Rezeptübersicht & Adminseite). `recipe_typ` bekommt einen vierten Wert `'snack'` (bisher nur `null`/`'beilage'`/`'grundlage'`); die Detailseite zeigt dafür denselben Kontext-Hinweis wie bei Beilage/Grundlage. Zusätzlich bekommt sowohl die öffentliche Rezeptbibliothek als auch die separate Admin-Rezeptliste einen neuen Typ-Filter (Alle/Mahlzeiten/Beilagen/Grundrezepte/Snacks), der das seit 2026-07-03 in Out of Scope stehende Deferred-Item einlöst. Teil 3–5 (KI-Analyse-Komponente/Snack-Output) sind von diesem Refinement nicht betroffen. Frontend fertig — API-Validierung + DB-Migration fehlen noch. Nächster Schritt: `/backend`.
+**Refinement (2026-09-03, Snack-Rezepttyp + Typ-Filter):** Betrifft **Teil 1+2** (Admin-`recipe_typ`, Rezept-Detailseiten-Hinweis) sowie neu **Teil 6** (Typ-Filter in Rezeptübersicht & Adminseite). `recipe_typ` bekommt einen vierten Wert `'snack'` (bisher nur `null`/`'beilage'`/`'grundlage'`); die Detailseite zeigt dafür denselben Kontext-Hinweis wie bei Beilage/Grundlage. Zusätzlich bekommt sowohl die öffentliche Rezeptbibliothek als auch die separate Admin-Rezeptliste einen neuen Typ-Filter (Alle/Mahlzeiten/Beilagen/Grundrezepte/Snacks), der das seit 2026-07-03 in Out of Scope stehende Deferred-Item einlöst. Teil 3–5 (KI-Analyse-Komponente/Snack-Output) sind von diesem Refinement nicht betroffen. Frontend + Backend-Code fertig — die DB-Migration (CHECK-Constraint additiv um `'snack'` erweitern) muss der Nutzer noch manuell in Supabase ausführen, bevor `/qa` sinnvoll ist. Nächster Schritt: Migration ausführen, dann `/qa`.
 
 **Refinement (2026-08-11, "Complete"-Umstrukturierung):** Betrifft ausschließlich **Teil 3+4** dieses Specs (KI-Analyse bei fotografierten/beschriebenen Mahlzeiten). **Teil 1+2** (Admin-`recipe_typ` auf Rezepten in der Rezeptbibliothek, Rezept-Detailseiten-Hinweis) sind vom Umbau nicht betroffen und bleiben unverändert live. Die bisherige Rückfrage-Trigger-Logik in Teil 3 wird durch PROJ-4s neue Schritt-0-Klassifikation ersetzt (PROJ-16 ist nicht mehr für die Erkennung zuständig, nur noch für die Darstellung). Der bisherige Beilagen-Output in Teil 4 wird zum Komponente-Output; ein komplett neuer Snack-Output kommt dazu. Nächster Schritt: `/architecture`, dann `/backend`+`/frontend`.
 
@@ -159,6 +159,8 @@
 | Admin-Seite wird in Server-Teil (Auth + Datenladen) + neuen Client-Teil (Filter + Darstellung) aufgeteilt | Kleinstmöglicher Eingriff in die bisher rein serverseitige, einfache Liste; Auth-Check bleibt serverseitig, nur die Darstellung wird interaktiv | 2026-09-03 |
 | Zentrale Werte-Liste für `recipe_typ` (Werte + Labels an einer Stelle) statt weiterer Duplizierung | Der Wert war bereits in 4 API-Dateien separat dupliziert — ein fünfter/sechster Duplizierungs-Ort (Filter, Formular) wäre eine Wartungsfalle; behebt die bestehende Duplizierung gleich mit | 2026-09-03 |
 | Client-seitige Filterung, kein neuer API-Parameter | Konsistent mit bestehendem Besitzer- und Tag-Filter-Muster; Datenmenge klein genug für vollständiges Laden + Browser-seitiges Filtern | 2026-09-03 |
+| `z.enum(RECIPE_TYP_DB_VALUES)` statt weiterhin hartcodierter Literale in den 4 API-Routen | Zieht die Backend-Validierung auf dieselbe zentrale Werte-Liste wie Formular und Filter — ein neuer Rezept-Typ künftig nur noch an einer Stelle ergänzen, nicht an 5+ | 2026-09-03 |
+| CHECK-Constraint-Migration sucht den bestehenden Constraint-Namen dynamisch über `pg_constraint`, statt ihn zu vermuten | Der ursprüngliche Constraint wurde nicht explizit benannt (Postgres-Default-Name) — ein hartcodierter Name wäre fragil, falls er von der Annahme abweicht | 2026-09-03 |
 | Decision | Rationale | Date |
 |----------|-----------|------|
 | BEILAGE_KONTEXT als Annahmen-Flag | Sauberster Weg um Beilagen-Kontext von start/answer-Route an confirm-Route zu übergeben — ohne neues Datenbankfeld oder API-Parameter | 2026-07-03 |
@@ -398,6 +400,45 @@ Gemeinsamer Frontend-Durchlauf mit PROJ-4/PROJ-5/PROJ-8 — geteilte Infrastrukt
 - `eslint` auf allen geänderten Dateien: 0 Fehler
 - Playwright (Scratch-Verifikation, gelöscht nach Gebrauch): Typ-Filter-Leiste in der Rezeptbibliothek sichtbar (Alle/Mahlzeiten/Beilagen/Grundrezepte/Snacks), Filterung auf „Snacks" liefert korrekt 0 Treffer + Leerer-Zustand („Keine Rezepte gefunden", noch keine Snack-Rezepte in der DB); Rezept-Typ-Auswahl im Formular (`variant="user"`, `/rezept/neu`) zeigt „Snack" mit korrektem Wortlaut und ist auswählbar; mobile Ansicht (375px) bricht die Filter-Leiste sauber um, kein horizontales Overflow
 - **Admin-Seite (`/admin/rezepte`, `/admin/rezepte/neu`) nicht automatisiert testbar** — gleiche Einschränkung wie PROJ-24: der E2E-Testnutzer `qa-test@endlichsatt.dev` ist kein `ADMIN_EMAIL`, der serverseitige Admin-Check greift vor jeglichem Mocking. Da die Rezept-Typ-Auswahl aber identisch für `variant="admin"` und `variant="user"` ist (dieselbe Komponente, kein Verzweigungscode), deckt der `variant="user"`-Test dieselbe UI-Logik ab. Der Typ-Filter auf der Admin-Liste (`AdminRezeptListe`) selbst sollte vom Nutzer manuell im Dev-Server verifiziert werden.
+
+## Implementation Notes (Backend) — Refinement 2026-09-03: Snack-Rezepttyp + Typ-Filter
+
+- **API-Routen** — `recipe_typ`-Zod-Enum in allen 4 Routen von `z.enum(['beilage', 'grundlage'])` auf `z.enum(RECIPE_TYP_DB_VALUES)` (aus `src/lib/recipe-typ.ts`) umgestellt, statt weiterhin hartcodierte Literale zu duplizieren:
+  - `src/app/api/admin/rezepte/route.ts` (POST)
+  - `src/app/api/admin/rezepte/[id]/route.ts` (PUT) — zusätzlich der GET-Response-Cast (`recipeTyp: recipe.recipe_typ as ...`) auf `RecipeTypDb | null` erweitert
+  - `src/app/api/rezepte/route.ts` (POST, eigene Rezepte)
+  - `src/app/api/rezepte/[id]/route.ts` (PUT, eigene Rezepte)
+- **DB-Migration** — additive Erweiterung der CHECK-Constraint auf `recipes.recipe_typ` um `'snack'`. **Da Supabase-MCP diese Session getrennt ist, musste der Nutzer die Migration manuell in Supabase ausführen** (SQL siehe Chat-Verlauf / unten):
+  ```sql
+  DO $$
+  DECLARE
+    constraint_name text;
+  BEGIN
+    SELECT con.conname INTO constraint_name
+    FROM pg_constraint con
+    JOIN pg_class rel ON rel.oid = con.conrelid
+    JOIN pg_attribute att ON att.attrelid = rel.oid AND att.attnum = ANY(con.conkey)
+    WHERE rel.relname = 'recipes'
+      AND con.contype = 'c'
+      AND att.attname = 'recipe_typ';
+
+    IF constraint_name IS NOT NULL THEN
+      EXECUTE format('ALTER TABLE recipes DROP CONSTRAINT %I', constraint_name);
+    END IF;
+
+    ALTER TABLE recipes ADD CONSTRAINT recipes_recipe_typ_check
+      CHECK (recipe_typ IN ('beilage', 'grundlage', 'snack'));
+  END $$;
+  ```
+  Sucht die bestehende CHECK-Constraint dynamisch über den Systemkatalog (statt einen vermuteten Namen hart zu kodieren), damit die Migration unabhängig vom tatsächlichen Constraint-Namen sicher funktioniert.
+- **Integrationstests (Vitest)** — je 1 Test "akzeptiert `recipe_typ: 'snack'`" + 1 Test "lehnt ungültigen `recipe_typ`-Wert mit 400 ab" in allen 4 zugehörigen `*.route.test.ts`-Dateien ergänzt (8 neue Tests insgesamt).
+- **Keine neuen Endpunkte, keine neue Tabelle, keine RLS-Änderung** — reine additive Erweiterung eines bestehenden Enums.
+
+**Verifikation:**
+- `npm test`: 455/455 grün (43 Testdateien, 8 neue Tests: 4× "akzeptiert Snack" + 4× "lehnt ungültigen Wert ab", je einmal pro API-Route)
+- `tsc --noEmit`: sauber (unverändert 1 vorbestehender, unabhängiger Fehler in `PROJ-2-user-authentication.spec.ts`)
+- `eslint` auf allen 4 geänderten Route-Dateien: 0 Fehler
+- **Migration noch NICHT ausgeführt** — steht dem Nutzer zur manuellen Ausführung in Supabase bevor (Supabase-MCP diese Session getrennt); bis dahin schlägt ein Speichern mit `recipe_typ: 'snack'` in Produktion mit einem DB-Fehler fehl, obwohl die API-Validierung es jetzt zulässt
 
 ## QA Test Results
 

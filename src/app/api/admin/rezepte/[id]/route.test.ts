@@ -151,6 +151,40 @@ describe('PUT /api/admin/rezepte/[id]', () => {
     expect(updatePayload.recipe_typ).toBe('grundlage')
   })
 
+  it('updates recipe_typ to snack (Refinement 2026-09-03)', async () => {
+    process.env.ADMIN_EMAIL = 'admin@test.com'
+    mockGetUser.mockResolvedValue({ data: { user: { email: 'admin@test.com' } } })
+
+    const updateMock = vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) })
+    const blsMock = { select: vi.fn().mockReturnValue({ ilike: vi.fn().mockReturnValue({ limit: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValue({ data: null }) }) }) }) }
+    adminFrom
+      .mockReturnValueOnce({ update: updateMock })
+      .mockReturnValueOnce({ delete: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }) })
+      .mockReturnValueOnce({ insert: vi.fn().mockResolvedValue({ error: null }) })
+      .mockReturnValueOnce(blsMock)
+      .mockReturnValueOnce({ update: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }) })
+
+    const { PUT } = await import('./route')
+    const res = await PUT(
+      new Request('http://localhost', { method: 'PUT', body: JSON.stringify({ ...VALID_UPDATE, recipe_typ: 'snack' }) }),
+      makeParams('recipe-1')
+    )
+    expect(res.status).toBe(200)
+    const updatePayload = updateMock.mock.calls[0][0]
+    expect(updatePayload.recipe_typ).toBe('snack')
+  })
+
+  it('rejects an invalid recipe_typ value on update', async () => {
+    process.env.ADMIN_EMAIL = 'admin@test.com'
+    mockGetUser.mockResolvedValue({ data: { user: { email: 'admin@test.com' } } })
+    const { PUT } = await import('./route')
+    const res = await PUT(
+      new Request('http://localhost', { method: 'PUT', body: JSON.stringify({ ...VALID_UPDATE, recipe_typ: 'nicht-existent' }) }),
+      makeParams('recipe-1')
+    )
+    expect(res.status).toBe(400)
+  })
+
   it('returns 400 when a group header has no following ingredient (PROJ-24)', async () => {
     process.env.ADMIN_EMAIL = 'admin@test.com'
     mockGetUser.mockResolvedValue({ data: { user: { email: 'admin@test.com' } } })

@@ -7,6 +7,7 @@ import { calculateMacrosPerServing } from '@/lib/nutrition'
 import { calculateRezeptMatrix } from '@/lib/saettigungs-matrix-rezept'
 import { computeGeschmack } from '@/lib/geschmack'
 import { RecipeIngredientsSchema, isZutat } from '@/lib/recipe-ingredients-schema'
+import { RECIPE_TYP_DB_VALUES, type RecipeTypDb } from '@/lib/recipe-typ'
 
 function imageUrl(path: string | null): string | null {
   if (!path) return null
@@ -24,7 +25,7 @@ const RecipeUpdateSchema = z.object({
   ingredient_tags: z.array(z.string().min(1)).min(1),
   cuisine_tags: z.array(z.string()).optional().default([]),
   ingredients: RecipeIngredientsSchema,
-  recipe_typ: z.enum(['beilage', 'grundlage']).nullable().optional(),
+  recipe_typ: z.enum(RECIPE_TYP_DB_VALUES).nullable().optional(),
   is_guest_visible: z.boolean().optional().default(false),
 })
 
@@ -60,7 +61,7 @@ export async function GET(
     instructions: recipe.instructions,
     ingredientTags: recipe.ingredient_tags,
     cuisineTags: recipe.cuisine_tags,
-    recipeTyp: recipe.recipe_typ as 'beilage' | 'grundlage' | null,
+    recipeTyp: recipe.recipe_typ as RecipeTypDb | null,
     ingredients,
   })
 }

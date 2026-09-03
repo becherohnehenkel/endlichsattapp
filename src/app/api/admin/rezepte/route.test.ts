@@ -174,6 +174,45 @@ describe('POST /api/admin/rezepte', () => {
     expect(insertCall.recipe_typ).toBe('beilage')
   })
 
+  it('accepts recipe_typ snack on create (Refinement 2026-09-03)', async () => {
+    process.env.ADMIN_EMAIL = 'admin@test.com'
+    mockGetUser.mockResolvedValue({ data: { user: { email: 'admin@test.com' } } })
+
+    const insertMock = vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({ data: { id: 'snack-recipe-id' }, error: null }),
+      }),
+    })
+    const blsMock = { select: vi.fn().mockReturnValue({ ilike: vi.fn().mockReturnValue({ limit: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValue({ data: null }) }) }) }) }
+    adminFrom
+      .mockReturnValueOnce({ insert: insertMock })
+      .mockReturnValueOnce({ insert: vi.fn().mockResolvedValue({ error: null }) })
+      .mockReturnValueOnce(blsMock)
+      .mockReturnValueOnce(blsMock)
+      .mockReturnValueOnce({ update: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }) })
+
+    const { POST } = await import('./route')
+    const res = await POST(new Request('http://localhost', {
+      method: 'POST',
+      body: JSON.stringify({ ...VALID_RECIPE, recipe_typ: 'snack' }),
+    }))
+    expect(res.status).toBe(201)
+    const insertCall = insertMock.mock.calls[0][0]
+    expect(insertCall.recipe_typ).toBe('snack')
+  })
+
+  it('rejects an invalid recipe_typ value', async () => {
+    process.env.ADMIN_EMAIL = 'admin@test.com'
+    mockGetUser.mockResolvedValue({ data: { user: { email: 'admin@test.com' } } })
+
+    const { POST } = await import('./route')
+    const res = await POST(new Request('http://localhost', {
+      method: 'POST',
+      body: JSON.stringify({ ...VALID_RECIPE, recipe_typ: 'nicht-existent' }),
+    }))
+    expect(res.status).toBe(400)
+  })
+
   it('stores recipe_typ null when no type selected', async () => {
     process.env.ADMIN_EMAIL = 'admin@test.com'
     mockGetUser.mockResolvedValue({ data: { user: { email: 'admin@test.com' } } })

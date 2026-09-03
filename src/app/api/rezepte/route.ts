@@ -6,6 +6,7 @@ import { calculateMacrosPerServing } from '@/lib/nutrition'
 import { calculateRezeptMatrix } from '@/lib/saettigungs-matrix-rezept'
 import { computeGeschmack } from '@/lib/geschmack'
 import { RecipeIngredientsSchema, isZutat } from '@/lib/recipe-ingredients-schema'
+import { RECIPE_TYP_DB_VALUES } from '@/lib/recipe-typ'
 
 // PROJ-31: bewusst kein is_guest_visible-Feld — das ist eine kuratorische Einordnung für die
 // offizielle Bibliothek und ergibt bei privaten Nutzer-Rezepten keinen Sinn (siehe Spec).
@@ -20,7 +21,7 @@ const RecipeSchema = z.object({
   ingredient_tags: z.array(z.string().min(1)).min(1, 'Mindestens ein Zutaten-Tag erforderlich'),
   cuisine_tags: z.array(z.string()).optional().default([]),
   ingredients: RecipeIngredientsSchema,
-  recipe_typ: z.enum(['beilage', 'grundlage']).nullable().optional(),
+  recipe_typ: z.enum(RECIPE_TYP_DB_VALUES).nullable().optional(),
 })
 
 export async function POST(request: Request) {
