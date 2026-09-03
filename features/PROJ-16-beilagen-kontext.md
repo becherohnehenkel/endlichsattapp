@@ -1,10 +1,10 @@
 # PROJ-16: Beilagen-Kontext
 
-## Status: Deployed (Refinement: Snack-Rezepttyp + Typ-Filter "In Progress" — Backend-Code fertig, DB-Migration steht noch aus)
+## Status: Deployed (Refinement: Snack-Rezepttyp + Typ-Filter "In Progress" — Frontend+Backend fertig, bereit für /qa)
 **Created:** 2026-07-03
 **Last Updated:** 2026-09-03
 
-**Refinement (2026-09-03, Snack-Rezepttyp + Typ-Filter):** Betrifft **Teil 1+2** (Admin-`recipe_typ`, Rezept-Detailseiten-Hinweis) sowie neu **Teil 6** (Typ-Filter in Rezeptübersicht & Adminseite). `recipe_typ` bekommt einen vierten Wert `'snack'` (bisher nur `null`/`'beilage'`/`'grundlage'`); die Detailseite zeigt dafür denselben Kontext-Hinweis wie bei Beilage/Grundlage. Zusätzlich bekommt sowohl die öffentliche Rezeptbibliothek als auch die separate Admin-Rezeptliste einen neuen Typ-Filter (Alle/Mahlzeiten/Beilagen/Grundrezepte/Snacks), der das seit 2026-07-03 in Out of Scope stehende Deferred-Item einlöst. Teil 3–5 (KI-Analyse-Komponente/Snack-Output) sind von diesem Refinement nicht betroffen. Frontend + Backend-Code fertig — die DB-Migration (CHECK-Constraint additiv um `'snack'` erweitern) muss der Nutzer noch manuell in Supabase ausführen, bevor `/qa` sinnvoll ist. Nächster Schritt: Migration ausführen, dann `/qa`.
+**Refinement (2026-09-03, Snack-Rezepttyp + Typ-Filter):** Betrifft **Teil 1+2** (Admin-`recipe_typ`, Rezept-Detailseiten-Hinweis) sowie neu **Teil 6** (Typ-Filter in Rezeptübersicht & Adminseite). `recipe_typ` bekommt einen vierten Wert `'snack'` (bisher nur `null`/`'beilage'`/`'grundlage'`); die Detailseite zeigt dafür denselben Kontext-Hinweis wie bei Beilage/Grundlage. Zusätzlich bekommt sowohl die öffentliche Rezeptbibliothek als auch die separate Admin-Rezeptliste einen neuen Typ-Filter (Alle/Mahlzeiten/Beilagen/Grundrezepte/Snacks), der das seit 2026-07-03 in Out of Scope stehende Deferred-Item einlöst. Teil 3–5 (KI-Analyse-Komponente/Snack-Output) sind von diesem Refinement nicht betroffen. Frontend + Backend fertig, DB-Migration (CHECK-Constraint additiv um `'snack'` erweitert) vom Nutzer manuell in Supabase ausgeführt und bestätigt ("Migration ist durch, alles grün"). Nächster Schritt: `/qa`.
 
 **Refinement (2026-08-11, "Complete"-Umstrukturierung):** Betrifft ausschließlich **Teil 3+4** dieses Specs (KI-Analyse bei fotografierten/beschriebenen Mahlzeiten). **Teil 1+2** (Admin-`recipe_typ` auf Rezepten in der Rezeptbibliothek, Rezept-Detailseiten-Hinweis) sind vom Umbau nicht betroffen und bleiben unverändert live. Die bisherige Rückfrage-Trigger-Logik in Teil 3 wird durch PROJ-4s neue Schritt-0-Klassifikation ersetzt (PROJ-16 ist nicht mehr für die Erkennung zuständig, nur noch für die Darstellung). Der bisherige Beilagen-Output in Teil 4 wird zum Komponente-Output; ein komplett neuer Snack-Output kommt dazu. Nächster Schritt: `/architecture`, dann `/backend`+`/frontend`.
 
@@ -438,7 +438,7 @@ Gemeinsamer Frontend-Durchlauf mit PROJ-4/PROJ-5/PROJ-8 — geteilte Infrastrukt
 - `npm test`: 455/455 grün (43 Testdateien, 8 neue Tests: 4× "akzeptiert Snack" + 4× "lehnt ungültigen Wert ab", je einmal pro API-Route)
 - `tsc --noEmit`: sauber (unverändert 1 vorbestehender, unabhängiger Fehler in `PROJ-2-user-authentication.spec.ts`)
 - `eslint` auf allen 4 geänderten Route-Dateien: 0 Fehler
-- **Migration noch NICHT ausgeführt** — steht dem Nutzer zur manuellen Ausführung in Supabase bevor (Supabase-MCP diese Session getrennt); bis dahin schlägt ein Speichern mit `recipe_typ: 'snack'` in Produktion mit einem DB-Fehler fehl, obwohl die API-Validierung es jetzt zulässt
+- **Migration vom Nutzer manuell in Supabase ausgeführt und bestätigt** (2026-09-03, "Migration ist durch, alles grün") — `recipe_typ: 'snack'` ist damit sowohl API-seitig als auch auf DB-Ebene zugelassen
 
 ## QA Test Results
 
