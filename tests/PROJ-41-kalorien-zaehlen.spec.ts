@@ -29,6 +29,9 @@ test.describe('Seitenstruktur', () => {
 
   test('AC: zeigt 2 Punkte in der richtigen Reihenfolge', async ({ page }) => {
     await page.goto('/ernaehrung/kalorien-zaehlen')
+    // ArbeitspunkteListe rendert erst nach dem Client-Mount (Hydration) — auf den letzten
+    // Trigger warten, bevor der Text-Snapshot gelesen wird, sonst ist die Liste noch leer.
+    await expect(page.getByRole('button', { name: 'Das Wichtigste beim Kalorienzählen: das Aufhören' })).toBeVisible()
     const main = page.locator('main')
     const text = await main.innerText()
     const titel = ['Warum zählen wir Kalorien?', 'Das Wichtigste beim Kalorienzählen: das Aufhören']
