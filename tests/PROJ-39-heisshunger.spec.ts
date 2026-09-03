@@ -30,6 +30,7 @@ test.describe('Seitenstruktur', () => {
 
   test('AC: zeigt 4 Arbeitspunkte in der richtigen Reihenfolge', async ({ page }) => {
     await page.goto('/ernaehrung/heisshunger')
+    await expect(page.getByRole('button', { name: 'Sehen, riechen, schmecken & hören' })).toBeVisible()
     const main = page.locator('main')
     const text = await main.innerText()
     const titel = [

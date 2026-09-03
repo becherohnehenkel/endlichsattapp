@@ -98,6 +98,7 @@ test.describe('Seitenstruktur', () => {
 
   test('AC: alle 12 Fragen erscheinen in der vorgegebenen Reihenfolge', async ({ page }) => {
     await page.goto('/check-in')
+    await expect(page.getByText('Etwas vergessen? Was war sonst noch wichtig?')).toBeVisible()
     const main = page.locator('main')
     const text = await main.innerText()
     const fragen = [

@@ -44,6 +44,7 @@ test.describe('Ernährung-Hub', () => {
 
   test('AC: die ersten 4 Grundpfeiler sind nummeriert (1–4) in der richtigen Reihenfolge', async ({ page }) => {
     await page.goto('/ernaehrung')
+    await expect(page.getByText('Kalorien zählen & damit aufhören', { exact: true })).toBeVisible()
     const main = page.locator('main')
     const text = await main.innerText()
     const titel = [
