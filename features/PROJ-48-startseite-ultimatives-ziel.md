@@ -1,6 +1,6 @@
 # PROJ-48: Startseite: Ultimatives Ziel
 
-## Status: Architected
+## Status: In Progress
 **Created:** 2026-09-03
 **Last Updated:** 2026-09-03
 
@@ -111,6 +111,15 @@ Keins — reiner, fest im Code hinterlegter Text, kein Datenbankbezug, keine API
 
 ### D) Abhängigkeiten (Pakete)
 Keine neuen Pakete.
+
+## Implementation Notes (Frontend)
+
+**Gebaut:**
+- `src/app/page.tsx` erweitert: neue Sektion zwischen Video-Platzhalter und "So legst du los", exakter Wortlaut aus der Content-Sektion übernommen (Überschrift, zwei Absätze, 6 Ziel-Punkte als `ZIELE`-Array).
+  - Liste in einer weichen, ungefärbten Hintergrund-Box (`bg-[#DFF0F2]/60`, kein Rahmen), jeder Punkt mit kleinem grünen Check-Icon — bewusst kein `<Link>`, kein Hover-Effekt, damit sich die Sektion klar von den klickbaren Funktions-Karten darunter abhebt
+  - Reiner Bestandteil der bestehenden Server-Component, kein `'use client'`, kein neuer State
+
+**Verifiziert:** `npm run build`, `npm run lint`, `npm test` (443/443, unverändert). Per Playwright verifiziert: Sektion erscheint in der richtigen Reihenfolge (Video → Ziel → So legst du los), alle 6 Punkte sichtbar, keine Links innerhalb der Liste (`ul li a` Count 0), kein horizontales Scrollen auf Mobile (375px). Identisch für Gast (getestet) und eingeloggte Nutzer (kein bedingter Code-Pfad, der das unterscheiden würde).
 
 ## QA Test Results
 _To be added by /qa_

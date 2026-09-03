@@ -63,7 +63,7 @@
 | PROJ-45 | Wochen-Check-In | P1 | Deployed | PROJ-2, PROJ-19, PROJ-35, PROJ-17, PROJ-42 | [Spec](PROJ-45-wochen-check-in.md) |
 | PROJ-46 | Gewohnheiten | P1 | Deployed | PROJ-45, PROJ-35 | [Spec](PROJ-46-gewohnheiten.md) |
 | PROJ-47 | Startseite Neu | P1 | Deployed | PROJ-2, PROJ-19 | [Spec](PROJ-47-startseite-neu.md) |
-| PROJ-48 | Startseite: Ultimatives Ziel | P1 | Architected | PROJ-47 | [Spec](PROJ-48-startseite-ultimatives-ziel.md) |
+| PROJ-48 | Startseite: Ultimatives Ziel | P1 | In Progress | PROJ-47 | [Spec](PROJ-48-startseite-ultimatives-ziel.md) |
 
 <!-- Add features above this line -->
 

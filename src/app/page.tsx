@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { UserRound, Play, Lightbulb, TrendingUp, ChefHat, CheckCircle2, ArrowRight } from 'lucide-react'
+import { UserRound, Play, Lightbulb, TrendingUp, ChefHat, CheckCircle2, ArrowRight, Check } from 'lucide-react'
 
 const KARTEN = [
   {
@@ -27,6 +27,15 @@ const KARTEN = [
     text: 'Reflektiere ehrlich, wie deine Woche lief.',
     href: '/check-in',
   },
+] as const
+
+const ZIELE = [
+  '80–90 % der Zeit vollwertig und bewusst essen',
+  'Ausreichend Wasser trinken',
+  'Alltagsbewegung hoch halten (Schritte, Haushalt, etc.)',
+  'Sport: 3× die Woche (Kraft- und Ausdauertraining gemischt)',
+  'Schlaf priorisieren',
+  'Körpergefühl schärfen',
 ] as const
 
 // PROJ-47: Ersetzt die bisherige, personalisierte Startseite (letzte Analysen,
@@ -81,6 +90,31 @@ export default async function StartPage() {
           <p className="text-xs text-muted-foreground text-center">
             <span className="font-semibold text-foreground">Video kommt bald</span>
           </p>
+        </section>
+
+        {/* ── Ultimatives Ziel (PROJ-48) ─────────────────────── */}
+        {/* Bewusst ohne Rahmen-Box/Hover-Effekt wie die Funktions-Karten darunter — auf den
+            ersten Blick klar: diese Sektion ist zum Lesen, nicht zum Klicken. */}
+        <section className="space-y-4">
+          <div className="space-y-2">
+            <h2 className="text-2xl font-semibold tracking-tight text-foreground text-balance">
+              Ein Ziel für uns alle
+            </h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Wir alle haben das gleiche Ziel — die Frage ist nur, wie wir da hinkommen. Der Weg dahin ist so individuell wie dein Fingerabdruck. Das Problem: Niemand von uns mag Veränderung.
+            </p>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Deswegen geht diese App einen anderen Weg — kleine Anpassungen, die deinen Alltag verändern, ohne dass es sich nach viel anfühlt. Ich möchte, dass du nach 6 Monaten sagen kannst: Auf deinen Körper zu achten ist für dich einfach normal geworden. Nimm dir die Zeit, die du brauchst — dein aktuelles Gewicht ist auch nicht über Nacht entstanden. Geh Schritt für Schritt durch die App, schau, was dir gerade hilft, und verändere deinen Alltag langsam. Viel Spaß dabei!
+            </p>
+          </div>
+          <ul className="space-y-2.5 rounded-2xl bg-[#DFF0F2]/60 p-4">
+            {ZIELE.map(ziel => (
+              <li key={ziel} className="flex items-start gap-2.5 text-sm text-foreground">
+                <Check className="h-4 w-4 text-[#2E9E6B] flex-shrink-0 mt-0.5" />
+                <span>{ziel}</span>
+              </li>
+            ))}
+          </ul>
         </section>
 
         {/* ── Funktions-Karten ──────────────────────────────── */}
