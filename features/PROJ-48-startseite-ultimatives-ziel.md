@@ -1,6 +1,6 @@
 # PROJ-48: Startseite: Ultimatives Ziel
 
-## Status: Approved
+## Status: Deployed
 **Created:** 2026-09-03
 **Last Updated:** 2026-09-03
 
@@ -172,4 +172,7 @@ Neu: `tests/PROJ-48-startseite-ultimatives-ziel.spec.ts` — 8 Tests, decken all
 - **Recommendation:** Deploy
 
 ## Deployment
-_To be added by /deploy_
+- **Production URL:** https://satt.mehralsabnehmen.de/
+- **Deployed:** 2026-09-03 (Vercel auto-deploy via Push zu `main`, commits `b326660`..`15083d5`)
+- **Verified in Produktion:** Nutzer hat die Live-Seite geprüft, alles grün ("alles grün").
+- **Umfang dieses Deploys:** vollständige PROJ-48-Implementierung — neue "Ein Ziel für uns alle"-Sektion auf der Startseite (`/`) zwischen Video-Platzhalter und "So legst du los": Überschrift, zweiabsätziger Intro-Text und 6 Ernährungs-/Lifestyle-Ziel-Punkte als nicht-klickbare Checkliste. Rein statisch, kein Backend, identisch für Gast und eingeloggten Nutzer.
