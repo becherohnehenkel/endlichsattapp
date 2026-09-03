@@ -24,7 +24,7 @@ export default function WochenRecapSektion() {
 
   if (isLoading) {
     return (
-      <div className="border-b-4 border-border/30 mb-1">
+      <div className="border-b-4 border-border/30 mb-1" data-testid="wochen-recap-skeleton">
         <div className="px-4 py-2 bg-card border-b border-border">
           <Skeleton className="h-3 w-28" />
         </div>

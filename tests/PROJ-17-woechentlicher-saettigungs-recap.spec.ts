@@ -132,15 +132,22 @@ test.describe('Wochenrückblick-Sektion sichtbar', () => {
 
   test('Lade-Skelett wird angezeigt während Recap lädt', async ({ page }) => {
     let resolve!: () => void
-    page.route('/api/mahlzeiten**', route =>
+    // Route-Handler müssen registriert (und die Registrierung abgewartet) sein, BEVOR die
+    // Navigation die Requests auslöst — sonst race: der App-Fetch geht am Mock vorbei raus,
+    // `resolve` bleibt unassigned und der spätere resolve()-Call wirft.
+    await page.route('/api/mahlzeiten**', route =>
       route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_MEALS) })
     )
-    page.route('/api/recap/wochen', async route => {
+    await page.route('/api/recap/wochen', async route => {
       await new Promise<void>(r => { resolve = r })
       await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ wochen: [WOCHE_AKTUELL_LEER] }) })
     })
     await loginAndGoToHistorie(page)
-    const skeleton = page.locator('.animate-pulse').first()
+    // Gezielt das Skelett der Wochenrückblick-Sektion prüfen, nicht `.animate-pulse` global —
+    // die Next.js-Route /analyse hat ein eigenes loading.tsx mit Skeleton-Komponenten, das
+    // beim Navigieren kurz aufblitzt und sonst fälschlich diese Assertion erfüllt, bevor der
+    // Recap-Fetch überhaupt gestartet (und `resolve` zugewiesen) wurde.
+    const skeleton = page.getByTestId('wochen-recap-skeleton')
     await expect(skeleton).toBeVisible({ timeout: 5000 })
     resolve()
     await expect(page.getByText('Diese Woche').first()).toBeVisible({ timeout: 5000 })
