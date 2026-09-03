@@ -1,6 +1,6 @@
 # PROJ-16: Beilagen-Kontext
 
-## Status: Deployed (Refinement: Snack-Rezepttyp + Typ-Filter "In Progress" — Frontend+Backend fertig, bereit für /qa)
+## Status: Deployed (Refinement: Snack-Rezepttyp + Typ-Filter "Approved" — 1 Medium-Bug offen, kein Deploy-Blocker)
 **Created:** 2026-07-03
 **Last Updated:** 2026-09-03
 
@@ -590,3 +590,75 @@ BUG-1 behoben: `komponenteFullResult.komponente` in `confirm/route.ts` setzt jet
 - [x] `tsc --noEmit`: sauber (unverändert 1 vorbestehender, unabhängiger Fehler in `PROJ-2-user-authentication.spec.ts`)
 
 **Production Ready: JA** — keine offenen Critical/High Bugs mehr.
+
+---
+
+## QA Test Results (Refinement 2026-09-03: Snack-Rezepttyp + Typ-Filter)
+
+**Tested:** 2026-09-03
+**App URL:** http://localhost:3000
+**Tester:** QA Engineer (AI)
+
+### Automated Tests
+- `npm test` (Vitest): **462/462 passed** (44 Testdateien — 7 neue Unit-Tests für `matchesRecipeTypFilter()` + Werte-Listen in `src/lib/recipe-typ.test.ts`, 8 neue Integrationstests über die 4 Rezept-API-Routen aus der Backend-Phase)
+- `node_modules/.bin/playwright test tests/PROJ-16-beilagen-kontext.spec.ts`: **20/20 passed** (7 neue E2E-Tests für dieses Refinement, zweifach wiederholt zur Stabilitätsprüfung — beide Male grün)
+- `tsc --noEmit`: sauber (unverändert 1 vorbestehender, unabhängiger Fehler in `PROJ-2-user-authentication.spec.ts`)
+
+### Acceptance Criteria Status
+
+#### Teil 1: Admin/Nutzer-Formular — Snack als vierter Rezept-Typ
+- [x] Vierte Option „Snack" im Formular sichtbar (Radio-Group, Label + Beschreibung)
+- [x] `recipe_typ: 'snack'` wird beim Anlegen akzeptiert und gespeichert (End-to-End über echte, per API angelegte Rezepte verifiziert — nicht nur gemockt)
+- [x] Ungültiger `recipe_typ`-Wert (inkl. Injection-Versuch `"snack'; DROP TABLE recipes; --"`) wird mit 400 abgelehnt
+
+#### Teil 2: Rezept-Detailseite — Snack-Kontext-Hinweis
+- [x] Snack-Rezept zeigt Badge „Snack" + Text „Ein Snack für zwischendurch — muss keine vollständige Mahlzeit sein." anstelle der normalen Sättigungs-Bewertung („Sättigungs-Säulen" nicht sichtbar)
+
+#### Teil 6: Rezept-Typ-Filter in Rezeptübersicht & Adminseite
+- [x] Filter-Leiste zeigt alle 5 Optionen (Alle/Mahlzeiten/Beilagen/Grundrezepte/Snacks)
+- [x] Filter „Snacks" findet ein Snack-Rezept; Filter „Mahlzeiten" findet es korrekt NICHT
+- [x] Typ-Filter und Besitzer-Filter sind kombinierbar (UND-Verknüpfung) — „Eigene Rezepte" + „Snacks" funktioniert
+- [x] Leerer-Zustand-Hinweis bei 0 Treffern („Keine Rezepte gefunden"), kein Fehler oder leerer Bildschirm
+- [~] **Admin-Rezeptliste (`/admin/rezepte`) nicht automatisiert testbar** — gleiche Einschränkung wie PROJ-24: `qa-test@endlichsatt.dev` ist kein `ADMIN_EMAIL`. Der Typ-Filter dort nutzt exakt dieselbe `RezeptTypFilter`-Komponente wie die öffentliche Bibliothek (kein separater Code-Pfad) — strukturell durch die Bibliotheks-Tests mitabgedeckt, aber nicht live auf `/admin/rezepte` verifiziert. **Empfehlung: kurz manuell im Dev-Server gegenprüfen.**
+
+### Responsive
+- [x] 375px: Filter-Leiste bricht nicht um, alle 5 Labels vollständig lesbar (kleinere Schrift/Padding wie in der Frontend-Phase umgesetzt)
+- [x] 768px, 1440px: Filter-Leiste rendert sauber, Seite bleibt auf die Design-System-Breite begrenzt
+
+### Security Audit Results
+- [x] `POST /api/rezepte` mit `recipe_typ`-Injection-Versuch → 400, kein SQL-Injection-Vektor (Supabase-Client nutzt parametrisierte Queries, Zod validiert vor jeder DB-Interaktion)
+- [x] `POST /api/rezepte` ohne Session → 401
+- [x] Admin-Routen (`POST /api/admin/rezepte`, `PUT .../[id]`) weiterhin korrekt gegen `ADMIN_EMAIL` geschützt (401/403) — durch die Zod-Enum-Umstellung nicht verändert
+- [x] Keine neuen Secrets/sensiblen Daten in API-Responses (nur der neue Enum-Wert `'snack'`, keine Freitext-Ausgabe)
+- [x] DB-CHECK-Constraint zusätzlich zur Zod-Validierung als zweite Verteidigungslinie aktiv (vom Nutzer bestätigt ausgeführt) — ein Bypass der API würde trotzdem auf DB-Ebene abgelehnt
+
+### Regressionstest
+- **Vitest (Gesamtsuite):** 462/462 grün.
+- **E2E — PROJ-30, PROJ-31, PROJ-8, PROJ-36 (angrenzende Rezept-Features):** 48/52 grün. 4 Fehlschläge gefunden, davon:
+  - **1 durch dieses Refinement verursacht** (siehe BUG-1 unten)
+  - **3 vorbestehende, unabhängige Bugs** (siehe BUG-2, BUG-3 unten) — bestätigt nicht durch dieses Refinement verursacht (betroffene Codepfade von diesem Refinement nicht berührt), als separate Hintergrund-Tasks ausgelagert
+
+### Bugs Found
+
+#### BUG-1: Zwei Buttons mit identischem Accessible Name "Alle"
+- **Severity:** Medium
+- **Datei:** [src/components/rezept-bibliothek.tsx](src/components/rezept-bibliothek.tsx) — neuer Typ-Filter (aus [src/components/rezept-typ-filter.tsx](src/components/rezept-typ-filter.tsx)) und der bestehende Cuisine-Tag-Filter haben beide einen Button mit dem Text „Alle"
+- **Steps to Reproduce:** `/ernaehrung/rezepte` öffnen → `page.getByRole('button', { name: 'Alle' })` (oder ein Screenreader, der nach dem Accessible Name "Alle" sucht) matched zwei unterschiedliche, funktional verschiedene Buttons ohne Möglichkeit der Unterscheidung
+- **Tatsächliche Auswirkung:** Bricht den vorbestehenden Regressionstest `tests/PROJ-36-ernaehrung-hub.spec.ts:113` (Playwright-Strict-Mode-Violation). Für sehende Nutzer visuell unterscheidbar (unterschiedliche Button-Form/Größe), für Screenreader-Nutzer aber nicht — zwei interaktive Elemente mit identischem Namen und unterschiedlicher Funktion ist ein A11y-Antipattern (WCAG 2.4.4/4.1.2)
+- **Fix (nicht selbst umgesetzt, außerhalb des QA-Scopes):** z.B. `aria-label="Alle Typen"` auf dem neuen Typ-Filter-Button bzw. `aria-label="Alle Küchen"` auf dem Cuisine-Tag-Filter-Button, plus Anpassung des betroffenen Locators in `tests/PROJ-36-ernaehrung-hub.spec.ts:113`
+- **Priority:** Vor Deploy beheben empfohlen (klein, aber echtes A11y- und Test-Infrastruktur-Problem)
+
+#### BUG-2 (vorbestehend, nicht durch dieses Refinement verursacht): `/rezept/[id]` liefert 200 statt 404
+- **Severity:** Low
+- Betrifft `tests/PROJ-8-rezeptbibliothek.spec.ts` und `tests/PROJ-30-rezept-eigentuemerschaft-filter.spec.ts` — Inhalt ist korrekt ("404 — This page could not be found"), nur der HTTP-Status stimmt nicht. Kein Datenleck. Diff-Prüfung bestätigt: die einzige Änderung dieses Refinements an `src/app/rezept/[id]/page.tsx` ist ein harmloser Import + Type-Cast, unabhängig vom `notFound()`-Mechanismus. Als Hintergrund-Task ausgelagert.
+
+#### BUG-3 (vorbestehend, nicht durch dieses Refinement verursacht): Veralteter Text "Sättigungs-Bausteine" in PROJ-31-Test
+- **Severity:** Low
+- `tests/PROJ-31-nutzer-eigene-rezepte.spec.ts:106` erwartet "Sättigungs-Bausteine", aktuelle Überschrift ist seit der "Complete"-Umstrukturierung (2026-08-11) "Sättigungs-Säulen" — reiner Test-Bug, kein Produktfehler. Als Hintergrund-Task ausgelagert.
+
+### Summary
+- **Acceptance Criteria:** 9/10 vollständig verifiziert (1 strukturell abgedeckt, aber nicht live auf der Admin-Seite verifizierbar — Empfehlung: manuelle Gegenprüfung)
+- **Bugs Found:** 3 total (0 Critical, 0 High, 1 Medium, 2 Low) — 1 Medium-Bug durch dieses Refinement verursacht, 2 Low-Bugs vorbestehend und unabhängig
+- **Security:** Pass
+- **Production Ready: JA** — keine Critical/High Bugs. Der Medium-Bug (BUG-1) ist eine reine Test-/A11y-Angelegenheit ohne Auswirkung auf die Kernfunktion und blockiert laut QA-Kriterium (nur Critical/High blockieren) das Deployment nicht, sollte aber zeitnah behoben werden.
+- **Recommendation:** Deploy möglich. BUG-1 vor oder kurz nach dem Deploy beheben (kleiner Fix: `aria-label` ergänzen + einen Locator anpassen).

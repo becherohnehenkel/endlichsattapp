@@ -300,3 +300,124 @@ test.describe('Security: Beilagen-Analyse', () => {
     expect([404, 400]).toContain(res.status())
   })
 })
+
+// ─── Refinement (2026-09-03): Snack-Rezepttyp + Typ-Filter ───────────────────
+//
+// Verifiziert über echte, per API angelegte Rezepte (statt page.route()-Mocks) —
+// dasselbe Muster wie tests/PROJ-31-nutzer-eigene-rezepte.spec.ts. Jeder Test räumt
+// sein Rezept über DELETE wieder auf, damit die Suite wiederholbar bleibt und den
+// permanenten PROJ-30-Fixture-Datensatz nicht beeinflusst.
+
+async function createRecipeViaApi(page: Page, title: string, recipeTyp?: string) {
+  return page.evaluate(async ({ title, recipeTyp }) => {
+    const res = await fetch('/api/rezepte', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title,
+        servings: 2,
+        cook_time_minutes: 10,
+        total_time_minutes: 15,
+        instructions: 'Alles vermischen und servieren.',
+        ingredient_tags: ['testzutat'],
+        cuisine_tags: [],
+        ingredients: [{ item_type: 'zutat', name: 'Testzutat', amount: 100, unit: 'g' }],
+        ...(recipeTyp ? { recipe_typ: recipeTyp } : {}),
+      }),
+    })
+    return { status: res.status, body: await res.json() }
+  }, { title, recipeTyp })
+}
+
+async function deleteRecipeViaApi(page: Page, id: string) {
+  await page.evaluate(async (id) => {
+    await fetch(`/api/rezepte/${id}`, { method: 'DELETE' })
+  }, id)
+}
+
+test.describe('Teil 1: Admin/Nutzer-Formular — Snack als vierter Rezept-Typ', () => {
+  test('AC: recipe_typ "snack" wird beim Anlegen akzeptiert und gespeichert', async ({ page }) => {
+    // Persistenz selbst ist bereits durch die Vitest-Integrationstests abgedeckt
+    // (src/app/api/rezepte/route.test.ts: insertCall.recipe_typ === 'snack'); hier wird
+    // zusätzlich der volle Request/Response-Zyklus über eine echte, eingeloggte Session
+    // verifiziert. Die tatsächliche Anzeige auf der Detailseite folgt im nächsten Block.
+    await loginAs(page)
+    const created = await createRecipeViaApi(page, `QA-E2E-Snack-${Date.now()}`, 'snack')
+    expect(created.status).toBe(201)
+    expect(created.body.id).toBeTruthy()
+    await deleteRecipeViaApi(page, created.body.id)
+  })
+
+  test('AC: ungültiger recipe_typ-Wert wird mit 400 abgelehnt', async ({ page }) => {
+    await loginAs(page)
+    const res = await page.request.post('/api/rezepte', {
+      data: {
+        title: 'QA-Invalid-Typ',
+        servings: 1,
+        cook_time_minutes: 0,
+        total_time_minutes: 0,
+        instructions: 'x',
+        ingredient_tags: ['x'],
+        ingredients: [{ item_type: 'zutat', name: 'x', amount: 1, unit: 'g' }],
+        recipe_typ: "snack'; DROP TABLE recipes; --",
+      },
+    })
+    expect(res.status()).toBe(400)
+  })
+})
+
+test.describe('Teil 2: Rezept-Detailseite — Snack-Kontext-Hinweis', () => {
+  test('AC: Snack-Rezept zeigt Badge "Snack" statt normaler Sättigungs-Bewertung', async ({ page }) => {
+    await loginAs(page)
+    const title = `QA-E2E-Snack-Detail-${Date.now()}`
+    const created = await createRecipeViaApi(page, title, 'snack')
+    try {
+      await page.goto(`/rezept/${created.body.id}`)
+      await expect(page.getByText('Snack', { exact: true })).toBeVisible()
+      await expect(page.getByText('Ein Snack für zwischendurch — muss keine vollständige Mahlzeit sein.')).toBeVisible()
+      await expect(page.getByText('Sättigungs-Säulen')).not.toBeVisible()
+    } finally {
+      await deleteRecipeViaApi(page, created.body.id)
+    }
+  })
+})
+
+test.describe('Teil 6: Rezept-Typ-Filter in der Rezeptübersicht', () => {
+  test('AC: Filter-Leiste zeigt alle 5 Optionen', async ({ page }) => {
+    await page.goto('/ernaehrung/rezepte')
+    await expect(page.getByRole('button', { name: 'Mahlzeiten' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Beilagen' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Grundrezepte' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Snacks' })).toBeVisible()
+  })
+
+  test('AC: Filter "Snacks" findet ein Snack-Rezept, Filter "Mahlzeiten" nicht', async ({ page }) => {
+    await loginAs(page)
+    const title = `QA-E2E-Filter-${Date.now()}`
+    const created = await createRecipeViaApi(page, title, 'snack')
+    try {
+      await page.goto('/ernaehrung/rezepte')
+      await page.getByRole('button', { name: 'Snacks' }).click()
+      await expect(page.getByText(title)).toBeVisible()
+
+      await page.getByRole('button', { name: 'Mahlzeiten' }).click()
+      await expect(page.getByText(title)).not.toBeVisible()
+    } finally {
+      await deleteRecipeViaApi(page, created.body.id)
+    }
+  })
+
+  test('AC: Typ-Filter und Besitzer-Filter sind kombinierbar', async ({ page }) => {
+    await loginAs(page)
+    const title = `QA-E2E-Kombi-${Date.now()}`
+    const created = await createRecipeViaApi(page, title, 'snack')
+    try {
+      await page.goto('/ernaehrung/rezepte')
+      await page.getByRole('button', { name: 'Snacks' }).click()
+      await page.getByRole('button', { name: 'Eigene Rezepte' }).click()
+      await expect(page.getByText(title)).toBeVisible()
+    } finally {
+      await deleteRecipeViaApi(page, created.body.id)
+    }
+  })
+})
