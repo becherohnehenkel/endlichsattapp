@@ -1,6 +1,6 @@
 # PROJ-48: Startseite: Ultimatives Ziel
 
-## Status: In Progress
+## Status: Approved
 **Created:** 2026-09-03
 **Last Updated:** 2026-09-03
 
@@ -122,7 +122,54 @@ Keine neuen Pakete.
 **Verifiziert:** `npm run build`, `npm run lint`, `npm test` (443/443, unverändert). Per Playwright verifiziert: Sektion erscheint in der richtigen Reihenfolge (Video → Ziel → So legst du los), alle 6 Punkte sichtbar, keine Links innerhalb der Liste (`ul li a` Count 0), kein horizontales Scrollen auf Mobile (375px). Identisch für Gast (getestet) und eingeloggte Nutzer (kein bedingter Code-Pfad, der das unterscheiden würde).
 
 ## QA Test Results
-_To be added by /qa_
+
+**Tested:** 2026-09-03
+**App URL:** http://localhost:3000
+**Tester:** QA Engineer (AI)
+
+### Acceptance Criteria Status
+
+#### Seitenstruktur
+- [x] Sektion erscheint unterhalb des Video-Platzhalters und oberhalb von "So legst du los"
+- [x] Zeigt Überschrift "Ein Ziel für uns alle", zweiabsätzigen Intro-Text und die 6 Ziel-Punkte
+
+#### Inhalt
+- [x] Die 6 Ziel-Punkte erscheinen in genau der vorgegebenen Reihenfolge
+- [x] Weder Überschrift, Intro-Text noch die 6 Punkte sind klickbar oder verlinkt (per DOM-Traversal geprüft: kein `<a>`/`<button>` im Elternpfad)
+
+#### Gast- & Nutzer-Verhalten
+- [x] Inhalt ist für Gast und eingeloggten Nutzer identisch (Ziel-Sektion unverändert bei beiden, nur die Begrüßung darüber unterscheidet sich erwartungsgemäß per Namen)
+
+### Edge Cases Status
+- [x] Sehr kleine Bildschirme (320px, unter der spezifizierten 360px-Grenze getestet): kein horizontales Scrollen
+- [x] Gast ohne jede Session: Sektion identisch zu einem eingeloggten Nutzer
+- [x] Eingeloggter Nutzer mit langem Namen in der Begrüßung (QA-Konto "Lukas Testerson"): keine Wechselwirkung mit der Ziel-Sektion, weiterhin vollständig und unverlinkt
+
+### Security Audit Results
+- [x] Kein `dangerouslySetInnerHTML`/`innerHTML`, kein `fetch` — rein statischer, hart codierter Text ohne jeden Nutzereingabe- oder Netzwerkbezug, kein Angriffsvektor
+- [x] Keine Auth-/Berechtigungslogik betroffen — Sektion ist für jeden identisch sichtbar
+- [x] Rate Limiting: nicht anwendbar (keine Server-Requests)
+
+### Regression Testing
+- [x] Vitest-Gesamtsuite: 443/443 grün, unverändert
+- [x] PROJ-47 (Startseite Neu, dieselbe Seite): alle 23 Tests weiterhin grün — die neue Sektion stört Begrüßung, Video, Funktions-Karten und Coach-Banner nicht
+- [x] PROJ-22 (App-Performance) und PROJ-42 (Analyse-Übersichtsseite), beide mit Homepage-Bezug: 20/20 grün
+
+### Bugs Found
+
+Keine Bugs im PROJ-48-Scope gefunden. Beim Schreiben der Tests wurde einmal zu früh (vor vollständigem Rendern) `main.innerText()` gelesen — derselbe Timing-Fallstrick wie bei früheren QA-Runden dieser Session, in den eigenen Tests behoben, kein Produktbug.
+
+### E2E-Testsuite
+
+Neu: `tests/PROJ-48-startseite-ultimatives-ziel.spec.ts` — 8 Tests, decken alle 5 Acceptance Criteria und alle 3 Edge Cases ab. Kein Backend nötig, Login nur für den Gast-vs-eingeloggt-Vergleich. Grün auf Chromium und Mobile Chrome.
+
+### Summary
+- **Acceptance Criteria:** 5/5 passed
+- **Edge Cases:** 3/3 passed
+- **Bugs Found:** 0 (0 critical, 0 high, 0 medium, 0 low)
+- **Security:** Pass (kein Angriffsvektor, statischer Inhalt)
+- **Production Ready:** YES
+- **Recommendation:** Deploy
 
 ## Deployment
 _To be added by /deploy_
