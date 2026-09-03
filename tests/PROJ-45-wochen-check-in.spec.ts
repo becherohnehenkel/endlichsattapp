@@ -140,23 +140,54 @@ test.describe('Formular-Felder', () => {
     }
   })
 
-  test('AC: die 6 Slider-Fragen zeigen die vorgegebenen Endpunkt-/Zwischen-Beschriftungen', async ({ page }) => {
+  test('AC: die 6 Slider-Fragen zeigen die vorgegebenen fixen Endpunkt-Beschriftungen', async ({ page }) => {
     await page.goto('/check-in')
     await expect(page.getByText('1 Schlecht', { exact: true })).toBeVisible()
     await expect(page.getByText('10 Sehr erholsam', { exact: true })).toBeVisible()
-    await expect(page.getByText('0 Min', { exact: true })).toBeVisible()
-    await expect(page.getByText('>10 Std.', { exact: true })).toBeVisible()
+    await expect(page.getByText('0 Min', { exact: true }).first()).toBeVisible()
+    await expect(page.getByText('10 Std.', { exact: true })).toBeVisible()
     await expect(page.getByText('0 Krank', { exact: true })).toBeVisible()
     await expect(page.getByText('10 Bäume ausreißen', { exact: true })).toBeVisible()
     await expect(page.getByText('0 Gar nicht', { exact: true })).toBeVisible()
     await expect(page.getByText('10 Alles getrackt', { exact: true })).toBeVisible()
     await expect(page.getByText('0 Sehr schwer', { exact: true })).toBeVisible()
-    await expect(page.getByText('5 Immer mal wieder', { exact: true })).toBeVisible()
     await expect(page.getByText('10 Total einfach', { exact: true })).toBeVisible()
     await expect(page.getByText('0 Unsicher', { exact: true })).toBeVisible()
-    await expect(page.getByText('5 Könnte klappen', { exact: true })).toBeVisible()
     await expect(page.getByText('10 Bin bereit', { exact: true })).toBeVisible()
     expect(await page.locator('[role="slider"]').count()).toBe(6)
+  })
+
+  // Refinement 2026-09-03 (Slider-Feinschliff): jede Stufe der 5 qualitativen Slider hat
+  // ein eigenes Wort, das live als Ergebnistext mittig unter dem Slider erscheint. Dieser
+  // Test prüft die Default-Werte; die Live-Aktualisierung wird im nächsten Test geprüft.
+  test('AC: die 5 qualitativen Slider zeigen bei ihrem Startwert das passende Wort als Ergebnistext', async ({ page }) => {
+    await page.goto('/check-in')
+    await expect(page.getByText('Okay', { exact: true })).toBeVisible() // Schlaf, Startwert 5
+    await expect(page.getByText('Mittelmäßig', { exact: true }).first()).toBeVisible() // Energielevel, Startwert 5
+    await expect(page.getByText('Mittelmäßig', { exact: true }).nth(1)).toBeVisible() // Ernährung, Startwert 5
+    await expect(page.getByText('Immer mal wieder', { exact: true })).toBeVisible() // Bewusst essen, Startwert 5
+    await expect(page.getByText('Unsicher', { exact: true })).toBeVisible() // Sicherheit ohne Tracking, Startwert 0
+  })
+
+  test('AC: der Ergebnistext eines qualitativen Sliders aktualisiert sich live beim Verschieben', async ({ page }) => {
+    await page.goto('/check-in')
+    const schlafThumb = page.locator('#schlaf [role="slider"]')
+    await schlafThumb.click()
+    await page.keyboard.press('Home')
+    await expect(page.getByText('Schlecht', { exact: true })).toBeVisible()
+    await page.keyboard.press('End')
+    await expect(page.getByText('Sehr erholsam', { exact: true }).last()).toBeVisible()
+  })
+
+  test('AC: der Screentime-Slider läuft in den vorgegebenen nicht-linearen Minuten-Schritten und zeigt die formatierte Zeit', async ({ page }) => {
+    await page.goto('/check-in')
+    await expect(page.getByText('0 Min', { exact: true }).last()).toBeVisible() // Startwert 0
+    const screentimeThumb = page.locator('#screentime [role="slider"]')
+    await screentimeThumb.click()
+    await page.keyboard.press('ArrowRight') // Index 0 -> 1 = 15 Min
+    await expect(page.getByText('15 Min', { exact: true })).toBeVisible()
+    await page.keyboard.press('End') // -> 600 Min = 10 Std
+    await expect(page.getByText('10 Std', { exact: true }).last()).toBeVisible()
   })
 
   test('AC: die Trainings-Frage zeigt 4 auswählbare Optionen (0/1/2/3 Mal)', async ({ page }) => {
@@ -175,12 +206,14 @@ test.describe('Bedingte Elemente', () => {
     await expect(page.getByText('Dann tracke an normalen Arbeitstagen nicht')).toHaveCount(0)
 
     const slider = page.locator('#sicherheit-ohne-tracking [role="slider"]')
-    await slider.focus()
+    await slider.click()
     for (let i = 0; i < 4; i++) await page.keyboard.press('ArrowRight')
     await expect(page.getByText('Dann tracke an normalen Arbeitstagen nicht')).toHaveCount(0)
 
     await page.keyboard.press('ArrowRight') // now at 5
     await expect(page.getByText('Dann tracke an normalen Arbeitstagen nicht — deine Routine sitzt schon.')).toBeVisible()
+    // Refinement 2026-09-03: der Zusatz-Hinweis UND der adaptive Ergebnistext sind ab 5 gleichzeitig sichtbar
+    await expect(page.getByText('Könnte klappen', { exact: true })).toBeVisible()
 
     await page.keyboard.press('ArrowLeft') // back to 4
     await expect(page.getByText('Dann tracke an normalen Arbeitstagen nicht')).toHaveCount(0)
@@ -295,7 +328,7 @@ test.describe.serial('Speichern, Bearbeiten & Mini-Historie (eingeloggte Nutzer)
         antworten: {
           highlights: 'QA-Seed: vergangene Woche',
           lowlights: '', lowlightsUrsache: '', naechsteWocheAnders: '',
-          schlaf: 5, screentime: 5, energielevel: 5, achtsamkeit: 5, bewusstEssen: 5,
+          schlaf: 5, screentime: 90, energielevel: 5, achtsamkeit: 5, bewusstEssen: 5,
           sicherheitOhneTracking: 0, training: null, trainingGrund: '', sonstiges: '',
         },
       },
@@ -346,7 +379,7 @@ test.describe('Gast-Verhalten', () => {
     await page.getByLabel('Highlights der letzten Woche').fill('Gast-Eintrag')
     await expect(page.getByLabel('Highlights der letzten Woche')).toHaveValue('Gast-Eintrag')
     const slider = page.locator('#schlaf [role="slider"]')
-    await slider.focus()
+    await slider.click()
     await page.keyboard.press('ArrowRight')
     await page.getByRole('button', { name: '3x', exact: true }).click()
     await expect(page.getByText('Dein Körper ist dir wichtig — toll!')).toBeVisible()
@@ -383,7 +416,7 @@ test.describe('Security', () => {
   test('AC: POST /api/check-in/wochen ohne Login gibt 401', async ({ page, context }) => {
     await context.clearCookies()
     const res = await page.request.post('/api/check-in/wochen', {
-      data: { wocheStart: AKTUELLE_WOCHE, antworten: { highlights: '', lowlights: '', lowlightsUrsache: '', naechsteWocheAnders: '', schlaf: 5, screentime: 5, energielevel: 5, achtsamkeit: 5, bewusstEssen: 5, sicherheitOhneTracking: 0, training: null, trainingGrund: '', sonstiges: '' } },
+      data: { wocheStart: AKTUELLE_WOCHE, antworten: { highlights: '', lowlights: '', lowlightsUrsache: '', naechsteWocheAnders: '', schlaf: 5, screentime: 90, energielevel: 5, achtsamkeit: 5, bewusstEssen: 5, sicherheitOhneTracking: 0, training: null, trainingGrund: '', sonstiges: '' } },
     })
     expect(res.status()).toBe(401)
   })
@@ -393,7 +426,7 @@ test.describe('Security', () => {
     await page.goto('/analyse/start')
     await page.waitForTimeout(1500)
     const res = await page.request.post('/api/check-in/wochen', {
-      data: { wocheStart: AKTUELLE_WOCHE, antworten: { highlights: '', lowlights: '', lowlightsUrsache: '', naechsteWocheAnders: '', schlaf: 5, screentime: 5, energielevel: 5, achtsamkeit: 5, bewusstEssen: 5, sicherheitOhneTracking: 0, training: null, trainingGrund: '', sonstiges: '' } },
+      data: { wocheStart: AKTUELLE_WOCHE, antworten: { highlights: '', lowlights: '', lowlightsUrsache: '', naechsteWocheAnders: '', schlaf: 5, screentime: 90, energielevel: 5, achtsamkeit: 5, bewusstEssen: 5, sicherheitOhneTracking: 0, training: null, trainingGrund: '', sonstiges: '' } },
     })
     expect(res.status()).toBe(403)
   })

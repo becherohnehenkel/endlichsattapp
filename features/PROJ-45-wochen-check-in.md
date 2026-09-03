@@ -1,6 +1,6 @@
 # PROJ-45: Wochen-Check-In
 
-## Status: Deployed (Refinement: Slider-Feinschliff "In Progress" — Frontend+Backend fertig, bereit für /qa)
+## Status: Deployed (Refinement: Slider-Feinschliff "Approved")
 **Created:** 2026-09-02
 **Last Updated:** 2026-09-03
 
@@ -397,3 +397,61 @@ Neu: `tests/PROJ-45-wochen-check-in.spec.ts` — 23 Tests, je einer pro Akzeptan
 - **Deployed:** 2026-09-02 (Vercel auto-deploy via Push zu `main`, commits `7c50fd2`..`cf83c96`)
 - **Verified in Produktion:** Nutzer hat die Live-Seite geprüft, alles grün ("Alles auf Grün").
 - **Umfang dieses Deploys:** vollständige PROJ-45-Implementierung — Wochen-Check-In-Formular unter `/check-in` mit allen 12 Fragen (5 Freitextfelder, 6 Slider, Trainings-Auswahl mit bedingtem Feedback), neue Tabelle `wochen_check_ins` (ein Eintrag pro Nutzer pro Kalenderwoche, per Unique-Constraint erzwungen) + `POST /api/check-in/wochen` zum wochenbasierten Upsert, Vorausfüllung der aktuellen Woche, ausklappbare Mini-Historie zum Laden/Bearbeiten vergangener Einträge, Gast-Hinweistext statt Speichern-Button. `getWeekStartIso` aus der PROJ-17-Route nach `src/lib/wochen-grenzen.ts` ausgelagert (jetzt von PROJ-17 und PROJ-45 geteilt). Migration wurde vom Nutzer manuell ausgeführt und live verifiziert (siehe Implementation Notes Backend).
+
+---
+
+## QA Test Results (Refinement 2026-09-03: Slider-Feinschliff)
+
+**Tested:** 2026-09-03
+**App URL:** http://localhost:3000
+**Tester:** QA Engineer (AI)
+
+### Automated Tests
+- `npm test` (Vitest): **464/464 passed** (2 neue Tests aus der Backend-Phase für die Screentime-Validierung)
+- `node_modules/.bin/playwright test tests/PROJ-45-wochen-check-in.spec.ts` — Chromium: **26/26 passed** (zweifach wiederholt, beide Male grün); Mobile Chrome (375px): **26/26 passed**
+- `tsc --noEmit`: sauber (unverändert 1 vorbestehender, unabhängiger Fehler in `PROJ-2-user-authentication.spec.ts`)
+
+### Acceptance Criteria Status (Slider-Feinschliff)
+- [x] Jeder der 5 qualitativen Slider zeigt bei einer neuen Stufe live das passende Wort als Ergebnistext mittig unter dem Slider
+- [x] Screentime-Slider läuft in den vorgegebenen nicht-linearen Schritten (0/15/30/45/60 Min, danach 30-Min-Schritte bis 600 Min) und zeigt die formatierte Zeit live mittig unter dem Slider
+- [x] Gespeichert wird ausschließlich die zugrunde liegende Zahl (verifiziert per Integrationstest: `insertCall`/`upsert`-Payload enthält den rohen Zahlenwert, keine Wortliste)
+- [x] Sicherheits-Slider zeigt ab Stufe 5 sowohl den bestehenden Zusatz-Hinweis als auch den neuen adaptiven Ergebnistext gleichzeitig
+
+### Edge Cases Status
+- [x] Endpunkt-Beschriftungen bleiben bei allen 6 Slidern fix links/rechts stehen, unabhängig von der gewählten Stufe
+- [x] Screentime-Grenzwerte (0 Min und 600 Min / 10 Std) korrekt erreichbar und formatiert
+- [x] Alte, vor diesem Refinement gespeicherte Einträge mit Screentime-Werten 0–10 (alte Skala) rendern ohne Absturz — `wortFuerWert`/`formatScreentime` sind reine Arithmetik-/Lookup-Funktionen ohne Sonderfallbehandlung nötig; ein alter Wert wie „4" wird einfach als „4 Min" angezeigt (kein Datenverlust, keine Migration bestehender Zeilen nötig, konsistent mit der Spec-Entscheidung „keine Schema-Änderung")
+
+### Security Audit Results
+- [x] `POST /api/check-in/wochen`: neuer Screentime-Wertebereich validiert per exakter Werte-Prüfung (`refine` gegen die 23 erlaubten Stufen) statt nur `min`/`max` — ein Zwischenwert wie 37 (den die UI nie erzeugen kann) wird mit 400 abgelehnt, kein Vertrauen auf Client-seitige Beschränkung allein
+- [x] Authentifizierung/Autorisierung (401/403) unverändert und weiterhin vor der Zod-Validierung geprüft — durch bestehende + neue Tests bestätigt
+- [x] Keine neuen Freitextfelder, kein `dangerouslySetInnerHTML`, keine neue Angriffsfläche durch dieses Refinement
+- [x] Rate Limiting weiterhin nicht implementiert — konsistent mit dem Rest des Projekts, kein neues Risiko durch dieses Refinement
+
+### Regression Testing
+- [x] PROJ-45 eigene Suite: 26/26 (Chromium + Mobile Chrome)
+- [x] PROJ-46 (Gewohnheiten, teilt sich die `/check-in`-Seite): 12/12 grün
+- [x] PROJ-17 (Wöchentlicher Sättigungs-Recap, teilt sich `getWeekStartIso`): 37/38 grün — 1 vorbestehender, unabhängiger Bug gefunden (siehe unten), nicht durch dieses Refinement verursacht
+- [x] Mobile (375px): kein horizontales Scrollen, alle adaptiven Labels lesbar, Slider bedienbar
+
+**1 vorbestehender, nicht mit diesem Refinement zusammenhängender Bug entdeckt** (nicht Teil dieser Feature-Bewertung):
+- `tests/PROJ-17-woechentlicher-saettigungs-recap.spec.ts`: „Lade-Skelett wird angezeigt während Recap lädt" wirft `TypeError: resolve is not a function` (3/3 Wiederholungen fehlgeschlagen) — die Promise-Resolver-Variable wird nur zugewiesen, wenn der `/api/recap/wochen`-Request tatsächlich vom gemockten `page.route()`-Handler abgefangen wird; reine Test-Infrastruktur, betrifft weder Slider noch Check-In-Logik. Als separater Hintergrund-Task ausgelagert.
+
+### Bugs Found (im PROJ-45-Refinement-Scope)
+
+Keine Bugs gefunden. Der einzige während der Frontend-Phase gefundene und dokumentierte Punkt (3 veraltete E2E-Assertions, die noch die alten statischen Labels erwarteten) wurde in dieser QA-Runde selbst behoben — kein separater Bugfix-Zyklus nötig, da es sich um reine Testanpassungen an eine bewusste, bereits abgenommene Spec-Änderung handelte, nicht um einen Produktfehler.
+
+### E2E-Testsuite (Ergänzungen)
+- 3 neue Tests: Default-Wörter der 5 qualitativen Slider, Live-Aktualisierung beim Verschieben, Screentime-Formatierung über mehrere Stufen
+- 1 bestehender Test erweitert: Sicherheits-Slider prüft jetzt zusätzlich den gleichzeitig sichtbaren adaptiven Ergebnistext
+- 3 veraltete Assertions ersetzt (alte statische `midLabel`-Texte, alter `>10 Std.`-Endpunkt)
+- Alle Screentime-Fixture-Werte (Seed-Daten, Auth-Test-Payloads) von `5` (unter der neuen Validierung ungültig) auf `90` korrigiert
+- **Nebenfund während der QA-Runde:** `.focus()` auf dem Radix-Slider-Thumb war intermittierend unzuverlässig (ca. 20–50 % Fehlerrate bei nachfolgenden Tastatur-Interaktionen, reproduziert über mehrere Wiederholungen) — durch `.click()` auf den Thumb ersetzt (4 Stellen in der Suite), danach über mehrere volle Läufe hinweg stabil grün. Reine Test-Infrastruktur, kein Produktverhalten betroffen (der Slider selbst funktioniert bei echter Maus-/Touch-Bedienung zuverlässig).
+
+### Summary
+- **Acceptance Criteria:** 4/4 passed (Slider-Feinschliff-spezifisch)
+- **Edge Cases:** 3/3 passed
+- **Bugs Found:** 0 im PROJ-45-Scope; 1 vorbestehender, unabhängiger Bug in PROJ-17 gefunden und ausgelagert
+- **Security:** Pass
+- **Production Ready:** YES
+- **Recommendation:** Deploy
