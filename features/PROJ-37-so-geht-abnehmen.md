@@ -1,8 +1,10 @@
 # PROJ-37: So geht abnehmen (inkl. Kcal-Rechner)
 
-## Status: Deployed
+## Status: Deployed (Refinement: Arbeitspunkte-Feinschliff "Planned")
 **Created:** 2026-08-31
 **Last Updated:** 2026-09-03
+
+**Refinement (2026-09-03, Arbeitspunkte-Feinschliff):** Betrifft Arbeitspunkt 2 (Layout gestapelt statt nebeneinander, neue Farbgebung, Wochentag-Beschriftungen, neue Überschrift/Captions), einen komplett neuen Arbeitspunkt 4 "Warum auf Ballaststoffe achten" (bisherige Arbeitspunkte 4+5 rücken auf 5+6), sowie 4 neue Vergleichsicons bei Krafttraining und ein neues Icon bei Schlaf/Erholung. Aus 5 Arbeitspunkten werden 6. Nächster Schritt: `/frontend`.
 
 ## Dependencies
 - Requires: PROJ-36 (Ernährung-Hub) — Zielseite `/ernaehrung/so-geht-abnehmen` existiert bereits als Platzhalter, wird hier mit echtem Inhalt befüllt
@@ -57,16 +59,16 @@
 - [ ] Angenommen ein Gast berechnet ein Ergebnis, dann wird nichts gespeichert — beim nächsten Besuch sind die Felder wieder leer.
 
 ### Seiten-Struktur "So geht abnehmen"
-- [ ] Angenommen ein Nutzer öffnet `/ernaehrung/so-geht-abnehmen`, dann sieht er 5 Arbeitspunkte in dieser Reihenfolge, alle mit echtem Inhalt (keine Platzhalter mehr): 1. Kcal-Rechner, 2. Wöchentlich vs. Täglich, 3. Warum auf Proteine achten, 4. Krafttraining, 5. Schlaf/Erholung.
+- [ ] Angenommen ein Nutzer öffnet `/ernaehrung/so-geht-abnehmen`, dann sieht er 6 Arbeitspunkte in dieser Reihenfolge, alle mit echtem Inhalt (keine Platzhalter mehr): 1. Kcal-Rechner, 2. Wöchentlich vs. tägliches Kaloriendefizit, 3. Warum auf Proteine achten, 4. Warum auf Ballaststoffe achten, 5. Krafttraining, 6. Schlaf/Erholung. *(Refinement 2026-09-03: neuer Arbeitspunkt 4, bisherige 4+5 rücken auf 5+6)*
 - [ ] Angenommen die Seite wird angezeigt, dann bleibt der bestehende Breadcrumb-Header ("Ernährung / So geht abnehmen") aus PROJ-36 erhalten.
 - [ ] Angenommen die Seite wird angezeigt, dann folgen alle 5 Arbeitspunkte demselben Karten-/Fortschritts-Muster wie der bestehende "Wie esse ich richtig?"-Guide (nummeriert, "Verstanden"-Button, Fortschrittsbalken, lokal gespeicherter Fortschritt).
 
-### Arbeitspunkt 2: Wöchentlich vs. Täglich
+### Arbeitspunkt 2: Wöchentlich vs. tägliches Kaloriendefizit (Refinement 2026-09-03)
 - [ ] Angenommen ein Nutzer öffnet diesen Arbeitspunkt, dann sieht er den Erklärtext: "Dein Körper rechnet nicht in Tagen, sondern in Wochen. Ein Tag über deinem Ziel bedeutet nicht, dass du 'versagt' hast — er wird einfach von den anderen sechs Tagen ausgeglichen. Schau auf den Wochendurchschnitt, nicht auf jeden einzelnen Tag."
-- [ ] Angenommen der Arbeitspunkt wird angezeigt, dann zeigt er zwei CSS-gestylte Balken-Schaubilder mit je 7 Balken (repräsentativ für die 7 Wochentage):
-  - Schaubild 1 "Wie ein starrer Plan aussieht": 7 gleich hohe Balken. Caption: "Jeden Tag exakt gleich."
-  - Schaubild 2 "Wie es wirklich aussieht": 5 ungefähr gleich niedrige Balken, 1 etwas höherer, 1 etwas niedrigerer Balken. Caption: "Mal mehr, mal weniger — im Schnitt im Ziel."
-- [ ] Angenommen die Schaubilder werden angezeigt, dann nutzen sie die bestehende App-Farbpalette (Primärgrün für reguläre Tage, warmer Akzent-Ton für den höheren Tag) — keine neuen Bild-Assets, reines CSS/HTML.
+- [ ] Angenommen der Arbeitspunkt wird angezeigt, dann zeigt er zwei CSS-gestylte Balken-Schaubilder, jedes in einer eigenen Box, **untereinander gestapelt statt nebeneinander — auch auf Desktop**:
+  - Box 1 "Wie ein starrer Plan aussieht": **neutrale, gedeckte Balkenfarbe und neutraler Box-Hintergrund** (keine kräftigen App-Farben — bewusst zurückgenommen, da dies der "falsche"/unrealistische Ansatz ist). 7 gleich hohe Balken, je mit der Wochentag-Abkürzung (Mo–So) darunter. Caption: "Jeden Tag exakt gleich viele Kalorien"
+  - Box 2 "Wie es wirklich aussieht": **kräftige, bestehende App-Farben (Primärgrün + warmer Akzent-Ton für den höheren Tag) auf leicht grünem Box-Hintergrund** — hervorgehoben als der richtige/wichtige Ansatz. 5 ungefähr gleich niedrige Balken, 1 etwas höherer, 1 etwas niedrigerer Balken, je mit der Wochentag-Abkürzung (Mo–So) darunter. Caption: "Mal mehr Kalorien, mal weniger — im Schnitt trotzdem im Defizit"
+- [ ] Angenommen die Schaubilder werden angezeigt, dann bleiben sie reines CSS/HTML (keine neuen Bild-Assets, keine Chart-Bibliothek).
 
 ### Arbeitspunkt 3: Warum auf Proteine achten
 - [ ] Angenommen ein Nutzer öffnet diesen Arbeitspunkt, dann sieht er den Erklärtext: "Protein hält dich länger satt als Kohlenhydrate oder Fett — und schützt beim Abnehmen deine Muskeln. Ohne genug Protein verlierst du beim Abnehmen nicht nur Fett, sondern auch Muskelmasse."
@@ -74,14 +76,22 @@
 - [ ] Angenommen der Arbeitspunkt wird angezeigt, dann listet er 3 Lebensmittel-Kategorien: Tierisch (mageres Fleisch, Fisch), Vegetarisch (magerer Käse, Milchprodukte), Vegan (Tofu, Erbsen, Linsen, Bohnen, Sojagranulat — mit Hinweis, dass diese zusätzlich Kohlenhydrate & Ballaststoffe enthalten).
 - [ ] Angenommen der Arbeitspunkt wird angezeigt, dann enthält er kein Schaubild (reiner Text/Listen-Inhalt).
 
-### Arbeitspunkt 4: Krafttraining
+### Arbeitspunkt 4: Warum auf Ballaststoffe achten (Refinement 2026-09-03 — komplett neu)
+- [ ] Angenommen ein Nutzer öffnet diesen Arbeitspunkt, dann sieht er den Erklärtext: "Ballaststoffe sind kein Ballast für den Körper sondern wichtig für deine Verdauung und Sättigung. Mehr Ballaststoffe heißt dein Körper nimmt die Nahrungsenergie langsamer auf, beugt damit Heißhunger und sättigt dich damit länger."
+- [ ] Angenommen der Arbeitspunkt wird angezeigt, dann zeigt er eine Warnhinweis-Box (Amber-/Warngelb-Stil, wie z. B. der 5kg-Abweichungshinweis im Kcal-Rechner): "Achtung: Bitte maximal 5g Ballaststoffe mehr pro 4 Wochen in deine Nahrung integrieren. Ansonsten kämpfst du mit deiner Verdauung 💩"
+- [ ] Angenommen der Arbeitspunkt wird angezeigt, dann zeigt er den hervorgehobenen Richtwert "Ziel-Richtwert: Mindestens 30 Ballaststoffe pro Tag. Heißt ca. 10g pro Mahlzeit." in einer grünen Info-Box (gleicher Stil wie der Protein-Richtwert in Arbeitspunkt 3).
+- [ ] Angenommen der Arbeitspunkt wird angezeigt, dann listet er 4 Ballaststoffquellen-Kategorien: Vollkornprodukte & Pseudogetreide (Brot, Wraps, Haferflocken, Quinoa, Amaranth), Hülsenfrüchte (Linsen, Bohnen, (Kicher-)Erbsen), Gemüse und Obst (Brokkoli, Karotten, Fenchel, Beeren — Obst gerne mit Schale), Nüsse, Saaten und Kerne (insbesondere Lein-, Chia- und Flohsamen — mit Hinweis auf höhere Kaloriendichte).
+- [ ] Angenommen der Arbeitspunkt wird angezeigt, dann enthält er kein Schaubild (reiner Text/Listen-Inhalt, analog zu Arbeitspunkt 3).
+
+### Arbeitspunkt 5: Krafttraining (Refinement 2026-09-03: 4 neue Vergleichsicons)
 - [ ] Angenommen ein Nutzer öffnet diesen Arbeitspunkt, dann sieht er 4 nummerierte Gründe: (1) Muskeln erhalten im Kaloriendefizit, (2) Grundumsatz-Effekt, (3) Gesundes Altern (inkl. Kniebeuge-Analogie), (4) Körper formen.
+- [ ] Angenommen der Arbeitspunkt wird angezeigt, dann zeigt jeder der 4 Gründe zusätzlich ein Vergleichsicon (klein/neutral → groß/hervorgehoben, siehe Content-Sektion für die genaue Gestaltung): (1) Lucide "BicepsFlexed"-Icon klein vs. groß, (2) kleine vs. große Flamme, (3) Gesicht mit neutralem vs. lächelndem Mund, (4) Körper-Silhouette schlicht vs. mit sichtbarer Muskeldefinition.
 - [ ] Angenommen der Arbeitspunkt wird angezeigt, dann zeigt er am Ende einen einzelnen, dezenten Text-Link "Trainingspläne findest du im Training-Bereich →", der zu `/training` führt — kein Button, keine weitere Erklärung, um nicht vom Ernährungs-Fokus abzulenken.
 
-### Arbeitspunkt 5: Schlaf / Erholung
-- [ ] Angenommen ein Nutzer öffnet diesen Arbeitspunkt, dann sieht er den Erklärtext zu Sättigungshormonen (Ghrelin/Leptin) und zur allgemeinen Erholungsfunktion von Schlaf (siehe Abschnitt "Content: Arbeitspunkte 2–5" für den finalen Wortlaut).
+### Arbeitspunkt 6: Schlaf / Erholung (Refinement 2026-09-03: neues Icon)
+- [ ] Angenommen ein Nutzer öffnet diesen Arbeitspunkt, dann sieht er den Erklärtext zu Sättigungshormonen (Ghrelin/Leptin) und zur allgemeinen Erholungsfunktion von Schlaf (siehe Abschnitt "Content" für den finalen Wortlaut).
+- [ ] Angenommen der Arbeitspunkt wird angezeigt, dann zeigt er ein schlafendes Gesicht-Icon (ruhige geschlossene Augen, entspannter Mund, 3 aufsteigende "Zzz") neben oder über dem Erklärtext.
 - [ ] Angenommen der Arbeitspunkt wird angezeigt, dann listet er 4 nummerierte Tipps für erholsamen Schlaf: (1) 3-2-1-Regel, (2) kühle Umgebung, (3) Dunkelheit, (4) Umgang mit kreisenden Gedanken (Atemübung, Zählen, Gedanken aufschreiben).
-- [ ] Angenommen der Arbeitspunkt wird angezeigt, dann enthält er kein Schaubild (reiner Text/Listen-Inhalt).
 
 ## Edge Cases
 - Gast berechnet mehrfach hintereinander mit unterschiedlichen Werten → jedes Mal ein frisches, unabhängiges Ergebnis, nichts wird gespeichert oder überschrieben.
@@ -92,13 +102,20 @@
 ## Technical Requirements (optional)
 - Security: Gespeicherte Biometrie-Daten sind personenbezogen — Zugriff ausschließlich auf die eigenen Daten des eingeloggten Nutzers (RLS), Details in `/architecture`/`/backend`.
 
-## Content: Arbeitspunkte 2–5 (finaler Wortlaut)
+### Refinement (2026-09-03): Arbeitspunkte-Feinschliff
+- `BicepsFlexed`-Icon aus `lucide-react` — Paket bereits im Projekt installiert (v0.562.0), kein neuer Dependency-Eintrag nötig.
+- 4 neue, reine CSS/SVG-Icons (Flamme, Gesicht Gesund-Altern, Körper-Silhouette, Schlaf-Gesicht) — keine Bild-Assets, konsistent mit dem bestehenden Muster aus Arbeitspunkt 2.
+- Reine Frontend-/Darstellungs-Änderung — kein neuer Datenbedarf, keine Migration, kein Backend-Bezug.
 
-### 2. Wöchentlich vs. Täglich
+## Content: Arbeitspunkte 2–6 (finaler Wortlaut)
+
+### 2. Wöchentlich vs. tägliches Kaloriendefizit (Refinement 2026-09-03)
 > Dein Körper rechnet nicht in Tagen, sondern in Wochen. Ein Tag über deinem Ziel bedeutet nicht, dass du "versagt" hast — er wird einfach von den anderen sechs Tagen ausgeglichen. Schau auf den Wochendurchschnitt, nicht auf jeden einzelnen Tag.
 
-**Schaubild 1 — "Wie ein starrer Plan aussieht":** 7 gleich hohe Balken. Caption: *"Jeden Tag exakt gleich."*
-**Schaubild 2 — "Wie es wirklich aussieht":** 5 ungefähr gleich niedrige Balken, 1 etwas höherer, 1 etwas niedrigerer Balken. Caption: *"Mal mehr, mal weniger — im Schnitt im Ziel."*
+**Box 1 — "Wie ein starrer Plan aussieht"** (neutrale Balkenfarbe, neutraler Box-Hintergrund): 7 gleich hohe Balken, je mit Wochentag-Abkürzung (Mo/Di/Mi/Do/Fr/Sa/So) darunter. Caption: *"Jeden Tag exakt gleich viele Kalorien"*
+**Box 2 — "Wie es wirklich aussieht"** (kräftige Primärgrün-/Akzent-Farbe, leicht grüner Box-Hintergrund — visuell als der richtige Ansatz hervorgehoben): 5 ungefähr gleich niedrige Balken, 1 etwas höherer, 1 etwas niedrigerer Balken, je mit Wochentag-Abkürzung darunter. Caption: *"Mal mehr Kalorien, mal weniger — im Schnitt trotzdem im Defizit"*
+
+Beide Boxen stehen **untereinander gestapelt, auch auf Desktop** (vorher nebeneinander).
 
 ### 3. Warum auf Proteine achten
 > Protein hält dich länger satt als Kohlenhydrate oder Fett — und schützt beim Abnehmen deine Muskeln. Ohne genug Protein verlierst du beim Abnehmen nicht nur Fett, sondern auch Muskelmasse.
@@ -110,20 +127,37 @@
 > - 🧀 **Vegetarisch:** magerer Käse, Milchprodukte
 > - 🌱 **Vegan:** Tofu, Erbsen, Linsen, Bohnen, Sojagranulat *(enthalten zusätzlich Kohlenhydrate & Ballaststoffe)*
 
-### 4. Krafttraining
+### 4. Warum auf Ballaststoffe achten (Refinement 2026-09-03 — komplett neu)
+> Ballaststoffe sind kein Ballast für den Körper sondern wichtig für deine Verdauung und Sättigung. Mehr Ballaststoffe heißt dein Körper nimmt die Nahrungsenergie langsamer auf, beugt damit Heißhunger und sättigt dich damit länger.
+
+**Warnhinweis-Box** (Amber-Stil): *"Achtung: Bitte maximal 5g Ballaststoffe mehr pro 4 Wochen in deine Nahrung integrieren. Ansonsten kämpfst du mit deiner Verdauung 💩"*
+
+**Info-Box** (grün, gleicher Stil wie Protein-Richtwert): *"Ziel-Richtwert: Mindestens 30 Ballaststoffe pro Tag. Heißt ca. 10g pro Mahlzeit."*
+
+Woher bekommst du sie?
+- 🌾 **Vollkornprodukte & Pseudogetreide:** Brot, Wraps, Haferflocken, Quinoa, Amaranth
+- 🫘 **Hülsenfrüchte:** Linsen, Bohnen, (Kicher-)Erbsen
+- 🥦 **Gemüse und Obst:** Brokkoli, Karotten, Fenchel, Beeren *(Obst gerne mit Schale)*
+- 🌰 **Nüsse, Saaten und Kerne:** insbesondere Lein-, Chia- und Flohsamen *(höhere Kaloriendichte)*
+
+### 5. Krafttraining (Refinement 2026-09-03: 4 neue Vergleichsicons)
 > Warum Krafttraining beim Abnehmen hilft:
 >
 > **1. Muskeln erhalten** — Im Kaloriendefizit denkt dein Körper sonst: "Das brauche ich nicht, kostet nur Energie." Krafttraining signalisiert ihm: Diese Muskulatur wird gebraucht — die bleibt.
+> **Icon:** Lucide `BicepsFlexed`-Icon, klein/neutral-grau → groß/Primärgrün (gleiches Icon, zwei Größen — kein Freihand-Icon, bewusste Entscheidung nach mehreren gescheiterten Eigenentwürfen, siehe Decision Log).
 >
 > **2. Grundumsatz** — Mehr Muskelmasse erhöht deinen Grundumsatz (nicht überbewerten, aber ein netter Nebeneffekt).
+> **Icon:** kleine, schmale Flamme (neutral-grau) → große Flamme (zweifarbig Amber/Grün) — ohne umgebenden Körper-Rahmen.
 >
 > **3. Gesund altern** — Jede Bewegung bleibt mit steigendem Alter leichter. Eine halbe Kniebeuge ist ein Toilettengang, den du mit 80 noch selbstständig schaffen willst.
+> **Icon:** rundes Gesicht mit neutralem Strich-Mund (grau) → rundes Gesicht mit Lächeln (grün), beide mit einfachen Punkt-Augen.
 >
 > **4. Körper formen** — Kleidung sitzt leichter, du fühlst dich wohler in deiner Haut.
+> **Icon:** schlichte Körper-Silhouette inkl. Beinen (grau) → Körper-Silhouette inkl. Beinen mit angedeuteter Muskeldefinition (grün, dünne interne Linien).
 
 Am Ende: dezenter Text-Link *"Trainingspläne findest du im Training-Bereich →"* → `/training`.
 
-### 5. Schlaf / Erholung
+### 6. Schlaf / Erholung (Refinement 2026-09-03: neues Icon)
 > Ein übermüdeter Körper hat mehr Hunger — Schlafmangel bringt deine Sättigungshormone durcheinander (mehr Ghrelin, weniger Leptin). Das Ergebnis: mehr Appetit, und unbewusst greifst du eher zu schnellen Kalorien wie Süßigkeiten und Snacks statt zu einer sättigenden Mahlzeit.
 >
 > Genauso wichtig: Schlaf ist die Zeit, in der dein Körper insgesamt zur Ruhe kommt — das System fährt herunter und erholt sich. Nur so kannst du jeden Tag die Leistung abrufen, die du abrufen möchtest.
@@ -137,6 +171,8 @@ Am Ende: dezenter Text-Link *"Trainingspläne findest du im Training-Bereich →
 > **3. Dunkelheit** — Rollladen, blickdichter Vorhang oder Schlafmaske.
 >
 > **4. Kreisende Gedanken?** — Langsam ein-, noch langsamer ausatmen, bis du einschläfst. Oder von 21 aufwärts endlos weiterzählen. Im Notfall: Gedanken mit Stift und Papier festhalten statt im Kopf zu wälzen.
+
+**Icon:** schlafendes Gesicht neben/über dem einleitenden Text — ruhige geschlossene Augen (sanfte Kurven), entspannter Mund, 3 aufsteigende "Zzz"-Buchstaben (keine Schlafmütze, keine Nasen-Blase — beides in der Design-Abstimmung verworfen, siehe Decision Log).
 
 ## Open Questions
 - [x] Exakte Copy/Reihenfolge der 4 übrigen Arbeitspunkte (Wöchentlich vs. Täglich, Proteine, Krafttraining, Schlaf/Erholung) → final erarbeitet im Refinement vom 2026-08-31, siehe Abschnitt "Content: Arbeitspunkte 2–5"
@@ -164,6 +200,20 @@ Am Ende: dezenter Text-Link *"Trainingspläne findest du im Training-Bereich →
 | Eiweiß-Faktoren gelten unabhängig vom gewählten Ziel (Fett verlieren/Halten/Muskeln aufbauen) | Nutzerentscheidung — einfachste Umsetzung, entspricht der Original-Vorgabe ohne zusätzliche Ziel-abhängige Faktoren | 2026-09-03 |
 | Anzeige zunächst als zwei zusätzliche Zeilen im bestehenden Ergebnis-Kästchen statt eigener Karte oder Spannen-Darstellung | Nutzerentscheidung nach 3 vorgestellten Optionen — bleibt im bestehenden, kompakten Kästchen-Stil, kein neues UI-Element nötig | 2026-09-03 |
 | **Iteration 2026-09-03:** Nach Live-Ansicht durch Nutzer ersetzt — Ergebnis-Kästchen vertikal 2-geteilt: links Kalorien (volle Höhe), rechts oben Mindest-Eiweiß, rechts unten optimales Eiweiß, statt schmaler Textzeilen | Nutzerwunsch: Eiweißwerte sollen präsenter/prominenter wirken als reiner Fließtext unter dem Kalorienergebnis — als direkte Skizze vom Nutzer vorgegeben, live im Code umgesetzt und per Screenshot bestätigt | 2026-09-03 |
+
+#### Refinement (2026-09-03): Arbeitspunkte-Feinschliff
+
+| Decision | Rationale | Date |
+|----------|-----------|------|
+| Arbeitspunkt 2 (Wöchentlich vs. Täglich) von nebeneinander auf gestapelt umgestellt, inkl. Farb-Differenzierung (neutral vs. hervorgehoben grün) | Nutzerwunsch — soll auch auf Desktop übereinander stehen; die Farbgebung soll visuell klarmachen, welcher der beiden Ansätze "richtig" ist (starrer Plan = neutral/unauffällig, realistischer Ansatz = grün hervorgehoben) | 2026-09-03 |
+| Wochentag-Abkürzungen (Mo–So) unter jedem Balken ergänzt | Nutzerwunsch — macht die Balken konkreter lesbar (eine echte Woche statt 7 abstrakter Balken) | 2026-09-03 |
+| Neuer Arbeitspunkt 4 "Warum auf Ballaststoffe achten" direkt nach Proteine eingefügt (bisherige 4+5 rücken auf 5+6) | Nutzerwunsch — Ballaststoffe sind fachlich eng mit dem Protein-Arbeitspunkt verwandt (beide zentrale Makro-/Sättigungs-Themen), gehört daher direkt danach | 2026-09-03 |
+| Ballaststoffe-Warnhinweis (max. 5g/4 Wochen) bekommt eine eigene, vom Ziel-Richtwert farblich abgesetzte Box (Amber statt Grün) | Zwei fachlich unterschiedliche Aussagen (Warnung vs. Ziel) sollen sich nicht optisch vermischen — Amber ist im Projekt bereits als "Achtung, kein Fehler"-Farbe etabliert (z. B. 5kg-Abweichungshinweis) | 2026-09-03 |
+| Krafttraining-Icons: fertiges Lucide-Icon (`BicepsFlexed`) statt Freihand-SVG für "Muskeln erhalten" | Mehrere Freihand-Entwürfe (gefüllte Formen, dann Linien-Stil nach Referenzfoto, dann mathematisch konstruierte Kreisbögen) wurden vom Nutzer als "sieht nicht wie ein Oberarm aus" abgelehnt — ein bereits im Projekt installiertes, professionell gestaltetes Icon ist zuverlässiger als weitere Freihand-Versuche | 2026-09-03 |
+| Grundumsatz-Icon: nur zwei Flammen (klein/groß), kein umgebender Körper-Rahmen | Nutzerkorrektur — der ursprüngliche Entwurf hatte einen Körperumriss um die Flamme, das war nicht gewünscht, die Flamme allein trägt die Aussage bereits | 2026-09-03 |
+| Körper-formen-Icon: vollständige Silhouette inkl. Beinen statt Oberkörper mit einzelner Linie darunter | Nutzerkorrektur — der einzelne Strich unter dem Oberkörper wirkte unfertig/falsch; entweder ganz mit Beinen oder ganz ohne, Entscheidung fiel auf vollständige Silhouette | 2026-09-03 |
+| Schlaf-Icon: geschlossene, ruhige Augen + 3 aufsteigende "Zzz"-Buchstaben statt Schlafmütze + Nasen-Blase | Nutzerkorrektur nach zwei Iterationsrunden — die Mütze/Blase-Kombination (ursprünglich an 😴ähnlich orientiert) wurde zugunsten der einfacheren, direkteren "Zzz"-Symbolik verworfen | 2026-09-03 |
+| Icon-Konzepte vorab als Artifact-Mockup abgestimmt statt direkt im Code entworfen | Abstrakte, kreative Design-Wünsche (Icons) lassen sich in einem schnellen visuellen Mockup günstiger iterieren als im echten Component-Code — mehrere Korrekturrunden wären im Code deutlich teurer gewesen | 2026-09-03 |
 
 ### Technical Decisions
 <!-- Added by /architecture -->
