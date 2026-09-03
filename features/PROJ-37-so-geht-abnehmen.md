@@ -1,10 +1,10 @@
 # PROJ-37: So geht abnehmen (inkl. Kcal-Rechner)
 
-## Status: Deployed (Refinement: Arbeitspunkte-Feinschliff "Planned")
+## Status: Deployed (Refinement: Arbeitspunkte-Feinschliff "In Progress")
 **Created:** 2026-08-31
 **Last Updated:** 2026-09-03
 
-**Refinement (2026-09-03, Arbeitspunkte-Feinschliff):** Betrifft Arbeitspunkt 2 (Layout gestapelt statt nebeneinander, neue Farbgebung, Wochentag-Beschriftungen, neue Überschrift/Captions), einen komplett neuen Arbeitspunkt 4 "Warum auf Ballaststoffe achten" (bisherige Arbeitspunkte 4+5 rücken auf 5+6), sowie 4 neue Vergleichsicons bei Krafttraining und ein neues Icon bei Schlaf/Erholung. Aus 5 Arbeitspunkten werden 6. Nächster Schritt: `/frontend`.
+**Refinement (2026-09-03, Arbeitspunkte-Feinschliff):** Betrifft Arbeitspunkt 2 (Layout gestapelt statt nebeneinander, neue Farbgebung, Wochentag-Beschriftungen, neue Überschrift/Captions), einen komplett neuen Arbeitspunkt 4 "Warum auf Ballaststoffe achten" (bisherige Arbeitspunkte 4+5 rücken auf 5+6), sowie 4 neue Vergleichsicons bei Krafttraining und ein neues Icon bei Schlaf/Erholung. Aus 5 Arbeitspunkten werden 6. Nächster Schritt: `/qa` (reine Frontend-Änderung, kein Backend nötig).
 
 ## Dependencies
 - Requires: PROJ-36 (Ernährung-Hub) — Zielseite `/ernaehrung/so-geht-abnehmen` existiert bereits als Platzhalter, wird hier mit echtem Inhalt befüllt
@@ -287,6 +287,15 @@ Eine neue API-Route zum Speichern der Rechner-Eingaben für eingeloggte Nutzer (
 - Iteration: erste Version zeigte die Eiweißwerte als zwei zusätzliche `text-xs`-Zeilen unterhalb von "Erhaltungsbedarf" — auf Nutzerwunsch nach Live-Ansicht durch das 2-spaltige Layout ersetzt (siehe Decision Log).
 - `npm run build`, `npm run lint`, `npm test` (443/443) weiterhin grün — bestehende `kcal-rechner.test.ts`-Tests unverändert grün (prüfen einzelne Felder, keine Deep-Equality auf `KcalRechnerErgebnis`, daher keine Anpassung nötig).
 - Per Playwright verifiziert (Desktop + Mobile 375px): 80 kg/180 cm/30 Jahre/männlich/moderat aktiv/Gewicht halten → links "2759 kcal" / "Erhaltungsbedarf: 2759 kcal", rechts oben "Mindestens 96g Eiweiß/Tag", rechts unten "Optimal 120g Eiweiß/Tag" (80 × 1,2 = 96, 80 × 1,5 = 120 — exakt wie erwartet). Kein horizontales Scrollen, Layout bleibt auch auf schmalen Screens gut lesbar.
+
+### Implementation Notes (Frontend, Refinement 2026-09-03): Arbeitspunkte-Feinschliff
+Reine Frontend-/Darstellungs-Änderung, kein Backend-Bezug (wie in der Spec vorgesehen).
+
+- `src/components/wochen-balken-diagramm.tsx` (umgeschrieben): neue Prop `variante: 'neutral' | 'hervorgehoben'` ersetzt die bisherige einheitliche Farbgebung — `neutral` (gedeckte `bg-muted/50`-Box für "Wie ein starrer Plan aussieht") vs. `hervorgehoben` (kräftige App-Farben auf `#DFF0F2`-Hintergrund für "Wie es wirklich aussieht"). Neu: Wochentags-Abkürzungen (Mo–So) unter jedem Balken beider Diagramme. Neue Überschrift/Captions gemäß Nutzervorgabe: "Wöchentlich vs. tägliches Kaloriendefizit", "Jeden Tag exakt gleich viele Kalorien" bzw. "Mal mehr Kalorien, mal weniger — im Schnitt trotzdem im Defizit".
+- `src/components/so-geht-abnehmen-guide.tsx`: Arbeitspunkt 2 stapelt beide Diagramme jetzt untereinander (`flex flex-col gap-3`) statt nebeneinander im Grid — explizit auch auf Desktop, wie vom Nutzer gefordert. Neuer Arbeitspunkt 4 "Warum auf Ballaststoffe achten" eingefügt (zwischen Proteine und Krafttraining, dadurch rücken Krafttraining → 5 und Schlaf → 6): Intro-Text, Amber-Warnbox (max. 5g Ballaststoffe/4 Wochen), grüne Info-Box (Richtwert 30g/Tag) im selben Stil wie die Protein-Infobox, 4 Ballaststoffquellen-Kategorien mit Emoji. Intro-Text der Seite von "5 Punkten" auf "6 Punkten" angepasst.
+- Neu: `src/components/arbeitspunkt-icons.tsx` — Vergleichsicons (klein/neutral → groß/hervorgehoben) für die 4 Krafttraining-Gründe sowie ein eigenständiges Schlaf-Icon. "Muskeln erhalten" nutzt bewusst das bereits installierte Lucide-Icon `BicepsFlexed` (`lucide-react`, keine neue Abhängigkeit) statt eines Freihand-SVGs — mehrere Freihand-Entwürfe (Cubic-Bezier-Pfad, Arc-Segmente) wurden in einer Artifact-Vorschau mit dem Nutzer erprobt und verworfen, da sie nicht als Oberarm erkennbar waren (siehe Decision Log). Die übrigen 3 Icon-Paare (Grundumsatz: kleine/große Flamme ohne Körperumriss-Rahmen; Gesund altern: neutrales vs. lächelndes Gesicht; Körper formen: schlanke vs. definierte Silhouette, beide mit vollständigen Beinen) sowie das Schlaf-Icon (geschlossene, entspannte Augen + aufsteigende "Zzz"-Buchstaben, angelehnt an 😴) sind reine Hand-SVGs aus einfachen Formen (`circle`/`path`/`ellipse`), keine Bild-Assets.
+- `npm run build`, volles `npm run lint`, `npm test` (464/464) fehlerfrei. Die 3 einzigen Lint-Fehler im Projekt liegen in `src/components/ui/sidebar.tsx` (bereits vor dieser Änderung vorhanden, unabhängiges shadcn-Boilerplate-Problem — als eigener Task ausgelagert, nicht Teil dieses Refinements).
+- Manuell per Playwright verifiziert (Desktop + Mobile 375px, alle 6 Arbeitspunkte einzeln aufgeklappt): gestapelte Diagramme inkl. Wochentags-Labels und neuer Überschrift/Captions korrekt; Ballaststoffe-Warnbox/Infobox/Quellenliste korrekt; alle 4 Krafttraining-Icon-Paare (BicepsFlexed klein→groß, Flamme klein→groß, Gesicht neutral→lächelnd, Körper schlank→definiert) und das Schlaf-Icon korrekt gerendert; kein horizontales Overflow auf 375px.
 
 ## QA Test Results
 
