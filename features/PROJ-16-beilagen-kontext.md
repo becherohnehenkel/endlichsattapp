@@ -1,10 +1,10 @@
 # PROJ-16: Beilagen-Kontext
 
-## Status: Deployed (Refinement: Snack-Rezepttyp + Typ-Filter "Planned")
+## Status: Deployed (Refinement: Snack-Rezepttyp + Typ-Filter "Architected")
 **Created:** 2026-07-03
 **Last Updated:** 2026-09-03
 
-**Refinement (2026-09-03, Snack-Rezepttyp + Typ-Filter):** Betrifft **Teil 1+2** (Admin-`recipe_typ`, Rezept-Detailseiten-Hinweis) sowie neu **Teil 6** (Typ-Filter in Rezeptübersicht & Adminseite). `recipe_typ` bekommt einen vierten Wert `'snack'` (bisher nur `null`/`'beilage'`/`'grundlage'`); die Detailseite zeigt dafür denselben Kontext-Hinweis wie bei Beilage/Grundlage. Zusätzlich bekommt sowohl die öffentliche Rezeptbibliothek als auch die separate Admin-Rezeptliste einen neuen Typ-Filter (Alle/Mahlzeiten/Beilagen/Grundrezepte/Snacks), der das seit 2026-07-03 in Out of Scope stehende Deferred-Item einlöst. Teil 3–5 (KI-Analyse-Komponente/Snack-Output) sind von diesem Refinement nicht betroffen. Nächster Schritt: `/architecture`.
+**Refinement (2026-09-03, Snack-Rezepttyp + Typ-Filter):** Betrifft **Teil 1+2** (Admin-`recipe_typ`, Rezept-Detailseiten-Hinweis) sowie neu **Teil 6** (Typ-Filter in Rezeptübersicht & Adminseite). `recipe_typ` bekommt einen vierten Wert `'snack'` (bisher nur `null`/`'beilage'`/`'grundlage'`); die Detailseite zeigt dafür denselben Kontext-Hinweis wie bei Beilage/Grundlage. Zusätzlich bekommt sowohl die öffentliche Rezeptbibliothek als auch die separate Admin-Rezeptliste einen neuen Typ-Filter (Alle/Mahlzeiten/Beilagen/Grundrezepte/Snacks), der das seit 2026-07-03 in Out of Scope stehende Deferred-Item einlöst. Teil 3–5 (KI-Analyse-Komponente/Snack-Output) sind von diesem Refinement nicht betroffen. Nächster Schritt: `/frontend`.
 
 **Refinement (2026-08-11, "Complete"-Umstrukturierung):** Betrifft ausschließlich **Teil 3+4** dieses Specs (KI-Analyse bei fotografierten/beschriebenen Mahlzeiten). **Teil 1+2** (Admin-`recipe_typ` auf Rezepten in der Rezeptbibliothek, Rezept-Detailseiten-Hinweis) sind vom Umbau nicht betroffen und bleiben unverändert live. Die bisherige Rückfrage-Trigger-Logik in Teil 3 wird durch PROJ-4s neue Schritt-0-Klassifikation ersetzt (PROJ-16 ist nicht mehr für die Erkennung zuständig, nur noch für die Darstellung). Der bisherige Beilagen-Output in Teil 4 wird zum Komponente-Output; ein komplett neuer Snack-Output kommt dazu. Nächster Schritt: `/architecture`, dann `/backend`+`/frontend`.
 
@@ -113,7 +113,7 @@
 - [x] Sollen die 4 Filter-Optionen (Snacks/Beilagen/Mahlzeiten/Grundrezepte) oder nur 3 (ohne Mahlzeiten) angeboten werden? (Refinement 2026-09-03) → 4 Optionen, siehe Decision Log (2026-09-03)
 - [x] Bekommt die separate Admin-Rezeptliste denselben Typ-Filter wie die öffentliche Bibliothek? (Refinement 2026-09-03) → Ja, siehe Decision Log (2026-09-03)
 - [x] Bekommt ein Snack-Rezept einen Kontext-Hinweis auf der Detailseite? (Refinement 2026-09-03) → Ja, Badge „Snack" analog zu Beilage/Grundlage, siehe Decision Log (2026-09-03)
-- [ ] Genaue technische Umsetzung der Admin-Filter (client-seitiges Nachrüsten der bestehenden einfachen Liste vs. Umstellung auf `rezept-bibliothek.tsx`-Logik) — final bei `/architecture`
+- [x] Genaue technische Umsetzung der Admin-Filter (client-seitiges Nachrüsten der bestehenden einfachen Liste vs. Umstellung auf `rezept-bibliothek.tsx`-Logik) → Gemeinsame kleine `RezeptTypFilter`-Komponente, Admin-Seite in Server-Teil + neuen Client-Teil aufgeteilt, keine volle Übernahme der Bibliothek-Logik (2026-09-03, siehe Tech Design)
 
 ## Decision Log
 
@@ -146,6 +146,15 @@
 | Typ-Filter und Besitzer-Filter sind frei kombinierbar (UND-Verknüpfung) | Beide Filter-Dimensionen sind unabhängig voneinander (wer vs. was) — Nutzer soll z.B. "Eigene Grundrezepte" filtern können | 2026-09-03 |
 
 ### Domain Decisions (/fachbereich)
+
+#### Refinement (2026-09-03): Snack-Rezepttyp + Typ-Filter — Technical Decisions
+
+| Decision | Rationale | Date |
+|----------|-----------|------|
+| Gemeinsame `RezeptTypFilter`-Komponente statt Admin-Seite auf `rezept-bibliothek.tsx` umzustellen | Admin-Seite braucht nur den Typ-Filter, nicht Suche/Tags/Besitzer-Filter — volle Wiederverwendung der Bibliothek hätte unnötige Funktionen aufgezwungen; eine kleine geteilte Filter-Komponente vermeidet trotzdem Code-Duplizierung | 2026-09-03 |
+| Admin-Seite wird in Server-Teil (Auth + Datenladen) + neuen Client-Teil (Filter + Darstellung) aufgeteilt | Kleinstmöglicher Eingriff in die bisher rein serverseitige, einfache Liste; Auth-Check bleibt serverseitig, nur die Darstellung wird interaktiv | 2026-09-03 |
+| Zentrale Werte-Liste für `recipe_typ` (Werte + Labels an einer Stelle) statt weiterer Duplizierung | Der Wert war bereits in 4 API-Dateien separat dupliziert — ein fünfter/sechster Duplizierungs-Ort (Filter, Formular) wäre eine Wartungsfalle; behebt die bestehende Duplizierung gleich mit | 2026-09-03 |
+| Client-seitige Filterung, kein neuer API-Parameter | Konsistent mit bestehendem Besitzer- und Tag-Filter-Muster; Datenmenge klein genug für vollständiges Laden + Browser-seitiges Filtern | 2026-09-03 |
 | Decision | Rationale | Date |
 |----------|-----------|------|
 | BEILAGE_KONTEXT als Annahmen-Flag | Sauberster Weg um Beilagen-Kontext von start/answer-Route an confirm-Route zu übergeben — ohne neues Datenbankfeld oder API-Parameter | 2026-07-03 |
@@ -300,6 +309,52 @@ Der bisherige Ausgabe-Typ "beilage" bekommt einen neuen, gleichbedeutenden Namen
 #### Abhängigkeiten
 
 Keine neuen npm-Pakete. Keine neue Umgebungsvariable. Keine Schema-Migration.
+
+### Refinement (2026-09-03): Snack-Rezepttyp + Typ-Filter
+
+#### Komponenten-Struktur
+
+```
+Rezeptbibliothek (öffentlich, /ernaehrung/rezepte) — bestehend, erweitert
+├── Besitzer-Filter (bestehend, unverändert)
+├── Typ-Filter [NEU] — nutzt neue gemeinsame Komponente "RezeptTypFilter"
+├── Suche (bestehend, unverändert)
+├── Cuisine-Tag-Filter (bestehend, unverändert)
+└── Rezept-Liste (jetzt zusätzlich nach Typ gefiltert)
+
+Admin-Rezeptliste (/admin/rezepte) — umgebaut
+├── Seite (Server-Teil: Admin-Check + Datenladen, jetzt inkl. recipe_typ) [ERWEITERT]
+└── Liste (NEUER Client-Teil, ausgelagert aus der Seite)
+     ├── Typ-Filter [NEU] — dieselbe gemeinsame Komponente "RezeptTypFilter"
+     └── bestehendes Karten-Layout (Bild, Titel, Zeit, Bearbeiten/Löschen) — unverändert
+
+Rezept-Formular (Anlegen/Bearbeiten)
+└── Rezept-Typ-Auswahl [ERWEITERT] — vierte Option "Snack"
+
+Rezept-Detailseite
+└── Kontext-Hinweis-Baustein [ERWEITERT] — dritter Fall "Snack" (Badge + Text)
+```
+
+Warum eine gemeinsame Filter-Komponente statt die komplette Bibliothek auf der Admin-Seite wiederzuverwenden: Die Admin-Seite braucht keine Suche, keine Cuisine-Tags und keinen Besitzer-Filter — nur den neuen Typ-Filter. Eine kleine, wiederverwendbare Filter-Leisten-Komponente vermeidet doppelten Code, ohne der einfachen Admin-Liste unnötige Funktionen aufzuzwingen, die dort niemand braucht.
+
+#### Datenmodell (einfache Sprache)
+
+Kein neues Feld — `recipe_typ` bekommt einen vierten erlaubten Wert:
+```
+recipe_typ: null | "beilage" | "grundlage" | "snack"
+null = vollständiges Gericht (wie bisher)
+```
+Die Liste der vier Werte + ihrer Anzeige-Labels ("Mahlzeiten"/"Beilagen"/"Grundrezepte"/"Snacks") wird an einer zentralen Stelle definiert, statt wie bisher in vier API-Dateien einzeln dupliziert — Formular, Filter und API-Validierung greifen alle auf dieselbe Quelle zu. Das verhindert, dass Label und Datenbankwert bei zukünftigen Änderungen auseinanderlaufen.
+
+#### Tech-Entscheidungen (für PM, mit Begründung)
+
+- **Client-seitige Filterung, kein neuer API-Parameter** — konsistent mit dem bestehenden Besitzer- und Tag-Filter; die Rezeptmenge ist klein genug, dass alles auf einmal geladen und im Browser gefiltert wird.
+- **Admin-Seite wird in einen Server-Teil (Auth-Check + Datenladen) und einen neuen Client-Teil (Filter + Darstellung) aufgeteilt** — kleinstmöglicher Eingriff in eine bisher rein serverseitige Seite, Auth-Check bleibt serverseitig.
+- **Zentrale Werte-Liste für `recipe_typ`** statt weiterer Duplizierung — behebt nebenbei die bestehende 4-fache Duplizierung der Typ-Werte in den API-Routen.
+
+#### Abhängigkeiten
+
+Keine neuen npm-Pakete. Keine neue Umgebungsvariable. DB-Migration: additive CHECK-Constraint-Erweiterung auf `recipes.recipe_typ` (siehe Technical Requirements) — vom Nutzer manuell in Supabase auszuführen, da Supabase-MCP getrennt ist.
 
 ## Implementation Notes (Backend) — Refinement 2026-08-11: Komponente & Snack
 
