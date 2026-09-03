@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
 import { Clock, ChefHat, Search, Lock, Plus } from 'lucide-react'
 import RezeptTypFilter from '@/components/rezept-typ-filter'
 import { matchesRecipeTypFilter, type RecipeTyp, type RecipeTypFilterValue } from '@/lib/recipe-typ'
@@ -63,9 +64,6 @@ export default function RezeptBibliothek({
   return (
     <div className="max-w-sm md:max-w-[850px] mx-auto px-4 py-5 space-y-4">
 
-      {/* PROJ-16 (Refinement 2026-09-03, Teil 6): Typ-Filter — steht über den übrigen Filtern */}
-      <RezeptTypFilter value={typFilter} onChange={setTypFilter} />
-
       {/* PROJ-30: Eigentümer-Filter */}
       {showEigeneFilter && (
         <div className="flex gap-2">
@@ -114,6 +112,11 @@ export default function RezeptBibliothek({
           className="pl-9"
         />
       </div>
+
+      {/* PROJ-16 (Refinement 2026-09-03, Teil 6): Typ-Filter — zwischen Suche und Cuisine-Tag-Filter */}
+      <RezeptTypFilter value={typFilter} onChange={setTypFilter} />
+
+      {allTags.length > 0 && <Separator />}
 
       {/* Cuisine tag filter */}
       {allTags.length > 0 && (

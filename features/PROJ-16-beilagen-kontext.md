@@ -71,7 +71,7 @@
 
 ### Teil 6: Rezept-Typ-Filter in Rezeptübersicht & Adminseite (Refinement 2026-09-03 — komplett neu)
 
-- [ ] Angenommen ein Nutzer öffnet die Rezeptbibliothek (`/ernaehrung/rezepte`), dann sieht er über den bestehenden Filtern (Besitzer-Filter, Suche, Cuisine-Tags) eine neue Filter-Leiste mit fünf Optionen: „Alle" (Standard, aktiv), „Mahlzeiten", „Beilagen", „Grundrezepte", „Snacks"
+- [ ] Angenommen ein Nutzer öffnet die Rezeptbibliothek (`/ernaehrung/rezepte`), dann sieht er zwischen dem Such-Eingabefeld und dem bestehenden Cuisine-Tag-Filter eine neue Filter-Leiste mit fünf Optionen: „Alle" (Standard, aktiv), „Mahlzeiten", „Beilagen", „Grundrezepte", „Snacks" — durch eine Trennlinie vom Cuisine-Tag-Filter abgesetzt *(Feinschliff 2026-09-03: ursprünglich über allen Filtern geplant, nach Live-Ansicht durch Nutzer hierher verschoben — siehe Decision Log)*
 - [ ] Angenommen der Nutzer wählt „Mahlzeiten", dann werden nur Rezepte mit `recipe_typ: null` angezeigt
 - [ ] Angenommen der Nutzer wählt „Beilagen"/„Grundrezepte"/„Snacks", dann werden nur Rezepte mit `recipe_typ: 'beilage'`/`'grundlage'`/`'snack'` angezeigt
 - [ ] Angenommen der Nutzer wählt „Alle", dann werden wieder Rezepte aller Typen angezeigt (kein Typ-Filter aktiv)
@@ -144,6 +144,8 @@
 | Typ-Filter auch auf der separaten Admin-Rezeptliste (`/admin/rezepte`) | Nutzer verwaltet dort gezielt einzelne Typen (z.B. nur Grundrezepte pflegen) — dieselbe Filter-Leiste wie in der öffentlichen Bibliothek spart Suchaufwand | 2026-09-03 |
 | Snack-Rezepte bekommen denselben Kontext-Hinweis-Mechanismus wie Beilage/Grundlage (Badge statt Sättigungs-Bewertung) | Konsistentes Muster — eine Sättigungs-Bewertung für einen Snack wäre ohnehin nicht sinnvoll, genau wie bei Beilage/Grundlage | 2026-09-03 |
 | Typ-Filter und Besitzer-Filter sind frei kombinierbar (UND-Verknüpfung) | Beide Filter-Dimensionen sind unabhängig voneinander (wer vs. was) — Nutzer soll z.B. "Eigene Grundrezepte" filtern können | 2026-09-03 |
+
+**Feinschliff 2026-09-03 (nach Live-Ansicht durch Nutzer):** Typ-Filter von "über allen Filtern" verschoben nach "zwischen Such-Eingabefeld und Cuisine-Tag-Filter", plus Trennlinie zum Cuisine-Tag-Filter ergänzt — bessere visuelle Gruppierung (Typ-Filter und Cuisine-Tag-Filter sind beides Rezept-Eigenschaften-Filter, klar getrennt vom Besitzer-Filter darüber).
 
 ### Domain Decisions (/fachbereich)
 
@@ -382,7 +384,7 @@ Gemeinsamer Frontend-Durchlauf mit PROJ-4/PROJ-5/PROJ-8 — geteilte Infrastrukt
 - **`src/components/rezept-typ-filter.tsx`** (neu) — kleine geteilte Filter-Leisten-Komponente, wie in der Architektur geplant von Bibliothek UND Admin-Liste genutzt.
 - **`src/components/rezept-formular.tsx`** — `RecipeTyp`-Type entfernt, ersetzt durch `RecipeTypFormular`/`RecipeTypDb` aus `recipe-typ.ts`; Radio-Optionen kommen jetzt aus `RECIPE_TYP_FORMULAR_OPTIONEN` (vierte Option „Snack" automatisch mit dabei). `variant="user"` UND `variant="admin"` zeigen dieselbe Rezept-Typ-Auswahl (unverändert, schon vorher so).
 - **`src/components/rezept-kontext-hinweis.tsx`** — nutzt jetzt `RECIPE_TYP_KONTEXT_HINWEIS` aus der zentralen Datei statt eigenem `CONFIG`-Objekt; Snack-Fall automatisch mit dabei.
-- **`src/components/rezept-bibliothek.tsx`** — `RezeptListItem` um `recipeTyp` erweitert; neuer `typFilter`-State + `<RezeptTypFilter>` über den bestehenden Filtern gerendert (wie in der AC gefordert); Filter-Logik um `matchesRecipeTypFilter()` erweitert; Leerer-Zustand-Bedingung für "Eigene Rezepte anlegen"-Hinweis um `typFilter === 'alle'` ergänzt (sonst hätte ein aktiver Typ-Filter fälschlich die "Du hast noch keine eigenen Rezepte"-CTA statt "Keine Rezepte gefunden" gezeigt — beim Bauen aufgefallen, nicht in der Spec vorgesehen).
+- **`src/components/rezept-bibliothek.tsx`** — `RezeptListItem` um `recipeTyp` erweitert; neuer `typFilter`-State + `<RezeptTypFilter>` zwischen Such-Eingabefeld und Cuisine-Tag-Filter gerendert, mit `<Separator>` dazwischen (Feinschliff 2026-09-03, nach Live-Ansicht durch Nutzer verschoben — ursprünglich über allen Filtern platziert, siehe Decision Log); Filter-Logik um `matchesRecipeTypFilter()` erweitert; Leerer-Zustand-Bedingung für "Eigene Rezepte anlegen"-Hinweis um `typFilter === 'alle'` ergänzt (sonst hätte ein aktiver Typ-Filter fälschlich die "Du hast noch keine eigenen Rezepte"-CTA statt "Keine Rezepte gefunden" gezeigt — beim Bauen aufgefallen, nicht in der Spec vorgesehen).
 - **`src/app/ernaehrung/rezepte/page.tsx`** — `recipe_typ` zur Supabase-Query hinzugefügt, in `RezeptListItem.recipeTyp` gemappt. (Hinweis: Diese Datei wurde während der Implementierung von außerhalb dieser Session zusätzlich auf Suspense-Streaming mit Skeleton-Fallback umgebaut — unabhängig von diesem Refinement, aber die `recipe_typ`-Änderung wurde in der neuen Struktur mit übernommen.)
 - **`src/app/admin/rezepte/page.tsx`** — wie geplant aufgeteilt: bleibt Server Component (Auth + Datenladen, jetzt inkl. `recipe_typ`), rendert neu `<AdminRezeptListe>`.
 - **`src/components/admin-rezept-liste.tsx`** (neu) — Client Component, übernimmt die bisherige Karten-Darstellung 1:1 aus der alten `page.tsx` plus neuen `<RezeptTypFilter>`.
