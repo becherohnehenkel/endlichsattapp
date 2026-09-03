@@ -1,6 +1,6 @@
 # PROJ-37: So geht abnehmen (inkl. Kcal-Rechner)
 
-## Status: Deployed (Refinement: Icon-Layout-Feinschliff "Approved")
+## Status: Deployed (Refinement: Icon-Layout-Feinschliff "Deployed")
 **Created:** 2026-08-31
 **Last Updated:** 2026-09-03
 
@@ -553,3 +553,4 @@ Per Playwright verifiziert bei 375px (Mobile), 768px (Tablet) und 1280px (Deskto
 - **Refinement-Deploy 2026-09-01** (Vercel auto-deploy via Push zu `main`, commits `3e0fb64`..`2e7aae4`, Tag `v2.8.0-ernaehrung-guides`): Teil eines gebündelten Deploys über PROJ-34/37/38/39/40/41 — Erstbesucher-Auto-Open + neue Überschriften auf mehreren Ernährungs-Guides. Nutzer hat auf Produktion visuell bestätigt ("Alles auf Grün").
 - **Refinement-Deploy 2026-09-03** (Vercel auto-deploy via Push zu `main`, commits `771a2d3`..`db8c027`, Tag `v3.6.0-PROJ-37-refinement`): Eiweißbedarf im Kcal-Rechner — Mindest- (×1,2 Gewicht) und optimale (×1,5 Gewicht) tägliche Eiweißmenge, im 2-spaltigen Ergebnis-Layout neben den Kalorien. Reine Client-seitige Berechnung, keine DB-Migration nötig. Nutzer hat auf Produktion visuell bestätigt ("alles grün").
 - **Refinement-Deploy 2026-09-03** (Vercel auto-deploy via Push zu `main`, commits `a4b6a44`..`50caae2`, Tag `v3.9.0-PROJ-37-refinement`): Arbeitspunkte-Feinschliff — gestapelte Wochen-Diagramme mit Mo–So-Labels, neuer Arbeitspunkt 4 "Warum auf Ballaststoffe achten", 4 neue Krafttraining-Vergleichsicons + Schlaf-Icon. Reine Frontend-Änderung, keine DB-Migration nötig. Automatisiert auf Produktion verifiziert (Page-Text- und Console-Check, kein Fehler). Nutzer hat auf Produktion visuell bestätigt ("alles grün, sieht gut aus").
+- **Refinement-Deploy 2026-09-03** (Vercel auto-deploy via Push zu `main`, commits `806a3f3`..`9dff616`, Tag `v3.10.0-PROJ-37-refinement`): Icon-Layout-Feinschliff — Krafttraining/Schlaf-Icons größer und spaltenbündig/zentriert (Desktop optisch statt geometrisch zentriert, siehe QA-Bugfix), neue kombinierte Icon-Grafik für die 4 Schlaf-Tipps. Reine Frontend-Änderung, keine DB-Migration nötig. Auf Produktion verifiziert direkt gegen das Server-HTML (`curl`) statt nur über das Browser-Tool, da dessen Session in dieser Verifikation unzuverlässig wurde (Redirects auf die Startseite, unvollständige Text-Extraktion — Tool-Session-Artefakt, kein Produktionsfehler): alle 3 Lucide-Icon-Klassen (`snowflake`/`moon`/`loader-pinwheel`) sowie die "3·2·1"-Kachel exakt einmal im gerenderten HTML vorhanden, keine Console-Fehler.
