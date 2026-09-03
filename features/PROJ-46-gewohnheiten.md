@@ -216,7 +216,7 @@ Neu: `tests/PROJ-46-gewohnheiten.spec.ts` — 12 Tests, je einer pro Akzeptanzkr
 - **Recommendation:** Deploy
 
 ## Deployment
-- **Production URL:** https://satt.mehralsabnehmen.de/check-in
+- **Production URL:** https://app.mehralsabnehmen.de/check-in
 - **Deployed:** 2026-09-02 (Vercel auto-deploy via Push zu `main`, commits `4ccb082`..`39f333b`)
 - **Verified in Produktion:** Nutzer hat die Live-Seite geprüft, alles grün ("Alles auf Grün").
 - **Umfang dieses Deploys:** vollständige PROJ-46-Implementierung — neue "Gewohnheiten"-Sektion unterhalb des Wochen-Check-Ins auf `/check-in`, 8 feste Gewohnheiten als Checkbox-Infoboxen mit unabhängig auf-/zuklappbarem Hinweistext, Fortschrittsanzeige, manueller Reset. Rein lokal in `localStorage` gespeichert, kein Backend, kein Unterschied zwischen Gast und eingeloggtem Nutzer.

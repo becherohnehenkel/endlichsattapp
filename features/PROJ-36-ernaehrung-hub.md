@@ -215,7 +215,7 @@ Auf **Desktop** ist der neue Breadcrumb-Header (`ErnaehrungSubHeader`) — wie a
 
 ## Deployment
 
-- **Production URL:** https://satt.mehralsabnehmen.de/ernaehrung
+- **Production URL:** https://app.mehralsabnehmen.de/ernaehrung
 - **Deployed:** 2026-08-31
 - **Git Tag:** v2.2.0-PROJ-36
 - Vercel-Build grün, Nutzer hat auf Produktion visuell bestätigt: Ernährung-Hub mit 8 Einträgen, Redirect von `/rezepte` auf `/ernaehrung/rezepte` funktioniert.
