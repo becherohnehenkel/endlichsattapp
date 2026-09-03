@@ -323,7 +323,7 @@ Keine.
 - **Recommendation:** Deploy. Da dieses Refinement auch `art-of-eating-guide.tsx` (PROJ-34) und `so-geht-abnehmen-guide.tsx` (PROJ-37) verändert hat, sollte der Deploy-Schritt beide bereits live befindlichen Features implizit mit aktualisieren (derselbe Produktions-Build) — kein separater Deploy-Zyklus für sie nötig, aber im Deployment-Log erwähnenswert.
 
 ## Deployment
-- **Production URL:** https://satt.mehralsabnehmen.de/ernaehrung/emotionales-essen
+- **Production URL:** https://app.mehralsabnehmen.de/ernaehrung/emotionales-essen
 - **Deployed:** 2026-09-01 (Vercel auto-deploy via Push zu `main`, commits `7573cbb`..`9abee29`)
 - **Verified in Produktion:** Nutzer hat die Live-Seite geprüft, alles grün ("Alles auf Grün").
 - **Umfang dieses Deploys:** vollständige PROJ-38-Implementierung inkl. aller Refinements — Drei-Säulen-Struktur (Intro, 3 emotionsspezifische Punkte, 6 allgemeine Praxis-Übungen), interaktiver Bewegungs-Timer, animierte Atemübung, interaktiver Mahlzeiten-Planer mit PROJ-37-Kcal-Integration, Reiz-Ampel, und das neue Erstbesucher-Onboarding. Zusätzlich im selben Deploy: die app-weite 850px-Desktop-Breite (`d8c2e56`).

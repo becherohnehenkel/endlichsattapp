@@ -227,7 +227,7 @@ Neu: `tests/PROJ-47-startseite-neu.spec.ts` — 15 Tests, decken alle 9 Acceptan
 - **Recommendation:** Deploy
 
 ## Deployment
-- **Production URL:** https://satt.mehralsabnehmen.de/
+- **Production URL:** https://app.mehralsabnehmen.de/
 - **Deployed:** 2026-09-02 (Vercel auto-deploy via Push zu `main`, commits `9f2372f`..`bc5c03c`)
 - **Verified in Produktion:** Nutzer hat die Live-Seite geprüft, alles grün ("Alles auf Grün").
 - **Umfang dieses Deploys:** vollständige PROJ-47-Implementierung — komplette Neugestaltung der Startseite (`/`): Begrüßung mit optionaler Vorname-Personalisierung, Video-Platzhalter, 4 Funktions-Karten (Wissen, Fortschritt, Rezepte, Check-In) und externes Coach-Banner. Ersetzt die bisherige personalisierte Startseite (letzte Analysen, Rezept-Vorschau, Teaser) komplett — identisch für Gast und eingeloggten Nutzer. Kein Backend, kein neuer API-Endpunkt.
