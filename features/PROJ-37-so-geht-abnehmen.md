@@ -1,10 +1,10 @@
 # PROJ-37: So geht abnehmen (inkl. Kcal-Rechner)
 
-## Status: Deployed (Refinement: Arbeitspunkte-Feinschliff "In Progress")
+## Status: Deployed (Refinement: Arbeitspunkte-Feinschliff "Approved")
 **Created:** 2026-08-31
 **Last Updated:** 2026-09-03
 
-**Refinement (2026-09-03, Arbeitspunkte-Feinschliff):** Betrifft Arbeitspunkt 2 (Layout gestapelt statt nebeneinander, neue Farbgebung, Wochentag-Beschriftungen, neue Überschrift/Captions), einen komplett neuen Arbeitspunkt 4 "Warum auf Ballaststoffe achten" (bisherige Arbeitspunkte 4+5 rücken auf 5+6), sowie 4 neue Vergleichsicons bei Krafttraining und ein neues Icon bei Schlaf/Erholung. Aus 5 Arbeitspunkten werden 6. Nächster Schritt: `/qa` (reine Frontend-Änderung, kein Backend nötig).
+**Refinement (2026-09-03, Arbeitspunkte-Feinschliff):** Betrifft Arbeitspunkt 2 (Layout gestapelt statt nebeneinander, neue Farbgebung, Wochentag-Beschriftungen, neue Überschrift/Captions), einen komplett neuen Arbeitspunkt 4 "Warum auf Ballaststoffe achten" (bisherige Arbeitspunkte 4+5 rücken auf 5+6), sowie 4 neue Vergleichsicons bei Krafttraining und ein neues Icon bei Schlaf/Erholung. Aus 5 Arbeitspunkten werden 6. QA abgeschlossen (0 Bugs, production-ready). Nächster Schritt: `/deploy`.
 
 ## Dependencies
 - Requires: PROJ-36 (Ernährung-Hub) — Zielseite `/ernaehrung/so-geht-abnehmen` existiert bereits als Platzhalter, wird hier mit echtem Inhalt befüllt
@@ -412,6 +412,69 @@ Pass (trivial) — reine Client-seitige Arithmetik auf bereits validiertem `gewi
 - **Security:** Pass (trivial, keine neue Angriffsfläche)
 - **Production Ready:** YES
 - **Recommendation:** Deploy.
+
+### QA Test Results (Refinement 2026-09-03): Arbeitspunkte-Feinschliff
+
+**Tested:** 2026-09-03
+**App URL:** http://localhost:3000
+**Tester:** QA Engineer (AI)
+
+#### Acceptance Criteria Status
+
+**Seiten-Struktur**
+- [x] 6 Arbeitspunkte in korrekter Reihenfolge (Kcal-Rechner, Wöchentlich vs. tägliches Kaloriendefizit, Proteine, **Ballaststoffe**, Krafttraining, Schlaf/Erholung)
+- [x] Intro-Text spricht von "6 Punkten"
+- [x] Fortschrittsanzeige zählt korrekt "X von 6 abgeschlossen" (Regressionsrisiko durch den neuen 6. Punkt geprüft — die gemeinsame `ArbeitspunkteListe`-Komponente berechnet `gesamt` bereits dynamisch aus der Punkte-Liste, keine Anpassung nötig gewesen)
+
+**Arbeitspunkt 2: Wöchentlich vs. tägliches Kaloriendefizit**
+- [x] Neue Überschrift/Captions exakt wie spezifiziert
+- [x] Beide Diagramme in eigener Box, **gestapelt statt nebeneinander — auch auf Desktop** (per Bounding-Box-Vergleich verifiziert: Box 2 liegt unterhalb von Box 1)
+- [x] Box 1 ("Wie ein starrer Plan aussieht"): neutrale, gedeckte Farbgebung
+- [x] Box 2 ("Wie es wirklich aussieht"): kräftige App-Farben auf grünem Hintergrund
+- [x] Wochentag-Abkürzungen (Mo–So) unter jedem Balken, in beiden Diagrammen
+
+**Arbeitspunkt 4: Warum auf Ballaststoffe achten (komplett neu)**
+- [x] Erklärtext exakt wie spezifiziert
+- [x] Amber-Warnbox mit dem 5g/4-Wochen-Hinweis (inkl. 💩-Emoji)
+- [x] Grüne Info-Box mit dem Ziel-Richtwert (30g/Tag, 10g/Mahlzeit)
+- [x] Alle 4 Ballaststoffquellen-Kategorien mit Emoji und Beispielen
+
+**Arbeitspunkt 5: Krafttraining**
+- [x] Alle 4 nummerierten Gründe mit Text unverändert vorhanden
+- [x] "Muskeln erhalten" zeigt das Lucide `BicepsFlexed`-Icon exakt 2× (klein + groß)
+- [x] Jede der 4 Zeilen zeigt genau 2 SVGs (Vergleichsicon-Paar klein→groß)
+- [x] Training-Link weiterhin vorhanden und korrekt verlinkt
+
+**Arbeitspunkt 6: Schlaf/Erholung**
+- [x] Schlaf-Icon neben dem Erklärtext sichtbar (1 SVG in der Zeile)
+- [x] Bestehender Inhalt (Ghrelin/Leptin-Text, 4 Tipps) unverändert erhalten
+
+#### Edge Cases Status
+- [x] Fortschrittsanzeige bei 6 statt 5 Punkten (siehe oben) — kein Bug, Komponente ist bereits generisch
+- [x] Icon-Rendering bleibt stabil bei wiederholtem Öffnen/Schließen der Accordion-Punkte (im Rahmen der 2-fachen Testwiederholung mitgeprüft)
+- [x] Bestehende Arbeitspunkte 1 (Kcal-Rechner), 3 (Proteine) unverändert — keine Regression durch das Einfügen des neuen Punkts 4
+
+#### Security Audit
+Pass (trivial) — reine Frontend-/Darstellungsänderung: keine neuen Eingabefelder, keine neue API-Route, keine neuen Berechtigungs- oder Auth-Pfade. Alle neuen Icon-Komponenten rendern ausschließlich hart codierte SVG-Pfade/Farben, keine Interpolation von Nutzer- oder Server-Daten — kein XSS-Vektor.
+
+#### Responsive-Prüfung
+Per Playwright verifiziert bei 375px (Mobile), 768px (Tablet) und 1440px (Desktop): kein horizontales Overflow (`scrollWidth <= clientWidth` an allen 3 Breakpoints), gestapelte Diagramme bleiben auch bei 1440px gestapelt (nicht nebeneinander), Ballaststoffe-Box und Krafttraining-Icon-Zeilen brechen sauber um. Screenshots bei allen 3 Breakpoints visuell geprüft.
+
+#### Console-/Netzwerk-Prüfung
+Ein wiederkehrender 404-Konsolenfehler beim Laden der Seite geprüft — reproduziert sich identisch auf der unabhängigen Hub-Seite `/ernaehrung` (die von diesem Refinement nicht berührt wird), also vorbestehendes, seitenunabhängiges Dev-Server-Rauschen (kein durch dieses Refinement verursachter Regressionsfehler). Nicht weiter verfolgt, da außerhalb des Scopes und ohne sichtbare Nutzerauswirkung.
+
+#### Regressionstest
+- **Vitest (Gesamtsuite):** 464/464 grün (44 Testdateien) — keine neuen Unit-Tests nötig, da reine präsentationale Komponenten ohne eigene Logik (siehe QA-Skill-Richtlinie "Pure presentational components" → nicht unit-testen).
+- **E2E — `tests/PROJ-37-so-geht-abnehmen.spec.ts` (eigene Suite):** von 20 auf 31 Tests erweitert (2 bestehende Tests an die neuen Copy-/Struktur-Änderungen angepasst, 9 neue Tests für Ballaststoffe/Icons/gestapelte Diagramme/Fortschrittsanzeige). 31/31 grün, über 2 Wiederholungen stabil (60/60), zusätzlich 30/30 auf "Mobile Chrome".
+- **E2E — PROJ-36 (Ernährung-Hub, direkt verlinkende Seite):** 19/19 grün, keine Regression durch die geänderte Zielseite.
+- **E2E — projektweite Vollsuite (628 Tests, 42 Dateien):** zwei Versuche, den unfilterten `playwright test`-Befehl laufen zu lassen, führten wegen `fullyParallel: true` in Kombination mit dem echten `channel: 'chrome'`-Browser (statt der leichteren Headless-Variante) zu einer Prozess-Explosion (>120 gleichzeitige Chrome-Prozesse) und faktischem Stillstand der Maschine — kein inhaltlicher Test-Fehler, sondern ein Ressourcenproblem der lokalen Umgebung bei unfiltertem Vollständig-Parallel-Lauf. Beide Läufe abgebrochen, alle verwaisten Chrome-Prozesse bereinigt. Stattdessen gezielte Regression auf die eigene Suite + die einzige direkt abhängige Nachbar-Seite (PROJ-36) gefahren — deckungsgleich mit der Tiefe früherer QA-Runden in diesem Projekt. **Für später:** Vollständig-Suite-Läufe in dieser Umgebung sollten `fullyParallel: false` oder einen niedrigeren `workers`-Wert nutzen, oder gezielt nach Verzeichnis/Datei gruppiert statt komplett ungefiltert laufen.
+
+#### Summary
+- **Acceptance Criteria:** 19/19 passed (alle Punkte der Arbeitspunkte-Feinschliff-Refinement-ACs)
+- **Bugs Found:** 0
+- **Security:** Pass (trivial, keine neue Angriffsfläche)
+- **Production Ready:** YES
+- **Recommendation:** Deploy. Reine Frontend-Änderung, keine DB-Migration, kein zusätzlicher Backend-Schritt nötig.
 
 ## Deployment
 

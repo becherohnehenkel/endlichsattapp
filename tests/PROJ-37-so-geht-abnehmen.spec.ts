@@ -238,7 +238,7 @@ test.describe('Seiten-Struktur "So geht abnehmen"', () => {
     await expect(page.getByText(/Allen voran das Kaloriendefizit/)).toBeVisible()
   })
 
-  test('AC: zeigt alle 5 Arbeitspunkte in der richtigen Reihenfolge', async ({ page }) => {
+  test('AC: zeigt alle 6 Arbeitspunkte in der richtigen Reihenfolge (Refinement 2026-09-03: neuer Ballaststoffe-Punkt)', async ({ page }) => {
     await page.goto('/ernaehrung/so-geht-abnehmen')
     // Wartet auf den letzten Arbeitspunkt (nicht nur die Überschrift), damit die komplette
     // Arbeitspunkte-Liste sicher gerendert ist, bevor main.innerText() gelesen wird.
@@ -247,13 +247,19 @@ test.describe('Seiten-Struktur "So geht abnehmen"', () => {
     const text = await main.innerText()
     const positions = [
       'Kcal-Rechner',
-      'Wöchentlich vs. Täglich',
+      'Wöchentlich vs. tägliches Kaloriendefizit',
       'Warum auf Proteine achten',
+      'Warum auf Ballaststoffe achten',
       'Krafttraining',
       'Schlaf / Erholung',
     ].map((label) => text.indexOf(label))
     expect(positions.every((p) => p >= 0)).toBe(true)
     expect(positions).toEqual([...positions].sort((a, b) => a - b))
+  })
+
+  test('AC: Intro-Text spricht von 6 Punkten (Refinement 2026-09-03)', async ({ page }) => {
+    await page.goto('/ernaehrung/so-geht-abnehmen')
+    await expect(page.getByText(/An den folgenden 6 Punkten kommen wir nicht dran vorbei/)).toBeVisible()
   })
 
   test('AC: Breadcrumb "Ernährung / So geht abnehmen" bleibt erhalten', async ({ page }) => {
@@ -272,10 +278,129 @@ test.describe('Seiten-Struktur "So geht abnehmen"', () => {
     await expect(page.getByRole('link', { name: 'Trainingspläne findest du im Training-Bereich →' })).toHaveAttribute('href', '/training')
   })
 
-  test('AC: Wöchentlich vs. Täglich zeigt beide Balkendiagramme mit den korrekten Captions', async ({ page }) => {
+  test('AC: Wöchentlich vs. tägliches Kaloriendefizit zeigt beide Balkendiagramme mit den korrekten Captions', async ({ page }) => {
     await page.goto('/ernaehrung/so-geht-abnehmen')
-    await oeffneArbeitspunkt(page, 'Wöchentlich vs. Täglich')
-    await expect(page.getByRole('img', { name: /Wie ein starrer Plan aussieht: Jeden Tag exakt gleich\./ })).toBeVisible()
-    await expect(page.getByRole('img', { name: /Wie es wirklich aussieht: Mal mehr, mal weniger/ })).toBeVisible()
+    await oeffneArbeitspunkt(page, 'Wöchentlich vs. tägliches Kaloriendefizit')
+    await expect(page.getByRole('img', { name: /Wie ein starrer Plan aussieht: Jeden Tag exakt gleich viele Kalorien/ })).toBeVisible()
+    await expect(page.getByRole('img', { name: /Wie es wirklich aussieht: Mal mehr Kalorien, mal weniger — im Schnitt trotzdem im Defizit/ })).toBeVisible()
+  })
+
+  test('AC (Refinement 2026-09-03): beide Diagramme sind gestapelt (nicht nebeneinander) und zeigen Mo–So unter jedem Balken', async ({ page }) => {
+    await page.goto('/ernaehrung/so-geht-abnehmen')
+    await oeffneArbeitspunkt(page, 'Wöchentlich vs. tägliches Kaloriendefizit')
+    const box1 = page.getByRole('img', { name: /Wie ein starrer Plan aussieht/ })
+    const box2 = page.getByRole('img', { name: /Wie es wirklich aussieht/ })
+    await expect(box1).toBeVisible()
+    await expect(box2).toBeVisible()
+    // Gestapelt statt nebeneinander: Box 2 liegt unterhalb von Box 1 (gleiche X-Achse in etwa, größere Y-Position).
+    const box1Bounds = await box1.boundingBox()
+    const box2Bounds = await box2.boundingBox()
+    expect(box1Bounds).not.toBeNull()
+    expect(box2Bounds).not.toBeNull()
+    expect(box2Bounds!.y).toBeGreaterThan(box1Bounds!.y)
+
+    // Die Wochentag-Labels liegen unterhalb des role="img"-Balken-Containers, als eigene
+    // Zeile in derselben Box — daher über den gemeinsamen Eltern-Container (Titel-<p>) scopen.
+    const box1Container = page.getByText('Wie ein starrer Plan aussieht', { exact: true }).locator('xpath=..')
+    const box2Container = page.getByText('Wie es wirklich aussieht', { exact: true }).locator('xpath=..')
+    for (const tag of ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']) {
+      await expect(box1Container.getByText(tag, { exact: true })).toBeVisible()
+      await expect(box2Container.getByText(tag, { exact: true })).toBeVisible()
+    }
+  })
+})
+
+// ─── Arbeitspunkt 4: Ballaststoffe (Refinement 2026-09-03 — komplett neu) ──
+
+test.describe('Arbeitspunkt 4: Warum auf Ballaststoffe achten', () => {
+  test('AC: zeigt den Erklärtext zu Ballaststoffen', async ({ page }) => {
+    await page.goto('/ernaehrung/so-geht-abnehmen')
+    await oeffneArbeitspunkt(page, 'Warum auf Ballaststoffe achten')
+    await expect(page.getByText(/kein Ballast für den Körper sondern wichtig für deine Verdauung und Sättigung/)).toBeVisible()
+  })
+
+  test('AC: zeigt die Amber-Warnbox mit dem 5g/4-Wochen-Hinweis', async ({ page }) => {
+    await page.goto('/ernaehrung/so-geht-abnehmen')
+    await oeffneArbeitspunkt(page, 'Warum auf Ballaststoffe achten')
+    await expect(page.getByText(/Achtung: Bitte maximal 5g Ballaststoffe mehr pro 4 Wochen/)).toBeVisible()
+  })
+
+  test('AC: zeigt die grüne Info-Box mit dem Ziel-Richtwert', async ({ page }) => {
+    await page.goto('/ernaehrung/so-geht-abnehmen')
+    await oeffneArbeitspunkt(page, 'Warum auf Ballaststoffe achten')
+    await expect(page.getByText(/Ziel-Richtwert: Mindestens 30 Ballaststoffe pro Tag\. Heißt ca\. 10g pro Mahlzeit\./)).toBeVisible()
+  })
+
+  test('AC: listet alle 4 Ballaststoffquellen-Kategorien', async ({ page }) => {
+    await page.goto('/ernaehrung/so-geht-abnehmen')
+    await oeffneArbeitspunkt(page, 'Warum auf Ballaststoffe achten')
+    await expect(page.getByText('Vollkornprodukte & Pseudogetreide:')).toBeVisible()
+    await expect(page.getByText(/Brot, Wraps, Haferflocken, Quinoa, Amaranth/)).toBeVisible()
+    await expect(page.getByText('Hülsenfrüchte:')).toBeVisible()
+    await expect(page.getByText(/Linsen, Bohnen, \(Kicher-\)Erbsen/)).toBeVisible()
+    await expect(page.getByText('Gemüse und Obst:')).toBeVisible()
+    await expect(page.getByText(/Brokkoli, Karotten, Fenchel, Beeren/)).toBeVisible()
+    await expect(page.getByText('Nüsse, Saaten und Kerne:')).toBeVisible()
+    await expect(page.getByText(/insbesondere Lein-, Chia- und Flohsamen/)).toBeVisible()
+  })
+})
+
+// ─── Arbeitspunkt 5: Krafttraining-Icons (Refinement 2026-09-03) ───────────
+
+test.describe('Arbeitspunkt 5: Krafttraining-Vergleichsicons', () => {
+  test('AC: zeigt für "Muskeln erhalten" das Lucide BicepsFlexed-Icon in klein und groß', async ({ page }) => {
+    await page.goto('/ernaehrung/so-geht-abnehmen')
+    await oeffneArbeitspunkt(page, 'Krafttraining')
+    await expect(page.locator('svg.lucide-biceps-flexed')).toHaveCount(2)
+  })
+
+  test('AC: zeigt alle 4 nummerierten Krafttraining-Gründe mit Text', async ({ page }) => {
+    await page.goto('/ernaehrung/so-geht-abnehmen')
+    await oeffneArbeitspunkt(page, 'Krafttraining')
+    await expect(page.getByText(/1\. Muskeln erhalten/)).toBeVisible()
+    await expect(page.getByText(/2\. Grundumsatz/)).toBeVisible()
+    await expect(page.getByText(/3\. Gesund altern/)).toBeVisible()
+    await expect(page.getByText(/4\. Körper formen/)).toBeVisible()
+  })
+
+  test('AC: jeder der 4 Gründe zeigt ein eigenes Vergleichsicon-Paar (klein + groß = 2 SVGs pro Zeile)', async ({ page }) => {
+    await page.goto('/ernaehrung/so-geht-abnehmen')
+    await oeffneArbeitspunkt(page, 'Krafttraining')
+    const zeilen = [
+      /1\. Muskeln erhalten/,
+      /2\. Grundumsatz/,
+      /3\. Gesund altern/,
+      /4\. Körper formen/,
+    ]
+    for (const text of zeilen) {
+      const zeile = page.locator('div.flex.items-start.gap-3', { hasText: text })
+      await expect(zeile.locator('svg')).toHaveCount(2)
+    }
+  })
+})
+
+// ─── Fortschrittsanzeige (Regression, Refinement 2026-09-03) ──────────────
+
+test.describe('Fortschrittsanzeige zählt jetzt 6 statt 5 Punkte', () => {
+  test('AC: "X von 6 abgeschlossen" — neuer Ballaststoffe-Punkt zählt korrekt mit', async ({ page, context }) => {
+    await context.clearCookies()
+    await page.goto('/ernaehrung/so-geht-abnehmen')
+    await expect(page.getByText('0 von 6 abgeschlossen')).toBeVisible()
+
+    await oeffneArbeitspunkt(page, 'Warum auf Ballaststoffe achten')
+    await page.getByRole('button', { name: 'Verstanden' }).click()
+    await expect(page.getByText('1 von 6 abgeschlossen')).toBeVisible()
+  })
+})
+
+// ─── Arbeitspunkt 6: Schlaf-Icon (Refinement 2026-09-03) ───────────────────
+
+test.describe('Arbeitspunkt 6: Schlaf-Icon', () => {
+  test('AC: zeigt das Schlaf-Icon neben dem Erklärtext', async ({ page }) => {
+    await page.goto('/ernaehrung/so-geht-abnehmen')
+    await oeffneArbeitspunkt(page, 'Schlaf / Erholung')
+    await expect(page.getByText(/Ein übermüdeter Körper hat mehr Hunger/)).toBeVisible()
+    const row = page.locator('div.flex.items-start.gap-3', { hasText: /Ein übermüdeter Körper hat mehr Hunger/ })
+    await expect(row.locator('svg')).toHaveCount(1)
   })
 })
