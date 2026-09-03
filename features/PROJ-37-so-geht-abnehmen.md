@@ -1,6 +1,6 @@
 # PROJ-37: So geht abnehmen (inkl. Kcal-Rechner)
 
-## Status: Deployed (Refinement: Icon-Layout-Feinschliff "In Progress")
+## Status: Deployed (Refinement: Icon-Layout-Feinschliff "Approved")
 **Created:** 2026-08-31
 **Last Updated:** 2026-09-03
 
@@ -496,6 +496,49 @@ Ein wiederkehrender 404-Konsolenfehler beim Laden der Seite geprüft — reprodu
 #### Summary
 - **Acceptance Criteria:** 19/19 passed (alle Punkte der Arbeitspunkte-Feinschliff-Refinement-ACs)
 - **Bugs Found:** 0
+- **Security:** Pass (trivial, keine neue Angriffsfläche)
+- **Production Ready:** YES
+- **Recommendation:** Deploy. Reine Frontend-Änderung, keine DB-Migration, kein zusätzlicher Backend-Schritt nötig.
+
+### QA Test Results (Refinement 2026-09-03): Icon-Layout-Feinschliff
+
+**Tested:** 2026-09-03
+**App URL:** http://localhost:3000
+**Tester:** QA Engineer (AI)
+
+#### Acceptance Criteria Status
+Diese Runde hat keine formalen Angenommen/Wenn/Dann-ACs in der Spec (direkte Nutzeranfrage, vorab per Artifact-Mockup abgestimmt statt über `/refine`) — geprüft gegen die im Decision Log festgehaltenen, vom Nutzer bestätigten Anforderungen:
+
+- [x] Krafttraining: alle 4 großen Icons auf Desktop/Tablet exakt spaltenbündig (**siehe Bugs Found — ursprünglich NICHT der Fall, gefixt**)
+- [x] Krafttraining: Icons größer als vorher (klein ~26px, groß ~48–50px; vorher uneinheitlich 14–24px/24–40px)
+- [x] Krafttraining: auf Mobile ist das (große) Icon horizontal zentriert, der Text bleibt linksbündig über die volle Breite
+- [x] Schlaf-Icon: größer, vertikal zum Text zentriert (Desktop), mittig über linksbündigem Volltext (Mobile)
+- [x] Neue kombinierte Grafik für die 4 Schlaf-Tipps: 3-2-1-Kachel + Snowflake + Moon + LoaderPinwheel, alle (bis auf 3-2-1) aus `lucide-react`
+
+#### Bugs Found
+
+##### BUG-1: Krafttraining-Icons auf Desktop nicht exakt spaltenbündig (gefixt)
+- **Severity:** Medium
+- **Steps to Reproduce:** `/ernaehrung/so-geht-abnehmen` bei ≥640px öffnen, Krafttraining aufklappen, X-Position der 4 großen Icons vergleichen.
+- **Erwartet:** Alle 4 großen Icons exakt in derselben Spalte (das war der ursprüngliche Auslöser dieses gesamten Refinements: "nicht in einer Reihe vertical angeordnet").
+- **Tatsächlich (vor Fix):** Bis zu 5,5px Abweichung zwischen den Icon-Zentren, weil die 4 kleinen Vergleichsicons unterschiedlich breit sind (16–26px) und die gesamte Icon-Reihe (klein+Pfeil+groß) als EIN Block zentriert wurde — nicht nur das große Icon.
+- **Wie gefunden:** Automatisiert — neuer Playwright-Test misst die X-Zentren aller 4 großen Icons und vergleicht sie (Toleranz 1px). Kein manuell/visuell entdeckter Bug; auf den ersten Blick sah die Ausrichtung im Screenshot bereits fast korrekt aus.
+- **Fix:** Dieselbe "optische Zentrierung" (großes Icon bestimmt die Mitte, kleines Icon+Pfeil hängt absolut positioniert links davon), die bereits für Mobile eingebaut war, gilt jetzt für BEIDE Breakpoints. Icon-Spalte von 110px auf 160px verbreitert, damit das absolut positionierte Präfix bei jedem Icon-Typ innerhalb der Spalte bleibt (kein Überlaufen).
+- **Status:** Gefixt und per neuem E2E-Test dauerhaft abgesichert (verhindert Regression).
+
+#### Security Audit
+Pass (trivial) — reine Frontend-/Darstellungsänderung: keine neuen Eingabefelder, keine neue API-Route, keine neuen Berechtigungs- oder Auth-Pfade. Alle Icon-Komponenten rendern ausschließlich hart codierte SVG-Pfade/Farben bzw. fertige Lucide-Icons, keine Interpolation von Nutzer- oder Server-Daten — kein XSS-Vektor.
+
+#### Responsive-Prüfung
+Per Playwright verifiziert bei 375px (Mobile), 768px (Tablet) und 1280px (Desktop): kein horizontales Overflow, Icon-Spaltenbündigkeit auf Desktop/Tablet per Bounding-Box-Messung exakt bestätigt (±1px), Mobile-Zentrierung des großen Icons ebenfalls per Bounding-Box-Messung bestätigt (±2px), Text nutzt auf Mobile durchgehend die volle Breite und ist linksbündig (per `getComputedStyle().textAlign` geprüft). Screenshots bei allen 3 Breakpoints visuell geprüft — keine sichtbaren Layout-Fehler.
+
+#### Regressionstest
+- **Vitest (Gesamtsuite):** 464/464 grün (44 Testdateien) — keine neuen Unit-Tests nötig (reine präsentationale Komponenten ohne eigene Logik).
+- **E2E — `tests/PROJ-37-so-geht-abnehmen.spec.ts` (eigene Suite):** von 32 auf 35 Tests erweitert (2 bestehende Locator an die neue DOM-Struktur angepasst — `div.flex.items-start.gap-3` existiert nicht mehr, ersetzt durch `div.flex.flex-col.items-center.gap-2`/`gap-3`; 3 neue Tests: Desktop-Spaltenbündigkeit, Mobile-Icon-Zentrierung + Text-Breite, Schlaf-Text-Breite). 35/35 grün, chromium + Mobile Chrome.
+- **E2E — PROJ-36 (Ernährung-Hub, direkt verlinkende Seite):** 19/19 grün, keine Regression durch die geänderte Zielseite.
+
+#### Summary
+- **Bugs Found:** 1 (Medium, gefixt vor Deploy)
 - **Security:** Pass (trivial, keine neue Angriffsfläche)
 - **Production Ready:** YES
 - **Recommendation:** Deploy. Reine Frontend-Änderung, keine DB-Migration, kein zusätzlicher Backend-Schritt nötig.

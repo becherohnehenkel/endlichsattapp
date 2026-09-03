@@ -118,7 +118,7 @@ export function SoGehtAbnehmenGuide({ kannSpeichern, gespeicherteWerte }: SoGeht
                   Grid-Kindern werden und sich vertikal zum Text zentrieren. Unterhalb `sm:` bleibt
                   der Wrapper eine normale Spalte: Icon mittig über dem Text, Text linksbündig über
                   die volle Breite. */}
-              <div className="grid grid-cols-1 gap-y-[22px] text-xs text-foreground/80 leading-relaxed sm:grid-cols-[110px_1fr] sm:items-center sm:gap-x-4 sm:gap-y-[18px]">
+              <div className="grid grid-cols-1 gap-y-[22px] text-xs text-foreground/80 leading-relaxed sm:grid-cols-[160px_1fr] sm:items-center sm:gap-x-4 sm:gap-y-[18px]">
                 <div className="flex flex-col items-center gap-2 sm:contents">
                   <MuskelnErhaltenIcons />
                   <p className="self-stretch text-left"><strong>1. Muskeln erhalten</strong> — Im Kaloriendefizit denkt dein Körper sonst: „Das brauche ich nicht, kostet nur Energie.“ Krafttraining signalisiert ihm: Diese Muskulatur wird gebraucht — die bleibt.</p>

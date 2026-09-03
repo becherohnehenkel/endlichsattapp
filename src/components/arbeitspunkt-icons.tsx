@@ -9,17 +9,21 @@ import { BicepsFlexed, Snowflake, Moon, LoaderPinwheel } from 'lucide-react'
 // PROJ-37 (Refinement 2026-09-03, Icon-Layout-Feinschliff): Icons vergrößert und über
 // `IconCompare` spaltenbündig (Desktop/Tablet) bzw. optisch zentriert (Mobile) ausgerichtet
 // — siehe `so-geht-abnehmen-guide.tsx` für das umgebende Grid. Das kleine Icon + Pfeil hängt
-// dabei per `absolute` als kompakte Anmerkung links vom großen Icon: eine geometrisch mittige
-// Box wirkt durch das unterschiedliche visuelle Gewicht der beiden Icon-Größen nach rechts
-// verschoben — erst wenn das GROSSE Icon die Mitte definiert, sieht es zentriert aus.
+// bei BEIDEN Breakpoints per `absolute` als kompakte Anmerkung links vom großen Icon: eine
+// geometrisch mittige Box (klein+Pfeil+groß als ein Block) wirkt durch das unterschiedliche
+// visuelle Gewicht der beiden Icon-Größen nach rechts verschoben — erst wenn das GROSSE Icon
+// allein die Mitte definiert, sitzt es exakt zentriert. Das gilt nicht nur auf Mobile, sondern
+// auch auf Desktop/Tablet für die Spaltenbündigkeit: die 4 Icon-Paare haben unterschiedlich
+// breite kleine Icons (16–26px), eine als GANZES zentrierte Reihe hätte die großen Icons daher
+// um bis zu 5px gegeneinander verschoben — per Playwright-Bounding-Box-Test abgesichert.
 
 const MUTED = '#B9BEB6'
 const PRIMARY = '#2E9E6B'
 
 function IconCompare({ small, large }: { small: ReactNode; large: ReactNode }) {
   return (
-    <div className="relative flex items-center justify-center gap-1.5 sm:gap-2">
-      <span className="absolute right-full mr-1.5 flex items-center gap-1.5 sm:static sm:right-auto sm:mr-0">
+    <div className="relative flex items-center justify-center">
+      <span className="absolute right-full mr-1.5 flex items-center gap-1.5">
         {small}
         <span className="text-muted-foreground text-xs">→</span>
       </span>

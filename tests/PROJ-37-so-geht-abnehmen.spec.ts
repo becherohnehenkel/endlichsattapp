@@ -377,6 +377,48 @@ test.describe('Arbeitspunkt 5: Krafttraining-Vergleichsicons', () => {
       await expect(zeile.locator('svg')).toHaveCount(2)
     }
   })
+
+  test('AC (Refinement 2026-09-03, Icon-Layout-Feinschliff): auf Desktop sind alle 4 großen Icons exakt spaltenbündig', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 })
+    await page.goto('/ernaehrung/so-geht-abnehmen')
+    await oeffneArbeitspunkt(page, 'Krafttraining')
+    const zeilen = [/1\. Muskeln erhalten/, /2\. Grundumsatz/, /3\. Gesund altern/, /4\. Körper formen/]
+    const centers: number[] = []
+    for (const text of zeilen) {
+      const zeile = page.locator('div.flex.flex-col.items-center.gap-2', { hasText: text })
+      const grossesIcon = zeile.locator('svg').last()
+      const box = await grossesIcon.boundingBox()
+      expect(box).not.toBeNull()
+      centers.push(box!.x + box!.width / 2)
+    }
+    // Alle 4 großen Icons sitzen in derselben Grid-Spalte -> nahezu identisches x-Zentrum (+/-1px Rundung).
+    for (const c of centers) {
+      expect(Math.abs(c - centers[0])).toBeLessThanOrEqual(1)
+    }
+  })
+
+  test('AC (Refinement 2026-09-03, Icon-Layout-Feinschliff): auf Mobile ist das große Icon horizontal zentriert, der Text bleibt linksbündig über volle Breite', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 })
+    await page.goto('/ernaehrung/so-geht-abnehmen')
+    await oeffneArbeitspunkt(page, 'Krafttraining')
+    const zeile = page.locator('div.flex.flex-col.items-center.gap-2', { hasText: /1\. Muskeln erhalten/ })
+    const grossesIcon = zeile.locator('svg').last()
+    const iconBox = await grossesIcon.boundingBox()
+    const zeileBox = await zeile.boundingBox()
+    expect(iconBox).not.toBeNull()
+    expect(zeileBox).not.toBeNull()
+    const iconCenter = iconBox!.x + iconBox!.width / 2
+    const zeileCenter = zeileBox!.x + zeileBox!.width / 2
+    expect(Math.abs(iconCenter - zeileCenter)).toBeLessThanOrEqual(2)
+
+    // Text nutzt die volle verfügbare Breite (nicht auf eine schmale Spalte begrenzt) und ist linksbündig.
+    const text = zeile.locator('p')
+    const textBox = await text.boundingBox()
+    expect(textBox).not.toBeNull()
+    expect(textBox!.width).toBeGreaterThan(250)
+    const textAlign = await text.evaluate((el) => getComputedStyle(el).textAlign)
+    expect(textAlign).toBe('left')
+  })
 })
 
 // ─── Fortschrittsanzeige (Regression, Refinement 2026-09-03) ──────────────
@@ -402,6 +444,19 @@ test.describe('Arbeitspunkt 6: Schlaf-Icon', () => {
     await expect(page.getByText(/Ein übermüdeter Körper hat mehr Hunger/)).toBeVisible()
     const row = page.locator('div.flex.flex-col.items-center.gap-3', { hasText: /Ein übermüdeter Körper hat mehr Hunger/ })
     await expect(row.locator('svg')).toHaveCount(1)
+  })
+
+  test('AC (Refinement 2026-09-03, Icon-Layout-Feinschliff): auf Mobile ist der Schlaf-Text linksbündig über volle Breite (nur das Icon zentriert)', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 })
+    await page.goto('/ernaehrung/so-geht-abnehmen')
+    await oeffneArbeitspunkt(page, 'Schlaf / Erholung')
+    const row = page.locator('div.flex.flex-col.items-center.gap-3', { hasText: /Ein übermüdeter Körper hat mehr Hunger/ })
+    const text = row.locator('p').first()
+    const textBox = await text.boundingBox()
+    expect(textBox).not.toBeNull()
+    expect(textBox!.width).toBeGreaterThan(250)
+    const textAlign = await text.evaluate((el) => getComputedStyle(el).textAlign)
+    expect(textAlign).toBe('left')
   })
 
   test('AC (Refinement 2026-09-03, Icon-Layout-Feinschliff): kombinierte Grafik zeigt alle 4 Schlaf-Tipps als Icon-Kacheln', async ({ page }) => {
