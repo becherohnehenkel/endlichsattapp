@@ -1,10 +1,10 @@
 # PROJ-16: Beilagen-Kontext
 
-## Status: Deployed (Refinement: Snack-Rezepttyp + Typ-Filter "Architected")
+## Status: Deployed (Refinement: Snack-Rezepttyp + Typ-Filter "In Progress")
 **Created:** 2026-07-03
 **Last Updated:** 2026-09-03
 
-**Refinement (2026-09-03, Snack-Rezepttyp + Typ-Filter):** Betrifft **Teil 1+2** (Admin-`recipe_typ`, Rezept-Detailseiten-Hinweis) sowie neu **Teil 6** (Typ-Filter in Rezeptübersicht & Adminseite). `recipe_typ` bekommt einen vierten Wert `'snack'` (bisher nur `null`/`'beilage'`/`'grundlage'`); die Detailseite zeigt dafür denselben Kontext-Hinweis wie bei Beilage/Grundlage. Zusätzlich bekommt sowohl die öffentliche Rezeptbibliothek als auch die separate Admin-Rezeptliste einen neuen Typ-Filter (Alle/Mahlzeiten/Beilagen/Grundrezepte/Snacks), der das seit 2026-07-03 in Out of Scope stehende Deferred-Item einlöst. Teil 3–5 (KI-Analyse-Komponente/Snack-Output) sind von diesem Refinement nicht betroffen. Nächster Schritt: `/frontend`.
+**Refinement (2026-09-03, Snack-Rezepttyp + Typ-Filter):** Betrifft **Teil 1+2** (Admin-`recipe_typ`, Rezept-Detailseiten-Hinweis) sowie neu **Teil 6** (Typ-Filter in Rezeptübersicht & Adminseite). `recipe_typ` bekommt einen vierten Wert `'snack'` (bisher nur `null`/`'beilage'`/`'grundlage'`); die Detailseite zeigt dafür denselben Kontext-Hinweis wie bei Beilage/Grundlage. Zusätzlich bekommt sowohl die öffentliche Rezeptbibliothek als auch die separate Admin-Rezeptliste einen neuen Typ-Filter (Alle/Mahlzeiten/Beilagen/Grundrezepte/Snacks), der das seit 2026-07-03 in Out of Scope stehende Deferred-Item einlöst. Teil 3–5 (KI-Analyse-Komponente/Snack-Output) sind von diesem Refinement nicht betroffen. Frontend fertig — API-Validierung + DB-Migration fehlen noch. Nächster Schritt: `/backend`.
 
 **Refinement (2026-08-11, "Complete"-Umstrukturierung):** Betrifft ausschließlich **Teil 3+4** dieses Specs (KI-Analyse bei fotografierten/beschriebenen Mahlzeiten). **Teil 1+2** (Admin-`recipe_typ` auf Rezepten in der Rezeptbibliothek, Rezept-Detailseiten-Hinweis) sind vom Umbau nicht betroffen und bleiben unverändert live. Die bisherige Rückfrage-Trigger-Logik in Teil 3 wird durch PROJ-4s neue Schritt-0-Klassifikation ersetzt (PROJ-16 ist nicht mehr für die Erkennung zuständig, nur noch für die Darstellung). Der bisherige Beilagen-Output in Teil 4 wird zum Komponente-Output; ein komplett neuer Snack-Output kommt dazu. Nächster Schritt: `/architecture`, dann `/backend`+`/frontend`.
 
@@ -375,6 +375,25 @@ Gemeinsamer Frontend-Durchlauf mit PROJ-4/PROJ-5/PROJ-8 — geteilte Infrastrukt
 - Teil 1+2 (Admin-`recipe_typ`, Rezept-Detailseiten-Hinweis): unverändert, wie geplant
 
 **Verifikation:** siehe PROJ-4 Implementation Notes (gemeinsamer Verifikationslauf).
+
+## Implementation Notes (Frontend) — Refinement 2026-09-03: Snack-Rezepttyp + Typ-Filter
+
+- **`src/lib/recipe-typ.ts`** (neu) — zentrale Werte-Liste: `RECIPE_TYP_DB_VALUES`, Formular-Optionen (`RECIPE_TYP_FORMULAR_OPTIONEN`), Kontext-Hinweis-Texte (`RECIPE_TYP_KONTEXT_HINWEIS`), Filter-Optionen (`RECIPE_TYP_FILTER_OPTIONEN`) und `matchesRecipeTypFilter()`. Löst die bisherige 4-fache (jetzt 7-fache) Duplizierung der Typ-Werte ab.
+- **`src/components/rezept-typ-filter.tsx`** (neu) — kleine geteilte Filter-Leisten-Komponente, wie in der Architektur geplant von Bibliothek UND Admin-Liste genutzt.
+- **`src/components/rezept-formular.tsx`** — `RecipeTyp`-Type entfernt, ersetzt durch `RecipeTypFormular`/`RecipeTypDb` aus `recipe-typ.ts`; Radio-Optionen kommen jetzt aus `RECIPE_TYP_FORMULAR_OPTIONEN` (vierte Option „Snack" automatisch mit dabei). `variant="user"` UND `variant="admin"` zeigen dieselbe Rezept-Typ-Auswahl (unverändert, schon vorher so).
+- **`src/components/rezept-kontext-hinweis.tsx`** — nutzt jetzt `RECIPE_TYP_KONTEXT_HINWEIS` aus der zentralen Datei statt eigenem `CONFIG`-Objekt; Snack-Fall automatisch mit dabei.
+- **`src/components/rezept-bibliothek.tsx`** — `RezeptListItem` um `recipeTyp` erweitert; neuer `typFilter`-State + `<RezeptTypFilter>` über den bestehenden Filtern gerendert (wie in der AC gefordert); Filter-Logik um `matchesRecipeTypFilter()` erweitert; Leerer-Zustand-Bedingung für "Eigene Rezepte anlegen"-Hinweis um `typFilter === 'alle'` ergänzt (sonst hätte ein aktiver Typ-Filter fälschlich die "Du hast noch keine eigenen Rezepte"-CTA statt "Keine Rezepte gefunden" gezeigt — beim Bauen aufgefallen, nicht in der Spec vorgesehen).
+- **`src/app/ernaehrung/rezepte/page.tsx`** — `recipe_typ` zur Supabase-Query hinzugefügt, in `RezeptListItem.recipeTyp` gemappt. (Hinweis: Diese Datei wurde während der Implementierung von außerhalb dieser Session zusätzlich auf Suspense-Streaming mit Skeleton-Fallback umgebaut — unabhängig von diesem Refinement, aber die `recipe_typ`-Änderung wurde in der neuen Struktur mit übernommen.)
+- **`src/app/admin/rezepte/page.tsx`** — wie geplant aufgeteilt: bleibt Server Component (Auth + Datenladen, jetzt inkl. `recipe_typ`), rendert neu `<AdminRezeptListe>`.
+- **`src/components/admin-rezept-liste.tsx`** (neu) — Client Component, übernimmt die bisherige Karten-Darstellung 1:1 aus der alten `page.tsx` plus neuen `<RezeptTypFilter>`.
+- **`src/app/rezept/[id]/page.tsx`, `src/app/rezept/[id]/bearbeiten/page.tsx`, `src/app/admin/rezepte/[id]/bearbeiten/page.tsx`** — Type-Casts von `'beilage' | 'grundlage' | null` auf `RecipeTypDb | null` erweitert (jetzt inkl. `'snack'`).
+- **Bewusst NICHT angefasst (Backend-Scope):** Die 4 API-Routen (`src/app/api/admin/rezepte/route.ts`, `.../[id]/route.ts`, `src/app/api/rezepte/route.ts`, `.../[id]/route.ts`) validieren `recipe_typ` weiterhin nur gegen `'beilage' | 'grundlage'` — ein Speichern mit `recipe_typ: 'snack'` schlägt bis zum `/backend`-Durchlauf mit 400 fehl. Ebenso die DB-CHECK-Constraint-Migration (additiv um `'snack'`).
+
+**Verifikation:**
+- `tsc --noEmit`: sauber (unverändert 1 vorbestehender, unabhängiger Fehler in `PROJ-2-user-authentication.spec.ts`)
+- `eslint` auf allen geänderten Dateien: 0 Fehler
+- Playwright (Scratch-Verifikation, gelöscht nach Gebrauch): Typ-Filter-Leiste in der Rezeptbibliothek sichtbar (Alle/Mahlzeiten/Beilagen/Grundrezepte/Snacks), Filterung auf „Snacks" liefert korrekt 0 Treffer + Leerer-Zustand („Keine Rezepte gefunden", noch keine Snack-Rezepte in der DB); Rezept-Typ-Auswahl im Formular (`variant="user"`, `/rezept/neu`) zeigt „Snack" mit korrektem Wortlaut und ist auswählbar; mobile Ansicht (375px) bricht die Filter-Leiste sauber um, kein horizontales Overflow
+- **Admin-Seite (`/admin/rezepte`, `/admin/rezepte/neu`) nicht automatisiert testbar** — gleiche Einschränkung wie PROJ-24: der E2E-Testnutzer `qa-test@endlichsatt.dev` ist kein `ADMIN_EMAIL`, der serverseitige Admin-Check greift vor jeglichem Mocking. Da die Rezept-Typ-Auswahl aber identisch für `variant="admin"` und `variant="user"` ist (dieselbe Komponente, kein Verzweigungscode), deckt der `variant="user"`-Test dieselbe UI-Logik ab. Der Typ-Filter auf der Admin-Liste (`AdminRezeptListe`) selbst sollte vom Nutzer manuell im Dev-Server verifiziert werden.
 
 ## QA Test Results
 

@@ -17,6 +17,7 @@ import FeedbackDialog from '@/components/feedback-dialog'
 import GeschmackErgebnis from '@/components/geschmack-ergebnis'
 import type { RezeptSaettigungsMatrix as MatrixType } from '@/lib/saettigungs-matrix-rezept'
 import type { GeschmackState } from '@/components/saettigungs-ergebnis'
+import type { RecipeTypDb } from '@/lib/recipe-typ'
 
 // React cache() dedupt den Query zwischen generateMetadata() und der Page-Komponente,
 // damit die DB nur einmal pro Request angefragt wird.
@@ -142,7 +143,7 @@ export default async function RezeptDetailPage({
   type MacrosPerServing = { kcal: number; protein_g: number; kohlenhydrate_g: number; zucker_g: number; fett_g: number; ballaststoffe_g: number }
   const macros = recipe.macros_per_serving as MacrosPerServing | null
   const matrix = recipe.saettigungs_matrix as MatrixType | null
-  const recipeTyp = recipe.recipe_typ as 'beilage' | 'grundlage' | null
+  const recipeTyp = recipe.recipe_typ as RecipeTypDb | null
   // PROJ-33: `null` heißt "noch nicht berechnet" (z.B. Rezept vor Einführung des Features nie
   // bearbeitet) — Sektion blendet dann korrekt aus.
   const recipeGeschmack = (recipe.geschmack_score as GeschmackState | null) ?? undefined

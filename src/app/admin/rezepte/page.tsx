@@ -1,10 +1,10 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
-import { Plus, Pencil, Clock, ChefHat, ChevronLeft } from 'lucide-react'
-import AdminDeleteButton from './admin-delete-button'
+import { Plus, ChevronLeft } from 'lucide-react'
+import AdminRezeptListe, { type AdminRezeptListItem } from '@/components/admin-rezept-liste'
+import type { RecipeTyp } from '@/lib/recipe-typ'
 
 async function requireAdmin() {
   const supabase = await createClient()
@@ -19,10 +19,22 @@ export default async function AdminRezeptePage() {
 
   const { data: recipes } = await supabase
     .from('recipes')
-    .select('id, title, image_path, cook_time_minutes, total_time_minutes, created_at')
+    .select('id, title, image_path, cook_time_minutes, total_time_minutes, created_at, recipe_typ')
     .order('created_at', { ascending: false })
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+
+  // PROJ-16 (Refinement 2026-09-03, Teil 6): Auth + Datenladen bleiben hier serverseitig,
+  // Filterung + Darstellung wandert in die neue Client-Component AdminRezeptListe.
+  const rezepte: AdminRezeptListItem[] = (recipes ?? []).map(r => ({
+    id: r.id,
+    title: r.title,
+    imageUrl: r.image_path
+      ? `${supabaseUrl}/storage/v1/object/public/recipe-images/${r.image_path}`
+      : null,
+    total_time_minutes: r.total_time_minutes,
+    recipeTyp: r.recipe_typ as RecipeTyp,
+  }))
 
   return (
     <div className="min-h-screen bg-background">
@@ -43,56 +55,7 @@ export default async function AdminRezeptePage() {
       </header>
 
       <main className="max-w-2xl mx-auto px-4 py-6">
-        {!recipes || recipes.length === 0 ? (
-          <div className="text-center py-20 text-muted-foreground">
-            <ChefHat className="h-10 w-10 mx-auto mb-3 opacity-30" />
-            <p className="text-sm">Noch keine Rezepte. Lege das erste an!</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {recipes.map((recipe) => {
-              const imageUrl = recipe.image_path
-                ? `${supabaseUrl}/storage/v1/object/public/recipe-images/${recipe.image_path}`
-                : null
-              return (
-                <div
-                  key={recipe.id}
-                  className="flex items-center gap-3 p-3 rounded-xl border border-border bg-card"
-                >
-                  <div className="flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden bg-muted flex items-center justify-center">
-                    {imageUrl ? (
-                      <Image
-                        src={imageUrl}
-                        alt={recipe.title}
-                        width={56}
-                        height={56}
-                        className="w-full h-full object-cover"
-                        unoptimized
-                      />
-                    ) : (
-                      <ChefHat className="h-5 w-5 text-muted-foreground" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm text-foreground truncate">{recipe.title}</p>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
-                      <Clock className="h-3 w-3" />
-                      <span>{recipe.total_time_minutes} Min.</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1 flex-shrink-0">
-                    <Link href={`/admin/rezepte/${recipe.id}/bearbeiten`}>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                    </Link>
-                    <AdminDeleteButton recipeId={recipe.id} title={recipe.title} />
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
+        <AdminRezeptListe recipes={rezepte} />
       </main>
     </div>
   )

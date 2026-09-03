@@ -28,6 +28,7 @@ import NaehrwertCounter from '@/components/naehrwert-counter'
 import BildCropper from '@/components/bild-cropper'
 import { useLiveNaehrwertSchaetzung } from '@/hooks/use-live-naehrwert-schaetzung'
 import type { NutritionPer100g } from '@/lib/nutrition'
+import { RECIPE_TYP_FORMULAR_OPTIONEN, type RecipeTypDb, type RecipeTypFormular } from '@/lib/recipe-typ'
 
 interface ZutatenZeile {
   itemType: 'zutat' | 'gruppe'
@@ -214,14 +215,12 @@ function SortableGruppenZeile({
   )
 }
 
-type RecipeTyp = 'vollstaendig' | 'beilage' | 'grundlage'
-
 interface RezeptFormularProps {
   defaultValues?: Partial<RezeptFormularValues>
   recipeId?: string
   existingImageUrl?: string | null
   defaultIngredientMacros?: (NutritionPer100g | null)[]
-  defaultRecipeTyp?: 'beilage' | 'grundlage' | null
+  defaultRecipeTyp?: RecipeTypDb | null
   defaultIsGuestVisible?: boolean
   mode: 'create' | 'edit'
   /** PROJ-31: 'user' blendet die Gast-Freischaltung aus und spricht die
@@ -246,8 +245,8 @@ export default function RezeptFormular({
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const [recipeTyp, setRecipeTyp] = useState<RecipeTyp>(
-    defaultRecipeTyp === 'beilage' ? 'beilage' : defaultRecipeTyp === 'grundlage' ? 'grundlage' : 'vollstaendig'
+  const [recipeTyp, setRecipeTyp] = useState<RecipeTypFormular>(
+    defaultRecipeTyp ?? 'vollstaendig'
   )
   const [isGuestVisible, setIsGuestVisible] = useState(defaultIsGuestVisible)
   const [imagePreview, setImagePreview] = useState<string | null>(existingImageUrl ?? null)
@@ -745,14 +744,10 @@ export default function RezeptFormular({
         <Label>Rezept-Typ</Label>
         <RadioGroup
           value={recipeTyp}
-          onValueChange={(v) => setRecipeTyp(v as RecipeTyp)}
+          onValueChange={(v) => setRecipeTyp(v as RecipeTypFormular)}
           className="space-y-2"
         >
-          {([
-            { value: 'vollstaendig', label: 'Vollständiges Gericht', desc: 'Kann als alleinige Mahlzeit gegessen werden' },
-            { value: 'beilage',      label: 'Beilage',               desc: 'Salat, Rohkost, Gemüsebeilage, Dips' },
-            { value: 'grundlage',    label: 'Grundlagen-Rezept',     desc: 'Brot, Brühe, Sauce, Teig' },
-          ] as { value: RecipeTyp; label: string; desc: string }[]).map(opt => (
+          {RECIPE_TYP_FORMULAR_OPTIONEN.map(opt => (
             <label
               key={opt.value}
               htmlFor={`typ-${opt.value}`}

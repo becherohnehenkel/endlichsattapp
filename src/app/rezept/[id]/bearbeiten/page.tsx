@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import RezeptFormular, { type RezeptFormularValues } from '@/components/rezept-formular'
+import type { RecipeTypDb } from '@/lib/recipe-typ'
 
 export default async function EigenesRezeptBearbeitenPage({
   params,
@@ -102,7 +103,7 @@ export default async function EigenesRezeptBearbeitenPage({
           defaultValues={defaultValues}
           existingImageUrl={existingImageUrl}
           defaultIngredientMacros={sortedIngredients.map(i => i.macros_per_100g as import('@/lib/nutrition').NutritionPer100g | null)}
-          defaultRecipeTyp={recipe.recipe_typ as 'beilage' | 'grundlage' | null}
+          defaultRecipeTyp={recipe.recipe_typ as RecipeTypDb | null}
           variant="user"
         />
       </main>

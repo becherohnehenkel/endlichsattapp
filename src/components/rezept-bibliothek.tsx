@@ -6,6 +6,8 @@ import Image from 'next/image'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Clock, ChefHat, Search, Lock, Plus } from 'lucide-react'
+import RezeptTypFilter from '@/components/rezept-typ-filter'
+import { matchesRecipeTypFilter, type RecipeTyp, type RecipeTypFilterValue } from '@/lib/recipe-typ'
 
 export interface RezeptListItem {
   id: string
@@ -16,6 +18,8 @@ export interface RezeptListItem {
   is_guest_visible: boolean
   /** PROJ-30: true = eigenes (privates) Rezept des aktuellen Nutzers, false = offizielles Rezept */
   isOwn: boolean
+  /** PROJ-16 (Refinement 2026-09-03): null = vollständiges Gericht */
+  recipeTyp: RecipeTyp
 }
 
 type OwnerFilter = 'alle' | 'lukas' | 'eigene'
@@ -33,6 +37,7 @@ export default function RezeptBibliothek({
   const [query, setQuery] = useState('')
   const [activeTag, setActiveTag] = useState<string | null>(null)
   const [ownerFilter, setOwnerFilter] = useState<OwnerFilter>('alle')
+  const [typFilter, setTypFilter] = useState<RecipeTypFilterValue>('alle')
 
   // All unique cuisine tags across all recipes
   const allTags = useMemo(() => {
@@ -50,12 +55,16 @@ export default function RezeptBibliothek({
         ownerFilter === 'alle' ? true :
         ownerFilter === 'lukas' ? !r.isOwn :
         r.isOwn
-      return matchesQuery && matchesTag && matchesOwner
+      const matchesTyp = matchesRecipeTypFilter(r.recipeTyp, typFilter)
+      return matchesQuery && matchesTag && matchesOwner && matchesTyp
     })
-  }, [rezepte, query, activeTag, ownerFilter])
+  }, [rezepte, query, activeTag, ownerFilter, typFilter])
 
   return (
     <div className="max-w-sm md:max-w-[850px] mx-auto px-4 py-5 space-y-4">
+
+      {/* PROJ-16 (Refinement 2026-09-03, Teil 6): Typ-Filter — steht über den übrigen Filtern */}
+      <RezeptTypFilter value={typFilter} onChange={setTypFilter} />
 
       {/* PROJ-30: Eigentümer-Filter */}
       {showEigeneFilter && (
@@ -144,7 +153,7 @@ export default function RezeptBibliothek({
       {filtered.length === 0 ? (
         <div className="text-center py-12 space-y-2">
           <ChefHat className="h-8 w-8 text-muted-foreground mx-auto" />
-          {ownerFilter === 'eigene' && !query && !activeTag ? (
+          {ownerFilter === 'eigene' && !query && !activeTag && typFilter === 'alle' ? (
             <>
               <p className="text-sm text-muted-foreground">Du hast noch keine eigenen Rezepte</p>
               <Link href="/rezept/neu" className="text-xs text-[#2E9E6B] hover:underline font-medium">
