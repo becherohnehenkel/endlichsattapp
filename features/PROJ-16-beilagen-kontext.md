@@ -1,6 +1,6 @@
 # PROJ-16: Beilagen-Kontext
 
-## Status: Deployed (Refinement: Snack-Rezepttyp + Typ-Filter "Approved" — alle Bugs gefixt, bereit für /deploy)
+## Status: Deployed (Refinement: Snack-Rezepttyp + Typ-Filter "Deployed")
 **Created:** 2026-07-03
 **Last Updated:** 2026-09-03
 
@@ -517,6 +517,21 @@ Keine kritischen oder hohen Bugs gefunden. PROJ-16 ist production-ready.
 **Git Tag:** v2.0.0-complete-umstrukturierung (gemeinsamer Release mit PROJ-4/5/8/33/34 + Rebranding)
 **Neue Env-Variablen:** keine
 **DB-Migrationen:** additive CHECK-Constraint-Erweiterung auf `meal_analyses.analysis_typ` (bereits vor QA angewendet)
+
+### Refinement: Snack-Rezepttyp + Typ-Filter
+**Deployed:** 2026-09-03
+**Production URL:** https://satt.mehralsabnehmen.de/ernaehrung/rezepte
+**Git Tag:** v3.7.0-PROJ-16-refinement
+**Neue Env-Variablen:** keine
+**DB-Migrationen:** additive CHECK-Constraint-Erweiterung auf `recipes.recipe_typ` um `'snack'` (vom Nutzer manuell in Supabase ausgeführt und bestätigt, vor `/qa`)
+
+### Was deployed
+- Vierte `recipe_typ`-Option „Snack" im Rezept-Formular (Admin + Nutzer-eigene Rezepte, gleiche Komponente)
+- Rezept-Detailseite: Kontext-Hinweis (Badge „Snack" + Text) bei `recipe_typ = 'snack'`
+- Neuer Typ-Filter (Alle/Mahlzeiten/Beilagen/Grundrezepte/Snacks) in der öffentlichen Rezeptbibliothek UND der Admin-Rezeptliste, kombinierbar mit dem bestehenden Besitzer-Filter
+- Zentrale Werte-Liste `src/lib/recipe-typ.ts` löst die vorherige 7-fache Duplizierung der Typ-Werte ab (Formular, Filter, 4 API-Routen)
+- Nebenbei behoben (QA-Fund, nicht Teil der ursprünglichen Spec): A11y-Kollision zweier gleichnamiger "Alle"-Buttons; ein vorbestehender Dev-Server-only 404-Status-Bug (PROJ-8/PROJ-30-Tests robuster gemacht); veralteter Testtext in PROJ-31 + 8 verwaiste Test-Datensätze bereinigt
+- Nutzer hat auf Produktion visuell bestätigt: Typ-Filter funktioniert, Snack-Rezept anlegen + speichern funktioniert ("Ja, alles grün")
 
 ---
 
