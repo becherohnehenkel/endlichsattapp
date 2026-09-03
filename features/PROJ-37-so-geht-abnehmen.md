@@ -356,7 +356,7 @@ Pass (trivial) — reine Client-seitige Arithmetik auf bereits validiertem `gewi
 
 ## Deployment
 
-- **Production URL:** https://satt.mehralsabnehmen.de/ernaehrung/so-geht-abnehmen
+- **Production URL:** https://app.mehralsabnehmen.de/ernaehrung/so-geht-abnehmen
 - **Deployed:** 2026-08-31
 - **Git Tag:** v2.3.0-PROJ-37
 - Vercel-Build grün, Nutzer hat auf Produktion visuell bestätigt: Kcal-Rechner berechnet korrekt, Werte + Ergebnis bleiben nach Reload erhalten.

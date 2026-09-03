@@ -223,7 +223,7 @@ Keine.
 - **Recommendation:** Deploy
 
 ## Deployment
-- **Production URL:** https://satt.mehralsabnehmen.de/training
+- **Production URL:** https://app.mehralsabnehmen.de/training
 - **Deployed:** 2026-09-02 (Vercel auto-deploy via Push zu `main`, commits `f290968`..`6fd8630`)
 - **Verified in Produktion:** Nutzer hat die Live-Seite geprüft, alles grün ("Alles auf Grün").
 - **Umfang dieses Deploys:** vollständige PROJ-43-Implementierung — Training-Hub unter `/training` (ersetzt den bisherigen Platzhalter): 5 Grundlagen-Arbeitspunkte zum Krafttraining (bestehende `ArbeitspunkteListe`-Komponente, Auto-Open, Fortschrittsbalken), 3 Plan-Karten (Zu Hause ohne Equipment / mit Widerstandsbändern / Fitnessstudio), deren Zielrouten erst mit PROJ-44 entstehen (bis dahin 404, wie spezifiziert). `HubCard` aus dem Ernährung-Hub in eine gemeinsame Komponente ausgelagert. Kein Backend.
