@@ -60,7 +60,7 @@
 | PROJ-42 | Analyse-Übersichtsseite | P1 | Deployed | PROJ-2, PROJ-4, PROJ-5, PROJ-6, PROJ-8, PROJ-17, PROJ-19, PROJ-35, PROJ-37 | [Spec](PROJ-42-analyse-uebersichtsseite.md) |
 | PROJ-43 | Training-Übersicht (Krafttraining-Basics) | P1 | Deployed | PROJ-35, PROJ-19 | [Spec](PROJ-43-training-uebersicht.md) |
 | PROJ-44 | Trainingspläne (Detailseiten + Gewicht-Logging) | P1 | Deployed | PROJ-43, PROJ-2, PROJ-19, PROJ-42 | [Spec](PROJ-44-trainingsplaene.md) |
-| PROJ-45 | Wochen-Check-In | P1 | Deployed | PROJ-2, PROJ-19, PROJ-35, PROJ-17, PROJ-42 | [Spec](PROJ-45-wochen-check-in.md) |
+| PROJ-45 | Wochen-Check-In (Refinement: Slider-Feinschliff "Planned") | P1 | Deployed | PROJ-2, PROJ-19, PROJ-35, PROJ-17, PROJ-42 | [Spec](PROJ-45-wochen-check-in.md) |
 | PROJ-46 | Gewohnheiten | P1 | Deployed | PROJ-45, PROJ-35 | [Spec](PROJ-46-gewohnheiten.md) |
 | PROJ-47 | Startseite Neu | P1 | Deployed | PROJ-2, PROJ-19 | [Spec](PROJ-47-startseite-neu.md) |
 | PROJ-48 | Startseite: Ultimatives Ziel | P1 | Deployed | PROJ-47 | [Spec](PROJ-48-startseite-ultimatives-ziel.md) |

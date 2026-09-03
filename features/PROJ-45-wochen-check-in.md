@@ -1,8 +1,10 @@
 # PROJ-45: Wochen-Check-In
 
-## Status: Deployed
+## Status: Deployed (Refinement: Slider-Feinschliff "Planned")
 **Created:** 2026-09-02
-**Last Updated:** 2026-09-02
+**Last Updated:** 2026-09-03
+
+**Refinement (2026-09-03, Slider-Feinschliff):** Betrifft alle 6 Slider-Fragen. Die 5 qualitativen Slider (Schlaf, Energielevel, Ernährung, Bewusstes Essen, Tracking-Sicherheit) bekommen für jede Stufe ein eigenes Wort statt nur Endpunkt-Beschriftungen — das Wort der aktuell gewählten Stufe erscheint live als Ergebnistext mittig unter dem Slider. Der Screentime-Slider wechselt von einer linearen 0–10-Skala auf eine nicht-lineare Minuten-Skala (15-Min-Schritte bis 60 Min, danach 30-Min-Schritte bis 10 Std) und zeigt die formatierte Zeit statt eines Worts. Gespeichert wird weiterhin ausschließlich die Zahl (Stufe bzw. Minuten) — die Wortlisten/Formatierung sind reine Darstellung. Nächster Schritt: `/frontend`.
 
 ## Dependencies
 - PROJ-2 (User Authentication) — Persistenz nur für eingeloggte, nicht-anonyme Nutzer
@@ -36,13 +38,19 @@
 
 ### Formular-Felder
 - [ ] Angenommen die Sektion lädt, wenn die 5 Textfragen (Highlights, Lowlights, Lowlights-Ursache, "nächste Woche anders", "Sonst noch was") angezeigt werden, dann sind sie leere, mehrzeilige Freitextfelder ohne Formatvorgabe
-- [ ] Angenommen die Sektion lädt, wenn die 6 Slider-Fragen (Schlaf, Screentime, Energielevel, Ernährungs-Achtsamkeit, "bewusst essen", "Sicherheit ohne Tracking") angezeigt werden, dann zeigen sie einen Regler mit den vorgegebenen Endpunkt-/Zwischen-Beschriftungen
+- [ ] Angenommen die Sektion lädt, wenn die 6 Slider-Fragen (Schlaf, Screentime, Energielevel, Ernährungs-Achtsamkeit, "bewusst essen", "Sicherheit ohne Tracking") angezeigt werden, dann zeigen sie einen Regler mit den vorgegebenen Endpunkt-Beschriftungen — **Details zu den Zwischenstufen ab Refinement 2026-09-03, siehe „Slider-Feinschliff" unten**
 - [ ] Angenommen die Sektion lädt, wenn die Trainings-Frage angezeigt wird, dann erscheinen 4 auswählbare Optionen (0/1/2/3 Mal)
 
 ### Bedingte Elemente
 - [ ] Angenommen der Nutzer stellt den "Sicherheit ohne Tracking"-Slider auf 5 oder höher, wenn der Wert geändert wird, dann erscheint der Hinweistext "Dann tracke an normalen Arbeitstagen nicht — deine Routine sitzt schon."; bei einem Wert unter 5 ist er nicht sichtbar
 - [ ] Angenommen der Nutzer wählt bei der Trainings-Frage 1, 2 oder 3, wenn er das tut, dann erscheint der jeweilige Feedback-Text ("Super!" / "WOW — richtig gut!" / "Dein Körper ist dir wichtig — toll!")
 - [ ] Angenommen der Nutzer wählt bei der Trainings-Frage 0, wenn er das tut, dann erscheint zusätzlich ein Textfeld "Woran hat es gelegen? Wie stellst du sicher, dass es nächstes Mal klappt?"
+
+### Slider-Feinschliff (Refinement 2026-09-03)
+- [ ] Angenommen einer der 5 qualitativen Slider (Schlaf, Energielevel, Ernährung, Bewusstes Essen, Tracking-Sicherheit) wird verschoben, wenn der Nutzer eine neue Stufe wählt, dann erscheint das zu dieser Stufe passende Wort (siehe Content-Sektion, Slider-Wortlisten) live als Ergebnistext mittig unter dem Slider
+- [ ] Angenommen der Screentime-Slider wird verschoben, wenn der Nutzer eine neue Stufe wählt, dann läuft er in den vorgegebenen nicht-linearen Schritten (0/15/30/45/60 Min, danach 30-Min-Schritte bis 600 Min) und zeigt die formatierte Zeit (z. B. "45 Min", "2,5 Std") live mittig unter dem Slider
+- [ ] Angenommen ein beliebiger der 6 Slider wird verändert, wenn der Nutzer speichert, dann wird ausschließlich die zugrunde liegende Zahl (Stufe 0–10 bzw. 1–10, bei Screentime Minuten) gespeichert — die Wortlisten/Formatierung sind reine Darstellung ohne eigenes Datenfeld
+- [ ] Angenommen der "Sicherheit ohne Tracking"-Slider wird auf 5 oder höher gestellt, wenn der Wert geändert wird, dann erscheinen sowohl der bestehende Zusatz-Hinweis ("Dann tracke an normalen Arbeitstagen nicht — deine Routine sitzt schon.") als auch der neue adaptive Ergebnistext gleichzeitig
 
 ### Speichern & Bearbeiten (eingeloggte Nutzer)
 - [ ] Angenommen ein eingeloggter, nicht-anonymer Nutzer hat für die aktuelle Kalenderwoche noch keinen Eintrag, wenn er die Seite öffnet, dann ist das Formular leer
@@ -75,6 +83,10 @@
 - Wochen-Grenzen (Sonntag–Samstag): bestehende Logik aus PROJ-17 (`getWeekStartIso`) wiederverwenden statt neu zu implementieren
 - Neue shadcn/ui-Komponente "Slider" muss installiert werden (`npx shadcn@latest add slider`) — aktuell nicht im Projekt vorhanden
 
+### Refinement (2026-09-03): Slider-Feinschliff
+- Screentime wird weiterhin als einzelne Zahl (Minuten, 0–600) im bestehenden `antworten`-JSON-Feld gespeichert — keine Schema-Änderung, nur der Wertebereich/die möglichen Slider-Stufen ändern sich gegenüber der ursprünglichen 0–10-Skala
+- Die 5 Wortlisten (Schlaf/Energielevel/Ernährung/Bewusstes-Essen/Tracking-Sicherheit) sowie die Screentime-Formatierungslogik leben rein im Frontend (z. B. als Konstanten-Array pro Slider) — kein Backend-Bezug, keine neue Migration nötig
+
 ## Content: Finaler Wortlaut
 
 **H1:** "Deine Erfolgskontrolle"
@@ -87,12 +99,36 @@
 2. Lowlights der letzten Woche — Textfeld
 3. "Wie könntest du weniger Lowlights haben? Woran hat es konkret gelegen?" — Textfeld
 4. "Das mache ich nächste Woche anders" — Textfeld
-5. "Wie war dein Schlaf letzte Woche?" — Slider 1–10, Labels "1 Schlecht" / "10 Sehr erholsam"
-6. "Wie war deine Screentime letzte Woche?" — Slider 0–10, Labels "0 Min" / ">10 Std."
-7. "Wie war dein Energielevel?" — Slider 0–10, Labels "0 Krank" / "10 Bäume ausreißen"
-8. "Wie sehr hast du auf deine Ernährung geachtet?" — Slider 0–10, Labels "0 Gar nicht" / "10 Alles getrackt"
-9. "Wie schwer war es für dich, bewusst zu essen?" — Slider 0–10, Labels "0 Sehr schwer" / "5 Immer mal wieder" / "10 Total einfach"
-10. "Wie sicher fühlst du dich, wenn du nächste Woche nicht mehr trackst?" — Slider 0–10, Labels "0 Unsicher" / "5 Könnte klappen" / "10 Bin bereit". Ab Wert 5: Zusatz-Hinweis "Dann tracke an normalen Arbeitstagen nicht — deine Routine sitzt schon."
+5. "Wie war dein Schlaf letzte Woche?" — Slider 1–10, Endpunkte "1 Schlecht" / "10 Sehr erholsam", vollständige Wortliste siehe „Slider-Wortlisten" unten
+6. "Wie war deine Screentime letzte Woche?" — Slider mit nicht-linearer Minuten-Skala (0 bis 600 Min), Details siehe „Slider-Wortlisten" unten
+7. "Wie war dein Energielevel?" — Slider 0–10, Endpunkte "0 Krank" / "10 Bäume ausreißen", vollständige Wortliste siehe „Slider-Wortlisten" unten
+8. "Wie sehr hast du auf deine Ernährung geachtet?" — Slider 0–10, Endpunkte "0 Gar nicht" / "10 Alles getrackt", vollständige Wortliste siehe „Slider-Wortlisten" unten
+9. "Wie schwer war es für dich, bewusst zu essen?" — Slider 0–10, Endpunkte "0 Sehr schwer" / "10 Total einfach" (Mittelanker "5 Immer mal wieder"), vollständige Wortliste siehe „Slider-Wortlisten" unten
+10. "Wie sicher fühlst du dich, wenn du nächste Woche nicht mehr trackst?" — Slider 0–10, Endpunkte "0 Unsicher" / "10 Bin bereit" (Mittelanker "5 Könnte klappen"), vollständige Wortliste siehe „Slider-Wortlisten" unten. Ab Wert 5: zusätzlicher Zusatz-Hinweis "Dann tracke an normalen Arbeitstagen nicht — deine Routine sitzt schon." (neben dem normalen adaptiven Ergebnistext)
+
+### Slider-Wortlisten (Refinement 2026-09-03)
+
+Für jede Stufe erscheint das jeweilige Wort live als Ergebnistext mittig unter dem Slider, sobald der Nutzer diese Stufe wählt. Gespeichert wird ausschließlich die Zahl (Stufe bzw. Minuten bei Screentime) — diese Wortlisten sind reine Darstellung.
+
+**Schlaf (1–10):**
+1 Schlecht · 2 Sehr unruhig · 3 Unruhig · 4 Durchwachsen · 5 Okay · 6 Ganz ordentlich · 7 Gut · 8 Sehr gut · 9 Fast durchgehend erholsam · 10 Sehr erholsam
+
+**Energielevel (0–10):**
+0 Krank · 1 Sehr erschöpft · 2 Erschöpft · 3 Müde · 4 Eher müde · 5 Mittelmäßig · 6 Ganz ok · 7 Fit · 8 Energiegeladen · 9 Voller Energie · 10 Bäume ausreißen
+
+**Ernährung geachtet (0–10):**
+0 Gar nicht · 1 Kaum geachtet · 2 Selten geachtet · 3 Ab und zu · 4 Teilweise · 5 Mittelmäßig · 6 Meistens geachtet · 7 Gut geachtet · 8 Sehr bewusst · 9 Fast alles im Blick · 10 Alles getrackt
+
+**Bewusstes Essen (0–10):**
+0 Sehr schwer · 1 Schwer · 2 Eher schwer · 3 Herausfordernd · 4 Teilweise schwer · 5 Immer mal wieder · 6 Meistens einfach · 7 Einfach · 8 Ziemlich einfach · 9 Fast durchgehend einfach · 10 Total einfach
+
+**Sicherheit ohne Tracking (0–10):**
+0 Unsicher · 1 Noch unsicher · 2 Eher unsicher · 3 Wachsende Sicherheit · 4 Fast so weit · 5 Könnte klappen · 6 Ziemlich sicher · 7 Sicher · 8 Sehr sicher · 9 Fast bereit · 10 Bin bereit
+(Ab Stufe 5 zusätzlich weiterhin der bestehende Zusatz-Hinweis "Dann tracke an normalen Arbeitstagen nicht — deine Routine sitzt schon.")
+
+**Screentime (Minuten, nicht-linear):**
+Werte: 0, 15, 30, 45, 60, dann in 30-Minuten-Schritten bis 600 (10 Std) — also 0/15/30/45/60/90/120/150/180/210/240/270/300/330/360/390/420/450/480/510/540/570/600 Minuten (23 Stufen).
+Anzeige: unter 60 Min als "X Min" (z. B. "45 Min"), ab 60 Min als "X Std" bzw. "X,5 Std" (z. B. "60" → "1 Std", "90" → "1,5 Std", "600" → "10 Std").
 11. "Hast du dein Training machen können?" — 4 Optionen (0/1/2/3 Mal). Feedback: 1 → "Super!", 2 → "WOW — richtig gut!", 3 → "Dein Körper ist dir wichtig — toll!". Bei 0 zusätzlich Textfeld: "Woran hat es gelegen? Wie stellst du sicher, dass es nächstes Mal klappt?"
 12. "Etwas vergessen? Was war sonst noch wichtig?" — Textfeld
 
@@ -116,6 +152,17 @@
 | Playful Slider-Label "Bäume ausreißen" beibehalten (nur Tippfehler korrigiert) | Passt zum bereits etablierten, lockeren Ton der App (vgl. "das Ego bleibt in der Umkleide" aus PROJ-43) | 2026-09-02 |
 | Gast-Hinweistext 1:1 vom Nutzer übernommen | Explizit vorgegebener Wortlaut | 2026-09-02 |
 | "Gewohnheiten"-Sektion der `/check-in`-Seite als eigenes Feature (PROJ-46) gesplittet | Unterschiedliches Datenmodell (wöchentlicher Eintrag vs. tägliche Checkliste) — analog zum Hub/Detail-Split bei Training | 2026-09-02 |
+
+#### Refinement (2026-09-03): Slider-Feinschliff
+
+| Decision | Rationale | Date |
+|----------|-----------|------|
+| Jede Stufe der 5 qualitativen Slider bekommt ein eigenes Wort statt nur Endpunkt-Beschriftungen | Nutzerwunsch: mehr Orientierung beim Einordnen der eigenen Woche, statt zwischen zwei weit auseinanderliegenden Ankern zu schätzen | 2026-09-03 |
+| Energielevel-Slider bleibt bei 0–10 (nicht auf 1–9 geändert) | Konsistent mit den anderen vier 0-10-Slidern; die "1-9"-Formulierung des Nutzers bezog sich auf die Anzahl neuer Zwischenbegriffe, nicht auf die Skala selbst — bei der Rückfrage bestätigt | 2026-09-03 |
+| Screentime-Slider wechselt von linearer 0–10-Skala auf nicht-lineare Minuten-Skala (15-Min-Schritte bis 60, danach 30-Min-Schritte bis 600) | Direkte Nutzervorgabe — bildet reale Screentime-Werte präziser ab als eine grobe 0-10-Einordnung | 2026-09-03 |
+| Screentime zeigt die formatierte Zeit statt eines Worts | Eine Zahl (Minuten/Stunden) ist bei Screentime selbsterklärend und präziser als ein qualitatives Wort — anders als bei den übrigen 5 Slidern, die eine subjektive Einschätzung abbilden | 2026-09-03 |
+| Tracking-Sicherheits-Slider behält seinen bestehenden Zusatz-Hinweis ab Stufe 5 UND bekommt zusätzlich den neuen adaptiven Ergebnistext | Beide Mechanismen ergänzen sich: der Zusatz-Hinweis ist eine konkrete Handlungsempfehlung, der adaptive Text ist die generelle Einordnung wie bei allen anderen Slidern — bei der Rückfrage bestätigt | 2026-09-03 |
+| Wortlisten/Formatierung bleiben reine Darstellung, kein neues Datenfeld | Gespeichert wird weiterhin nur die Zahl — explizite Nutzervorgabe ("Zahl speichern für die kommende Analyse") bei allen 6 Fragen | 2026-09-03 |
 
 ### Technical Decisions
 <!-- Added by /architecture -->
