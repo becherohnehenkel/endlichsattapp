@@ -103,7 +103,7 @@ test.describe('Anlegen, Bearbeiten, Löschen', () => {
     const recipeId = page.url().split('/rezept/')[1]
 
     await expect(page.getByRole('heading', { name: 'QA-Test E2E: Neues Rezept' })).toBeVisible()
-    await expect(page.getByText('Sättigungs-Bausteine')).toBeVisible()
+    await expect(page.getByText('Sättigungs-Säulen')).toBeVisible()
 
     await page.goto('/rezepte')
     await page.getByRole('button', { name: 'Eigene Rezepte' }).click()

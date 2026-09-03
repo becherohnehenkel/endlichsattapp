@@ -110,7 +110,7 @@ test.describe('Alte Pfade redirecten dauerhaft auf die neuen', () => {
   test('AC: /ernaehrung/rezepte zeigt die volle Rezeptbibliothek-Funktionalität (keine Regression durch Umzug)', async ({ page }) => {
     await page.goto('/ernaehrung/rezepte')
     await expect(page.getByPlaceholder('Rezept suchen…')).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Alle' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Alle', exact: true })).toBeVisible()
   })
 })
 

@@ -20,6 +20,9 @@ export default function RezeptTypFilter({
         <button
           key={opt.value}
           onClick={() => onChange(opt.value)}
+          // BUG-1-Fix (QA 2026-09-03): "Alle" kollidiert sonst im Accessible Name mit dem
+          // bestehenden Cuisine-Tag-Filter-Button "Alle" — für Screenreader nicht unterscheidbar.
+          aria-label={opt.value === 'alle' ? 'Alle Rezept-Typen' : undefined}
           className={`flex-1 whitespace-nowrap text-[10px] md:text-xs px-1 md:px-2 py-1.5 rounded-lg border transition-colors ${
             value === opt.value
               ? 'bg-[#2E9E6B] text-white border-[#2E9E6B]'

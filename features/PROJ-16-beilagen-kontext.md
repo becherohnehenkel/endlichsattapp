@@ -1,6 +1,6 @@
 # PROJ-16: Beilagen-Kontext
 
-## Status: Deployed (Refinement: Snack-Rezepttyp + Typ-Filter "Approved" — 1 Medium-Bug offen, kein Deploy-Blocker)
+## Status: Deployed (Refinement: Snack-Rezepttyp + Typ-Filter "Approved" — alle Bugs gefixt, bereit für /deploy)
 **Created:** 2026-07-03
 **Last Updated:** 2026-09-03
 
@@ -640,25 +640,36 @@ BUG-1 behoben: `komponenteFullResult.komponente` in `confirm/route.ts` setzt jet
 
 ### Bugs Found
 
-#### BUG-1: Zwei Buttons mit identischem Accessible Name "Alle"
+#### BUG-1: Zwei Buttons mit identischem Accessible Name "Alle" — GEFIXT
 - **Severity:** Medium
 - **Datei:** [src/components/rezept-bibliothek.tsx](src/components/rezept-bibliothek.tsx) — neuer Typ-Filter (aus [src/components/rezept-typ-filter.tsx](src/components/rezept-typ-filter.tsx)) und der bestehende Cuisine-Tag-Filter haben beide einen Button mit dem Text „Alle"
 - **Steps to Reproduce:** `/ernaehrung/rezepte` öffnen → `page.getByRole('button', { name: 'Alle' })` (oder ein Screenreader, der nach dem Accessible Name "Alle" sucht) matched zwei unterschiedliche, funktional verschiedene Buttons ohne Möglichkeit der Unterscheidung
 - **Tatsächliche Auswirkung:** Bricht den vorbestehenden Regressionstest `tests/PROJ-36-ernaehrung-hub.spec.ts:113` (Playwright-Strict-Mode-Violation). Für sehende Nutzer visuell unterscheidbar (unterschiedliche Button-Form/Größe), für Screenreader-Nutzer aber nicht — zwei interaktive Elemente mit identischem Namen und unterschiedlicher Funktion ist ein A11y-Antipattern (WCAG 2.4.4/4.1.2)
-- **Fix (nicht selbst umgesetzt, außerhalb des QA-Scopes):** z.B. `aria-label="Alle Typen"` auf dem neuen Typ-Filter-Button bzw. `aria-label="Alle Küchen"` auf dem Cuisine-Tag-Filter-Button, plus Anpassung des betroffenen Locators in `tests/PROJ-36-ernaehrung-hub.spec.ts:113`
-- **Priority:** Vor Deploy beheben empfohlen (klein, aber echtes A11y- und Test-Infrastruktur-Problem)
+- **Fix:** `aria-label="Alle Rezept-Typen"` auf dem Typ-Filter-„Alle"-Button ergänzt ([src/components/rezept-typ-filter.tsx](src/components/rezept-typ-filter.tsx)) — Cuisine-Tag-Filter-Button bleibt unverändert „Alle". Da Playwrights `getByRole(..., {name})` standardmäßig als Teilstring matcht, wurde zusätzlich der betroffene Locator in `tests/PROJ-36-ernaehrung-hub.spec.ts:113` auf `{ name: 'Alle', exact: true }` präzisiert (matcht dadurch nur noch den Cuisine-Tag-Button).
+- **Verifiziert:** `tests/PROJ-36-ernaehrung-hub.spec.ts` grün, `tests/PROJ-16-beilagen-kontext.spec.ts` weiterhin 20/20 grün (keine Regression durch das aria-label).
 
-#### BUG-2 (vorbestehend, nicht durch dieses Refinement verursacht): `/rezept/[id]` liefert 200 statt 404
+#### BUG-2: `/rezept/[id]` liefert 200 statt 404 im Dev-Server — GEFIXT (Test angepasst, kein App-Code-Fix nötig)
 - **Severity:** Low
-- Betrifft `tests/PROJ-8-rezeptbibliothek.spec.ts` und `tests/PROJ-30-rezept-eigentuemerschaft-filter.spec.ts` — Inhalt ist korrekt ("404 — This page could not be found"), nur der HTTP-Status stimmt nicht. Kein Datenleck. Diff-Prüfung bestätigt: die einzige Änderung dieses Refinements an `src/app/rezept/[id]/page.tsx` ist ein harmloser Import + Type-Cast, unabhängig vom `notFound()`-Mechanismus. Als Hintergrund-Task ausgelagert.
+- Betrifft `tests/PROJ-8-rezeptbibliothek.spec.ts` und `tests/PROJ-30-rezept-eigentuemerschaft-filter.spec.ts`. **Root Cause gefunden:** reiner **Next.js/Turbopack-Dev-Server-Effekt** — verifiziert per `npm run build && npm run start`: im Produktions-Build liefert dieselbe URL korrekt HTTP 404. `curl` gegen den Dev-Server bestätigte den falschen 200-Status unabhängig vom Browser (kein Playwright-Artefakt). Die Seite selbst war nie fehlerhaft — der App-Code (`generateMetadata()` + `notFound()`) ist bereits korrekt, das Verhalten unterscheidet sich nur zwischen Dev- und Produktions-Server.
+- **Fix:** Da die Test-Suite gegen den Dev-Server läuft (nicht gegen einen Produktions-Build) und dort der HTTP-Status systembedingt unzuverlässig ist, prüfen beide Tests jetzt zusätzlich den tatsächlich gerenderten Seiteninhalt ("This page could not be found" sichtbar, bei PROJ-30 zusätzlich: der private Rezepttitel ist NICHT sichtbar — die eigentliche sicherheitsrelevante Garantie) statt sich ausschließlich auf den Status zu verlassen. Kein App-Code geändert, da bereits korrekt.
+- **Verifiziert:** Beide Tests grün gegen den Dev-Server; Produktions-Build separat mit `curl` bestätigt (404).
 
-#### BUG-3 (vorbestehend, nicht durch dieses Refinement verursacht): Veralteter Text "Sättigungs-Bausteine" in PROJ-31-Test
+#### BUG-3: Veralteter Text "Sättigungs-Bausteine" in PROJ-31-Test — GEFIXT
 - **Severity:** Low
-- `tests/PROJ-31-nutzer-eigene-rezepte.spec.ts:106` erwartet "Sättigungs-Bausteine", aktuelle Überschrift ist seit der "Complete"-Umstrukturierung (2026-08-11) "Sättigungs-Säulen" — reiner Test-Bug, kein Produktfehler. Als Hintergrund-Task ausgelagert.
+- `tests/PROJ-31-nutzer-eigene-rezepte.spec.ts:106` erwartete "Sättigungs-Bausteine", aktuelle Überschrift ist seit der "Complete"-Umstrukturierung (2026-08-11) "Sättigungs-Säulen" — reiner Test-Bug, kein Produktfehler.
+- **Fix:** Text in `tests/PROJ-31-nutzer-eigene-rezepte.spec.ts:106` auf "Sättigungs-Säulen" korrigiert.
+- **Nebenfund beim Fixen:** Da dieser Test seit der Umbenennung (2026-08-11) bei jedem Lauf schon vor dem Cleanup-Schritt (`deleteRecipeViaApi`) fehlschlug, hatten sich **8 verwaiste Test-Rezepte** ("QA-Test E2E: Neues Rezept", angelegt unter dem `qa-test`-Account) in der Produktions-Datenbank angesammelt — sichtbar geworden durch einen Folgefehler (`getByText(...)` matchte 8 Elemente statt 1). Alle 8 wurden über `DELETE /api/rezepte/[id]` bereinigt (je 200-Antwort bestätigt).
+- **Verifiziert:** `tests/PROJ-31-nutzer-eigene-rezepte.spec.ts` 9/9 grün.
+
+### Re-Test nach allen 3 Bugfixes (2026-09-03, selbe Sitzung)
+- `node_modules/.bin/playwright test tests/PROJ-30-rezept-eigentuemerschaft-filter.spec.ts tests/PROJ-31-nutzer-eigene-rezepte.spec.ts tests/PROJ-8-rezeptbibliothek.spec.ts tests/PROJ-36-ernaehrung-hub.spec.ts tests/PROJ-16-beilagen-kontext.spec.ts`: **72/72 passed**
+- `npm test` (Vitest): **462/462 passed**
+- `tsc --noEmit`: sauber (unverändert 1 vorbestehender, unabhängiger Fehler in `PROJ-2-user-authentication.spec.ts`)
+- `eslint` auf `src/components/rezept-typ-filter.tsx`: 0 Fehler
 
 ### Summary
 - **Acceptance Criteria:** 9/10 vollständig verifiziert (1 strukturell abgedeckt, aber nicht live auf der Admin-Seite verifizierbar — Empfehlung: manuelle Gegenprüfung)
-- **Bugs Found:** 3 total (0 Critical, 0 High, 1 Medium, 2 Low) — 1 Medium-Bug durch dieses Refinement verursacht, 2 Low-Bugs vorbestehend und unabhängig
+- **Bugs Found:** 3 total (0 Critical, 0 High, 1 Medium, 2 Low) — **alle 3 gefixt**, keine offenen Bugs mehr
 - **Security:** Pass
-- **Production Ready: JA** — keine Critical/High Bugs. Der Medium-Bug (BUG-1) ist eine reine Test-/A11y-Angelegenheit ohne Auswirkung auf die Kernfunktion und blockiert laut QA-Kriterium (nur Critical/High blockieren) das Deployment nicht, sollte aber zeitnah behoben werden.
-- **Recommendation:** Deploy möglich. BUG-1 vor oder kurz nach dem Deploy beheben (kleiner Fix: `aria-label` ergänzen + einen Locator anpassen).
+- **Production Ready: JA** — keine offenen Bugs.
+- **Recommendation:** Deploy.
