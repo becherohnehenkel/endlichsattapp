@@ -39,13 +39,16 @@ interface SliderFrageProps {
   max: number
   minLabel: string
   maxLabel: string
-  midLabel?: string
   value: number
   onChange: (value: number) => void
+  /** PROJ-45 (Refinement 2026-09-03): liefert den Ergebnistext für die aktuell gewählte Stufe. */
+  labelForValue: (value: number) => string
   hinweis?: string
 }
 
-function SliderFrage({ id, frage, min, max, minLabel, maxLabel, midLabel, value, onChange, hinweis }: SliderFrageProps) {
+// PROJ-45 (Refinement 2026-09-03): Die Endpunkt-Beschriftungen bleiben fix links/rechts
+// stehen, der Ergebnistext darunter aktualisiert sich live mit der gewählten Stufe.
+function SliderFrage({ id, frage, min, max, minLabel, maxLabel, value, onChange, labelForValue, hinweis }: SliderFrageProps) {
   return (
     <div className="space-y-3">
       <Label htmlFor={id} className="text-sm font-medium text-foreground leading-relaxed">{frage}</Label>
@@ -59,14 +62,83 @@ function SliderFrage({ id, frage, min, max, minLabel, maxLabel, midLabel, value,
       />
       <div className="flex justify-between text-xs text-muted-foreground">
         <span>{minLabel}</span>
-        {midLabel && <span>{midLabel}</span>}
         <span>{maxLabel}</span>
       </div>
+      <p className="text-center text-sm font-semibold text-[#0E7C86]">{labelForValue(value)}</p>
       {hinweis && (
         <p className="text-xs text-[#0E7C86] bg-[#DFF0F2] rounded-lg px-3 py-2 leading-relaxed">{hinweis}</p>
       )}
     </div>
   )
+}
+
+// PROJ-45 (Refinement 2026-09-03): Screentime läuft nicht linear 0–10, sondern in
+// unterschiedlich großen Minuten-Schritten. Die Slider-UI arbeitet intern über einen
+// Index in dieses Array, gespeichert/übergeben wird immer der tatsächliche Minutenwert.
+const SCREENTIME_MINUTEN_SCHRITTE = [
+  0, 15, 30, 45, 60,
+  90, 120, 150, 180, 210, 240, 270, 300, 330, 360, 390, 420, 450, 480, 510, 540, 570, 600,
+]
+
+function formatScreentime(minuten: number): string {
+  if (minuten < 60) return `${minuten} Min`
+  const stunden = minuten / 60
+  const stundenText = Number.isInteger(stunden) ? `${stunden}` : stunden.toFixed(1).replace('.', ',')
+  return `${stundenText} Std`
+}
+
+interface ScreentimeSliderFrageProps {
+  id: string
+  frage: string
+  value: number
+  onChange: (value: number) => void
+}
+
+function ScreentimeSliderFrage({ id, frage, value, onChange }: ScreentimeSliderFrageProps) {
+  const index = Math.max(0, SCREENTIME_MINUTEN_SCHRITTE.indexOf(value))
+  return (
+    <div className="space-y-3">
+      <Label htmlFor={id} className="text-sm font-medium text-foreground leading-relaxed">{frage}</Label>
+      <Slider
+        id={id}
+        min={0}
+        max={SCREENTIME_MINUTEN_SCHRITTE.length - 1}
+        step={1}
+        value={[index]}
+        onValueChange={v => onChange(SCREENTIME_MINUTEN_SCHRITTE[v[0]])}
+      />
+      <div className="flex justify-between text-xs text-muted-foreground">
+        <span>0 Min</span>
+        <span>10 Std.</span>
+      </div>
+      <p className="text-center text-sm font-semibold text-[#0E7C86]">{formatScreentime(value)}</p>
+    </div>
+  )
+}
+
+const SCHLAF_WOERTER = [
+  'Schlecht', 'Sehr unruhig', 'Unruhig', 'Durchwachsen', 'Okay',
+  'Ganz ordentlich', 'Gut', 'Sehr gut', 'Fast durchgehend erholsam', 'Sehr erholsam',
+]
+const ENERGIELEVEL_WOERTER = [
+  'Krank', 'Sehr erschöpft', 'Erschöpft', 'Müde', 'Eher müde', 'Mittelmäßig',
+  'Ganz ok', 'Fit', 'Energiegeladen', 'Voller Energie', 'Bäume ausreißen',
+]
+const ACHTSAMKEIT_WOERTER = [
+  'Gar nicht', 'Kaum geachtet', 'Selten geachtet', 'Ab und zu', 'Teilweise', 'Mittelmäßig',
+  'Meistens geachtet', 'Gut geachtet', 'Sehr bewusst', 'Fast alles im Blick', 'Alles getrackt',
+]
+const BEWUSST_ESSEN_WOERTER = [
+  'Sehr schwer', 'Schwer', 'Eher schwer', 'Herausfordernd', 'Teilweise schwer', 'Immer mal wieder',
+  'Meistens einfach', 'Einfach', 'Ziemlich einfach', 'Fast durchgehend einfach', 'Total einfach',
+]
+const SICHERHEIT_WOERTER = [
+  'Unsicher', 'Noch unsicher', 'Eher unsicher', 'Wachsende Sicherheit', 'Fast so weit', 'Könnte klappen',
+  'Ziemlich sicher', 'Sicher', 'Sehr sicher', 'Fast bereit', 'Bin bereit',
+]
+
+function wortFuerWert(woerter: string[], value: number, min: number): string {
+  return woerter[value - min] ?? ''
 }
 
 interface TextFrageProps {
@@ -104,7 +176,7 @@ const LEERE_ANTWORTEN: WochenCheckInAntworten = {
   lowlightsUrsache: '',
   naechsteWocheAnders: '',
   schlaf: 5,
-  screentime: 5,
+  screentime: 0,
   energielevel: 5,
   achtsamkeit: 5,
   bewusstEssen: 5,
@@ -238,14 +310,11 @@ export function WochenCheckInForm({ isGuest, aktuelleWoche, initialEintrag, hist
           maxLabel="10 Sehr erholsam"
           value={antworten.schlaf}
           onChange={v => set('schlaf', v)}
+          labelForValue={v => wortFuerWert(SCHLAF_WOERTER, v, 1)}
         />
-        <SliderFrage
+        <ScreentimeSliderFrage
           id="screentime"
           frage="Wie war deine Screentime letzte Woche?"
-          min={0}
-          max={10}
-          minLabel="0 Min"
-          maxLabel=">10 Std."
           value={antworten.screentime}
           onChange={v => set('screentime', v)}
         />
@@ -258,6 +327,7 @@ export function WochenCheckInForm({ isGuest, aktuelleWoche, initialEintrag, hist
           maxLabel="10 Bäume ausreißen"
           value={antworten.energielevel}
           onChange={v => set('energielevel', v)}
+          labelForValue={v => wortFuerWert(ENERGIELEVEL_WOERTER, v, 0)}
         />
         <SliderFrage
           id="achtsamkeit"
@@ -268,6 +338,7 @@ export function WochenCheckInForm({ isGuest, aktuelleWoche, initialEintrag, hist
           maxLabel="10 Alles getrackt"
           value={antworten.achtsamkeit}
           onChange={v => set('achtsamkeit', v)}
+          labelForValue={v => wortFuerWert(ACHTSAMKEIT_WOERTER, v, 0)}
         />
         <SliderFrage
           id="bewusst-essen"
@@ -275,10 +346,10 @@ export function WochenCheckInForm({ isGuest, aktuelleWoche, initialEintrag, hist
           min={0}
           max={10}
           minLabel="0 Sehr schwer"
-          midLabel="5 Immer mal wieder"
           maxLabel="10 Total einfach"
           value={antworten.bewusstEssen}
           onChange={v => set('bewusstEssen', v)}
+          labelForValue={v => wortFuerWert(BEWUSST_ESSEN_WOERTER, v, 0)}
         />
         <SliderFrage
           id="sicherheit-ohne-tracking"
@@ -286,10 +357,10 @@ export function WochenCheckInForm({ isGuest, aktuelleWoche, initialEintrag, hist
           min={0}
           max={10}
           minLabel="0 Unsicher"
-          midLabel="5 Könnte klappen"
           maxLabel="10 Bin bereit"
           value={antworten.sicherheitOhneTracking}
           onChange={v => set('sicherheitOhneTracking', v)}
+          labelForValue={v => wortFuerWert(SICHERHEIT_WOERTER, v, 0)}
           hinweis={
             antworten.sicherheitOhneTracking >= 5
               ? 'Dann tracke an normalen Arbeitstagen nicht — deine Routine sitzt schon.'

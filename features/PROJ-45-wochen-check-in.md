@@ -1,6 +1,6 @@
 # PROJ-45: Wochen-Check-In
 
-## Status: Deployed (Refinement: Slider-Feinschliff "Planned")
+## Status: Deployed (Refinement: Slider-Feinschliff "In Progress" — Frontend fertig, Backend-Validierung für Screentime steht noch aus)
 **Created:** 2026-09-02
 **Last Updated:** 2026-09-03
 
@@ -232,6 +232,22 @@ Ein neues shadcn/ui-Paket: `slider` (offizielle Radix-basierte Komponente, wie a
 - Gast- vs. eingeloggt-Unterscheidung inkl. Gast-Hinweistext (hängt von der Session ab, die serverseitig ermittelt wird)
 
 **Verifiziert:** `npm run build`, `npm run lint` (0 Fehler, 1 vorbestehende, unabhängige Warnung), `npm test` (430/430 grün). Visuell per Playwright-Screenshot auf Desktop und Mobile (375px, kein horizontales Scrollen) geprüft: alle Slider, der bedingte Hinweistext ab Wert 5, die Trainings-Chips mit Feedback-Text und das bedingte Textfeld bei „0x" funktionieren wie spezifiziert.
+
+## Implementation Notes (Frontend) — Refinement 2026-09-03: Slider-Feinschliff
+
+**Gebaut** (`src/components/wochen-check-in-form.tsx`):
+- `SliderFrage` erweitert: `midLabel`-Prop entfernt (durch den adaptiven Ergebnistext überflüssig geworden), neue `labelForValue: (value: number) => string`-Prop — der Ergebnistext erscheint jetzt live als eigene, betonte Zeile mittig unter dem Slider (Endpunkt-Beschriftungen links/rechts bleiben unverändert fix)
+- 5 Wortlisten-Konstanten (`SCHLAF_WOERTER`, `ENERGIELEVEL_WOERTER`, `ACHTSAMKEIT_WOERTER`, `BEWUSST_ESSEN_WOERTER`, `SICHERHEIT_WOERTER`) + `wortFuerWert()`-Helper (Index = Wert − Minimum)
+- Neue eigenständige `ScreentimeSliderFrage`-Komponente statt Wiederverwendung von `SliderFrage`: der Radix-Slider arbeitet intern über einen Index in `SCREENTIME_MINUTEN_SCHRITTE` (23 nicht-linear verteilte Werte: 0/15/30/45/60, danach 30-Min-Schritte bis 600), `onChange` gibt aber immer den tatsächlichen Minutenwert nach außen — `antworten.screentime` bleibt dadurch weiterhin eine einzelne Minutenzahl, keine Index-Verwechslung möglich
+- `formatScreentime()`: unter 60 Min als „X Min", ab 60 Min als „X Std" bzw. „X,5 Std" (deutsches Komma statt Punkt)
+- `LEERE_ANTWORTEN.screentime`-Default von `5` (alte 0–10-Skala) auf `0` (gültiger Wert der neuen Minuten-Skala) korrigiert
+- Sicherheits-Slider zeigt weiterhin den bestehenden Zusatz-Hinweis ab Stufe 5 — jetzt zusätzlich zum neuen adaptiven Ergebnistext, beide gleichzeitig sichtbar
+
+**Bewusst NICHT angepasst (Backend-Scope):** Die Zod-Validierung in `src/app/api/check-in/wochen/route.ts` begrenzt `screentime` noch auf `min(0).max(10)` (alte Skala) — ein Speichern mit einem neuen Screentime-Wert über 10 (z. B. 90 oder 600 Minuten) schlägt bis zum `/backend`-Durchlauf mit 400 fehl. Die anderen 5 Slider (weiterhin 0–10 bzw. 1–10) sind von der Backend-Validierung nicht betroffen.
+
+**Verifiziert:** `tsc --noEmit` sauber (unverändert 1 vorbestehender, unabhängiger Fehler in `PROJ-2-user-authentication.spec.ts`), `eslint` auf der geänderten Datei 0 Fehler. Playwright-Scratch-Verifikation (gelöscht nach Gebrauch): alle 5 Wortlisten-Slider zeigen die korrekten Standard-Wörter bei Wert 5 bzw. 0, Keyboard-Navigation (Home/End/ArrowRight) über den Radix-Thumb bestätigt live-aktualisierende Labels inkl. Endstufen; Screentime-Slider korrekt formatiert bei 0 Min/15 Min/1,5 Std/10 Std; Sicherheits-Slider zeigt bei Stufe 5 Wort UND Zusatz-Hinweis gleichzeitig; Mobile (375px) kein horizontales Overflow, alle Labels lesbar.
+
+**Hinweis für `/qa`:** Die bestehenden E2E-Tests in `tests/PROJ-45-wochen-check-in.spec.ts` prüfen noch die alten statischen Labels „>10 Std.", „5 Immer mal wieder" und „5 Könnte klappen" (Zeilen ~148/154/157) — diese wurden bewusst nicht in der Frontend-Phase angefasst (Test-Anpassungen gehören zu `/qa`), müssen dort aber aktualisiert werden, da sie durch diese Refinement erwartungsgemäß nicht mehr matchen.
 
 ## Implementation Notes (Backend)
 
