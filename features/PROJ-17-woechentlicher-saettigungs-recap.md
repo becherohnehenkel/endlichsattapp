@@ -2,7 +2,7 @@
 
 ## Status: Deployed
 **Created:** 2026-07-07
-**Last Updated:** 2026-07-07
+**Last Updated:** 2026-09-03
 **Architected:** 2026-07-07
 
 ## Dependencies
@@ -268,6 +268,15 @@ Keine kritischen oder hohen Bugs gefunden.
 ### Entscheidung: Production-Ready
 ✅ **JA** — Alle Acceptance Criteria erfüllt, keine kritischen/hohen Bugs, Regression sauber.
 
+## Post-Deployment Fixes
+
+### E2E-Test-Flakiness "resolve is not a function" (2026-09-03)
+- `tests/PROJ-17-woechentlicher-saettigungs-recap.spec.ts` — Test "Lade-Skelett wird angezeigt während Recap lädt" schlug intermittierend fehl (3/3 in einem Lauf). Bei QA für PROJ-45 (Wochen-Check-In) entdeckt, ohne fachlichen Bezug zu diesem Feature.
+- Ursache: Der Test suchte per `page.locator('.animate-pulse').first()` global nach dem Ladeskelett. Beim Navigieren zu `/analyse` zeigt Next.js aber zusätzlich sein eigenes routenspezifisches `loading.tsx` (ebenfalls mit shadcn-`Skeleton`, also auch `animate-pulse`), das kurz aufblitzt, bevor die `WochenRecapSektion` überhaupt mountet. Dieses fremde Skelett konnte die Sichtbarkeits-Assertion erfüllen, bevor der Recap-Fetch (und damit die Zuweisung von `resolve`) gestartet war — daher der Absturz bei `resolve()`. Reiner Test-Bug, kein Produkt-Bug.
+- Fix: dediziertes `data-testid="wochen-recap-skeleton"` an `src/components/wochen-recap-sektion.tsx` ergänzt, Test fragt jetzt gezielt dieses Testid ab statt des globalen `.animate-pulse`-Selektors. `page.route()`-Registrierungen werden zusätzlich vor der Navigation awaited.
+- Verifiziert: 5/5 bei `--repeat-each=5`, vollständiges Testfile 26/26 grün.
+- Commit: `0abe580` — `fix(PROJ-17): Behebe "resolve is not a function" im Lade-Skelett-Test`
+
 ## Deployment
 **Deployed:** 2026-07-07
 **Production URL:** https://app.mehralsabnehmen.de/historie
@@ -276,3 +285,7 @@ Keine kritischen oder hohen Bugs gefunden.
 - Push auf `main` → Vercel Auto-Deploy getriggert
 - Neue Route `/api/recap/wochen` live
 - Neuer Client-Komponent `WochenRecapSektion` live auf `/historie`
+
+### Redeploy: E2E-Test-Fix (2026-09-03)
+- Push auf `main` (Commit `0abe580`) → Vercel Auto-Deploy, Production Ready in 57s
+- Kein Funktionsumfang geändert, nur Testcode + `data-testid`-Attribut — Recap-Verhalten unverändert
