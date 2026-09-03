@@ -43,7 +43,7 @@
 - [ ] Angenommen ein Ergebnis wird angezeigt, dann ist die kcal-Zahl auf ganze Zahlen gerundet.
 
 ### Eiweißbedarf (Refinement 2026-09-03)
-- [ ] Angenommen ein Ergebnis wird angezeigt, dann zeigt das Ergebnis-Kästchen zusätzlich zwei neue Zeilen unter "Erhaltungsbedarf: X kcal": "Mindestens {Gewicht × 1,2}g Eiweiß/Tag" und "Optimal {Gewicht × 1,5}g Eiweiß/Tag", beide auf ganze Gramm gerundet.
+- [ ] Angenommen ein Ergebnis wird angezeigt, dann ist das Ergebnis-Kästchen vertikal in zwei Hälften geteilt: links die Kalorien-Angabe ("Dein Kalorienbedarf", die kcal-Zahl, "Erhaltungsbedarf: X kcal"), rechts oben die Mindest-Eiweißmenge ("Mindestens", {Gewicht × 1,2}g, "Eiweiß/Tag"), rechts unten die optimale Eiweißmenge ("Optimal", {Gewicht × 1,5}g, "Eiweiß/Tag") — beide Eiweißwerte auf ganze Gramm gerundet.
 - [ ] Angenommen ein Nutzer wechselt das Ziel (Fett verlieren / Gewicht halten / Muskeln aufbauen), ohne das Gewicht zu ändern, dann bleiben beide Eiweißmengen unverändert — sie hängen ausschließlich vom Gewicht ab, nicht vom Ziel.
 
 ### Speichern (eingeloggte Nutzer)
@@ -162,7 +162,8 @@ Am Ende: dezenter Text-Link *"Trainingspläne findest du im Training-Bereich →
 | Krafttraining-Arbeitspunkt verlinkt nur dezent (Text-Link, kein Button) auf `/training`, ohne weitere Erklärung dort | Nutzer will vermeiden, dass der Fokus vom Ernährungs-Bereich wegwandert — der Link soll auffindbar, aber nicht werblich sein | 2026-08-31 |
 | **Refinement 2026-09-03:** Mindest- (1,2×Gewicht) und optimale (1,5×Gewicht) tägliche Eiweißmenge zusätzlich zum Kalorien-Ergebnis anzeigen | Nutzerwunsch — Eiweiß ist für Sättigung und Muskelerhalt zentral (siehe bereits bestehender Arbeitspunkt 3 "Warum auf Proteine achten"), soll direkt neben dem Kalorienergebnis sichtbar sein statt nur als separater Lerninhalt | 2026-09-03 |
 | Eiweiß-Faktoren gelten unabhängig vom gewählten Ziel (Fett verlieren/Halten/Muskeln aufbauen) | Nutzerentscheidung — einfachste Umsetzung, entspricht der Original-Vorgabe ohne zusätzliche Ziel-abhängige Faktoren | 2026-09-03 |
-| Anzeige als zwei zusätzliche Zeilen im bestehenden Ergebnis-Kästchen statt eigener Karte oder Spannen-Darstellung | Nutzerentscheidung nach 3 vorgestellten Optionen — bleibt im bestehenden, kompakten Kästchen-Stil, kein neues UI-Element nötig | 2026-09-03 |
+| Anzeige zunächst als zwei zusätzliche Zeilen im bestehenden Ergebnis-Kästchen statt eigener Karte oder Spannen-Darstellung | Nutzerentscheidung nach 3 vorgestellten Optionen — bleibt im bestehenden, kompakten Kästchen-Stil, kein neues UI-Element nötig | 2026-09-03 |
+| **Iteration 2026-09-03:** Nach Live-Ansicht durch Nutzer ersetzt — Ergebnis-Kästchen vertikal 2-geteilt: links Kalorien (volle Höhe), rechts oben Mindest-Eiweiß, rechts unten optimales Eiweiß, statt schmaler Textzeilen | Nutzerwunsch: Eiweißwerte sollen präsenter/prominenter wirken als reiner Fließtext unter dem Kalorienergebnis — als direkte Skizze vom Nutzer vorgegeben, live im Code umgesetzt und per Screenshot bestätigt | 2026-09-03 |
 
 ### Technical Decisions
 <!-- Added by /architecture -->
@@ -232,9 +233,10 @@ Eine neue API-Route zum Speichern der Rechner-Eingaben für eingeloggte Nutzer (
 
 ### Refinement (2026-09-03): Eiweißbedarf im Kcal-Rechner-Ergebnis
 `src/lib/kcal-rechner.ts`: `KcalRechnerErgebnis` um `eiweissMindestG` und `eiweissOptimalG` erweitert (Gewicht × 1,2 bzw. × 1,5, auf ganze Gramm gerundet, neue Konstanten `EIWEISS_FAKTOR_MINDEST`/`EIWEISS_FAKTOR_OPTIMAL`), berechnet in `berechneKcal` — reine Erweiterung der bestehenden, rein client-seitigen Funktion, kein neuer Speicherbedarf (Eiweißmenge wird bei jedem Aufruf aus dem ohnehin erfassten Gewicht neu berechnet, nicht separat gespeichert).
-`src/components/kcal-rechner.tsx`: zwei neue Zeilen im bestehenden Ergebnis-Kästchen unter "Erhaltungsbedarf: X kcal" — "Mindestens Xg Eiweiß/Tag" und "Optimal Xg Eiweiß/Tag", gleicher Textstil wie die bestehende Erhaltungsbedarf-Zeile.
+`src/components/kcal-rechner.tsx`: Ergebnis-Kästchen von einer einspaltigen Textliste auf ein `grid grid-cols-2 divide-x`-Layout umgestellt — linke Spalte (volle Höhe, zentriert): "Dein Kalorienbedarf" + kcal-Zahl + "Erhaltungsbedarf: X kcal", wie zuvor. Rechte Spalte per `divide-y` in zwei gleich hohe Zellen geteilt: oben "Mindestens" + `{eiweissMindestG}g` + "Eiweiß/Tag", unten "Optimal" + `{eiweissOptimalG}g` + "Eiweiß/Tag" — beide mit eigener, kleinerer aber deutlich fetter Zahl (`text-lg font-bold`) als die ursprünglichen reinen Textzeilen, dadurch präsenter.
+- Iteration: erste Version zeigte die Eiweißwerte als zwei zusätzliche `text-xs`-Zeilen unterhalb von "Erhaltungsbedarf" — auf Nutzerwunsch nach Live-Ansicht durch das 2-spaltige Layout ersetzt (siehe Decision Log).
 - `npm run build`, `npm run lint`, `npm test` (443/443) weiterhin grün — bestehende `kcal-rechner.test.ts`-Tests unverändert grün (prüfen einzelne Felder, keine Deep-Equality auf `KcalRechnerErgebnis`, daher keine Anpassung nötig).
-- Per Playwright verifiziert: 80 kg/180 cm/30 Jahre/männlich/moderat aktiv/Gewicht halten → "Mindestens 96g Eiweiß/Tag", "Optimal 120g Eiweiß/Tag" (80 × 1,2 = 96, 80 × 1,5 = 120 — exakt wie erwartet).
+- Per Playwright verifiziert (Desktop + Mobile 375px): 80 kg/180 cm/30 Jahre/männlich/moderat aktiv/Gewicht halten → links "2759 kcal" / "Erhaltungsbedarf: 2759 kcal", rechts oben "Mindestens 96g Eiweiß/Tag", rechts unten "Optimal 120g Eiweiß/Tag" (80 × 1,2 = 96, 80 × 1,5 = 120 — exakt wie erwartet). Kein horizontales Scrollen, Layout bleibt auch auf schmalen Screens gut lesbar.
 
 ## QA Test Results
 

@@ -237,12 +237,24 @@ export function KcalRechner({ kannSpeichern, gespeicherteWerte, onBerechnet }: K
       </Button>
 
       {ergebnis && (
-        <div className="rounded-2xl border border-[#2E9E6B]/30 bg-[#DFF0F2] p-4 space-y-1 text-center">
-          <p className="text-xs text-[#2E9E6B]/80">Dein Kalorienbedarf</p>
-          <p className="text-2xl font-bold text-[#0E7C86]">{ergebnis.zielKcal} kcal</p>
-          <p className="text-xs text-[#2E9E6B]/70">Erhaltungsbedarf: {ergebnis.erhaltungsbedarf} kcal</p>
-          <p className="text-xs text-[#2E9E6B]/70">Mindestens {ergebnis.eiweissMindestG}g Eiweiß/Tag</p>
-          <p className="text-xs text-[#2E9E6B]/70">Optimal {ergebnis.eiweissOptimalG}g Eiweiß/Tag</p>
+        <div className="rounded-2xl border border-[#2E9E6B]/30 bg-[#DFF0F2] grid grid-cols-2 divide-x divide-[#2E9E6B]/20 overflow-hidden">
+          <div className="p-4 flex flex-col items-center justify-center text-center space-y-1">
+            <p className="text-xs text-[#2E9E6B]/80">Dein Kalorienbedarf</p>
+            <p className="text-2xl font-bold text-[#0E7C86]">{ergebnis.zielKcal} kcal</p>
+            <p className="text-xs text-[#2E9E6B]/70">Erhaltungsbedarf: {ergebnis.erhaltungsbedarf} kcal</p>
+          </div>
+          <div className="flex flex-col divide-y divide-[#2E9E6B]/20">
+            <div className="flex-1 flex flex-col items-center justify-center text-center py-2 px-2">
+              <p className="text-xs text-[#2E9E6B]/80">Mindestens</p>
+              <p className="text-lg font-bold text-[#0E7C86] leading-tight">{ergebnis.eiweissMindestG}g</p>
+              <p className="text-[10px] text-[#2E9E6B]/70">Eiweiß/Tag</p>
+            </div>
+            <div className="flex-1 flex flex-col items-center justify-center text-center py-2 px-2">
+              <p className="text-xs text-[#2E9E6B]/80">Optimal</p>
+              <p className="text-lg font-bold text-[#0E7C86] leading-tight">{ergebnis.eiweissOptimalG}g</p>
+              <p className="text-[10px] text-[#2E9E6B]/70">Eiweiß/Tag</p>
+            </div>
+          </div>
         </div>
       )}
 
