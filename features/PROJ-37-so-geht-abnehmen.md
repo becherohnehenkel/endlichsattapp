@@ -178,6 +178,7 @@ Am Ende: dezenter Text-Link *"Trainingspläne findest du im Training-Bereich →
 
 ## Open Questions
 - [x] Exakte Copy/Reihenfolge der 4 übrigen Arbeitspunkte (Wöchentlich vs. Täglich, Proteine, Krafttraining, Schlaf/Erholung) → final erarbeitet im Refinement vom 2026-08-31, siehe Abschnitt "Content: Arbeitspunkte 2–5"
+- [ ] **Regression nach Icon-Layout-Feinschliff-Deploy (2026-09-03):** Nutzer hat auf Produktion visuell bestätigt, dass Spaltenbündigkeit + Größe passen, aber die Krafttraining-Icons sind auf Desktop nicht mehr vertikal zum Text zentriert (vermutlich Nebenwirkung des Spaltenbündigkeits-Fixes aus der QA-Runde — die Icon-Spalte wurde von 110px auf 160px verbreitert und das kleine Präfix-Icon von responsive auf immer-`absolute` umgestellt). Nutzer will das am Folgetag angehen — bewusst nicht mehr am 2026-09-03 gefixt.
 
 ## Decision Log
 
