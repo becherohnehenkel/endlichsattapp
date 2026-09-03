@@ -147,6 +147,8 @@
 
 **Feinschliff 2026-09-03 (nach Live-Ansicht durch Nutzer):** Typ-Filter von "über allen Filtern" verschoben nach "zwischen Such-Eingabefeld und Cuisine-Tag-Filter", plus Trennlinie zum Cuisine-Tag-Filter ergänzt — bessere visuelle Gruppierung (Typ-Filter und Cuisine-Tag-Filter sind beides Rezept-Eigenschaften-Filter, klar getrennt vom Besitzer-Filter darüber).
 
+**Feinschliff 2026-09-03 (Teil 2, volle Breite):** Typ-Filter-Buttons spannen jetzt die volle Breite (`flex-1`, analog zum Besitzer-Filter), statt wie zuvor nur so breit wie ihr Text. Auf Mobile (375px) wurde dadurch bei 5 gleich breiten Buttons "Snacks" abgeschnitten (5 Optionen vs. nur 3 beim Besitzer-Filter, plus das lange Label "Grundrezepte") — gelöst durch kleinere Schrift/Padding auf Mobile (`text-[10px] px-1` statt `text-xs px-2`, ab `md:` wieder auf die reguläre Größe), statt Umbruch auf 2 Zeilen oder horizontalem Scroll.
+
 ### Domain Decisions (/fachbereich)
 
 #### Refinement (2026-09-03): Snack-Rezepttyp + Typ-Filter — Technical Decisions
