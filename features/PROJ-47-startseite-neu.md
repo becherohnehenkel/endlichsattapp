@@ -1,6 +1,6 @@
 # PROJ-47: Startseite Neu
 
-## Status: Deployed (Refinement: Gast-Hinweis & PWA-Installation "Approved")
+## Status: Deployed (Refinement: Gast-Hinweis & PWA-Installation "Deployed")
 **Created:** 2026-09-02
 **Last Updated:** 2026-09-04
 
@@ -305,3 +305,4 @@ Keine.
 - **Deployed:** 2026-09-02 (Vercel auto-deploy via Push zu `main`, commits `9f2372f`..`bc5c03c`)
 - **Verified in Produktion:** Nutzer hat die Live-Seite geprüft, alles grün ("Alles auf Grün").
 - **Umfang dieses Deploys:** vollständige PROJ-47-Implementierung — komplette Neugestaltung der Startseite (`/`): Begrüßung mit optionaler Vorname-Personalisierung, Video-Platzhalter, 4 Funktions-Karten (Wissen, Fortschritt, Rezepte, Check-In) und externes Coach-Banner. Ersetzt die bisherige personalisierte Startseite (letzte Analysen, Rezept-Vorschau, Teaser) komplett — identisch für Gast und eingeloggten Nutzer. Kein Backend, kein neuer API-Endpunkt.
+- **Refinement-Deploy 2026-09-04** (Vercel auto-deploy via Push zu `main`, commits `d8a8bdd`..`b87b17d`, Tag `v3.15.0-PROJ-47-refinement`): Gast-Hinweis & PWA-Installation — sichtbare Grün/Blau-Infobox zwischen "Ein Ziel für uns alle" und "So legst du los" (Gast-Nutzung/Login-Vorteil/Datenschutz) sowie ein PWA-Installations-Icon neben der Begrüßung, das ein Dialog-Overlay mit iOS- und Android-Anleitung öffnet. Direkt gegen die Produktions-URL per Playwright verifiziert: Infobox-Text sichtbar, Icon öffnet Overlay mit beiden Anleitungen, schließt per "Verstanden". Reine Frontend-Änderung, keine DB-Migration nötig. Nutzer hat auf Produktion visuell bestätigt ("alles grün").
