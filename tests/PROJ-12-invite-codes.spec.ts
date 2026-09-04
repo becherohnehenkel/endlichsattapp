@@ -3,19 +3,106 @@
  *
  * Teststrategie:
  * - Auth-Flows und UI-Verhalten testen mit echtem QA-Testkonto
- * - Code-Einlösung via page.route() gemockt, da Codes Single-Use sind und
- *   kein automatisches DB-Seeding existiert (gleicher Ansatz wie PROJ-9)
+ * - Code-Einlösung via page.route() gemockt, da Codes Single-Use sind (gleicher
+ *   Ansatz wie PROJ-9) — kein DB-Seeding für die Redeem-API selbst nötig
  * - API-Sicherheit (401 ohne Session) direkt über fetch getestet
  *
- * PRECONDITION: QA-Konto in "Paywall"-Zustand:
- *   photo_scans_remaining = 0, trial_ends_at = Vergangenheit, subscription_status = null
- *   invite_code_redeemed_at = null (Code noch nicht eingelöst)
+ * Jeder Test unten, der über loginAndGoToUpgrade() geht, braucht das QA-Konto im
+ * echten "Paywall"-Zustand (photo_scans_remaining = 0, trial_ends_at = Vergangenheit,
+ * subscription_status = null, invite_code_redeemed_at = null), damit der
+ * Einladungscode-Link überhaupt sichtbar ist — sonst zeigt die UI den permanenten
+ * Baseline-Zustand des Kontos (voller Zugriff). Wird auf Dateiebene automatisch
+ * geseedet und danach zurückgesetzt (siehe seedAccountState unten). PROJ-11
+ * mutiert dasselbe Konto ebenfalls temporär, daher teilen sich beide Dateien die
+ * Dateisystem-Sperre aus helpers/qa-account-lock.ts, damit ihre Schreibfenster sich
+ * bei parallelen Workern nicht überschneiden.
  */
 
 import { test, expect, type Page } from '@playwright/test'
+import fs from 'fs'
+import { createClient } from '@supabase/supabase-js'
+import { acquireQaAccountLock, LOCK_TIMEOUT_MS } from './helpers/qa-account-lock'
 
 const TEST_EMAIL = 'qa-test@endlichsatt.dev'
 const TEST_PASSWORD = 'QaTest123!'
+
+function readEnv() {
+  const content = fs.readFileSync('.env.local', 'utf8')
+  const env: Record<string, string> = {}
+  for (const line of content.split('\n')) {
+    const trimmed = line.trim()
+    if (!trimmed || trimmed.startsWith('#')) continue
+    const idx = trimmed.indexOf('=')
+    if (idx === -1) continue
+    env[trimmed.slice(0, idx)] = trimmed.slice(idx + 1)
+  }
+  return env
+}
+
+const env = readEnv()
+const admin = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY)
+
+type ProfileState = {
+  trial_ends_at: string | null
+  subscription_status: string | null
+  invite_code_redeemed_at: string | null
+  photo_scans_remaining: number
+}
+
+async function findQaUserId(): Promise<string> {
+  for (let page = 1; page <= 50; page++) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 })
+    if (error) throw error
+    const found = data.users.find(u => u.email === TEST_EMAIL)
+    if (found) return found.id
+    if (data.users.length < 200) break
+  }
+  throw new Error('QA-Testkonto qa-test@endlichsatt.dev nicht gefunden')
+}
+
+async function readProfileState(userId: string): Promise<ProfileState> {
+  const { data, error } = await admin
+    .from('profiles')
+    .select('trial_ends_at, subscription_status, invite_code_redeemed_at, photo_scans_remaining')
+    .eq('id', userId)
+    .single()
+  if (error || !data) throw new Error(`QA-Profil nicht lesbar: ${error?.message}`)
+  return data
+}
+
+// Seedet die übergebene Vorbedingung für die Dauer des Blocks und stellt danach den
+// zuvor gelesenen echten Zustand wieder her. Hält währenddessen die QA-Konto-Sperre,
+// damit PROJ-11/PROJ-12 sich bei parallelen Workern nicht gegenseitig überschreiben.
+function seedAccountState(precondition: Partial<ProfileState>) {
+  let qaUserId: string
+  let baseline: ProfileState
+  let releaseLock: () => void
+
+  test.beforeAll(async () => {
+    // Playwrights Hook-Default (30s) reicht nicht, wenn diese Sperre hinter mehreren
+    // anderen Blöcken warten muss — siehe LOCK_TIMEOUT_MS in qa-account-lock.ts.
+    test.setTimeout(LOCK_TIMEOUT_MS + 30_000)
+    releaseLock = await acquireQaAccountLock()
+    qaUserId = await findQaUserId()
+    baseline = await readProfileState(qaUserId)
+    const { error } = await admin.from('profiles').update(precondition).eq('id', qaUserId)
+    if (error) throw error
+  })
+
+  test.afterAll(async () => {
+    test.setTimeout(LOCK_TIMEOUT_MS + 30_000)
+    // Falls beforeAll fehlgeschlagen ist, bevor die Sperre erworben wurde: nichts
+    // zurückzusetzen und nichts freizugeben.
+    if (!releaseLock) return
+    try {
+      if (qaUserId && baseline) {
+        await admin.from('profiles').update(baseline).eq('id', qaUserId)
+      }
+    } finally {
+      releaseLock()
+    }
+  })
+}
 
 async function loginAs(page: Page) {
   await page.goto('/login')
@@ -30,6 +117,16 @@ async function loginAndGoToUpgrade(page: Page) {
   await page.goto('/upgrade')
   await page.waitForLoadState('networkidle')
 }
+
+// Der Einladungscode-Link ist nur im Paywall-Zustand sichtbar — betrifft nicht nur
+// den "Code-Formular"-Block, sondern jeden Test unten, der über loginAndGoToUpgrade()
+// geht (Code-Einlösung, Rate-Limit). Daher hier auf Dateiebene geseedet, nicht pro Block.
+seedAccountState({
+  trial_ends_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+  subscription_status: null,
+  invite_code_redeemed_at: null,
+  photo_scans_remaining: 0,
+})
 
 // ─── Zugriffskontrolle ─────────────────────────────────────────────────────
 
@@ -50,7 +147,7 @@ test.describe('Zugriffskontrolle', () => {
 // ─── Code-Formular UI ──────────────────────────────────────────────────────
 
 test.describe.serial('Code-Formular: Toggle und Anzeige', () => {
-  // PRECONDITION: Paywall-Zustand (kein Abo, Trial abgelaufen)
+  // PRECONDITION: Paywall-Zustand (kein Abo, Trial abgelaufen) — auf Dateiebene geseedet
 
   test('Link "Ich habe einen Einladungscode →" öffnet das Eingabefeld auf derselben Seite', async ({ page }) => {
     await loginAndGoToUpgrade(page)
