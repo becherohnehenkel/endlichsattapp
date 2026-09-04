@@ -1,6 +1,6 @@
 # PROJ-24: Zutaten-Reihenfolge & Gruppierung im Rezept-Editor
 
-## Status: Deployed (Refinement: Punktlinie Zutat → Menge "Approved")
+## Status: Deployed (Refinement: Punktlinie Zutat → Menge "Deployed")
 **Created:** 2026-07-20
 **Last Updated:** 2026-09-04
 
@@ -521,3 +521,12 @@ Keine (im Scope dieser Änderung).
 - **Security:** Pass
 - **Production Ready:** YES
 - **Recommendation:** Deploy. Reine Frontend-CSS-Änderung, keine DB-Migration, kein zusätzlicher Backend-Schritt nötig.
+
+## Deployment — Refinement: Punktlinie Zutat → Menge (2026-09-04)
+
+**Deployed:** 2026-09-04 (Vercel auto-deploy via Push zu `main`, Commit `d8ece72`)
+**Production URL:** https://app.mehralsabnehmen.de
+**Neue Env-Variablen:** keine
+**DB-Migrationen:** keine
+
+**Post-Deployment-Verifikation:** Direkt gegen die Produktions-URL per Playwright verifiziert (`/rezept/fe8e05ab-af68-4e61-b8fd-6ead79b5e4e3`, echtes Rezept mit gruppierten und ungruppierten Zutaten) — Punktlinie erscheint in jeder Zutaten-Zeile, Screenshot bestätigt sauberes, dezentes Erscheinungsbild in Produktion.

@@ -39,7 +39,7 @@
 | PROJ-21 | Foto-Qualität in der App-Anzeige | P1 | Deployed | PROJ-3, PROJ-18 | [Spec](PROJ-21-foto-qualitaet-anzeige.md) |
 | PROJ-22 | App-Performance & Perceived Speed | P1 | Deployed | PROJ-1–PROJ-21 | [Spec](PROJ-22-app-performance.md) |
 | PROJ-23 | Prompt Caching für Analyse-Routen | P2 | Planned | PROJ-4, PROJ-5 | [Spec](PROJ-23-prompt-caching.md) |
-| PROJ-24 | Zutaten-Reihenfolge & Gruppierung im Rezept-Editor (+ Markdown-Formatierung Zubereitung) (Refinement: Punktlinie Zutat → Menge "Approved") | P2 | Deployed | PROJ-8 | [Spec](PROJ-24-rezept-zutaten-gruppierung.md) |
+| PROJ-24 | Zutaten-Reihenfolge & Gruppierung im Rezept-Editor (+ Markdown-Formatierung Zubereitung) (Refinement: Punktlinie Zutat → Menge "Deployed") | P2 | Deployed | PROJ-8 | [Spec](PROJ-24-rezept-zutaten-gruppierung.md) |
 | PROJ-25 | KI-Hinweis auf Ergebnisseiten | P1 | Deployed | PROJ-4, PROJ-5, PROJ-8 | [Spec](PROJ-25-ki-hinweis-ergebnisseiten.md) |
 | PROJ-26 | Fehler-Feedback zu KI-Ergebnissen | P2 | Deployed | PROJ-25, PROJ-4, PROJ-5, PROJ-8, PROJ-19 | [Spec](PROJ-26-fehler-feedback-ki-ergebnisse.md) |
 | PROJ-27 | Getrennte Test- und Produktions-Landschaften (Staging-Umgebung) | P2 | Planned | PROJ-1, PROJ-11 | [Spec](PROJ-27-staging-umgebung.md) |
