@@ -124,9 +124,19 @@ test.describe('Timeline-Ansicht', () => {
   })
 
   test('Laden-Skelett erscheint während Daten geladen werden', async ({ page }) => {
+    // `resolveDelay` wird SYNCHRON zugewiesen, bevor die Route überhaupt registriert wird —
+    // nicht erst im Request-Handler. Vorher hing die Zuweisung am tatsächlichen Netzwerk-
+    // Roundtrip (Fetch verlässt den Browser → CDP-Interception → Handler feuert), während das
+    // sichtbare Skelett rein clientseitig ist und oft schon vorher steht. `resolveDelay()`
+    // direkt nach der Sichtbarkeits-Assertion konnte den Handler damit überholen und
+    // "resolveDelay is not a function" werfen. Mit der Zuweisung außerhalb des Handlers ist
+    // `resolveDelay` immer schon eine Funktion, unabhängig vom Timing des Requests.
     let resolveDelay!: () => void
-    page.route('/api/mahlzeiten**', async route => {
-      await new Promise<void>(r => { resolveDelay = r })
+    const delay = new Promise<void>(r => { resolveDelay = r })
+    // Route-Handler muss registriert (und die Registrierung abgewartet) sein, BEVOR die
+    // Navigation die Requests auslöst (siehe PROJ-17-Fix, commit 0abe580, gleiches Muster).
+    await page.route('/api/mahlzeiten**', async route => {
+      await delay
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -134,11 +144,10 @@ test.describe('Timeline-Ansicht', () => {
       })
     })
     await loginAndGoToHistorie(page)
-    // PROJ-42: seit die Historie in der Analyse-Übersicht eingebettet ist, rendert auch
-    // der (hier ungemockte) WochenRecapSektion-Ladezustand eigene .animate-pulse-Elemente
-    // auf derselben Seite — Selektor daher auf die Mahlzeit-Karten-Skelette (w-16 h-16)
-    // eingegrenzt statt auf ".animate-pulse" allgemein.
-    const skeleton = page.locator('.animate-pulse.w-16.h-16').first()
+    // Dediziertes data-testid am Skelett statt des generischen ".animate-pulse"-Selektors —
+    // die (hier ungemockte) WochenRecapSektion rendert während ihres eigenen Ladezustands
+    // ebenfalls .animate-pulse-Elemente auf derselben Seite.
+    const skeleton = page.getByTestId('mahlzeit-historie-skeleton')
     await expect(skeleton).toBeVisible({ timeout: 5000 })
     resolveDelay()
     await expect(page.getByText('Linsensalat mit Avocado')).toBeVisible({ timeout: 5000 })

@@ -94,7 +94,7 @@ export default function MahlzeitHistorie({ embedded = false }: MahlzeitHistorieP
       <WochenRecapSektion />
 
       {isLoading && (
-        <div className="px-4 py-6 space-y-3">
+        <div className="px-4 py-6 space-y-3" data-testid="mahlzeit-historie-skeleton">
           {[1, 2, 3].map((i) => (
             <div key={i} className="flex items-center gap-3">
               <Skeleton className="w-16 h-16 rounded-lg flex-shrink-0" />
