@@ -1,8 +1,10 @@
 # PROJ-6: Mahlzeit-Historie
 
-## Status: Deployed
+## Status: Deployed (Refinement: Sortierung & Pagination "In Progress")
 **Created:** 2026-06-10
-**Last Updated:** 2026-06-12
+**Last Updated:** 2026-09-04
+
+**Refinement (2026-09-04, Sortierung & Pagination):** Timeline-Reihenfolge umgedreht — neueste Mahlzeit jetzt oben statt unten (löst die ursprüngliche AC unten explizit ab). Initial werden nur die letzten 5 Mahlzeiten geladen (vorher 20); "Ältere Einträge laden" (jetzt unten in der Liste statt oben) holt danach in 10er-Schritten nach. Reiner Frontend-Change, keine DB-/API-Änderung nötig — die API sortierte bereits `created_at DESC` und wurde bislang im Frontend umgekehrt, das Umkehren fällt jetzt weg.
 
 ## Dependencies
 - Requires: PROJ-1 (Supabase Infrastructure) — Mahlzeiten und Analysen werden aus `meals` + `meal_analyses` geladen
@@ -27,9 +29,9 @@
 ## Acceptance Criteria
 
 ### Timeline-Ansicht
-- [ ] Angenommen der Nutzer ist eingeloggt und hat mindestens eine Analyse abgeschlossen, wenn er die App öffnet, dann sieht er eine scrollbare Timeline seiner Mahlzeiten — älteste oben, neueste unten.
+- [x] ~~Angenommen der Nutzer ist eingeloggt und hat mindestens eine Analyse abgeschlossen, wenn er die App öffnet, dann sieht er eine scrollbare Timeline seiner Mahlzeiten — älteste oben, neueste unten.~~ → **Refinement 2026-09-04:** umgedreht — neueste Mahlzeit oben, älteste unten (Nutzerwunsch: die zuletzt analysierte Mahlzeit soll an erster Stelle stehen)
 - [ ] Angenommen die Timeline angezeigt wird, dann zeigt jede Karte: Thumbnail (wenn Foto vorhanden, sonst ein neutrales Platzhalter-Icon), Datum und Uhrzeit, Gerichtsname oder Kurzbeschreibung, Gesamt-Sättigungsbewertung (sehr sättigend / mäßig sättigend / wenig sättigend) als farbiges Badge.
-- [ ] Angenommen der Nutzer scrollt in der Timeline nach oben, dann werden ältere Einträge geladen (Infinite Scroll oder Pagination — Details in `/architecture`).
+- [x] ~~Angenommen der Nutzer scrollt in der Timeline nach oben, dann werden ältere Einträge geladen (Infinite Scroll oder Pagination — Details in `/architecture`).~~ → bei `/frontend` als expliziter "Ältere Einträge laden"-Button umgesetzt statt automatischem Scroll-Trigger (siehe Decision Log); **Refinement 2026-09-04:** Button sitzt jetzt unten (war oben, passend zur alten Sortierung), initial 5 statt 20 Einträge, Nachladen in 10er- statt 20er-Schritten
 
 ### Eintrag öffnen
 - [ ] Angenommen der Nutzer tippt auf eine Karte in der Timeline, wenn der Eintrag geöffnet wird, dann sieht er die vollständige PROJ-5-Ergebnisseite dieser Mahlzeit (6 Bausteine, Erklärung, Verbesserungsvorschläge, Rezept-Delta).
@@ -38,7 +40,7 @@
 ### Neue Analyse starten
 - [ ] Angenommen der Nutzer ist in der Timeline, dann ist am unteren Rand immer ein kompakter "+ Neue Mahlzeit"-Button sichtbar.
 - [ ] Angenommen der Nutzer tippt auf "+ Neue Mahlzeit", wenn der Button betätigt wird, dann öffnet sich der vollständige Analyse-Flow (PROJ-3 Eingabe-Screen).
-- [ ] Angenommen eine neue Analyse abgeschlossen wurde, wenn der Nutzer zurück zur Timeline navigiert, dann erscheint die neue Mahlzeit als unterster (neuester) Eintrag.
+- [ ] Angenommen eine neue Analyse abgeschlossen wurde, wenn der Nutzer zurück zur Timeline navigiert, dann erscheint die neue Mahlzeit als oberster Eintrag. *(Refinement 2026-09-04: ursprünglich "unterster" — überholt durch die umgedrehte Sortierung, siehe oben)*
 
 ### Eintrag löschen
 - [ ] Angenommen der Nutzer möchte einen Eintrag löschen (z.B. via Swipe oder Long-Press), wenn die Löschaktion ausgelöst wird, dann erscheint ein Bestätigungsdialog ("Mahlzeit unwiderruflich löschen?").
@@ -58,7 +60,7 @@
 ## Technical Requirements
 - **Mobile-first:** Timeline auf 320px+ vollständig nutzbar; Touch-Targets min. 44px; "+ Neue Mahlzeit"-Button immer im Thumb-Reach-Bereich (unten)
 - **Scroll-Position:** Nach Rückkehr aus Detailansicht wird die exakte Scroll-Position der Timeline wiederhergestellt
-- **Ladeperformance:** Thumbnails lazy-geladen; erste 20 Einträge sofort, weitere on scroll
+- **Ladeperformance:** Thumbnails lazy-geladen; erste 5 Einträge sofort *(Refinement 2026-09-04: vorher 20)*, weitere per Klick auf "Ältere Einträge laden" in 10er-Schritten *(vorher 20er-Schritten, automatisch bei Scroll geplant — bei `/frontend` als expliziter Button umgesetzt)*
 - **Datenquelle:** Nur Daten des eingeloggten Nutzers (RLS via Supabase — PROJ-1)
 
 ## Open Questions
@@ -75,6 +77,8 @@
 | Löschen mit Bestätigungsdialog | Unwiderrufliche Aktion; Schutz vor versehentlichem Löschen | 2026-06-10 |
 | Kein Bearbeiten von Einträgen | Analyse ist abgeschlossen und unveränderlich; Korrekturen erfordern neue Analyse | 2026-06-10 |
 | Kalender/Filter/Insights deferred zu PROJ-7 | PROJ-6 = reiner Zugriff auf Verlauf; PROJ-7 = Arbeit mit dem Verlauf | 2026-06-10 |
+| **Refinement 2026-09-04:** Sortierung umgedreht — neueste Mahlzeit oben statt unten | Löst die ursprüngliche Chat-Timeline-Analogie ("wie in Messaging-Apps") explizit ab — Nutzer wollte die zuletzt analysierte Mahlzeit direkt an erster Stelle sehen, nicht ans Ende scrollen müssen | 2026-09-04 |
+| **Refinement 2026-09-04:** Initial nur 5 statt 20 Einträge, Nachladen in 10er- statt 20er-Schritten | Nutzerwunsch — kürzere initiale Ladezeit/Liste, "Ältere Einträge laden" für alles darüber hinaus | 2026-09-04 |
 
 ### Technical Decisions
 | Decision | Rationale | Date |
@@ -86,11 +90,22 @@
 | AnalysisResult aus separaten DB-Spalten rekonstruiert | Schema hat `macros_before`, `satiety_scores_before` etc. statt single `result`-Spalte | 2026-06-12 |
 | Floating "Neue Mahlzeit"-Button (fixed bottom-right) | Immer im Thumb-Reach-Bereich auf Mobile; App-Chrome bleibt minimal | 2026-06-12 |
 | Backend inline mit Frontend implementiert | Keine neuen DB-Migrationen nötig; nur API-Routen für Paginierung und Delete | 2026-06-12 |
+| **Refinement 2026-09-04:** client-seitiges Reversal entfernt — Liste wird jetzt 1:1 in der API-Reihenfolge (`created_at DESC`) angezeigt und beim Nachladen einfach ans Ende angehängt (`[...prev, ...neue]` statt vorher `[...neue, ...prev]` mit Reverse) | Vereinfacht den Code spürbar — die API sortierte schon immer newest-first, das bisherige Reversal war nur nötig, um die (jetzt nicht mehr gewünschte) oldest-first-Anzeige zu erzeugen. `limit`/`offset`-Parameter der bestehenden API-Route decken 5- bzw. 10er-Schritte bereits ab (Cap bei 50), keine Backend-Änderung nötig | 2026-09-04 |
+| **Refinement 2026-09-04:** "Ältere Einträge laden"-Button von oberhalb auf unterhalb der Liste verschoben, Pfeil-Icon von ↑ auf ↓ gedreht | Folgt zwingend aus der umgedrehten Sortierung — ältere Einträge liegen jetzt am Ende der Liste, nicht mehr am Anfang | 2026-09-04 |
 
 ---
 
 ## Tech Design (Solution Architect)
 _Inline mit /frontend implementiert — kein separater Architecture-Pass nötig (keine neue DB-Schema-Änderung)._
+
+## Implementation Notes (Frontend, Refinement 2026-09-04): Sortierung & Pagination
+Reine Frontend-Änderung, kein Backend-/DB-Bezug — die API (`GET /api/mahlzeiten`) sortierte bereits `created_at DESC` und unterstützte beliebige `limit`/`offset`-Werte (Cap bei 50).
+
+- `src/components/mahlzeit-historie.tsx`: beide `.reverse()`-Aufrufe entfernt (Initial-Fetch und `loadMore`) — die Liste übernimmt jetzt direkt die API-Reihenfolge. Initial-Fetch von `limit=20` auf `limit=5` reduziert, `loadMore` von `limit=20` auf `limit=10`. Beim Nachladen werden neue Einträge jetzt ans Ende angehängt (`[...prev, ...neue]`) statt an den Anfang vorangestellt. Der "Ältere Einträge laden"-Button wurde von oberhalb der Liste (Pfeil ↑) nach unterhalb der Liste (Pfeil ↓) verschoben.
+- `tests/PROJ-6-mahlzeit-historie.spec.ts`: bestehenden Test "lädt ältere Einträge und fügt sie oben ein" umbenannt und auf die neue Anhänge-Reihenfolge umgestellt (prüft jetzt per `main.innerText()`-Positionsvergleich, dass die neuere Mahlzeit vor der nachgeladenen älteren steht). Neuer Test verifiziert die exakten Request-URLs (`limit=5&offset=0` initial, `limit=10` beim Nachladen).
+- Ein vorbestehender, von dieser Änderung unabhängiger Flake im Test "Laden-Skelett erscheint während Daten geladen werden" wurde bei der Verifikation entdeckt (reproduziert auch auf dem Stand VOR diesem Refinement, `--repeat-each=5` bestätigt) — als separater Task ausgelagert, nicht Teil dieses Refinements.
+- `npm run build`, `npm run lint`, `npm test` (464/464) fehlerfrei. Einzige verbleibenden Lint-Fehler: die bekannten, unabhängigen `sidebar.tsx`-Fehler (separater Task).
+- Manuell mit echtem QA-Test-Account gegen den laufenden Dev-Server verifiziert (`/analyse`): Seite lädt fehlerfrei, Mahlzeiten-Karten rendern korrekt — der Account hatte nur 2 Einträge, weshalb das "5 initial / 10 nachladen"-Verhalten primär über die E2E-Suite (gemockte Antworten) abgesichert wurde statt visuell mit echten Daten.
 
 ## QA Test Results
 

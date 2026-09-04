@@ -163,7 +163,7 @@ test.describe('Ältere Einträge laden', () => {
     await expect(page.getByRole('button', { name: /ältere einträge laden/i })).toBeHidden()
   })
 
-  test('lädt ältere Einträge und fügt sie oben ein', async ({ page }) => {
+  test('lädt ältere Einträge und hängt sie unten an (Refinement 2026-09-04)', async ({ page }) => {
     let callCount = 0
     page.route('/api/mahlzeiten**', route => {
       callCount++
@@ -186,6 +186,31 @@ test.describe('Ältere Einträge laden', () => {
     await page.getByRole('button', { name: /ältere einträge laden/i }).click()
     await expect(page.getByText('Weißbrot mit Marmelade')).toBeVisible({ timeout: 5000 })
     await expect(page.getByRole('button', { name: /ältere einträge laden/i })).toBeHidden()
+
+    // Neuere Mahlzeit steht weiterhin oben, ältere (gerade nachgeladene) darunter.
+    const main = page.getByRole('main')
+    const text = await main.innerText()
+    expect(text.indexOf('Linsensalat mit Avocado')).toBeLessThan(text.indexOf('Weißbrot mit Marmelade'))
+  })
+
+  test('AC (Refinement 2026-09-04): initialer Abruf lädt nur 5 Einträge, Nachladen in 10er-Schritten', async ({ page }) => {
+    const requestedUrls: string[] = []
+    page.route('/api/mahlzeiten**', route => {
+      requestedUrls.push(route.request().url())
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ meals: [MEAL_SEHR_SAETTIGEND], hasMore: true }),
+      })
+    })
+    await loginAndGoToHistorie(page)
+    await expect(page.getByText('Linsensalat mit Avocado')).toBeVisible({ timeout: 5000 })
+    await page.getByRole('button', { name: /ältere einträge laden/i }).click()
+    await expect(page.getByRole('button', { name: /lade…/i })).toBeHidden({ timeout: 5000 })
+
+    expect(requestedUrls[0]).toContain('limit=5')
+    expect(requestedUrls[0]).toContain('offset=0')
+    expect(requestedUrls[1]).toContain('limit=10')
   })
 })
 

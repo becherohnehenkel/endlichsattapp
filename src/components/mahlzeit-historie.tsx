@@ -28,7 +28,9 @@ interface MahlzeitHistorieProps {
 }
 
 export default function MahlzeitHistorie({ embedded = false }: MahlzeitHistorieProps) {
-  // Display oldest-first (ascending) — API returns newest-first, so reverse
+  // PROJ-6 (Refinement 2026-09-04): Display newest-first (die API liefert bereits absteigend
+  // sortiert nach created_at — keine Umkehrung mehr nötig). Start mit den letzten 5 Mahlzeiten,
+  // "Ältere Einträge laden" holt danach in 10er-Schritten nach und hängt sie ans Ende an.
   const [meals, setMeals] = useState<MealEntry[]>([])
   const [hasMore, setHasMore] = useState(false)
   const [serverOffset, setServerOffset] = useState(0)
@@ -41,10 +43,10 @@ export default function MahlzeitHistorie({ embedded = false }: MahlzeitHistorieP
   useEffect(() => {
     async function fetchInitial() {
       try {
-        const res = await fetch('/api/mahlzeiten?limit=20&offset=0')
+        const res = await fetch('/api/mahlzeiten?limit=5&offset=0')
         if (!res.ok) throw new Error()
         const data: { meals: MealEntry[]; hasMore: boolean } = await res.json()
-        setMeals([...data.meals].reverse())
+        setMeals(data.meals)
         setHasMore(data.hasMore)
         setServerOffset(data.meals.length)
       } catch {
@@ -60,11 +62,10 @@ export default function MahlzeitHistorie({ embedded = false }: MahlzeitHistorieP
     setIsLoadingMore(true)
     setLoadError(null)
     try {
-      const res = await fetch(`/api/mahlzeiten?limit=20&offset=${serverOffset}`)
+      const res = await fetch(`/api/mahlzeiten?limit=10&offset=${serverOffset}`)
       if (!res.ok) throw new Error()
       const data: { meals: MealEntry[]; hasMore: boolean } = await res.json()
-      const olderBatch = [...data.meals].reverse()
-      setMeals(prev => [...olderBatch, ...prev])
+      setMeals(prev => [...prev, ...data.meals])
       setHasMore(data.hasMore)
       setServerOffset(prev => prev + data.meals.length)
     } catch {
@@ -107,21 +108,6 @@ export default function MahlzeitHistorie({ embedded = false }: MahlzeitHistorieP
         </div>
       )}
 
-      {/* Load older entries */}
-      {!isLoading && hasMore && (
-        <div className="flex justify-center pt-4 pb-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={loadMore}
-            disabled={isLoadingMore}
-            className="text-muted-foreground text-xs"
-          >
-            {isLoadingMore ? 'Lade…' : '↑ Ältere Einträge laden'}
-          </Button>
-        </div>
-      )}
-
       {loadError && (
         <div className="px-4 py-2">
           <Alert variant="destructive">
@@ -153,6 +139,21 @@ export default function MahlzeitHistorie({ embedded = false }: MahlzeitHistorieP
           {meals.map((meal) => (
             <MahlzeitKarte key={meal.id} {...meal} onDelete={(id) => setDeleteId(id)} />
           ))}
+        </div>
+      )}
+
+      {/* Load older entries — unten, da die Liste jetzt neueste-zuerst sortiert ist */}
+      {!isLoading && hasMore && (
+        <div className="flex justify-center pt-4 pb-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={loadMore}
+            disabled={isLoadingMore}
+            className="text-muted-foreground text-xs"
+          >
+            {isLoadingMore ? 'Lade…' : '↓ Ältere Einträge laden'}
+          </Button>
         </div>
       )}
 
