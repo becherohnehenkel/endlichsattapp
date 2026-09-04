@@ -64,10 +64,11 @@
 | PROJ-46 | Gewohnheiten | P1 | Deployed | PROJ-45, PROJ-35 | [Spec](PROJ-46-gewohnheiten.md) |
 | PROJ-47 | Startseite Neu (Refinement: Gast-Hinweis & PWA-Installation "Deployed") | P1 | Deployed | PROJ-2, PROJ-19 | [Spec](PROJ-47-startseite-neu.md) |
 | PROJ-48 | Startseite: Ultimatives Ziel | P1 | Deployed | PROJ-47 | [Spec](PROJ-48-startseite-ultimatives-ziel.md) |
+| PROJ-49 | E2E-Testisolation: automatisches QA-Konto-Seeding für PROJ-11/PROJ-12 (Test-Infrastruktur, kein Feature-Spec) | P2 | Deployed | PROJ-11, PROJ-12 | — |
 
 <!-- Add features above this line -->
 
-## Next Available ID: PROJ-49
+## Next Available ID: PROJ-50
 
 ## Empfohlene Build-Reihenfolge
 
