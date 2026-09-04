@@ -135,6 +135,23 @@ test.describe('Arbeitspunkte-Inhalte', () => {
     await expect(zeile.locator('svg')).toHaveCount(2)
   })
 
+  test('AC (Refinement 2026-09-04, Bugfix): Blitz-Badge ragt nicht über den oberen Rand des Icons hinaus (Accordion-Clipping)', async ({ page }) => {
+    // Regression: Das Akkordeon (Radix) rendert seinen Content-Wrapper mit `overflow: hidden`
+    // und ohne oberen Innenabstand — ein negativer `top`-Offset auf dem Badge hätte dadurch
+    // sichtbar abgeschnitten gewirkt. Badge darf daher nie oberhalb der Icon-Box liegen.
+    await page.goto('/ernaehrung/heisshunger')
+    await oeffneArbeitspunkt(page, 'Stress')
+    const zeile = page.locator('div.flex.items-center.gap-3', { hasText: /Stress fühlt sich oft wie Heißhunger an/ })
+    const iconWrapper = zeile.locator('> div').first()
+    const gesicht = iconWrapper.locator('svg').first()
+    const badge = iconWrapper.locator('svg').nth(1)
+    const gesichtBox = await gesicht.boundingBox()
+    const badgeBox = await badge.boundingBox()
+    expect(gesichtBox).not.toBeNull()
+    expect(badgeBox).not.toBeNull()
+    expect(badgeBox!.y).toBeGreaterThanOrEqual(gesichtBox!.y - 1)
+  })
+
   test('AC (Refinement 2026-09-04): "Screentime und Content" zeigt die neue Zwischenüberschrift "Hinterfrage die folgenden Punkte:"', async ({ page }) => {
     await page.goto('/ernaehrung/heisshunger')
     await oeffneArbeitspunkt(page, 'Screentime und Content')

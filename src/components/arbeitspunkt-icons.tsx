@@ -131,7 +131,7 @@ export function StressIcon() {
   return (
     <div className="relative flex-shrink-0">
       <Angry className="h-11 w-11 text-[#0E7C86]" strokeWidth={1.8} />
-      <span className="absolute -top-1.5 -right-2 flex h-[22px] w-[22px] items-center justify-center rounded-full border-2 border-white bg-[#E8A33D]">
+      <span className="absolute top-0 -right-2 flex h-[22px] w-[22px] items-center justify-center rounded-full border-2 border-white bg-[#E8A33D]">
         <Zap className="h-[13px] w-[13px] text-white" fill="white" strokeWidth={1} />
       </span>
     </div>

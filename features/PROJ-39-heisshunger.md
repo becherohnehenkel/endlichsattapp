@@ -106,6 +106,7 @@
 | Keine Interaktivität bei "Sehen/riechen/schmecken & hören" über den Standard-"Verstanden"-Toggle hinaus | Konsistent mit allen anderen reinen Reflexions-/Lese-Arbeitspunkten in PROJ-34/37/38 | 2026-09-01 |
 | **Refinement 2026-09-04:** Icon-Zuordnung bei "Sehen, riechen, schmecken & hören" nach Inhalt statt starr nach den 4 Sinnen im Titel (Eye→Werbeplakate, Ear→Podcast/Radio, Wind→Gerüche, Tv→TV/Film/YouTube) | Die 4 bestehenden Beobachtungspunkte decken inhaltlich nicht exakt die 4 Sinne "Sehen/riechen/schmecken/hören" ab (kein Punkt ist rein übers Schmecken) — erzwungene 1:1-Zuordnung hätte ein Icon falsch benannt; Nutzer hat die inhaltsbasierte Zuordnung im Mockup kommentarlos akzeptiert | 2026-09-04 |
 | **Refinement 2026-09-04:** Stress-Icon aus Lucide (`Angry` + `Zap`-Badge) statt Freihand-SVG | Konsistent mit der PROJ-37-Entscheidung, fertige Lucide-Icons Freihand-Entwürfen vorzuziehen, wenn ein passendes Icon existiert | 2026-09-04 |
+| **Bugfix 2026-09-04:** Blitz-Badge-Positionierung von `-top-1.5 -right-2` auf `top-0 -right-2` geändert (kein negativer Y-Offset mehr) | Nutzer meldete den Smiley "ab dem Zap oben abgeschnitten" — Radix Accordion Content rendert mit `overflow-hidden` und `pt-0` (keinerlei oberer Innenabstand); ein negativer `top`-Offset auf dem Badge kann dadurch über den oberen Rand des Akkordeon-Panels hinausragen und abgeschnitten werden. Horizontaler Overshoot (`-right-2`) bleibt bewusst erhalten (klassischer "Ecke-Badge"-Look, dort kein Clipping beobachtet, da der Text daneben genug Breite lässt) | 2026-09-04 |
 
 ### Technical Decisions
 <!-- Added by /architecture -->
@@ -179,6 +180,9 @@ Reine Frontend-/Darstellungs-Änderung, kein Backend-Bezug. Vorab per Artifact-M
 - `npm run build`, `npm run lint`, `npm test` (464/464) fehlerfrei. Einzige verbleibende Lint-Fehler: die bekannten, unabhängigen `sidebar.tsx`-Fehler (separater Task).
 - Regression: PROJ-36 (Ernährung-Hub) 19/19, PROJ-37 (teilt sich `arbeitspunkt-icons.tsx`) 36/36 — keine Auswirkung durch die neuen Exporte.
 - Manuell per Playwright verifiziert (Desktop 1280px + Mobile 375px): alle 4 Änderungen rendern wie im approved Mockup, kein horizontales Overflow auf 375px, 2-spaltiges Icon-Grid bei "Sehen, riechen..." kollabiert korrekt auf 1 Spalte unterhalb `sm:`.
+
+### Bugfix (2026-09-04): Stress-Icon oben abgeschnitten
+Nutzer meldete direkt nach dem Deploy dieses Refinements: Smiley "ab dem Zap oben abgeschnitten". Root Cause: Radix Accordion Content rendert mit `overflow-hidden` + `pt-0` (kein oberer Innenabstand) — der Blitz-Badge hatte einen negativen `top`-Offset (`-top-1.5`), der über den oberen Rand des Akkordeon-Panels hinausragen und dadurch abgeschnitten werden konnte. Fix: `top-0` statt `-top-1.5` in `src/components/arbeitspunkt-icons.tsx` (`StressIcon`) — horizontaler Overshoot (`-right-2`, klassischer Ecke-Badge-Look) bleibt erhalten, dort kein Clipping-Risiko. Per Playwright verifiziert (Desktop + Mobile, generöse Bounding-Box-Crops zur Sichtprüfung): Icon und Badge rendern vollständig. Neuer permanenter Regressionstest prüft, dass die Badge-Y-Position nie oberhalb der Gesichts-Icon-Y-Position liegt. `npm run build`, `npm run lint`, `npm test` (464/464) weiterhin grün, Suite 18 → 19 Tests.
 
 ## QA Test Results
 
