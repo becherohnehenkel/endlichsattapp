@@ -80,6 +80,36 @@ test.describe('Art of Eating Guide-Seite: Struktur', () => {
     await expect(trigger).toHaveAttribute('aria-expanded', 'false')
     await expect(trigger).toHaveAttribute('aria-expanded', 'true', { timeout: 2000 })
   })
+
+  test('AC (Refinement 2026-09-04, Icon-Feinschliff): jeder der 6 Prinzipien zeigt genau ein Icon über dem Text', async ({ page }) => {
+    await page.goto('/ernaehrung/wie-esse-ich-richtig')
+    for (const titel of [
+      'Schaffe den richtigen Rahmen',
+      'Schalte Ablenkungen aus',
+      'Riech, bevor du isst',
+      'Kau gründlich',
+      'Schmecke die Details',
+      'Hör auf deinen Körper',
+    ]) {
+      const trigger = page.getByRole('button', { name: titel })
+      if ((await trigger.getAttribute('aria-expanded')) !== 'true') await trigger.click()
+    }
+    const tiles = page.locator('div.rounded-xl.bg-\\[\\#DFF0F2\\].text-\\[\\#0E7C86\\]')
+    await expect(tiles).toHaveCount(6)
+    for (let i = 0; i < 6; i++) {
+      await expect(tiles.nth(i).locator('svg')).toHaveCount(1)
+    }
+  })
+
+  test('AC (Refinement 2026-09-04, Icon-Feinschliff): Hinweis-Box ist grün/blau statt amber eingefärbt', async ({ page }) => {
+    await page.goto('/ernaehrung/wie-esse-ich-richtig')
+    const trigger = page.getByRole('button', { name: 'Schaffe den richtigen Rahmen' })
+    if ((await trigger.getAttribute('aria-expanded')) !== 'true') await trigger.click()
+    const hinweis = page.getByText(/In Japan sieht man niemanden im Gehen essen/).locator('xpath=ancestor::div[contains(@class,"rounded-xl")][1]')
+    const bg = await hinweis.evaluate(el => getComputedStyle(el).backgroundColor)
+    // #DFF0F2 = rgb(223, 240, 242) — keine Amber/Gelb-Töne (rgb(255, 251, 235) o.ä.) mehr.
+    expect(bg).toBe('rgb(223, 240, 242)')
+  })
 })
 
 test.describe('Art of Eating: erscheint bei allen drei neuen Analyse-Typen', () => {

@@ -1,8 +1,12 @@
 # PROJ-34: Art of Eating
 
-## Status: Planned
+## Status: Deployed (Refinement: Icon-Feinschliff "In Progress")
 **Created:** 2026-08-11
-**Last Updated:** 2026-08-11
+**Last Updated:** 2026-09-04
+
+**Refinement (2026-09-04, Icon-Feinschliff):** Jedes der 6 Prinzipien bekommt ein zentriertes Lucide-Icon über dem Text (Armchair/PhoneOff/Wind/Timer/Utensils/Ear), Text bleibt darunter linksbündig. Die Fun-Fact-Hinweisbox wechselt von Amber auf Grün/Blau (`#DFF0F2`/`#0E7C86`, etablierter Info-Stil aus den anderen Guides — Amber wirkte alarmierend). Vorab per Artifact-Mockup abgestimmt. Reine Frontend-Änderung.
+
+**(Hinweis: Der Status-Header dieser Spec war zuvor fälschlich noch auf "Planned" stehen geblieben, obwohl QA- und Deployment-Abschnitte bereits vollständige, abgeschlossene Runden dokumentieren — hiermit korrigiert.)**
 
 ## Dependencies
 - PROJ-3 (Mahlzeit-Input) — Foto/Freitext-Eingabe, auf der die Analyse aufbaut
@@ -60,6 +64,9 @@
 | Gilt für Mahlzeit, Komponente UND Snack (anders als Geschmack, das Snack ausschließt) | Wie man isst ist unabhängig davon, ob es sich um eine vollständige Mahlzeit handelt — auch ein Snack kann hingesetzt oder abgelenkt gegessen werden | 2026-08-11 |
 | Bestehender vollständiger Guide (`/wie-esse-ich-richtig`) und sein Homepage-Einstiegspunkt bleiben unverändert | Nutzerwunsch: soll weiterhin zentral für alle verfügbar bleiben, unabhängig von der neuen pro-Mahlzeit-Karte | 2026-08-11 |
 | Legacy-Analysen behalten ihren eigenen gespeicherten `art_of_eating_tipp`, keine Umstellung | Konsistent mit dem in dieser Session etablierten Muster: alte Analysen bleiben für immer im alten Format, keine Migration | 2026-08-11 |
+| **Refinement 2026-09-04:** Icons pro Prinzip nur im vollständigen Guide (`art-of-eating-guide.tsx`), nicht im kompakten rotierenden Hinweis auf Ergebnisseiten (`art-of-eating-hinweis.tsx`) | Der kompakte Hinweis ist bewusst dezent gehalten (festes 🧘-Emoji, siehe Decision Log oben "Karte bleibt dezent") — 6 wechselnde Icons dort hätten dem widersprochen; der Nutzerwunsch bezog sich explizit auf die Guide-Seite | 2026-09-04 |
+| **Refinement 2026-09-04:** Icon-Zuordnung: Armchair (Rahmen), PhoneOff (Ablenkungen), Wind (Riechen), Timer (Kau gründlich), Utensils (Details schmecken), Ear (auf Körper hören) | Wind/Ear bewusst identisch zu den gleichnamigen Konzepten bei PROJ-39 (Heißhunger) für konsistente Bildsprache über beide Guides; für "Kau gründlich" gibt es kein literales Kau-Icon in Lucide — Timer steht stellvertretend fürs bewusste Langsam-Kauen | 2026-09-04 |
+| **Refinement 2026-09-04:** Fun-Fact-Box von Amber (`bg-amber-50`) auf Grün/Blau (`bg-[#DFF0F2]`/`text-[#0E7C86]`) umgefärbt | Nutzerfeedback: Amber/Gelb wirkt alarmierend für einen reinen Lern-Hinweis ohne Warncharakter — Grün/Blau ist im Projekt bereits die etablierte "Info"-Farbe (z. B. Protein-/Ballaststoffe-Richtwerte bei PROJ-37) | 2026-09-04 |
 
 ### Technical Decisions
 <!-- Added by /architecture -->
@@ -144,6 +151,16 @@ Keine neuen Pakete — nutzt ausschließlich bereits vorhandenen React-Code und 
 
 ### Beobachtung außerhalb des Scopes (nicht durch PROJ-34 verursacht)
 Beim Testen der Legacy-Fixture-Seite trat im Playwright-Fehlerlog ein React-Hydration-Warnhinweis auf — betrifft aber ausschließlich `rating-ring.tsx` (ein Sub-Pixel-Rundungsunterschied in einem SVG-Pfad zwischen Server- und Client-Berechnung), eine bereits vor dieser Session bestehende, rein kosmetische Angelegenheit, unabhängig von PROJ-34. Zur Kenntnisnahme für eine spätere QA-Runde vermerkt.
+
+## Implementation Notes (Frontend, Refinement 2026-09-04): Icon-Feinschliff
+Reine Frontend-/Darstellungs-Änderung, kein Backend-Bezug. Vorab per Artifact-Mockup mit dem Nutzer abgestimmt.
+
+- `src/components/art-of-eating-guide.tsx`: neue Konstante `PRINZIP_ICONS` (Record, Prinzip-Nummer → Lucide-Icon-Element) — bewusst hier im Guide statt in `art-of-eating-principles.ts` definiert, da Icons ein reines Darstellungsanliegen sind und die Prinzipien-Datei laut ihrem eigenen Kommentar unverändert bleiben soll ("Inhalt von Lukas geschrieben, unverändert übernommen"). Jeder Punkt-Inhalt beginnt jetzt mit einem zentrierten Icon-Tile (`h-11 w-11 rounded-xl bg-[#DFF0F2] text-[#0E7C86]`) oberhalb des Textes; Text bleibt darunter linksbündig (kein zusätzliches CSS nötig, da Icon-Tile und Text als eigenständige Geschwister-Elemente im ohnehin vorhandenen `space-y-2.5`-Wrapper der `ArbeitspunkteListe` liegen). Fun-Fact-Box von `bg-amber-50 border-amber-200 text-amber-800` auf `bg-[#DFF0F2] border-[#2E9E6B]/20 text-[#0E7C86]` umgestellt.
+- `art-of-eating-hinweis.tsx` (kompakter rotierender Hinweis) bewusst unverändert gelassen — Nutzerwunsch bezog sich auf die Guide-Seite, siehe Decision Log.
+- `tests/PROJ-34-art-of-eating.spec.ts`: 2 neue Tests — alle 6 Icon-Tiles vorhanden (je genau 1 SVG), Fun-Fact-Box hat die neue `#DFF0F2`-Hintergrundfarbe (per `getComputedStyle` geprüft, nicht nur Klassenname). Suite: 7 → 9 Tests, 9/9 grün.
+- `npm run build`, `npm run lint`, `npm test` (464/464) fehlerfrei. Einzige verbleibenden Lint-Fehler: die bekannten, unabhängigen `sidebar.tsx`-Fehler (separater Task).
+- Regression: PROJ-36 (Ernährung-Hub) 19/19 grün.
+- Manuell per Playwright verifiziert (Desktop 1280px + Mobile 375px, alle 6 Prinzipien aufgeklappt): alle 6 Icons rendern korrekt und passend zum jeweiligen Prinzip, Fun-Fact-Boxen durchgehend grün/blau, kein horizontales Overflow auf 375px.
 
 ## QA Test Results
 
