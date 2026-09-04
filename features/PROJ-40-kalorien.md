@@ -1,6 +1,6 @@
 # PROJ-40: Kalorien
 
-## Status: Deployed (Refinement: Makronährstoffe visuell aufbereitet "Approved")
+## Status: Deployed (Refinement: Makronährstoffe visuell aufbereitet "Deployed")
 **Created:** 2026-09-01
 **Last Updated:** 2026-09-04
 
@@ -337,3 +337,4 @@ Keine.
 - **Deployed:** 2026-09-01 (Vercel auto-deploy via Push zu `main`, commits `1ef49c2`..`cd24dd4`)
 - **Verified in Produktion:** Nutzer hat die Live-Seite geprüft, alles grün ("Alles auf Grün").
 - **Refinement-Deploy 2026-09-01** (Vercel auto-deploy via Push zu `main`, commits `3e0fb64`..`2e7aae4`, Tag `v2.8.0-ernaehrung-guides`): Teil eines gebündelten Deploys über PROJ-34/37/38/39/40/41 — Erstbesucher-Auto-Open (erster Punkt öffnet automatisch) + neue Überschrift/Intro "Kalorien und Makronährstoffe". Nutzer hat auf Produktion visuell bestätigt ("Alles auf Grün").
+- **Refinement-Deploy 2026-09-04** (Vercel auto-deploy via Push zu `main`, commits `1a286f4`..`4bc9916`, Tag `v3.16.0-PROJ-40-refinement`): Makronährstoffe visuell aufbereitet — Icon+Intro, kcal/g- und "Wichtig für"-Boxen, neue Proteinquellen- und Fettquellen-Listen (Tierisch/Vegetarisch/Vegan), hervorgehobene "Gut zu wissen"/"Lukas sagt"-Tipp-Boxen. Direkt gegen die Produktions-URL per Playwright verifiziert: Proteinquellen, Fettquellen, Omega-3-Tipp, Ballaststoffe (1–2 kcal) und Alkohol-Fakt-Box alle sichtbar. Reine Frontend-Änderung, keine DB-Migration nötig. Nutzer hat auf Produktion visuell bestätigt ("alles grün").
