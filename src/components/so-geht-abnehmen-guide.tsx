@@ -121,19 +121,19 @@ export function SoGehtAbnehmenGuide({ kannSpeichern, gespeicherteWerte }: SoGeht
               <div className="grid grid-cols-1 gap-y-[22px] text-xs text-foreground/80 leading-relaxed sm:grid-cols-[160px_1fr] sm:items-center sm:gap-x-4 sm:gap-y-[18px]">
                 <div className="flex flex-col items-center gap-2 sm:contents">
                   <MuskelnErhaltenIcons />
-                  <p className="self-stretch text-left"><strong>1. Muskeln erhalten</strong> — Im Kaloriendefizit denkt dein Körper sonst: „Das brauche ich nicht, kostet nur Energie.“ Krafttraining signalisiert ihm: Diese Muskulatur wird gebraucht — die bleibt.</p>
+                  <p className="self-stretch sm:self-auto text-left"><strong>1. Muskeln erhalten</strong> — Im Kaloriendefizit denkt dein Körper sonst: „Das brauche ich nicht, kostet nur Energie.“ Krafttraining signalisiert ihm: Diese Muskulatur wird gebraucht — die bleibt.</p>
                 </div>
                 <div className="flex flex-col items-center gap-2 sm:contents">
                   <GrundumsatzIcons />
-                  <p className="self-stretch text-left"><strong>2. Grundumsatz</strong> — Mehr Muskelmasse erhöht deinen Grundumsatz (nicht überbewerten, aber ein netter Nebeneffekt).</p>
+                  <p className="self-stretch sm:self-auto text-left"><strong>2. Grundumsatz</strong> — Mehr Muskelmasse erhöht deinen Grundumsatz (nicht überbewerten, aber ein netter Nebeneffekt).</p>
                 </div>
                 <div className="flex flex-col items-center gap-2 sm:contents">
                   <GesundAlternIcons />
-                  <p className="self-stretch text-left"><strong>3. Gesund altern</strong> — Jede Bewegung bleibt mit steigendem Alter leichter. Eine halbe Kniebeuge ist ein Toilettengang, den du mit 80 noch selbstständig schaffen willst.</p>
+                  <p className="self-stretch sm:self-auto text-left"><strong>3. Gesund altern</strong> — Jede Bewegung bleibt mit steigendem Alter leichter. Eine halbe Kniebeuge ist ein Toilettengang, den du mit 80 noch selbstständig schaffen willst.</p>
                 </div>
                 <div className="flex flex-col items-center gap-2 sm:contents">
                   <KoerperFormenIcons />
-                  <p className="self-stretch text-left"><strong>4. Körper formen</strong> — Kleidung sitzt leichter, du fühlst dich wohler in deiner Haut.</p>
+                  <p className="self-stretch sm:self-auto text-left"><strong>4. Körper formen</strong> — Kleidung sitzt leichter, du fühlst dich wohler in deiner Haut.</p>
                 </div>
               </div>
               <Link href="/training" className="inline-block text-xs text-muted-foreground hover:text-foreground transition-colors">

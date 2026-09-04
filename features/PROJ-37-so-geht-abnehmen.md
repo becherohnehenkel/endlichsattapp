@@ -178,7 +178,7 @@ Am Ende: dezenter Text-Link *"Trainingspläne findest du im Training-Bereich →
 
 ## Open Questions
 - [x] Exakte Copy/Reihenfolge der 4 übrigen Arbeitspunkte (Wöchentlich vs. Täglich, Proteine, Krafttraining, Schlaf/Erholung) → final erarbeitet im Refinement vom 2026-08-31, siehe Abschnitt "Content: Arbeitspunkte 2–5"
-- [ ] **Regression nach Icon-Layout-Feinschliff-Deploy (2026-09-03):** Nutzer hat auf Produktion visuell bestätigt, dass Spaltenbündigkeit + Größe passen, aber die Krafttraining-Icons sind auf Desktop nicht mehr vertikal zum Text zentriert (vermutlich Nebenwirkung des Spaltenbündigkeits-Fixes aus der QA-Runde — die Icon-Spalte wurde von 110px auf 160px verbreitert und das kleine Präfix-Icon von responsive auf immer-`absolute` umgestellt). Nutzer will das am Folgetag angehen — bewusst nicht mehr am 2026-09-03 gefixt.
+- [x] **Regression nach Icon-Layout-Feinschliff-Deploy (2026-09-03):** Nutzer hat auf Produktion visuell bestätigt, dass Spaltenbündigkeit + Größe passen, aber die Krafttraining-Icons sind auf Desktop nicht mehr vertikal zum Text zentriert. → Gefixt am 2026-09-04, siehe Implementation Notes und Decision Log. **Tatsächliche Ursache war nicht die vermutete** (Spaltenbündigkeits-Fix/160px-Spalte), sondern `self-stretch` auf den `<p>`-Elementen ohne `sm:`-Reset (siehe Decision Log für Details).
 
 ## Decision Log
 
@@ -230,6 +230,14 @@ Am Ende: dezenter Text-Link *"Trainingspläne findest du im Training-Bereich →
 | Schlaf-Icon: gleiches Prinzip (größer, vertikal zum mehrzeiligen Text zentriert auf Desktop, mittig darüber auf Mobile) — aber ohne die Absolute-Prefix-Technik | Das Schlaf-Icon ist ein einzelnes, näherungsweise symmetrisches Icon (kein klein→groß-Paar) — gemessene Abweichung der optischen Mitte lag bei nur ~5px (praktisch nicht wahrnehmbar), daher kein zusätzlicher Aufwand nötig | 2026-09-03 |
 | Neue kombinierte Icon-Grafik für die 4 Schlaf-Tipps (3-2-1 / Snowflake / Moon / LoaderPinwheel) | Nutzerwunsch — visuelle Zusammenfassung aller 4 Tipps auf einen Blick, analog zum Krafttraining-Abschnitt. "3-2-1" gibt es nicht als Lucide-Icon, daher als fette Zahlen-Kachel im selben Kachel-Stil umgesetzt; die übrigen 3 Icons bewusst aus derselben Lucide-Bibliothek wie "Muskeln erhalten" für ein einheitliches Bild (Nutzervorgabe) | 2026-09-03 |
 | Design vorab per Artifact-Mockup abgestimmt (3 Korrekturrunden: Spaltenbündigkeit/Größe → optische statt geometrische Zentrierung → Text nicht mitzentrieren → Text volle Breite) | Nutzerwunsch ("Bitte erst eine Vorschau machen, bevor gebaut wird"); jede Korrektur wurde direkt am Mockup verifiziert (lokale Playwright-Bounding-Box-Messungen), bevor der echte Code angefasst wurde | 2026-09-03 |
+
+#### Bugfix (2026-09-04): Krafttraining-Icons auf Desktop nicht vertikal zentriert
+
+| Decision | Rationale | Date |
+|----------|-----------|------|
+| `self-stretch` auf den 4 Krafttraining-`<p>`-Elementen auf `self-stretch sm:self-auto` geändert | **Root Cause:** `self-stretch` (`align-self: stretch`) wurde ohne `sm:`-Reset gesetzt, um im Mobile-Flex-Layout (`flex-col`) den Text auf volle Breite zu strecken — dort steuert `align-self` die horizontale Achse, das war korrekt. Sobald der Punkt-Wrapper ab `sm:` zu `display:contents` wird und Icon+Text zu direkten CSS-Grid-Kindern werden, steuert `align-self` dort aber die VERTIKALE Achse — derselbe Klassenname hatte auf Desktop einen ungewollten Nebeneffekt: der Text wurde auf die (höhere) Icon-Zeilenhöhe gestreckt und blieb dabei oben in seiner Box verankert (Text-Content wird nicht automatisch vertikal zentriert), während das Icon selbst korrekt mittig in seiner eigenen, exakt passenden Box saß — dadurch driftete der sichtbare Text bis zu ~8px aus der Icon-Mitte. Per Playwright-Diagnose gefunden: `getComputedStyle(p).alignSelf` war `"stretch"` statt des erwarteten, vom Grid geerbten `"center"` | 2026-09-04 |
+| Ursprüngliche Vermutung (Spaltenbündigkeits-Fix von gestern, 160px-Spalte) war falsch | Die Vermutung im Open-Questions-Eintrag vom Vorabend zielte auf die falsche Ursache — ein Lehrbuch-Beispiel dafür, dass ein CSS-Bug, der erst bei einem Breakpoint-Wechsel auftritt (hier: Flex→Grid via `display:contents`), am zuverlässigsten über `getComputedStyle`-Messung statt Vermutung gefunden wird | 2026-09-04 |
+| Neuer E2E-Test ergänzt, der vertikale Zentrierung UND `align-self !== 'stretch'` explizit prüft, nicht nur horizontale Spaltenbündigkeit | Der bestehende Spaltenbündigkeits-Test aus der QA-Runde vom Vortag deckte nur die X-Achse ab und blieb grün, obwohl die Y-Achse kaputt war — dieser blinde Fleck soll nicht wieder auftreten | 2026-09-04 |
 
 ### Technical Decisions
 <!-- Added by /architecture -->
@@ -543,6 +551,15 @@ Per Playwright verifiziert bei 375px (Mobile), 768px (Tablet) und 1280px (Deskto
 - **Security:** Pass (trivial, keine neue Angriffsfläche)
 - **Production Ready:** YES
 - **Recommendation:** Deploy. Reine Frontend-Änderung, keine DB-Migration, kein zusätzlicher Backend-Schritt nötig.
+
+### Bugfix (2026-09-04): Krafttraining-Icons auf Desktop nicht vertikal zum Text zentriert
+Nutzer hat den Vortages-Deploy auf Produktion geprüft: Spaltenbündigkeit und Icon-Größe passen, aber die Icons sind auf Desktop nicht mehr vertikal zum Text zentriert — bewusst auf den nächsten Tag verschoben, siehe Open Questions.
+
+- **Root Cause gefunden per Playwright-Diagnose** (nicht durch Vermutung): `getComputedStyle(p).alignSelf` ergab `"stretch"` statt des erwarteten `"center"`. Ursache: `src/components/so-geht-abnehmen-guide.tsx` setzte `self-stretch` auf den 4 Krafttraining-`<p>`-Elementen ohne `sm:`-Reset — im Mobile-Flex-Layout (`flex-col`) korrekt (streckt den Text auf volle Breite, steuert dort die horizontale Achse), aber sobald der Punkt-Wrapper ab `sm:` zu `display:contents` wird und Icon+Text zu direkten CSS-Grid-Kindern werden, steuert `align-self` dort die VERTIKALE Achse — der Text wurde auf die Icon-Zeilenhöhe gestreckt und blieb oben in seiner Box verankert, statt (wie vom Grid via `sm:items-center` vorgesehen) zentriert zu werden.
+- **Fix:** `className="self-stretch text-left"` → `className="self-stretch sm:self-auto text-left"` auf allen 4 `<p>`-Elementen in `src/components/so-geht-abnehmen-guide.tsx` (Krafttraining-Abschnitt). Kein Eingriff in `arbeitspunkt-icons.tsx` nötig — die Icons selbst waren nie das Problem.
+- Per Playwright verifiziert: Text-Mittelpunkt (via `Range.getBoundingClientRect()` über den kompletten `<p>`-Inhalt) liegt jetzt bei allen 4 Punkten innerhalb 0,3px des Icon-Mittelpunkts (vorher bis zu ~8px Abweichung). Mobile-Verhalten (Text volle Breite, linksbündig) unverändert korrekt — dort bleibt `self-stretch` unterhalb `sm:` aktiv.
+- **Neuer permanenter E2E-Test** (`tests/PROJ-37-so-geht-abnehmen.spec.ts`): prüft für alle 4 Krafttraining-Punkte sowohl `align-self !== 'stretch'` als auch die tatsächliche Y-Zentrierung (Toleranz 2px) — schließt die Testlücke, durch die dieser Bug am Vortag trotz grüner Spaltenbündigkeits-Suite unentdeckt blieb (der bestehende Test prüfte nur die X-Achse). Suite: 32 → 36 Tests, 36/36 grün (chromium + Mobile Chrome).
+- `npm run build`, `npm run lint`, `npm test` (464/464) fehlerfrei. Einzige verbleibenden Lint-Fehler weiterhin die bekannten, unabhängigen `sidebar.tsx`-Fehler (separater Task).
 
 ## Deployment
 

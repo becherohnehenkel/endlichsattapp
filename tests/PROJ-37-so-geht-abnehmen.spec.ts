@@ -397,6 +397,38 @@ test.describe('Arbeitspunkt 5: Krafttraining-Vergleichsicons', () => {
     }
   })
 
+  test('AC (Refinement 2026-09-04, Bugfix): auf Desktop ist jedes Icon vertikal zum eigenen Text zentriert', async ({ page }) => {
+    // Regression: `self-stretch` auf dem <p> (nötig für die Mobile-Volltextbreite) wurde ohne
+    // `sm:`-Reset gesetzt. Im Mobile-Flex-Layout steuert align-self die horizontale Achse (korrekt),
+    // aber sobald der Punkt-Wrapper ab `sm:` zu `contents` wird und Icon+Text zu Grid-Kindern werden,
+    // steuert align-self dort die VERTIKALE Achse — der Text wurde auf die Icon-Zeilenhöhe gestreckt
+    // und dadurch oben im Kasten verankert statt zentriert, obwohl die Icons selbst korrekt zentriert
+    // waren. Nutzer hat das auf Produktion bemerkt, obwohl der Spaltenbündigkeits-Test (oben) grün war
+    // — dieser Test deckt jetzt zusätzlich die vertikale Achse ab.
+    await page.setViewportSize({ width: 1280, height: 900 })
+    await page.goto('/ernaehrung/so-geht-abnehmen')
+    await oeffneArbeitspunkt(page, 'Krafttraining')
+    const zeilen = [/1\. Muskeln erhalten/, /2\. Grundumsatz/, /3\. Gesund altern/, /4\. Körper formen/]
+    for (const text of zeilen) {
+      const zeile = page.locator('div.flex.flex-col.items-center.gap-2', { hasText: text })
+      const p = zeile.locator('p')
+      const grossesIcon = zeile.locator('svg').last()
+      const alignSelf = await p.evaluate((el) => getComputedStyle(el).alignSelf)
+      expect(alignSelf).not.toBe('stretch')
+
+      const textCenter = await p.evaluate((el) => {
+        const range = document.createRange()
+        range.selectNodeContents(el)
+        const r = range.getBoundingClientRect()
+        return r.top + r.height / 2
+      })
+      const iconBox = await grossesIcon.boundingBox()
+      expect(iconBox).not.toBeNull()
+      const iconCenter = iconBox!.y + iconBox!.height / 2
+      expect(Math.abs(textCenter - iconCenter)).toBeLessThanOrEqual(2)
+    }
+  })
+
   test('AC (Refinement 2026-09-03, Icon-Layout-Feinschliff): auf Mobile ist das große Icon horizontal zentriert, der Text bleibt linksbündig über volle Breite', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 })
     await page.goto('/ernaehrung/so-geht-abnehmen')
