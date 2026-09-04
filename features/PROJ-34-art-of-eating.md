@@ -1,6 +1,6 @@
 # PROJ-34: Art of Eating
 
-## Status: Deployed (Refinement: Icon-Feinschliff "In Progress")
+## Status: Deployed (Refinement: Icon-Feinschliff "Approved")
 **Created:** 2026-08-11
 **Last Updated:** 2026-09-04
 
@@ -222,6 +222,46 @@ Der vorbestehende, kosmetische React-Hydration-Warnhinweis in `rating-ring.tsx` 
 - **Security:** Pass (minimale Angriffsfläche, keine Findings)
 - **Production Ready:** JA
 - **Recommendation:** Deploybereit als Teil des gemeinsamen "Complete"-Rollouts (wartet laut Absprache auf Rename/Headline zusammen mit den übrigen drei Sektionen)
+
+### QA Test Results (Refinement 2026-09-04): Icon-Feinschliff
+
+**Tested:** 2026-09-04
+**App URL:** http://localhost:3000
+**Tester:** QA Engineer (AI)
+
+#### Acceptance Criteria Status
+Diese Runde hat keine formalen Angenommen/Wenn/Dann-ACs in der Spec (direkte Nutzeranfrage, vorab per Artifact-Mockup abgestimmt statt über `/refine`) — geprüft gegen die im Decision Log festgehaltenen, vom Nutzer bestätigten Anforderungen:
+
+- [x] Alle 6 Prinzipien zeigen genau ein Icon (Armchair, PhoneOff, WavesVertical, Timer, Gem, Ear)
+- [x] Icon sitzt links neben dem Text (nicht darüber), vertikal zum (ggf. mehrzeiligen) Text zentriert — per Bounding-Box-Test verifiziert (Toleranz 4px)
+- [x] Fun-Fact-Hinweisbox ist grün/blau (`#DFF0F2`/`#0E7C86`) statt amber — per `getComputedStyle` geprüft, nicht nur Klassenname
+- [x] Kompakter rotierender Hinweis auf Ergebnisseiten (`art-of-eating-hinweis.tsx`) bewusst unverändert (kein Icon-Bezug, siehe Decision Log)
+
+#### `lucide-react`-Upgrade (^0.562.0 → ^1.40.0) — Risikoprüfung
+Dies ist eine projektweite Abhängigkeitsänderung, nicht auf PROJ-34 beschränkt — daher mit eigener, breiterer Prüfung:
+- Alle ~65 im Projekt bereits verwendeten Icon-Namen kompilieren nach dem Upgrade fehlerfrei (`tsc --noEmit`) — keine Umbenennungen/Entfernungen betroffen.
+- Visuelle Stichprobe (Playwright-Screenshots vor jeder Code-Änderung, nur Dependency-Bump): Navigation, PROJ-37 (Krafttraining/Schlaf-Icons), PROJ-39 (Stress-/Sinn-Icons) — alle Icons rendern pixelidentisch zur Vorversion.
+- **Erweiterte Regressionstests über den engeren PROJ-34-Scope hinaus** (da projektweite Dependency): PROJ-15 (Bottom-/Top-Nav-Icons) 22/22, PROJ-38 (Emotionales Essen, u. a. Smile/Meh-Icons) 23/23, PROJ-43 (Training, Dumbbell-Icon) + PROJ-8 (Rezeptbibliothek, ChefHat/Search/Lock-Icons) 32/32 — alle grün.
+
+#### Security Audit
+Pass (trivial) — reine Frontend-/Darstellungsänderung: keine neuen Eingabefelder, keine neue API-Route, keine neuen Berechtigungs- oder Auth-Pfade. Icons rendern ausschließlich fertige Lucide-Komponenten, keine Interpolation von Nutzer- oder Server-Daten — kein XSS-Vektor. Das Dependency-Upgrade selbst wurde nicht separat auf CVEs geprüft (`npm audit` zeigt vorbestehende Findings in Drittabhängigkeiten, keine davon durch dieses Upgrade neu eingeführt oder mit `lucide-react` in Zusammenhang).
+
+#### Regressionstest
+- **Vitest (Gesamtsuite):** 464/464 grün (44 Testdateien).
+- **E2E — `tests/PROJ-34-art-of-eating.spec.ts` (eigene Suite):** von 7 auf 10 Tests erweitert (1 bestehender Test umbenannt, da sein Name noch "über dem Text" sagte; 2 neue Tests: Icon-Anzahl, Icon-Position links + vertikal zentriert). 10/10 grün.
+- **E2E — PROJ-36 (Ernährung-Hub):** 19/19. **PROJ-37 (So geht abnehmen):** 36/36. **PROJ-39 (Heißhunger):** 19/19. **PROJ-15 (Navigation):** 22/22. **PROJ-38 (Emotionales Essen):** 23/23. **PROJ-43+PROJ-8 (Training/Rezepte):** 32/32. Alle grün — keine Regression durch das `lucide-react`-Upgrade oder die Layout-Änderung.
+- `npm run build`, `npm run lint`, `npm test` fehlerfrei. Einzige verbleibenden Lint-Fehler: die bekannten, unabhängigen `sidebar.tsx`-Fehler (separater Task, nicht Teil dieser Änderung).
+
+#### Bugs Found
+Keine.
+
+#### Summary
+- **Acceptance Criteria:** 4/4 passed (Icon-Feinschliff-Runde)
+- **Bugs Found:** 0
+- **Security:** Pass (trivial, keine neue Angriffsfläche)
+- **Dependency-Risiko (`lucide-react`-Major-Upgrade):** geprüft und für unbedenklich befunden (Type-Check + Build + 6 Test-Suiten über icon-lastige Bereiche hinweg, alle grün)
+- **Production Ready:** YES
+- **Recommendation:** Deploy. Reine Frontend-Änderung, keine DB-Migration, kein zusätzlicher Backend-Schritt nötig.
 
 ## Deployment
 
