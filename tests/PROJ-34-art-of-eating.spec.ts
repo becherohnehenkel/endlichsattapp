@@ -81,7 +81,7 @@ test.describe('Art of Eating Guide-Seite: Struktur', () => {
     await expect(trigger).toHaveAttribute('aria-expanded', 'true', { timeout: 2000 })
   })
 
-  test('AC (Refinement 2026-09-04, Icon-Feinschliff): jeder der 6 Prinzipien zeigt genau ein Icon über dem Text', async ({ page }) => {
+  test('AC (Refinement 2026-09-04, Icon-Feinschliff): jeder der 6 Prinzipien zeigt genau ein Icon', async ({ page }) => {
     await page.goto('/ernaehrung/wie-esse-ich-richtig')
     for (const titel of [
       'Schaffe den richtigen Rahmen',
@@ -99,6 +99,26 @@ test.describe('Art of Eating Guide-Seite: Struktur', () => {
     for (let i = 0; i < 6; i++) {
       await expect(tiles.nth(i).locator('svg')).toHaveCount(1)
     }
+  })
+
+  test('AC (Refinement 2026-09-04, Layout-Korrektur): Icon sitzt links neben dem Text, vertikal zum Text zentriert', async ({ page }) => {
+    await page.goto('/ernaehrung/wie-esse-ich-richtig')
+    const trigger = page.getByRole('button', { name: 'Schalte Ablenkungen aus' })
+    if ((await trigger.getAttribute('aria-expanded')) !== 'true') await trigger.click()
+
+    const zeile = page.locator('div.flex.items-center.gap-3', { hasText: /Kein Smartphone/ })
+    const tile = zeile.locator('div.rounded-xl.bg-\\[\\#DFF0F2\\]').first()
+    const text = zeile.locator('p')
+    const tileBox = await tile.boundingBox()
+    const textBox = await text.boundingBox()
+    expect(tileBox).not.toBeNull()
+    expect(textBox).not.toBeNull()
+    // Links vom Text.
+    expect(tileBox!.x).toBeLessThan(textBox!.x)
+    // Vertikal zentriert zum (mehrzeiligen) Text: Icon-Mitte nahe der Text-Block-Mitte.
+    const tileCenter = tileBox!.y + tileBox!.height / 2
+    const textCenter = textBox!.y + textBox!.height / 2
+    expect(Math.abs(tileCenter - textCenter)).toBeLessThanOrEqual(4)
   })
 
   test('AC (Refinement 2026-09-04, Icon-Feinschliff): Hinweis-Box ist grün/blau statt amber eingefärbt', async ({ page }) => {
