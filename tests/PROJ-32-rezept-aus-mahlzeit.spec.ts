@@ -77,13 +77,16 @@ test.describe('"Wie gescannt"', () => {
 
     await page.waitForURL(url => url.toString().includes('/rezept/') && !url.toString().includes('/neu'), { timeout: 8000 })
     const recipeId = page.url().split('/rezept/')[1]
-    await expect(page.getByRole('heading', { name: 'QA-Test PROJ-32: Hähnchenbrust mit Reis' })).toBeVisible()
 
-    await page.goto('/rezepte')
-    await page.getByRole('button', { name: 'Eigene Rezepte' }).click()
-    await expect(page.getByText('QA-Test PROJ-32: Hähnchenbrust mit Reis')).toBeVisible()
+    try {
+      await expect(page.getByRole('heading', { name: 'QA-Test PROJ-32: Hähnchenbrust mit Reis' })).toBeVisible()
 
-    await deleteRecipeViaApi(page, recipeId)
+      await page.goto('/rezepte')
+      await page.getByRole('button', { name: 'Eigene Rezepte' }).click()
+      await expect(page.getByRole('link', { name: 'QA-Test PROJ-32: Hähnchenbrust mit Reis' }).first()).toBeVisible()
+    } finally {
+      await deleteRecipeViaApi(page, recipeId)
+    }
   })
 })
 
@@ -125,9 +128,12 @@ test.describe('"Mit mehr Sättigung"', () => {
     await page.click('button[type="submit"]')
     await page.waitForURL(url => url.toString().includes('/rezept/') && !url.toString().includes('/neu'), { timeout: 8000 })
     const recipeId = page.url().split('/rezept/')[1]
-    await expect(page.getByText('Sättigungs-Säulen')).toBeVisible()
 
-    await deleteRecipeViaApi(page, recipeId)
+    try {
+      await expect(page.getByText('Sättigungs-Säulen')).toBeVisible()
+    } finally {
+      await deleteRecipeViaApi(page, recipeId)
+    }
   })
 })
 

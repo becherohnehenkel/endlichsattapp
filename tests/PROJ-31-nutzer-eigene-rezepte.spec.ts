@@ -102,14 +102,16 @@ test.describe('Anlegen, Bearbeiten, Löschen', () => {
     await page.waitForURL(url => url.toString().includes('/rezept/') && !url.toString().includes('/neu'), { timeout: 8000 })
     const recipeId = page.url().split('/rezept/')[1]
 
-    await expect(page.getByRole('heading', { name: 'QA-Test E2E: Neues Rezept' })).toBeVisible()
-    await expect(page.getByText('Sättigungs-Säulen')).toBeVisible()
+    try {
+      await expect(page.getByRole('heading', { name: 'QA-Test E2E: Neues Rezept' })).toBeVisible()
+      await expect(page.getByText('Sättigungs-Säulen')).toBeVisible()
 
-    await page.goto('/rezepte')
-    await page.getByRole('button', { name: 'Eigene Rezepte' }).click()
-    await expect(page.getByText('QA-Test E2E: Neues Rezept')).toBeVisible()
-
-    await deleteRecipeViaApi(page, recipeId)
+      await page.goto('/rezepte')
+      await page.getByRole('button', { name: 'Eigene Rezepte' }).click()
+      await expect(page.getByRole('link', { name: 'QA-Test E2E: Neues Rezept' }).first()).toBeVisible()
+    } finally {
+      await deleteRecipeViaApi(page, recipeId)
+    }
   })
 
   test('Nutzer kann ein eigenes Rezept bearbeiten', async ({ page }) => {
@@ -117,15 +119,17 @@ test.describe('Anlegen, Bearbeiten, Löschen', () => {
     const created = await createRecipeViaApi(page, 'QA-Test E2E: Vor dem Bearbeiten')
     const recipeId = created.body.id as string
 
-    await page.goto(`/rezept/${recipeId}/bearbeiten`)
-    await page.waitForSelector('#title')
-    await page.fill('#title', 'QA-Test E2E: Nach dem Bearbeiten')
-    await page.click('button[type="submit"]')
+    try {
+      await page.goto(`/rezept/${recipeId}/bearbeiten`)
+      await page.waitForSelector('#title')
+      await page.fill('#title', 'QA-Test E2E: Nach dem Bearbeiten')
+      await page.click('button[type="submit"]')
 
-    await page.waitForURL(`/rezept/${recipeId}`, { timeout: 8000 })
-    await expect(page.getByRole('heading', { name: 'QA-Test E2E: Nach dem Bearbeiten' })).toBeVisible()
-
-    await deleteRecipeViaApi(page, recipeId)
+      await page.waitForURL(`/rezept/${recipeId}`, { timeout: 8000 })
+      await expect(page.getByRole('heading', { name: 'QA-Test E2E: Nach dem Bearbeiten' })).toBeVisible()
+    } finally {
+      await deleteRecipeViaApi(page, recipeId)
+    }
   })
 
   test('Löschen zeigt eine Bestätigung, bevor das Rezept endgültig entfernt wird', async ({ page }) => {
@@ -203,11 +207,13 @@ test.describe('Sicherheit', () => {
     const created = await createRecipeViaApi(page, xssTitle)
     const recipeId = created.body.id as string
 
-    await page.goto(`/rezept/${recipeId}`)
-    await expect(page.getByRole('heading', { name: xssTitle })).toBeVisible()
-    const hasRawImgTag = await page.evaluate(() => document.body.innerHTML.includes('<img src=x onerror'))
-    expect(hasRawImgTag).toBe(false)
-
-    await deleteRecipeViaApi(page, recipeId)
+    try {
+      await page.goto(`/rezept/${recipeId}`)
+      await expect(page.getByRole('heading', { name: xssTitle })).toBeVisible()
+      const hasRawImgTag = await page.evaluate(() => document.body.innerHTML.includes('<img src=x onerror'))
+      expect(hasRawImgTag).toBe(false)
+    } finally {
+      await deleteRecipeViaApi(page, recipeId)
+    }
   })
 })
