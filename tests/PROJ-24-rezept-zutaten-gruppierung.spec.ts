@@ -77,6 +77,44 @@ test.describe('Rezept-Detailseite: Zutaten-Gruppierung', () => {
   })
 })
 
+// ─── Öffentliche Anzeige: Punktlinie zwischen Zutat und Menge (Refinement 2026-09-04) ──
+
+test.describe('Rezept-Detailseite: Punktlinie Zutat → Menge', () => {
+  test('jede Zutaten-Zeile hat eine gepunktete Trennlinie zwischen Name und Menge', async ({ page }) => {
+    await loginAs(page)
+    await page.goto(`/rezept/${UNGROUPED_RECIPE_ID}`)
+    const zeilen = page.locator('li').filter({ has: page.locator('.border-dotted') })
+    expect(await zeilen.count()).toBeGreaterThan(0)
+  })
+
+  test('die Punktlinie sitzt horizontal zwischen dem Zutat-Namen und der Mengenangabe', async ({ page }) => {
+    await loginAs(page)
+    await page.goto(`/rezept/${UNGROUPED_RECIPE_ID}`)
+    const ersteZeile = page.locator('li').filter({ has: page.locator('.border-dotted') }).first()
+    await expect(ersteZeile).toBeVisible()
+    const name = ersteZeile.locator('span').first()
+    const linie = ersteZeile.locator('.border-dotted')
+    const menge = ersteZeile.locator('span').last()
+
+    const nameBox = await name.boundingBox()
+    const linieBox = await linie.boundingBox()
+    const mengeBox = await menge.boundingBox()
+    expect(nameBox).not.toBeNull()
+    expect(linieBox).not.toBeNull()
+    expect(mengeBox).not.toBeNull()
+    expect(linieBox!.x).toBeGreaterThanOrEqual(nameBox!.x + nameBox!.width - 1)
+    expect(mengeBox!.x).toBeGreaterThanOrEqual(linieBox!.x + linieBox!.width - 1)
+  })
+
+  test('sehr lange Zutat-Namen laufen nicht über den Bildschirmrand hinaus (375px)', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 900 })
+    await loginAs(page)
+    await page.goto(`/rezept/${GROUPED_RECIPE_ID}`)
+    const hasHScroll = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)
+    expect(hasHScroll).toBe(false)
+  })
+})
+
 // ─── Öffentliche Anzeige: Markdown-Formatierung in der Zubereitung (PROJ-24 Refinement) ─
 //
 // Bewusst KEIN Test, der sich auf konkrete Formatierungs-Marker im aktuellen Text eines

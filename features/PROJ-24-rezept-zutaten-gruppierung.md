@@ -1,8 +1,10 @@
 # PROJ-24: Zutaten-Reihenfolge & Gruppierung im Rezept-Editor
 
-## Status: Deployed (Refinement: Markdown-Formatierung in der Zubereitung)
+## Status: Deployed (Refinement: Punktlinie Zutat → Menge "Approved")
 **Created:** 2026-07-20
-**Last Updated:** 2026-07-21
+**Last Updated:** 2026-09-04
+
+**Refinement (2026-09-04, Punktlinie Zutat → Menge):** Auf der Rezept-Detailseite verbindet jetzt eine dezente gepunktete Linie den Zutat-Namen mit der Mengenangabe (klassisches "Dot-Leader"-Muster wie in gedruckten Speisekarten), damit sich beide bei unterschiedlich langen Namen leicht einander zuordnen lassen. Reine CSS-Änderung an der bestehenden Zutatenliste in `src/app/rezept/[id]/page.tsx`, betrifft alle Rezepte (gruppiert und ungruppiert) gleichermaßen. Nutzerwunsch, kein Mockup nötig (eindeutig beschriebenes, etabliertes UI-Muster).
 
 ## Dependencies
 - Requires: PROJ-8 (Rezeptbibliothek) — Rezept-Editor (`rezept-formular.tsx`) und Datenmodell (`recipe_ingredients` mit `sort_order`) existieren bereits
@@ -118,6 +120,8 @@
 | Kein Toggle/Erkennung von bereits vorhandener Formatierung beim Klick auf einen Button | Für „basic" Formatierung wie gewünscht ausreichend; Toggle-Logik hätte den Scope unnötig vergrößert | 2026-07-21 |
 | Rendering über einen eigenen, minimalen Parser (kein `dangerouslySetInnerHTML`, keine Markdown-Library wie `react-markdown`) | Nur 3 Formatierungs-Arten nötig — ein voller Markdown-Parser wäre unnötiger Funktionsumfang (Listen, Links, Headers etc. explizit out of scope). Eigener Parser vermeidet zudem jedes XSS-Risiko, da nur `**`/`*`/`__` erkannt und in React-Elemente umgewandelt werden, alles andere bleibt Klartext. | 2026-07-21 |
 | Bestandsdaten (5 Rezepte) vor dem Deploy auf `*`/`_`-Zeichen geprüft | Sollte ein Rezeptschritt bereits Sternchen als Aufzählungszeichen enthalten haben, würde die neue Formatierung das ungewollt umbrechen. Ergebnis: keines der 5 Rezepte enthält `*` oder `_` in der Zubereitung — kein Nacharbeits-Bedarf. | 2026-07-21 |
+| **Refinement 2026-09-04:** Punktlinie als klassisches CSS-"Dot-Leader"-Muster (`border-bottom: dotted` auf einem `flex-1`-Element zwischen Name und Menge), dezent eingefärbt (`border-muted-foreground/35`) | Nutzerwunsch: "dezent, jedoch sichtbar" — 35% Deckkraft der bestehenden Muted-Farbe erreicht das, ohne eine neue Farbe einzuführen | 2026-09-04 |
+| **Refinement 2026-09-04:** Sehr lange Zutat-Namen werden abgeschnitten (Ellipsis) statt umzubrechen | Der Dot-Leader funktioniert nur zuverlässig einzeilig — ein Umbruch würde die Linie auf eine falsche/kurze Restbreite in der zweiten Zeile schieben. Ellipsis ist der übliche Kompromiss bei diesem UI-Muster (z. B. Speisekarten) und betrifft in der Praxis nur seltene, ungewöhnlich lange Namen. | 2026-09-04 |
 
 ### Technical Decisions
 <!-- Added by /architecture -->
@@ -251,6 +255,14 @@ Kein neues Backend-Paket nötig — die Änderung an der Admin-API ist eine Erwe
 **Tests:** 7 neue Vitest-Tests in `src/lib/format-rezept-text.test.tsx` (`@testing-library/react`) — je ein Test pro Formatierungs-Typ, unformatierter Text bleibt unverändert, mehrere Marker im selben Text, unpaarige Marker bleiben Klartext, sowie ein expliziter XSS-Test (`**<img src=x onerror=alert(1)>**` wird als Text im `<strong>` gerendert, kein `<img>`-Element entsteht). Gesamte Suite: 209/209 grün.
 
 **Manuelle Live-Verifikation:** Das echte Rezept "Spitzhkohl Erdnuss Nudeln" enthielt bereits `*Nudeln*` in Schritt 8 (vom Admin während der vorherigen Session eingetippt, bevor dieses Feature existierte) — diente als organischer Live-Test ohne Datenänderung: Screenshot bestätigt "Nudeln" wird kursiv ohne Sternchen dargestellt, der Rest des Texts unverändert. Die Admin-Toolbar selbst konnte nicht live durchgeklickt werden (kein Zugriff auf den echten Admin-Account/Passwort — `ADMIN_EMAIL` ist die private Adresse des Product Owners, gleiche Einschränkung wie bei BUG-2/Touch-Drag dokumentiert); Verifikation dort per Code-Review (Standard-DOM-Selection-API, gleiche Technik wie in unzähligen Rich-Text-Toolbars, kein exotisches Verhalten).
+
+### Refinement: Punktlinie Zutat → Menge (2026-09-04)
+
+**Geänderte Datei:**
+- `src/app/rezept/[id]/page.tsx` — die Zutaten-`<li>` (sowohl gruppiert als auch ungruppiert, beide nutzen dieselbe `liste`-Konstante) von `flex items-baseline justify-between` auf `flex items-end gap-2` umgestellt: Name-`<span>` (`truncate min-w-0`), ein leeres `<span aria-hidden>` mit `flex-1 border-b border-dotted border-muted-foreground/35` als Punktlinie, dann die Mengenangabe (`whitespace-nowrap`). `items-end` + `mb-[3px]` auf der Punktlinie richtet sie optisch an der Textgrundlinie aus statt an der vollen Zeilenhöhe.
+- Name wird bei zu wenig Platz nicht mehr umgebrochen, sondern mit Ellipsis abgeschnitten (`truncate`) — nötig, damit die Punktlinie zuverlässig einzeilig funktioniert (siehe Decision Log). Betrifft in der Praxis nur ungewöhnlich lange Namen; auf 375px konnte im Test-Datensatz noch keine reale Kürzung beobachtet werden (Truncation griff nur bei einem absichtlich sehr langen Testnamen).
+
+**Verifiziert:** `tsc --noEmit` (ein vorbestehender, unabhängiger Fehler in `tests/PROJ-2-user-authentication.spec.ts`, nicht Teil dieser Änderung), gezieltes `eslint` (clean), `npm run build` (clean). 3 neue E2E-Tests in `tests/PROJ-24-rezept-zutaten-gruppierung.spec.ts` (Describe-Block "Rezept-Detailseite: Punktlinie Zutat → Menge"): Punktlinie vorhanden, sitzt per Bounding-Box-Vergleich horizontal zwischen Name und Menge, kein horizontales Scrollen bei 375px. Visuell gegen echte Rezepte (Desktop und 375px) geprüft — Punktlinie sitzt sauber auf der Textgrundlinie, lange Namen kürzen sich mit "…" statt umzubrechen oder überzulaufen.
 
 ## Implementation Notes (Backend)
 
@@ -477,3 +489,35 @@ Gleiche Einschränkung wie beim ursprünglichen PROJ-24-QA-Pass: Die Toolbar-But
 - Produktions-URL lädt (200): `https://app.mehralsabnehmen.de/rezept/fe8e05ab-af68-4e61-b8fd-6ead79b5e4e3`
 
 **Kein neues Setup nötig.**
+
+## QA Test Results — Refinement: Punktlinie Zutat → Menge (2026-09-04)
+
+**Tested:** 2026-09-04
+**App URL:** http://localhost:3000
+**Tester:** QA Engineer (AI)
+
+### Acceptance Criteria Status
+- [x] Jede Zutaten-Zeile (gruppiert und ungruppiert) zeigt eine gepunktete Trennlinie zwischen Name und Menge
+- [x] Die Linie ist dezent (35% Deckkraft der Muted-Farbe), aber sichtbar — visuell auf echten Rezepten geprüft
+- [x] Die Zuordnung Name → Menge ist auch bei unterschiedlich langen Namen klar erkennbar
+
+### Security Audit
+Pass (trivial) — reine CSS-Änderung an bereits vorhandenem, statischem Markup. Kein neues Nutzer-Input, kein `dangerouslySetInnerHTML`, keine neue API-Route.
+
+### Regressionstest
+- **Vitest (Gesamtsuite):** 464/464 grün, unverändert.
+- **E2E — `tests/PROJ-24-rezept-zutaten-gruppierung.spec.ts` (eigene Suite, erweitert um 3 neue Tests):** 14/14 grün — Gruppierung, Rahmen, Markdown-Formatierung und die neue Punktlinie alle weiterhin korrekt.
+- **E2E — angrenzende Rezept-Suiten:** `PROJ-9-rezept-zutat-datenquellen.spec.ts` 20/20 (isoliert im kombinierten 39er-Lauf), `PROJ-30-rezept-eigentuemerschaft-filter.spec.ts` grün, `PROJ-16-beilagen-kontext.spec.ts` 20/20, `PROJ-19-gast-modus.spec.ts` 60/60 (inkl. Gast-Zugriff auf Rezept-Detailseiten).
+- **Bekannter, unabhängiger Befund:** `PROJ-31-nutzer-eigene-rezepte.spec.ts` und `PROJ-32-rezept-aus-mahlzeit.spec.ts` haben je 1 fehlschlagenden Test ("… erscheint unter 'Eigene Rezepte'") — per `git stash` bestätigt, dass dies auf unverändertem Code identisch fehlschlägt (Strict-Mode-Kollision durch mehrere liegengebliebene Test-Duplikate "QA-Test PROJ-32: Hähnchenbrust mit Reis" von früheren, nicht vollständig aufgeräumten Testläufen). Keine Regression durch diese Änderung — als separater Hintergrund-Task ausgelagert (`task_3b40f1d3`).
+- `npm run build` und gezieltes `eslint` auf die geänderte Datei fehlerfrei.
+- Responsive geprüft bei 375px (kein horizontales Scrollen, lange Namen kürzen sich mit Ellipsis statt zu überlaufen) sowie Desktop-Breite.
+
+### Bugs Found
+Keine (im Scope dieser Änderung).
+
+### Summary
+- **Acceptance Criteria:** 3/3 passed
+- **Bugs Found:** 0
+- **Security:** Pass
+- **Production Ready:** YES
+- **Recommendation:** Deploy. Reine Frontend-CSS-Änderung, keine DB-Migration, kein zusätzlicher Backend-Schritt nötig.

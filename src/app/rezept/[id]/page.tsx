@@ -235,9 +235,10 @@ export default async function RezeptDetailPage({
             const liste = (
               <ul className="space-y-1.5">
                 {gruppe.items.map((ing) => (
-                  <li key={ing.id} className="flex items-baseline justify-between gap-3 text-sm">
-                    <span className="text-foreground">{ing.name}</span>
-                    <span className="text-muted-foreground flex-shrink-0">
+                  <li key={ing.id} className="flex items-end gap-2 text-sm">
+                    <span className="text-foreground truncate min-w-0">{ing.name}</span>
+                    <span className="flex-1 border-b border-dotted border-muted-foreground/35 mb-[3px]" aria-hidden="true" />
+                    <span className="text-muted-foreground flex-shrink-0 whitespace-nowrap">
                       {ing.amount !== null && (ing.amount % 1 === 0 ? ing.amount.toFixed(0) : ing.amount)} {ing.unit}
                     </span>
                   </li>
