@@ -1,6 +1,6 @@
 # PROJ-6: Mahlzeit-Historie
 
-## Status: Deployed (Refinement: Sortierung & Pagination "Approved")
+## Status: Deployed (Refinement: Sortierung & Pagination "Deployed")
 **Created:** 2026-06-10
 **Last Updated:** 2026-09-04
 
@@ -191,3 +191,4 @@ Keine neuen Bugs. Ein vorbestehender, unabhängiger Test-Flake ("Laden-Skelett e
 **Deployed:** 2026-06-12
 **Tag:** v1.6.0-PROJ-6
 **Vercel:** Auto-deploy via push to `main`
+- **Refinement-Deploy 2026-09-04** (Vercel auto-deploy via Push zu `main`, commits `5d63d3b`..`207c9ed`, Tag `v3.14.0-PROJ-6-refinement`): Sortierung & Pagination — neueste Mahlzeit oben, initial 5 statt 20 Einträge, "Ältere Einträge laden" unten in 10er-Schritten. Reine Frontend-Änderung, keine DB-Migration nötig. Mit echtem QA-Test-Account gegen Produktion verifiziert: Netzwerk-Request bestätigt `limit=5&offset=0` beim initialen Laden, keine neuen Console-Fehler (ein bekannter, seitenunabhängiger 404-Rest bereits aus früheren QA-Runden als Dev-Rauschen eingestuft). Nutzer hat auf Produktion visuell bestätigt ("alles grün, schau mal").
