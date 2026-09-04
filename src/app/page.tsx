@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { UserRound, Play, Lightbulb, TrendingUp, ChefHat, CheckCircle2, ArrowRight, Check } from 'lucide-react'
+import { UserRound, Play, Lightbulb, TrendingUp, ChefHat, CheckCircle2, ArrowRight, Check, Info } from 'lucide-react'
+import { PwaInstallHinweis } from '@/components/pwa-install-hinweis'
 
 const KARTEN = [
   {
@@ -67,14 +68,17 @@ export default async function StartPage() {
       <main className="max-w-sm md:max-w-[850px] mx-auto px-4 py-8 space-y-8">
 
         {/* ── Begrüßung ─────────────────────────────────────── */}
-        <section className="space-y-1">
-          <p className="text-xs font-semibold text-[#2E9E6B] uppercase tracking-wide">Mehralsabnehmen</p>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground text-balance">
-            {vorname ? `Schön, dass du da bist, ${vorname}.` : 'Schön, dass du da bist.'}
-          </h1>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Kurz erklärt: was dich erwartet, wie du loslegst.
-          </p>
+        <section className="flex items-start justify-between gap-3">
+          <div className="space-y-1">
+            <p className="text-xs font-semibold text-[#2E9E6B] uppercase tracking-wide">Mehralsabnehmen</p>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground text-balance">
+              {vorname ? `Schön, dass du da bist, ${vorname}.` : 'Schön, dass du da bist.'}
+            </h1>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Kurz erklärt: was dich erwartet, wie du loslegst.
+            </p>
+          </div>
+          <PwaInstallHinweis />
         </section>
 
         {/* ── Video-Platzhalter ─────────────────────────────── */}
@@ -116,6 +120,16 @@ export default async function StartPage() {
             ))}
           </ul>
         </section>
+
+        {/* ── Gast/Login-Hinweis ────────────────────────────── */}
+        <div className="rounded-2xl bg-[#DFF0F2] p-4 flex items-start gap-2.5">
+          <div className="w-8 h-8 rounded-[9px] bg-white flex items-center justify-center flex-shrink-0">
+            <Info className="h-4 w-4 text-[#0E7C86]" />
+          </div>
+          <p className="text-xs text-[#0E7C86] leading-relaxed">
+            Du kannst diese App gratis nutzen, ohne dich einzuloggen. Deine Einträge werden dann aber nicht gespeichert und sind mit dem Neuladen der Seite weg. Meldest du dich an, bleibt es kostenlos — aber du kannst deinen Fortschritt wochenlang verfolgen und analysieren. Ich sehe deine Daten nicht, außer du gibst sie mir ausdrücklich frei. (Kommendes Feature für die Zukunft)
+          </p>
+        </div>
 
         {/* ── Funktions-Karten ──────────────────────────────── */}
         <section className="space-y-3.5">

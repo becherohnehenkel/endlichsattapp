@@ -1,8 +1,10 @@
 # PROJ-47: Startseite Neu
 
-## Status: Deployed
+## Status: Deployed (Refinement: Gast-Hinweis & PWA-Installation "In Progress")
 **Created:** 2026-09-02
-**Last Updated:** 2026-09-02
+**Last Updated:** 2026-09-04
+
+**Refinement (2026-09-04, Gast-Hinweis & PWA-Installation):** Zwei neue, eigenständige Ergänzungen. (1) Sichtbare, nicht-alarmierende Infobox zwischen der "Ein Ziel für uns alle"-Sektion (PROJ-48) und "So legst du los": erklärt Gast-Nutzung (kostenlos, aber Einträge gehen beim Neuladen verloren) vs. Login (weiterhin kostenlos, Fortschritt bleibt erhalten) sowie eine kurze Datenschutz-Zusicherung. (2) Kleines, eigenständiges Icon neben der Begrüßung (kein Text-Button) — öffnet beim Klick ein Overlay mit Schritt-für-Schritt-Anleitung, wie man die App auf dem Homescreen installiert (iOS Safari + Android Chrome getrennt), schließbar per X oder "Verstanden"-Button. Vorab per Artifact-Mockup abgestimmt. Reine Frontend-Änderung, kein Backend-Bezug.
 
 ## Dependencies
 - PROJ-2 (User Authentication) — für die optionale Namens-Personalisierung bei eingeloggten Nutzern
@@ -46,6 +48,15 @@
 ### Gast-Verhalten
 - [ ] Angenommen ein Gast besucht die Startseite, wenn sie lädt, dann sieht er exakt denselben Inhalt und dieselbe Funktionalität wie ein eingeloggter Nutzer, mit Ausnahme der Namens-Personalisierung in der Begrüßung
 
+### Gast/Login-Hinweis (Refinement 2026-09-04)
+- [ ] Angenommen die Startseite lädt, wenn sie angezeigt wird, dann erscheint zwischen der "Ein Ziel für uns alle"-Sektion und "So legst du los" eine sichtbar farbig hinterlegte Infobox (grün/blau, nicht Warnfarbe) mit dem Hinweis zu Gast-Nutzung, Login-Vorteil und Datenschutz
+- [ ] Angenommen der Hinweis wird angezeigt, dann gilt er unabhängig vom Login-Status identisch für Gäste und eingeloggte Nutzer (der Text erklärt beide Zustände gleichzeitig, keine bedingte Anzeige nötig)
+
+### PWA-Installations-Hinweis (Refinement 2026-09-04)
+- [ ] Angenommen die Startseite lädt, wenn sie angezeigt wird, dann erscheint neben der Begrüßung ein kleines, eigenständiges Icon (kein Text-Button) zum Installieren der App
+- [ ] Angenommen der Nutzer klickt auf das Icon, wenn das Overlay öffnet, dann zeigt es getrennt eine Schritt-für-Schritt-Anleitung für iOS (Safari) und für Android (Chrome)
+- [ ] Angenommen das Overlay ist geöffnet, wenn der Nutzer auf das X oder auf "Verstanden" klickt, dann schließt sich das Overlay
+
 ## Edge Cases
 - Sehr langer Vorname: Begrüßungs-Überschrift muss umbrechen können, ohne das Layout zu sprengen.
 - Name enthält Sonderzeichen/Emoji: wird unverändert angezeigt, keine serverseitige Bereinigung nötig (vertrauenswürdige, selbst gepflegte Profildaten, gleiche Behandlung wie an anderen Stellen der App, die den Namen anzeigen).
@@ -87,6 +98,15 @@
 "Lieber mit Coach an deiner Seite?"
 "Persönliche Begleitung statt Alleingang."
 
+**Gast/Login-Hinweis (Refinement 2026-09-04)**
+"Du kannst diese App gratis nutzen, ohne dich einzuloggen. Deine Einträge werden dann aber nicht gespeichert und sind mit dem Neuladen der Seite weg. Meldest du dich an, bleibt es kostenlos — aber du kannst deinen Fortschritt wochenlang verfolgen und analysieren. Ich sehe deine Daten nicht, außer du gibst sie mir ausdrücklich frei. (Kommendes Feature für die Zukunft)"
+
+**PWA-Installations-Hinweis (Refinement 2026-09-04)**
+Icon-Button (kein Textlabel), `aria-label="Als App installieren"`. Overlay-Titel: "App installieren". Overlay-Beschreibung: "Installiere Mehralsabnehmen auf deinem Homescreen — schneller Zugriff, wie eine echte App."
+- iPhone/iPad (Safari): "Tippe unten auf das Teilen-Symbol." / "Scrolle im Menü zu 'Zum Home-Bildschirm'." / "Tippe oben rechts auf 'Hinzufügen'."
+- Android (Chrome): "Tippe oben rechts auf die drei Punkte." / "Wähle 'App installieren' (oder 'Zum Startbildschirm hinzufügen')." / "Bestätige mit 'Installieren'."
+- Schließen-Button: "Verstanden"
+
 ## Open Questions
 - [ ] Exaktes visuelles Feintuning (Icons, Spacing, Farbverläufe) — Mockup als Referenz vorhanden, wird bei `/frontend` final umgesetzt
 
@@ -101,6 +121,9 @@
 | Coach-Link öffnet extern zu onlineernaehrungsberater.de in neuem Tab | Nutzervorgabe, kein eigener Coaching-Flow in der App geplant | 2026-09-02 |
 | Karten-Ziele: Wissen→`/ernaehrung`, Fortschritt→`/analyse`, Rezepte→`/ernaehrung/rezepte`, Check-In→`/check-in` | Direkteste Verbindung zwischen dem Versprechen der Karte und der Seite, die es einlöst | 2026-09-02 |
 | Copy so kurz wie möglich gehalten, alle Karten-Texte auf max. 2 Zeilen getrimmt | Nutzerwunsch aus dem Design-Brainstorming, Startseite soll überblickbar bleiben | 2026-09-02 |
+| Gast/Login-Hinweis in Grün/Blau (`#DFF0F2`/`#0E7C86`) statt Gelb/Amber | Nutzerwunsch: "Gelb sieht so alarmierend aus" — der Hinweis ist informativ, keine Warnung; Farbe folgt der bereits etablierten Info-Box-Konvention (z.B. Fun-Fact-Boxen in PROJ-34) | 2026-09-04 |
+| PWA-Hinweis bewusst nur als Icon ohne Textlabel neben der Begrüßung, öffnet Overlay statt eigener Seite | Nutzervorgabe: "Der Hinweis soll nur als Symbol auf der Startseite sichtbar sein" — hält die Begrüßung aufgeräumt, Anleitung ist trotzdem einen Klick entfernt | 2026-09-04 |
+| Icon-Wahl: Smartphone mit kleinem Plus-Badge (statt z.B. Download-Icon) | Kommuniziert "Gerät + Hinzufügen" auf einen Blick, passt zum bestehenden Badge-Icon-Muster (kleines Icon + Corner-Badge) aus anderen Refinements dieser Session | 2026-09-04 |
 
 ### Technical Decisions
 <!-- Added by /architecture -->
@@ -110,6 +133,8 @@
 | Ersetzt die bestehende `/`-Route direkt, statt eine neue Route anzulegen | Die Startseite bleibt weiterhin unter `/` erreichbar, kein Routing-Wechsel nötig | 2026-09-02 |
 | Coach-Link als einfacher externer Link (`target="_blank"`, `rel="noopener"`) | Kein eigener Coaching-Flow oder Tracking in dieser Version geplant | 2026-09-02 |
 | Video-Platzhalter ist rein visuell, kein `<video>`-Tag oder Player-Setup | Spart Komplexität, bis das echte Video existiert — wird beim späteren Refinement ergänzt | 2026-09-02 |
+| PWA-Overlay als bestehende shadcn `Dialog`-Komponente umgesetzt, kein eigenes Custom-Modal | `Dialog` bringt X-Close, Escape/Klick-außerhalb-Close und Fokus-Trap bereits eingebaut — spart Code und Accessibility-Arbeit | 2026-09-04 |
+| Kein Gerätetyp-Erkennung — beide Anleitungen (iOS + Android) werden immer gleichzeitig gezeigt | Einfachste, robusteste Lösung; kein User-Agent-Sniffing nötig, Nutzer sieht ggf. einfach die für ihn irrelevante Anleitung mit | 2026-09-04 |
 
 ---
 <!-- Sections below are added by subsequent skills -->
@@ -158,6 +183,15 @@ Keine neuen Pakete nötig.
 - Reine Server-Component, kein `'use client'` nötig — nichts auf der Seite ist interaktiv (nur Links/externer Link)
 
 **Verifiziert:** `npm run build`, `npm run lint`, `npm test` (443/443, unverändert — keine bestehenden Tests hingen an der alten Startseite). Per Playwright verifiziert: alle 4 Karten-Links und der Coach-Link (inkl. `target="_blank"`) korrekt gesetzt, Video-Platzhalter nicht interaktiv, Mobile (375px) kein horizontales Scrollen. Personalisierte Begrüßung live gegen das bestehende QA-Testkonto verifiziert (`profiles.name` auf "Lukas Testerson" gesetzt, bleibt als Fixture für künftige QA-Läufe bestehen) — zeigt korrekt "Schön, dass du da bist, Lukas.". Bottom-Navigation fehlt für einen Nutzer ganz ohne jede Session (nicht mal anonym) — bestätigt als vorbestehendes, unverändertes Verhalten aus `navigation-shell.tsx` (siehe PROJ-35), kein PROJ-47-Bug.
+
+### Implementation Notes (Frontend) — Refinement 2026-09-04, Gast-Hinweis & PWA-Installation
+
+**Gebaut:**
+- `src/app/page.tsx`: neue Infobox zwischen der "Ein Ziel für uns alle"-Sektion (PROJ-48) und "So legst du los" — `#DFF0F2`-Hintergrund mit `Info`-Icon in weißer Kachel, Text exakt aus der Spec (siehe Content-Sektion). Begrüßungs-Sektion zu `flex items-start justify-between` umgebaut, `<PwaInstallHinweis />` als Geschwister-Element neben dem Begrüßungstext eingefügt.
+- `src/components/pwa-install-hinweis.tsx` (neu, Client Component): Icon-Button (`Smartphone` + kleiner `#2E9E6B`-Kreis mit `Plus`-Badge, `position:absolute -bottom-1 -right-1`, analog zum etablierten Icon+Corner-Badge-Muster) öffnet eine bestehende shadcn `Dialog`-Komponente. Overlay zeigt iOS- und Android-Anleitung als zwei nummerierte Listen, schließbar über die eingebaute `DialogPrimitive.Close`-X (kein Zusatzaufwand nötig) sowie einen `DialogClose asChild`-`Verstanden`-Button im Footer.
+- Beide Ergänzungen sind reine Frontend-Änderungen ohne Backend-Bezug, kein neuer State über `useState` hinaus (Dialog-Open-State wird intern von Radix verwaltet).
+
+**Verifiziert:** `tsc --noEmit` (clean), gezieltes `eslint` auf beide geänderten/neuen Dateien (clean), `npm run build` (clean), `npm test` (464/464 — 21 neue Tests gegenüber dem vorherigen Stand, alle aus anderen Refinements dieser Session, keine Regression). `tests/PROJ-47-startseite-neu.spec.ts`: 20/20 auf Chromium, 5/5 der neuen Tests zusätzlich auf Mobile Chrome. `tests/PROJ-48-startseite-ultimatives-ziel.spec.ts`: 8/8 (bestätigt keine Störung der direkt benachbarten PROJ-48-Sektion durch die neue Infobox). Visuell gegen das zuvor abgestimmte Artifact-Mockup verglichen (Farben, Icon-Platzierung, Overlay-Layout) — Übereinstimmung bestätigt.
 
 ## QA Test Results
 

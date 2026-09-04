@@ -88,6 +88,70 @@ test.describe('Seitenstruktur (Gast)', () => {
   })
 })
 
+// ─── Gast/Login-Hinweis (Refinement 2026-09-04) ────────────────────────────
+
+test.describe('Gast/Login-Hinweis', () => {
+  test('AC: zeigt den Hinweis-Text zwischen "Ein Ziel für uns alle" und "So legst du los"', async ({ page, context }) => {
+    await context.clearCookies()
+    await page.goto('/')
+    await expect(page.getByText(/Du kannst diese App gratis nutzen/)).toBeVisible()
+    await expect(page.getByText(/Ich sehe deine Daten nicht/)).toBeVisible()
+
+    const main = page.locator('main')
+    const text = (await main.innerText()).toLowerCase()
+    const posZiel = text.indexOf('ein ziel für uns alle')
+    const posHinweis = text.indexOf('du kannst diese app gratis nutzen')
+    const posSoLegstDuLos = text.indexOf('so legst du los')
+    expect([posZiel, posHinweis, posSoLegstDuLos].every(p => p >= 0)).toBe(true)
+    expect(posZiel).toBeLessThan(posHinweis)
+    expect(posHinweis).toBeLessThan(posSoLegstDuLos)
+  })
+
+  test('AC: Hinweis ist grün/blau eingefärbt, nicht als Warnung (kein Gelb/Amber)', async ({ page, context }) => {
+    await context.clearCookies()
+    await page.goto('/')
+    const box = page.getByText(/Du kannst diese App gratis nutzen/).locator('xpath=ancestor::div[contains(@class,"rounded-2xl")][1]')
+    const bg = await box.evaluate(el => getComputedStyle(el).backgroundColor)
+    expect(bg).toBe('rgb(223, 240, 242)') // #DFF0F2
+  })
+})
+
+// ─── PWA-Installations-Hinweis (Refinement 2026-09-04) ─────────────────────
+
+test.describe('PWA-Installations-Hinweis', () => {
+  test('AC: Icon ist sichtbar, öffnet ein Overlay mit Anleitung für iOS und Android', async ({ page, context }) => {
+    await context.clearCookies()
+    await page.goto('/')
+    const btn = page.getByRole('button', { name: 'Als App installieren' })
+    await expect(btn).toBeVisible()
+    await btn.click()
+    await expect(page.getByRole('dialog')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'App installieren' })).toBeVisible()
+    await expect(page.getByText('iPhone / iPad (Safari)')).toBeVisible()
+    await expect(page.getByText('Zum Home-Bildschirm', { exact: false })).toBeVisible()
+    await expect(page.getByText('Android (Chrome)')).toBeVisible()
+    await expect(page.getByText('App installieren', { exact: false }).last()).toBeVisible()
+  })
+
+  test('AC: Overlay schließt sich per "Verstanden"-Button', async ({ page, context }) => {
+    await context.clearCookies()
+    await page.goto('/')
+    await page.getByRole('button', { name: 'Als App installieren' }).click()
+    await expect(page.getByRole('dialog')).toBeVisible()
+    await page.getByRole('button', { name: 'Verstanden' }).click()
+    await expect(page.getByRole('dialog')).toBeHidden()
+  })
+
+  test('AC: Overlay schließt sich per X-Button', async ({ page, context }) => {
+    await context.clearCookies()
+    await page.goto('/')
+    await page.getByRole('button', { name: 'Als App installieren' }).click()
+    await expect(page.getByRole('dialog')).toBeVisible()
+    await page.getByRole('button', { name: 'Close' }).click()
+    await expect(page.getByRole('dialog')).toBeHidden()
+  })
+})
+
 // ─── Video-Platzhalter ──────────────────────────────────────────────────────
 
 test.describe('Video-Platzhalter', () => {
