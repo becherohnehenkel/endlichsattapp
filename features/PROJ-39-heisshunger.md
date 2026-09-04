@@ -1,8 +1,10 @@
 # PROJ-39: Heißhunger
 
-## Status: Deployed
+## Status: Deployed (Refinement: Icon-Feinschliff "In Progress")
 **Created:** 2026-09-01
-**Last Updated:** 2026-09-01
+**Last Updated:** 2026-09-04
+
+**Refinement (2026-09-04, Icon-Feinschliff):** Neuer Intro-Text (erwähnt Stresslevel/Umfeld/Social Media explizit als verstärkende Faktoren). "Konstante Energie": Blutzucker-Kurven strecken jetzt über die volle Box-Breite (Bugfix, vorher durch SVG-Default-Seitenverhältnis "letterboxed") + neues Eyebrow-Label "Beispielhafter Blutzuckerverlauf". "Stress": neues Icon (gestresstes Gesicht + Blitz-Badge). "Screentime und Content": neue Zwischenüberschrift "Hinterfrage die folgenden Punkte:". "Sehen, riechen, schmecken & hören": die 4 Beobachtungspunkte jetzt als Icon-Infoboxen statt reiner nummerierter Liste — löst damit auch die bereits offene Frage aus dem ursprünglichen Refinement-Wunsch. Vorab per Artifact-Mockup abgestimmt (2 Korrekturrunden).
 
 ## Dependencies
 - Requires: PROJ-36 (Ernährung-Hub) — Einstiegspunkt
@@ -91,7 +93,7 @@
 
 ## Open Questions
 - [x] Konkrete Visualisierung der 2 Blutzucker-Vergleichsgrafiken → bei /frontend umgesetzt: 2 illustrative SVG-Kurven (Achterbahn-Zickzack für 6 Mahlzeiten vs. sanfte 3-Peaks-Kurve für 3 Mahlzeiten), siehe `blutzucker-vergleichs-grafik.tsx` (2026-09-01)
-- [ ] Konkrete Visualisierung der Schritt-für-Schritt-Anleitung bei "Screentime und Content" — aktuell als einfache Fließtext-Liste umgesetzt (konsistent mit den Reflexionsfragen bei "Emotionales Essen"); Nutzer wünschte sich ursprünglich eine grafischere Aufbereitung — kann bei Bedarf in einem /refine nachgezogen werden
+- [x] Konkrete Visualisierung der Schritt-für-Schritt-Anleitung bei "Screentime und Content" — aktuell als einfache Fließtext-Liste umgesetzt (konsistent mit den Reflexionsfragen bei "Emotionales Essen"); Nutzer wünschte sich ursprünglich eine grafischere Aufbereitung → im Refinement 2026-09-04 stattdessen bei "Sehen, riechen, schmecken & hören" umgesetzt (Icon-Infoboxen); "Screentime und Content" selbst bekam nur eine neue Zwischenüberschrift, bleibt sonst Fließtext (Nutzerwunsch war hier nur die Überschrift, keine grafische Umgestaltung)
 
 ## Decision Log
 
@@ -102,6 +104,8 @@
 | 4 flache Arbeitspunkte, keine Sektions-Gruppierung wie bei PROJ-38 | Alle 4 Themen sind gleichrangig, keine natürliche Unterteilung wie bei "emotionsspezifisch vs. allgemein" nötig | 2026-09-01 |
 | Rohtext deutlich gekürzt/verdichtet für die App-Copy | Nutzer bevorzugt beim Schreiben Ausführlichkeit, hat aber selbst erkannt, dass das für schnelle Infos in der App hinderlich ist — verdichtete Fassung wurde vom Nutzer explizit bestätigt ("Passt so") | 2026-09-01 |
 | Keine Interaktivität bei "Sehen/riechen/schmecken & hören" über den Standard-"Verstanden"-Toggle hinaus | Konsistent mit allen anderen reinen Reflexions-/Lese-Arbeitspunkten in PROJ-34/37/38 | 2026-09-01 |
+| **Refinement 2026-09-04:** Icon-Zuordnung bei "Sehen, riechen, schmecken & hören" nach Inhalt statt starr nach den 4 Sinnen im Titel (Eye→Werbeplakate, Ear→Podcast/Radio, Wind→Gerüche, Tv→TV/Film/YouTube) | Die 4 bestehenden Beobachtungspunkte decken inhaltlich nicht exakt die 4 Sinne "Sehen/riechen/schmecken/hören" ab (kein Punkt ist rein übers Schmecken) — erzwungene 1:1-Zuordnung hätte ein Icon falsch benannt; Nutzer hat die inhaltsbasierte Zuordnung im Mockup kommentarlos akzeptiert | 2026-09-04 |
+| **Refinement 2026-09-04:** Stress-Icon aus Lucide (`Angry` + `Zap`-Badge) statt Freihand-SVG | Konsistent mit der PROJ-37-Entscheidung, fertige Lucide-Icons Freihand-Entwürfen vorzuziehen, wenn ein passendes Icon existiert | 2026-09-04 |
 
 ### Technical Decisions
 <!-- Added by /architecture -->
@@ -113,6 +117,8 @@
 | Kein Backend / keine neue API-Route | Reiner Lese-Inhalt, identisch zum Muster von PROJ-38 und Teilen von PROJ-37 | 2026-09-01 |
 | **Refinement 2026-09-01:** `ersterPunktOnboarding={{ autoOpenNachMs: 700 }}` doch ergänzt (erster Arbeitspunkt klappt beim Laden automatisch auf) | Löst die Entscheidung "Kein Erstbesucher-Onboarding" (Zeile oben) teilweise ab — Nutzerwunsch nach konsistentem Auto-Open-Verhalten über alle Ernährung-Guides hinweg (ohne Pulse/Dialog, die bleiben PROJ-38-exklusiv). `pulseNachMs` in `ArbeitspunkteListe` dafür optional gemacht. | 2026-09-01 |
 | **Refinement 2026-09-01:** Neue Überschrift "Plötzlich Hunger?" oberhalb des bestehenden Intro-Texts ergänzt (Text selbst unverändert) | War der letzte Ernährungs-Guide ohne eigene H1 — Nutzerwunsch nach konsistenter Überschrift wie bei allen anderen Guides | 2026-09-01 |
+| **Refinement 2026-09-04:** Neue Icons in der bestehenden, projektweit geteilten `arbeitspunkt-icons.tsx` ergänzt statt einer neuen, PROJ-39-exklusiven Datei | Datei ist bereits generisch benannt (nicht "so-geht-abnehmen-icons") und wird schon für Arbeitspunkte-Icons über Guides hinweg genutzt — vermeidet Datei-Wildwuchs | 2026-09-04 |
+| **Refinement 2026-09-04:** `SinnesBox`-Wrapper-Komponente lokal (nicht exportiert) direkt in `heisshunger-guide.tsx` definiert statt in einer eigenen Datei | Nur 4 Verwendungen an einer einzigen Stelle, kein Wiederverwendungsbedarf über die Datei hinaus — folgt demselben Muster wie `Kurve` in `blutzucker-vergleichs-grafik.tsx` | 2026-09-04 |
 
 ---
 <!-- Sections below are added by subsequent skills -->
@@ -162,6 +168,17 @@ Keine neuen Pakete nötig — vollständig mit den bereits installierten shadcn/
 - Neu: `src/components/blutzucker-vergleichs-grafik.tsx` — 2 rein illustrative SVG-Kurven (kein echtes Chart, keine Achsen/Werte) im selben Stil wie `WochenBalkenDiagramm` (PROJ-37): Achterbahn-Kurve (6 Mahlzeiten, amber) vs. sanftere 3-Peaks-Kurve (grün).
 - `src/app/ernaehrung/heisshunger/page.tsx`: Platzhalter aus PROJ-36 durch `HeisshungerGuide` ersetzt.
 - `npm run build`, `npm run lint`, `npm test` (415/415) fehlerfrei. Verifiziert per Playwright-Skript (Text- und Screenshot-Check nach Animations-Settle) statt Browser-Tool-Screenshot, da Letzteres bei diesem Feature zwischenzeitlich Navigations-Probleme zeigte — Playwright bestätigt: Intro sichtbar, alle 4 Arbeitspunkte in korrekter Reihenfolge, beide Blutzucker-Kurven rendern korrekt (Achterbahn-Zickzack vs. sanfte 3-Peaks-Kurve), Stress-Link zeigt auf `/ernaehrung/emotionales-essen`, Screentime-Reflexionsfragen sichtbar, genau 4 nummerierte Beobachtungspunkte bei "Sehen, riechen, schmecken & hören".
+
+### Implementation Notes (Frontend, Refinement 2026-09-04): Icon-Feinschliff
+Reine Frontend-/Darstellungs-Änderung, kein Backend-Bezug. Vorab per Artifact-Mockup mit dem Nutzer abgestimmt (2 Korrekturrunden: Kurven-Stretch-Bug gefunden + Icon-Zentrierung bei den 4 Sinn-Boxen).
+
+- `src/components/heisshunger-guide.tsx`: neuer Intro-Text; `StressIcon` neben dem Stress-Text eingebaut (`flex items-center gap-3`); neue Zwischenüberschrift "Hinterfrage die folgenden Punkte:" zwischen Screentime-Intro und Reflexionsfragen; die 4 Beobachtungspunkte bei "Sehen, riechen, schmecken & hören" von `<ol>/<li>` auf ein `grid grid-cols-1 sm:grid-cols-2`-Layout mit neuer lokaler `SinnesBox`-Komponente (Icon + Text in einer `#DFF0F2`-Box) umgestellt — Icons `Eye`/`Ear`/`Wind`/`Tv` aus `lucide-react`, nach Inhalt zugeordnet (siehe Decision Log).
+- `src/components/arbeitspunkt-icons.tsx`: neuer Export `StressIcon` — Lucide `Angry` (gestresstes Gesicht) mit kleinem `Zap`-Blitz-Badge (amber, weißes Icon) oben rechts, `position:absolute` analog zum bereits bestehenden Icon-Kompositions-Muster in dieser Datei.
+- `src/components/blutzucker-vergleichs-grafik.tsx`: **Bugfix** — `preserveAspectRatio="none"` + `vectorEffect="non-scaling-stroke"` auf beiden Kurven-SVGs ergänzt. Vorher hat das SVG-Default-Seitenverhältnis (`xMidYMid meet`) die Kurve mittig "letterboxed" statt über die volle Box-Breite zu strecken — ein vorbestehender Bug, der erst durch den Nutzer-Vergleich mit dem Artifact-Mockup auffiel. `non-scaling-stroke` verhindert, dass die nicht-uniforme Skalierung die Strichbreite verzerrt. Zusätzlich neues Eyebrow-Label "Beispielhafter Blutzuckerverlauf" (Activity-Icon + Text) oberhalb beider Kurven.
+- `tests/PROJ-39-heisshunger.spec.ts`: 2 bestehende Tests angepasst — "4 Arbeitspunkte in der richtigen Reihenfolge" nutzt jetzt Button-Y-Positionen statt `indexOf()`-Textsuche (der neue Intro-Text enthält "Stresslevel", was eine naive Suche nach "Stress" fälschlicherweise vor dem eigentlichen Trigger-Button gefunden hätte); "4 nummerierte Beobachtungspunkte" auf die neue Icon-Infobox-Struktur umgestellt. 5 neue Tests: Intro-Text-Inhalt, Kurven-Stretch (Bounding-Box ≥ 85 % der Kartenbreite), Stress-Icon (2 SVGs: Gesicht + Blitz), neue Zwischenüberschrift, Icon-Infoboxen (je 1 SVG pro Box). Suite: 13 → 18 Tests, 18/18 grün (chromium + Mobile Chrome).
+- `npm run build`, `npm run lint`, `npm test` (464/464) fehlerfrei. Einzige verbleibende Lint-Fehler: die bekannten, unabhängigen `sidebar.tsx`-Fehler (separater Task).
+- Regression: PROJ-36 (Ernährung-Hub) 19/19, PROJ-37 (teilt sich `arbeitspunkt-icons.tsx`) 36/36 — keine Auswirkung durch die neuen Exporte.
+- Manuell per Playwright verifiziert (Desktop 1280px + Mobile 375px): alle 4 Änderungen rendern wie im approved Mockup, kein horizontales Overflow auf 375px, 2-spaltiges Icon-Grid bei "Sehen, riechen..." kollabiert korrekt auf 1 Spalte unterhalb `sm:`.
 
 ## QA Test Results
 

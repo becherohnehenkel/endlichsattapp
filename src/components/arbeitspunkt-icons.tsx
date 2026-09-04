@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { BicepsFlexed, Snowflake, Moon, LoaderPinwheel } from 'lucide-react'
+import { BicepsFlexed, Snowflake, Moon, LoaderPinwheel, Angry, Zap } from 'lucide-react'
 
 // PROJ-37 (Refinement 2026-09-03): Vergleichsicons für die 4 Krafttraining-Gründe (klein/neutral
 // → groß/hervorgehoben) sowie das Schlaf-Icon. Reine SVG/Lucide-Illustrationen, keine Bild-Assets.
@@ -121,6 +121,20 @@ export function SchlafIcon() {
       <text x="43" y="14" fontSize="8.5" fill="#0E7C86" fontFamily="sans-serif" fontWeight="700">z</text>
       <text x="48" y="9" fontSize="6.5" fill="#0E7C86" fontFamily="sans-serif" fontWeight="700">z</text>
     </svg>
+  )
+}
+
+// PROJ-39 (Refinement): Stress-Icon für "Heißhunger" — gestresstes Gesicht (Lucide `Angry`)
+// mit kleinem Blitz-Badge (`Zap`), dieselbe Icon-Bibliothek wie die PROJ-37-Icons oben,
+// für ein einheitliches Bild über alle Ernährungs-Guides hinweg.
+export function StressIcon() {
+  return (
+    <div className="relative flex-shrink-0">
+      <Angry className="h-11 w-11 text-[#0E7C86]" strokeWidth={1.8} />
+      <span className="absolute -top-1.5 -right-2 flex h-[22px] w-[22px] items-center justify-center rounded-full border-2 border-white bg-[#E8A33D]">
+        <Zap className="h-[13px] w-[13px] text-white" fill="white" strokeWidth={1} />
+      </span>
+    </div>
   )
 }
 

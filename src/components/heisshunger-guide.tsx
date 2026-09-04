@@ -1,6 +1,24 @@
+import type { ReactNode } from 'react'
 import Link from 'next/link'
+import { Eye, Ear, Wind, Tv } from 'lucide-react'
 import { ArbeitspunkteListe, type ArbeitspunkteSektion } from './arbeitspunkte-liste'
 import { BlutzuckerVergleichsGrafik } from './blutzucker-vergleichs-grafik'
+import { StressIcon } from './arbeitspunkt-icons'
+
+// PROJ-39 (Refinement): kleine Infobox für die 4 Beobachtungspunkte bei "Sehen, riechen,
+// schmecken & hören" — Icon + Text statt reiner nummerierter Liste, für bessere Lesbarkeit.
+// Icon-Zuordnung folgt dem Inhalt jedes Punkts, nicht starr den 4 Sinnen im Titel (der TV/Film-
+// Punkt deckt weder rein "schmecken" noch nur einen Sinn ab).
+function SinnesBox({ icon, children }: { icon: ReactNode; children: ReactNode }) {
+  return (
+    <div className="flex items-center gap-2.5 rounded-xl bg-[#DFF0F2] p-3">
+      <div className="flex h-[34px] w-[34px] flex-shrink-0 items-center justify-center rounded-[9px] bg-white text-[#0E7C86]">
+        {icon}
+      </div>
+      <p className="text-xs text-foreground/80 leading-relaxed">{children}</p>
+    </div>
+  )
+}
 
 const SEKTIONEN: ArbeitspunkteSektion[] = [
   {
@@ -28,9 +46,12 @@ const SEKTIONEN: ArbeitspunkteSektion[] = [
         titel: 'Stress',
         inhalt: (
           <>
-            <p className="text-xs text-foreground/80 leading-relaxed">
-              Stress fühlt sich oft wie Heißhunger an — ist aber meist unbewusstes Essen als Ausgleich. Was wirklich hilft, findest du unter &quot;Emotionales Essen&quot;.
-            </p>
+            <div className="flex items-center gap-3">
+              <StressIcon />
+              <p className="text-xs text-foreground/80 leading-relaxed">
+                Stress fühlt sich oft wie Heißhunger an — ist aber meist unbewusstes Essen als Ausgleich. Was wirklich hilft, findest du unter &quot;Emotionales Essen&quot;.
+              </p>
+            </div>
             <Link
               href="/ernaehrung/emotionales-essen"
               className="inline-block text-xs font-medium text-[#2E9E6B] hover:underline"
@@ -48,6 +69,7 @@ const SEKTIONEN: ArbeitspunkteSektion[] = [
             <p className="text-xs text-foreground/80 leading-relaxed">
               Screentime allein haben wir schon bei &quot;Emotionales Essen&quot; behandelt — hier geht&apos;s um die Inhalte. Dein Algorithmus weiß genau, worauf du anspringst: Rezeptvideos, Genuss-Content, &quot;So lecker&quot;-Reels. Das Ergebnis: Lust, obwohl du keinen echten Hunger hast.
             </p>
+            <p className="text-xs font-semibold text-foreground">Hinterfrage die folgenden Punkte:</p>
             <div className="space-y-1 text-xs text-foreground/80 leading-relaxed">
               <p>👥 Wem folge ich?</p>
               <p>📱 Was sehe ich in meinem Feed?</p>
@@ -68,12 +90,20 @@ const SEKTIONEN: ArbeitspunkteSektion[] = [
             <p className="text-xs text-foreground/80 leading-relaxed">
               Dein Alltag steckt voller Trigger, die Appetit wecken sollen — wir leben in einer satten Gesellschaft, die trotzdem hungrig gemacht werden soll. Achte einen Tag lang bewusst auf:
             </p>
-            <ol className="space-y-2 text-xs text-foreground/80 leading-relaxed list-decimal pl-5">
-              <li>Auf dem Weg zur Arbeit: Welche Werbeplakate wollen mir Essen verkaufen?</li>
-              <li>In Podcasts/Radio: Welche Snacks werden mir schmackhaft gemacht?</li>
-              <li>Unterwegs: Welche Gerüche nehme ich wahr (Bäckerei, Dönerbude, Crêpes-Stand)?</li>
-              <li>TV/Film/YouTube: Welcher Deal oder welches Trendprodukt wird mir gerade verkauft?</li>
-            </ol>
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+              <SinnesBox icon={<Eye className="h-[18px] w-[18px]" strokeWidth={2} />}>
+                <strong>Auf dem Weg zur Arbeit:</strong> Welche Werbeplakate wollen mir Essen verkaufen?
+              </SinnesBox>
+              <SinnesBox icon={<Ear className="h-[18px] w-[18px]" strokeWidth={2} />}>
+                <strong>In Podcasts/Radio:</strong> Welche Snacks werden mir schmackhaft gemacht?
+              </SinnesBox>
+              <SinnesBox icon={<Wind className="h-[18px] w-[18px]" strokeWidth={2} />}>
+                <strong>Unterwegs:</strong> Welche Gerüche nehme ich wahr (Bäckerei, Dönerbude, Crêpes-Stand)?
+              </SinnesBox>
+              <SinnesBox icon={<Tv className="h-[18px] w-[18px]" strokeWidth={2} />}>
+                <strong>TV/Film/YouTube:</strong> Welcher Deal oder welches Trendprodukt wird mir gerade verkauft?
+              </SinnesBox>
+            </div>
           </>
         ),
       },
@@ -87,7 +117,7 @@ export function HeisshungerGuide() {
       <div className="space-y-2">
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">Plötzlich Hunger?</h1>
         <p className="text-sm text-muted-foreground leading-relaxed">
-          Heißhunger fühlt sich plötzlich an — ist er aber selten. Bekommt dein Körper deutlich weniger Energie als sonst, meldet er sich lauter: Hunger. Heißhunger entsteht meist, wenn das Kaloriendefizit zu groß ist. Deshalb arbeiten wir mit einem kleinen Defizit und tasten uns langsam an dein Ziel heran.
+          Heißhunger fühlt sich plötzlich an — kommt aber so spontan wie Weihnachten. Bekommt dein Körper konstant deutlich weniger Energie als sonst, meldet er sich lauter: Hunger. Heißhunger entsteht meist, wenn das Kaloriendefizit zu groß ist. (Ein Grund mehr für ein kleineres Defizit.) Verstärkt wird der Effekt durch dein Stresslevel, dein Umfeld und deine Gewohnheiten auf Social Media.
         </p>
       </div>
 

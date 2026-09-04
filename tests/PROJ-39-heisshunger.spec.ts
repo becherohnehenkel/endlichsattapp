@@ -28,19 +28,30 @@ test.describe('Seitenstruktur', () => {
     await expect(page.getByText(/Kaloriendefizit zu groß ist/)).toBeVisible()
   })
 
+  test('AC (Refinement 2026-09-04): Intro-Text erwähnt Stresslevel, Umfeld und Social Media als verstärkende Faktoren', async ({ page }) => {
+    await page.goto('/ernaehrung/heisshunger')
+    await expect(page.getByText(/kommt aber so spontan wie Weihnachten/)).toBeVisible()
+    await expect(page.getByText(/Verstärkt wird der Effekt durch dein Stresslevel, dein Umfeld und deine Gewohnheiten auf Social Media/)).toBeVisible()
+  })
+
   test('AC: zeigt 4 Arbeitspunkte in der richtigen Reihenfolge', async ({ page }) => {
     await page.goto('/ernaehrung/heisshunger')
     await expect(page.getByRole('button', { name: 'Sehen, riechen, schmecken & hören' })).toBeVisible()
-    const main = page.locator('main')
-    const text = await main.innerText()
     const titel = [
       'Konstante Energie',
       'Stress',
       'Screentime und Content',
       'Sehen, riechen, schmecken & hören',
     ]
-    const positions = titel.map(t => text.indexOf(t))
-    expect(positions.every(p => p >= 0)).toBe(true)
+    // Y-Position der Accordion-Trigger-Buttons statt Text-Suche (Refinement 2026-09-04: der
+    // Intro-Text enthält jetzt "Stresslevel", was eine naive `indexOf('Stress')`-Suche vor den
+    // eigentlichen Trigger fälschlicherweise treffen würde).
+    const positions: number[] = []
+    for (const t of titel) {
+      const box = await page.getByRole('button', { name: t }).boundingBox()
+      expect(box).not.toBeNull()
+      positions.push(box!.y)
+    }
     expect(positions).toEqual([...positions].sort((a, b) => a - b))
   })
 
@@ -91,12 +102,43 @@ test.describe('Arbeitspunkte-Inhalte', () => {
     expect(box2!.width).toBeGreaterThan(50)
   })
 
+  test('AC (Refinement 2026-09-04): Blutzucker-Kurven strecken sich über die volle Box-Breite', async ({ page }) => {
+    // Regression: vorher hat das Default-SVG-Seitenverhältnis die Kurve mittig "letterboxed"
+    // statt zu strecken — behoben via preserveAspectRatio="none".
+    await page.goto('/ernaehrung/heisshunger')
+    await oeffneArbeitspunkt(page, 'Konstante Energie')
+    const eyebrow = page.getByText('Beispielhafter Blutzuckerverlauf')
+    await expect(eyebrow).toBeVisible()
+
+    const kurve = page.getByRole('img', { name: /6 Mahlzeiten\/Snacks über den Tag/ })
+    const kurveBox = await kurve.boundingBox()
+    const cardBox = await eyebrow.locator('xpath=ancestor::div[contains(@class,"rounded-2xl")][1]').boundingBox()
+    expect(kurveBox).not.toBeNull()
+    expect(cardBox).not.toBeNull()
+    // Kurve soll (abzüglich Innenabstand) fast die volle Kartenbreite ausfüllen.
+    expect(kurveBox!.width).toBeGreaterThan(cardBox!.width * 0.85)
+  })
+
   test('AC: "Stress" verlinkt auf /ernaehrung/emotionales-essen', async ({ page }) => {
     await page.goto('/ernaehrung/heisshunger')
     await oeffneArbeitspunkt(page, 'Stress')
     await expect(page.getByText(/Stress fühlt sich oft wie Heißhunger an/)).toBeVisible()
     const link = page.getByRole('link', { name: /Zu Emotionales Essen/ })
     await expect(link).toHaveAttribute('href', '/ernaehrung/emotionales-essen')
+  })
+
+  test('AC (Refinement 2026-09-04): "Stress" zeigt das gestresste-Gesicht-Icon mit Blitz-Badge', async ({ page }) => {
+    await page.goto('/ernaehrung/heisshunger')
+    await oeffneArbeitspunkt(page, 'Stress')
+    const zeile = page.locator('div.flex.items-center.gap-3', { hasText: /Stress fühlt sich oft wie Heißhunger an/ })
+    // 1 Angry-Icon (Gesicht) + 1 Zap-Icon (Blitz-Badge) = 2 SVGs.
+    await expect(zeile.locator('svg')).toHaveCount(2)
+  })
+
+  test('AC (Refinement 2026-09-04): "Screentime und Content" zeigt die neue Zwischenüberschrift "Hinterfrage die folgenden Punkte:"', async ({ page }) => {
+    await page.goto('/ernaehrung/heisshunger')
+    await oeffneArbeitspunkt(page, 'Screentime und Content')
+    await expect(page.getByText('Hinterfrage die folgenden Punkte:')).toBeVisible()
   })
 
   test('AC: "Screentime und Content" zeigt die 4 Reflexionsfragen und die Handlungsempfehlung', async ({ page }) => {
@@ -109,13 +151,16 @@ test.describe('Arbeitspunkte-Inhalte', () => {
     await expect(page.getByText(/Entfolgen oder schneller wegwischen/)).toBeVisible()
   })
 
-  test('AC: "Sehen, riechen, schmecken & hören" zeigt genau 4 nummerierte Beobachtungspunkte', async ({ page }) => {
+  test('AC: "Sehen, riechen, schmecken & hören" zeigt genau 4 Beobachtungspunkte als Icon-Infoboxen (Refinement 2026-09-04)', async ({ page }) => {
     await page.goto('/ernaehrung/heisshunger')
     await oeffneArbeitspunkt(page, 'Sehen, riechen, schmecken & hören')
-    const items = page.locator('main ol li')
-    await expect(items).toHaveCount(4)
-    await expect(items.nth(0)).toContainText('Werbeplakate')
-    await expect(items.nth(3)).toContainText('TV/Film/YouTube')
+    const punkte = [/Auf dem Weg zur Arbeit/, /In Podcasts\/Radio/, /Unterwegs.*Gerüche/, /TV\/Film\/YouTube/]
+    for (const text of punkte) {
+      const box = page.getByText(text).locator('xpath=ancestor::div[contains(@class,"rounded-xl")][1]')
+      await expect(box).toBeVisible()
+      // Jede Infobox hat genau ein Icon (Eye/Ear/Wind/Tv).
+      await expect(box.locator('svg')).toHaveCount(1)
+    }
   })
 })
 
