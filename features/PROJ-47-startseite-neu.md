@@ -1,6 +1,6 @@
 # PROJ-47: Startseite Neu
 
-## Status: Deployed (Refinement: Gast-Hinweis & PWA-Installation "In Progress")
+## Status: Deployed (Refinement: Gast-Hinweis & PWA-Installation "Approved")
 **Created:** 2026-09-02
 **Last Updated:** 2026-09-04
 
@@ -259,6 +259,46 @@ Neu: `tests/PROJ-47-startseite-neu.spec.ts` — 15 Tests, decken alle 9 Acceptan
 - **Security:** Pass
 - **Production Ready:** YES
 - **Recommendation:** Deploy
+
+### QA Test Results (Refinement 2026-09-04): Gast-Hinweis & PWA-Installation
+
+**Tested:** 2026-09-04
+**App URL:** http://localhost:3000
+**Tester:** QA Engineer (AI)
+
+#### Acceptance Criteria Status
+
+##### Gast/Login-Hinweis
+- [x] Infobox erscheint zwischen "Ein Ziel für uns alle" (PROJ-48) und "So legst du los" — per Bounding-Box-Reihenfolge geprüft
+- [x] Farblich hinterlegt in Grün/Blau (`bg-[#DFF0F2]`, Text `#0E7C86`), nicht Gelb/Amber — per `getComputedStyle`, nicht nur Klassenname
+- [x] Text identisch für Gast und eingeloggten Nutzer (keine bedingte Anzeige) — beide Zustände getestet, exakt gleicher Inhalt
+
+##### PWA-Installations-Hinweis
+- [x] Icon-Button (kein Textlabel) neben der Begrüßung sichtbar, `aria-label="Als App installieren"`
+- [x] Klick öffnet Overlay mit getrennter iOS- (Safari) und Android-Anleitung (Chrome), je 3 Schritten
+- [x] Schließt per X-Button — Radix `DialogPrimitive.Close`, keine Zusatzimplementierung nötig
+- [x] Schließt per "Verstanden"-Button
+- [x] Zusätzlich verifiziert (über die ACs hinaus): schließt auch per `Escape`-Taste; Icon ist per Tab erreichbar und öffnet das Overlay per `Enter` (Tastatur-Zugänglichkeit)
+
+#### Security Audit
+Pass (trivial) — beide Ergänzungen sind vollständig statischer Text ohne Nutzer- oder Server-Dateninterpolation, kein `dangerouslySetInnerHTML`, keine neue API-Route, kein neuer Auth-Pfad. Beide Elemente sind für Gast und eingeloggten Nutzer identisch sichtbar (kein Auth-Bypass relevant, keine privilegierte Aktion).
+
+#### Regressionstest
+- **Vitest (Gesamtsuite):** 464/464 grün (44 Testdateien), unverändert.
+- **E2E — `tests/PROJ-47-startseite-neu.spec.ts` (eigene Suite):** von 15 auf 20 Tests erweitert (2 neue Describe-Blöcke: "Gast/Login-Hinweis" mit 2 Tests, "PWA-Installations-Hinweis" mit 3 Tests). 20/20 grün auf Chromium (isolierter Lauf, `workers=1`); ein einzelner Fehlschlag bei `workers=2` reproduzierte sich bei isoliertem Re-Run nicht — per `git stash`-Vergleichsmuster als Ressourcen-Konkurrenz zwischen parallelen Workern eingestuft, keine echte Regression. 5/5 der neuen Tests zusätzlich grün auf Mobile Chrome (375px).
+- **E2E — `tests/PROJ-48-startseite-ultimatives-ziel.spec.ts` (direkt benachbarte Sektion):** 8/8 grün — keine Störung durch die neue Infobox zwischen den beiden Sektionen.
+- Visuell gegen das abgestimmte Artifact-Mockup verglichen (Desktop-Screenshot, Mobile-375px-Screenshot, geöffnetes Overlay) — Farben, Icon-Platzierung und Overlay-Layout stimmen überein.
+- `npm run build` und gezieltes `eslint` auf beide geänderten/neuen Dateien fehlerfrei.
+
+#### Bugs Found
+Keine.
+
+#### Summary
+- **Acceptance Criteria:** 5/5 passed (Gast/Login-Hinweis: 2/2, PWA-Installations-Hinweis: 3/3)
+- **Bugs Found:** 0
+- **Security:** Pass
+- **Production Ready:** YES
+- **Recommendation:** Deploy. Reine Frontend-Änderung, keine DB-Migration, kein zusätzlicher Backend-Schritt nötig.
 
 ## Deployment
 - **Production URL:** https://app.mehralsabnehmen.de/
