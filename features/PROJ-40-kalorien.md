@@ -1,8 +1,10 @@
 # PROJ-40: Kalorien
 
-## Status: Deployed
+## Status: Deployed (Refinement: Makronährstoffe visuell aufbereitet "In Progress")
 **Created:** 2026-09-01
-**Last Updated:** 2026-09-01
+**Last Updated:** 2026-09-04
+
+**Refinement (2026-09-04, Makronährstoffe visuell aufbereitet):** Die 5 Makronährstoff-Punkte (Proteine, Kohlenhydrate, Fette, Ballaststoffe, Alkohol) folgen jetzt einem einheitlichen visuellen Muster statt reinem Fließtext: Icon + kurzer Einleitungssatz, zwei Infoboxen ("kcal/g" + "Wichtig für"/"Fakt"), Quellen (wo zutreffend) und eine hervorgehobene Tipp-Box ("Gut zu wissen" für sachliche Hinweise, "Lukas sagt" für persönliche Tipps). Die bisherige 3-Stufen-Proteinquellen-Tabelle (40 %/30 %/20 % Proteinanteil) wurde durch 3 einfache Listen mit je 5 mageren Beispielen (Tierisch/Vegetarisch/Vegan) ersetzt — Nutzerfeedback: die alte Struktur "überfordert die Leute". Fette bekommen eine analoge 3er-Quellenliste. Vorab per Artifact-Mockup abgestimmt, inkl. einer Korrekturrunde. Reine Frontend-Änderung, kein Backend-Bezug.
 
 ## Dependencies
 - Requires: PROJ-36 (Ernährung-Hub) — Einstiegspunkt
@@ -35,10 +37,16 @@
 
 ### Proteine
 - [ ] Angenommen der Punkt "Proteine" ist aufgeklappt, wenn der Nutzer liest, dann sieht er kcal/g, die Rolle im Körper und die Aminosäuren-Erklärung
-- [ ] Angenommen der Punkt ist aufgeklappt, wenn der Nutzer die Quellen-Übersicht liest, dann sieht er 3 Prozent-Stufen (40 %/30 %/20 % Proteinanteil) mit je Beispielen für Tierisch/Vegetarisch/Vegan
+- [x] ~~Angenommen der Punkt ist aufgeklappt, wenn der Nutzer die Quellen-Übersicht liest, dann sieht er 3 Prozent-Stufen (40 %/30 %/20 % Proteinanteil) mit je Beispielen für Tierisch/Vegetarisch/Vegan~~ → **Refinement 2026-09-04:** ersetzt durch 3 einfache Listen (Tierisch/Vegetarisch/Vegan) mit je 5 mageren Beispielen, ohne Prozent-Stufen — siehe unten
 
 ### Kohlenhydrate, Fette, Ballaststoffe, Alkohol
 - [ ] Angenommen einer dieser Punkte ist aufgeklappt, wenn der Nutzer liest, dann sieht er kcal/g (wo zutreffend), die Rolle im Körper und mindestens ein konkretes Beispiel/eine praktische Anwendung
+
+### Makronährstoffe visuell aufbereitet (Refinement 2026-09-04)
+- [ ] Angenommen einer der 5 Makronährstoff-Punkte ist aufgeklappt, wenn der Nutzer liest, dann sieht er oben ein Icon mit kurzem Einleitungssatz sowie zwei Infoboxen ("kcal/g" und "Wichtig für" bzw. bei Alkohol "Fakt")
+- [ ] Angenommen der Punkt "Proteine" ist aufgeklappt, wenn der Nutzer die Quellen liest, dann sieht er 3 Listen (Tierisch/Vegetarisch/Vegan) mit je 5 mageren Beispielen
+- [ ] Angenommen der Punkt "Fette" ist aufgeklappt, wenn der Nutzer die Quellen liest, dann sieht er ebenfalls 3 Listen (Tierisch/Vegetarisch/Vegan) mit je einigen Beispielen
+- [ ] Angenommen ein Punkt enthält einen praktischen Tipp, wenn der Nutzer liest, dann ist dieser in einer umrandeten Box hervorgehoben — "Gut zu wissen" für sachliche Hinweise (Proteine, Ballaststoffe), "Lukas sagt" für persönliche Tipps (Kohlenhydrate, Fette, Alkohol)
 
 ### Gast-Zugriff
 - [ ] Angenommen ein Gast (kein Login), wenn er /ernaehrung/kalorien öffnet, dann kann er die komplette Seite lesen
@@ -137,6 +145,11 @@ Keine — Inhalt final, inklusive der vom Nutzer bereitgestellten Protein-Quelle
 | Protein-Quellen exakt aus der vom Nutzer bereitgestellten Grafik übernommen (3 Prozent-Stufen × 3 Kategorien) | Reale, vom Nutzer kuratierte Daten statt eigener Schätzung — Nutzer hat die Grafik auf Nachfrage nachgereicht | 2026-09-01 |
 | Verlinkung auf "So geht abnehmen" für die Kalorienbedarfs-Berechnung statt eigener Berechnung | Vermeidet Duplizierung des bestehenden Kcal-Rechners (PROJ-37) | 2026-09-01 |
 | Rohtext deutlich verdichtet für die App-Copy | Nutzer bevorzugt beim Schreiben Ausführlichkeit, hat aber selbst erkannt, dass das für schnelle Infos in der App hinderlich ist — Muster aus PROJ-38/39 fortgeführt | 2026-09-01 |
+| **Refinement 2026-09-04:** 3-Stufen-Proteinquellen-Tabelle (40 %/30 %/20 %) durch 3 einfache Listen (Tierisch/Vegetarisch/Vegan, je 5 magere Beispiele) ersetzt | Nutzerfeedback: die alte Struktur ist zwar korrekt, aber "überfordert die Leute" — weniger Kategorien, klarere Beispiele | 2026-09-04 |
+| **Refinement 2026-09-04:** Bei Fetten eine analoge 3er-Quellenliste (Tierisch/Vegetarisch/Vegan) ergänzt | Nutzerwunsch, konsistent zu Proteinen | 2026-09-04 |
+| **Refinement 2026-09-04:** Tipp-Boxen unterscheiden "Gut zu wissen" (sachlicher Fakt: Hülsenfrüchte-Hinweis bei Proteinen, Tagesziel bei Ballaststoffen) von "Lukas sagt" (persönlicher Tipp: Sport-Kohlenhydrate, Omega-3-Präferenz, Alkohol-Tipp) | Eigene Design-Entscheidung, im Mockup vorgeschlagen und vom Nutzer akzeptiert — macht auf einen Blick klar, ob etwas ein neutraler Fakt oder eine persönliche Empfehlung ist | 2026-09-04 |
+| **Refinement 2026-09-04:** Bei Alkohol heißt die zweite Infobox "Fakt" statt "Wichtig für" (Inhalt: "Energie, Nervengift, keine Nährstoffe") | "Wichtig für" passt inhaltlich nicht — Alkohol hat keinen positiven Nutzen im selben Sinn wie die echten Makros | 2026-09-04 |
+| **Refinement 2026-09-04:** Ballaststoffe zeigen "1–2 kcal/g" statt "~0" | Nutzerkorrektur — Ballaststoffe liefern nicht exakt null Energie, sondern werden teilweise von Darmbakterien fermentiert | 2026-09-04 |
 
 ### Technical Decisions
 <!-- Added by /architecture -->
@@ -195,6 +208,19 @@ Keine neuen Pakete nötig — vollständig mit den bereits installierten shadcn/
 - `src/app/ernaehrung/kalorien/page.tsx`: Platzhalter aus PROJ-36 durch `KalorienGuide` ersetzt.
 - Die Satzeinleitung "Unsere Kalorien werden zum Großteil aus den Makronährstoffen berechnet…" aus dem Spec-Entwurf wurde als Lead-in des ersten Punkts im Bereich "Die Makronährstoffe" (Proteine) platziert statt als eigener Sektions-Absatz, da `ArbeitspunkteListe` pro Sektion nur ein kurzes Label, keinen Fließtext unterstützt. Die äußere Seiten-Einleitung wurde stattdessen neu formuliert ("Kalorien und Makronährstoffe — die Bausteine deiner Ernährung, einfach erklärt."), angelehnt an den bestehenden Hub-Untertitel für diese Seite.
 - `npm run build`, `npm run lint`, `npm test` (415/415) fehlerfrei. Verifiziert per Playwright-Skript (Text-Check + Screenshot nach Animations-Settle): Intro, alle 6 Arbeitspunkte in korrekter Reihenfolge inkl. Sektions-Divider "DIE MAKRONÄHRSTOFFE", Link zu "So geht abnehmen" korrekt, alle 3 Proteinquellen-Karten mit korrekten Daten sichtbar.
+
+### Implementation Notes (Frontend) — Refinement 2026-09-04, Makronährstoffe visuell aufbereitet
+
+**Gebaut:**
+- Neu: `src/components/makro-bausteine.tsx` — 4 wiederverwendbare Bausteine für alle 5 Makronährstoff-Punkte: `MakroIconIntro` (Icon-Kachel + kurzer Satz, ohne Titel-Wiederholung, da der Arbeitspunkt-Titel bereits im Accordion-Trigger steht), `MakroStatBoxen` (kcal/g-Zahl + "Wichtig für"/"Fakt"-Box nebeneinander), `MakroQuellenListe` (Kategorie-Zeilen mit Icon, für Proteine und Fette wiederverwendet), `MakroTippBox` (Variante `wissen` = grüner Info-Kreis "Gut zu wissen", Variante `lukas` = teal "L"-Kreis "Lukas sagt").
+- Entfernt: `src/components/protein-quellen-uebersicht.tsx` (3-Stufen-Tabelle) — durch `MakroQuellenListe`-Aufrufe direkt in `kalorien-guide.tsx` ersetzt.
+- `src/components/kalorien-guide.tsx`: alle 5 Makronährstoff-Punkte (Proteine, Kohlenhydrate, Fette, Ballaststoffe, Alkohol) auf das neue Muster umgestellt. Icons aus `lucide-react`: `Drumstick` (Proteine), `Wheat` (Kohlenhydrate), `Droplet` (Fette), `Sprout` (Ballaststoffe), `Wine` (Alkohol); Quellen-Kategorien nutzen `Beef`/`Egg`/`Leaf` für Tierisch/Vegetarisch/Vegan.
+- Proteinquellen: 3 Listen (Tierisch: Hähnchenbrust, Putenbrust, Kabeljau, Thunfisch, Rinderfilet · Vegetarisch: Magerquark, Skyr, Harzer Käse, Eier, Hüttenkäse · Vegan: Tofu, Tempeh, Linsen, Kichererbsen, Edamame), je 5 magere Beispiele.
+- Fettquellen: analoge 3er-Liste (Tierisch: fetter Fisch/Speck/Talg · Vegetarisch: Butter/Käse/Eigelb/Sahne · Vegan: Olivenöl/Rapsöl/Avocado/Nüsse/Chiasamen).
+- Kohlenhydrate: neue Quellen-Zeile ergänzt (Reis, Kartoffeln, Haferflocken, Vollkornbrot, Nudeln, Obst).
+- Bisherige "1g X = ca. Y kcal"-Sätze aus dem Fließtext entfernt — die kcal/g-Information steckt jetzt ausschließlich in der `MakroStatBoxen`-Zahl, keine Dopplung.
+
+**Verifiziert:** `tsc --noEmit` (ein vorbestehender, unabhängiger Fehler in `tests/PROJ-2-user-authentication.spec.ts`, nicht Teil dieser Änderung), gezieltes `eslint` auf alle geänderten/neuen Dateien (clean), `npm run build` (clean), `npm test` (464/464). `tests/PROJ-40-kalorien.spec.ts`: alle 15 Assertions auf die neue Struktur umgestellt (u. a. `1g Protein = ca. 4 kcal`-Fließtext-Checks durch Checks auf die neue kcal-Box ersetzt), 15/15 grün. Dabei zwei reine Testbugs behoben: ein `getByText('4')` kollidierte mit der Fette-Trigger-Nummer (auf einen klassenbasierten Locator `span.tabular-nums` umgestellt) und `getByText('Gut zu wissen')`/`'Lukas sagt'` kollidierten ohne `exact: true` mit demselben Wortlaut im Tipp-Fließtext. `tests/PROJ-36-ernaehrung-hub.spec.ts` (Regression, da die Kalorien-Seite dort verlinkt ist): 19/19 grün. Visuell gegen das abgestimmte Artifact-Mockup verglichen (Desktop- und Mobile-375px-Screenshot) — Layout, Icons und Farben stimmen überein.
 
 ## QA Test Results
 

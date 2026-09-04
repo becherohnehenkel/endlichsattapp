@@ -1,6 +1,7 @@
 import Link from 'next/link'
+import { Drumstick, Wheat, Droplet, Sprout, Wine, Beef, Egg, Leaf } from 'lucide-react'
 import { ArbeitspunkteListe, type ArbeitspunkteSektion } from './arbeitspunkte-liste'
-import { ProteinQuellenUebersicht } from './protein-quellen-uebersicht'
+import { MakroIconIntro, MakroStatBoxen, MakroQuellenListe, MakroTippBox } from './makro-bausteine'
 
 const SEKTIONEN: ArbeitspunkteSektion[] = [
   {
@@ -38,14 +39,35 @@ const SEKTIONEN: ArbeitspunkteSektion[] = [
         titel: 'Proteine',
         inhalt: (
           <>
-            <p className="text-xs text-foreground/80 leading-relaxed">
-              Unsere Kalorien werden zum Großteil aus den Makronährstoffen berechnet. Alle haben ihre Daseinsberechtigung, ihre Aufgabe — und sind gleichermaßen wichtig.
-            </p>
-            <p className="text-xs text-foreground/80 leading-relaxed">
-              1g Protein = ca. 4 kcal. Dein Körper nutzt Protein primär als Baustein — für Muskulatur, Haut, Haare, Hormone und dein Immunsystem. Zu viele isst man eher nicht aus Versehen.
-            </p>
-            <p className="text-xs font-semibold text-foreground">Proteinquellen nach Anteil</p>
-            <ProteinQuellenUebersicht />
+            <MakroIconIntro
+              icon={<Drumstick className="h-6 w-6 text-[#0E7C86]" strokeWidth={1.8} />}
+              intro="Dein Baustein für Muskulatur, Haut, Haare, Hormone und Immunsystem."
+            />
+            <MakroStatBoxen kcalWert="4" wichtigText="Muskeln · Haut & Haare · Hormone · Immunsystem" />
+            <MakroQuellenListe
+              label="Magere Proteinquellen"
+              quellen={[
+                {
+                  icon: <Beef className="h-[13px] w-[13px] text-[#0E7C86]" strokeWidth={2} />,
+                  kategorie: 'Tierisch',
+                  liste: 'Hähnchenbrust, Putenbrust, Kabeljau, Thunfisch (Natur), Rinderfilet',
+                },
+                {
+                  icon: <Egg className="h-[13px] w-[13px] text-[#0E7C86]" strokeWidth={2} />,
+                  kategorie: 'Vegetarisch',
+                  liste: 'Magerquark, Skyr, Harzer Käse, Eier, Hüttenkäse',
+                },
+                {
+                  icon: <Leaf className="h-[13px] w-[13px] text-[#0E7C86]" strokeWidth={2} />,
+                  kategorie: 'Vegan',
+                  liste: 'Tofu, Tempeh, Linsen, Kichererbsen, Edamame',
+                },
+              ]}
+            />
+            <MakroTippBox
+              variant="wissen"
+              text="Hülsenfrüchte wie Linsen, Bohnen und Kichererbsen liefern nie nur Protein — sie bringen fast immer auch wertvolle Ballaststoffe und Kohlenhydrate mit. Kein Nachteil, nur gut zu wissen, wenn du deine Makros einordnest."
+            />
             <p className="text-xs text-foreground/80 leading-relaxed">
               Protein besteht aus Aminosäuren — einige davon (essentiell) muss dein Körper über die Nahrung bekommen, da er sie nicht selbst herstellen kann. Tierische Quellen liefern meist alle auf einmal. Bei pflanzlicher Ernährung lohnt sich die Kombination: Weizen-Eiweiß hat z. B. wenig Lysin — erst zusammen mit Hülsenfrüchten (Linsen, Erbsen, Bohnen) wird das Aminosäure-Profil vollständig.
             </p>
@@ -57,18 +79,24 @@ const SEKTIONEN: ArbeitspunkteSektion[] = [
         titel: 'Kohlenhydrate',
         inhalt: (
           <>
-            <p className="text-xs text-foreground/80 leading-relaxed">
-              1g Kohlenhydrate = ca. 4 kcal. Kohlenhydrate sind dein schnellster Energielieferant — sie werden am zügigsten zu Glucose.
-            </p>
+            <MakroIconIntro
+              icon={<Wheat className="h-6 w-6 text-[#0E7C86]" strokeWidth={1.8} />}
+              intro="Dein schnellster Energielieferant — wird am zügigsten zu Glucose."
+            />
+            <MakroStatBoxen kcalWert="4" wichtigText="Schnelle Energie · Gehirn · Sportleistung" />
             <p className="text-xs text-foreground/80 leading-relaxed">
               Es gibt kurze Kohlenhydratketten (Zucker, Honig, Sirup, Datteln) und lange Ketten (Brot, Nudeln, Gebäck). Ganz lange Ketten sind Ballaststoffe — wichtig für den Darm und für eine langsame Energieabgabe (→ länger satt, mehr dazu bei &quot;Ballaststoffe&quot;).
             </p>
             <p className="text-xs text-foreground/80 leading-relaxed">
-              Isst du (fast) nur Kohlenhydrate, steigt dein Blutzucker schnell — das ist normal, dein Körper schüttet Insulin aus, um die Glucose zu verteilen. Je länger die Kette, desto langsamer läuft dieser Prozess ab.
+              Quellen: Reis, Kartoffeln, Haferflocken, Vollkornbrot, Nudeln, Obst.
             </p>
             <p className="text-xs text-foreground/80 leading-relaxed">
-              Im (Ausdauer-)Sport sind Kohlenhydrate Pflicht: Iss vorher eine kleine, schnell verdauliche Portion (Banane, Dattel, Marmeladenbrot) — wie Tanken vor dem Rennen.
+              Isst du (fast) nur Kohlenhydrate, steigt dein Blutzucker schnell — das ist normal, dein Körper schüttet Insulin aus, um die Glucose zu verteilen. Je länger die Kette, desto langsamer läuft dieser Prozess ab.
             </p>
+            <MakroTippBox
+              variant="lukas"
+              text="Im (Ausdauer-)Sport sind Kohlenhydrate Pflicht: Iss vorher eine kleine, schnell verdauliche Portion (Banane, Dattel, Marmeladenbrot) — wie Tanken vor dem Rennen."
+            />
           </>
         ),
       },
@@ -77,18 +105,40 @@ const SEKTIONEN: ArbeitspunkteSektion[] = [
         titel: 'Fette',
         inhalt: (
           <>
-            <p className="text-xs text-foreground/80 leading-relaxed">
-              1g Fett = ca. 9 kcal — doppelt so viel wie Protein oder Kohlenhydrate. Deshalb isst man sich damit am schnellsten über sein Kalorienziel.
-            </p>
-            <p className="text-xs text-foreground/80 leading-relaxed">
-              Trotzdem lebensnotwendig: für fettlösliche Vitamine (E, D, K, A) und deine Hormonproduktion. Fett gibt Energie langsam ab (→ länger satt) und ist Geschmacksträger.
-            </p>
+            <MakroIconIntro
+              icon={<Droplet className="h-6 w-6 text-[#0E7C86]" strokeWidth={1.8} />}
+              intro="Dein dichtester Energiespeicher — doppelt so viele Kalorien wie Protein oder Kohlenhydrate."
+            />
+            <MakroStatBoxen kcalWert="9" wichtigText="Vitamine A · D · E · K · Hormone · Sättigung" />
             <p className="text-xs text-foreground/80 leading-relaxed">
               Gesättigte Fette sind bei Raumtemperatur meist fest (Fleisch, Butter, Käse, Kokosöl) — dein Körper kann sie selbst herstellen, sie sind nicht lebensnotwendig. Einfach oder mehrfach ungesättigte Fette sind bei Raumtemperatur flüssig: Olivenöl, Leinöl, Rapsöl, Avocado, fetter Fisch, Nüsse und Saaten. Kaltgepresste (&quot;native&quot;) Pflanzenöle sind die Quelle deiner Wahl.
             </p>
-            <p className="text-xs text-foreground/80 leading-relaxed">
-              Omega-3-zu-Omega-6-Verhältnis: Unsere Ernährung enthält meist zu viel Omega-6 und zu wenig Omega-3. Das Verhältnis sollte maximal 5 (Omega-6) : 1 (Omega-3) sein, ist aber meist höher. Omega-6 steckt in Sonnenblumen-, Maiskeim- und Sojaöl sowie in Fleisch, Wurst, Eiern und Milchprodukten. Omega-3 findest du in Lein-, Raps- und Walnussöl, Chia- und Leinsamen sowie in fettreichem Fisch. Praxistipp: Bevorzuge bewusst deine Omega-3-Quellen im Alltag.
-            </p>
+            <MakroQuellenListe
+              label="Fettquellen"
+              quellen={[
+                {
+                  icon: <Beef className="h-[13px] w-[13px] text-[#0E7C86]" strokeWidth={2} />,
+                  kategorie: 'Tierisch',
+                  liste: 'Fetter Fisch (Lachs, Makrele, Hering), Speck, Talg',
+                },
+                {
+                  icon: <Egg className="h-[13px] w-[13px] text-[#0E7C86]" strokeWidth={2} />,
+                  kategorie: 'Vegetarisch',
+                  liste: 'Butter, Käse, Eigelb, Sahne',
+                },
+                {
+                  icon: <Leaf className="h-[13px] w-[13px] text-[#0E7C86]" strokeWidth={2} />,
+                  kategorie: 'Vegan',
+                  liste: 'Olivenöl, Rapsöl, Avocado, Nüsse, Chiasamen',
+                },
+              ]}
+            />
+            <MakroTippBox
+              variant="lukas"
+              text={
+                'Wichtiger als "wie viel Fett" ist "welches Fett": Achte eher auf Omega-3 als auf Omega-6 — davon isst du ohnehin meist genug. Mit Lein-, Raps- oder Walnussöl, Chiasamen und fettem Fisch (Lachs, Makrele) machst du dir Omega-3 einfach.'
+              }
+            />
           </>
         ),
       },
@@ -97,18 +147,21 @@ const SEKTIONEN: ArbeitspunkteSektion[] = [
         titel: 'Ballaststoffe',
         inhalt: (
           <>
+            <MakroIconIntro
+              icon={<Sprout className="h-6 w-6 text-[#0E7C86]" strokeWidth={1.8} />}
+              intro="Unverdauliche, sehr lange Kohlenhydratketten — dein Darm braucht sie dringend."
+            />
+            <MakroStatBoxen kcalWert="1–2" wichtigText="Darmflora · Verdauung · Stabiler Blutzucker" />
             <p className="text-xs text-foreground/80 leading-relaxed">
-              Ballaststoffe sind unverdauliche, sehr lange Kohlenhydratketten — dein Körper wandelt sie nicht in Energie um, aber dein Darm braucht sie dringend.
+              Sie füttern deine Darmbakterien, halten die Verdauung in Schwung und verlangsamen, wie schnell andere Nährstoffe ins Blut gelangen — das hält dich länger satt und deinen Blutzucker stabiler.
             </p>
-            <div className="rounded-xl bg-muted/40 p-3 space-y-1">
-              <p className="text-xs font-semibold text-foreground">🎯 Aufgabe</p>
-              <p className="text-xs text-foreground/80 leading-relaxed">
-                Sie füttern deine Darmbakterien, halten die Verdauung in Schwung und verlangsamen, wie schnell andere Nährstoffe ins Blut gelangen — das hält dich länger satt und deinen Blutzucker stabiler.
-              </p>
-            </div>
             <p className="text-xs text-foreground/80 leading-relaxed">
-              🌾 Quellen: Vollkornprodukte, Hülsenfrüchte, Gemüse, Obst mit Schale, Nüsse und Samen.
+              Quellen: Vollkornprodukte, Hülsenfrüchte, Gemüse, Obst mit Schale, Nüsse und Samen.
             </p>
+            <MakroTippBox
+              variant="wissen"
+              text="Die meisten essen zu wenig Ballaststoffe. Faustregel: mindestens 30 g pro Tag — am einfachsten über Vollkornprodukte, Hülsenfrüchte und Gemüse mit Schale, nicht über Nahrungsergänzung."
+            />
           </>
         ),
       },
@@ -117,15 +170,18 @@ const SEKTIONEN: ArbeitspunkteSektion[] = [
         titel: 'Alkohol',
         inhalt: (
           <>
+            <MakroIconIntro
+              icon={<Wine className="h-6 w-6 text-[#0E7C86]" strokeWidth={1.8} />}
+              intro="Ein kulturell schwieriges Thema in Deutschland — aber wichtig für die Einordnung."
+            />
+            <MakroStatBoxen kcalWert="7" wichtigLabel="Fakt" wichtigText="Energie, Nervengift, keine Nährstoffe · wird zuerst abgebaut" />
             <p className="text-xs text-foreground/80 leading-relaxed">
-              Ein kulturell schwieriges Thema in Deutschland — aber wichtig für die Einordnung.
+              Alkohol ist ein Nervengift — eine unbedenkliche Menge gibt es nicht. Sobald Alkohol in deinen Körper gelangt, kümmert sich dein Körper zuerst um dessen Abbau. Gleichzeitig ist Alkohol auch eine Energiequelle: Kalorien, die währenddessen zusätzlich aufgenommen werden, werden erstmal geparkt — meist direkt als Körperfett. Wo genau, entscheidet deine DNA, nicht du.
             </p>
-            <p className="text-xs text-foreground/80 leading-relaxed">
-              1g Alkohol = 7 kcal. Alkohol ist ein Nervengift — eine unbedenkliche Menge gibt es nicht.
-            </p>
-            <p className="text-xs text-foreground/80 leading-relaxed">
-              Sobald Alkohol in deinen Körper gelangt, kümmert sich dein Körper zuerst um dessen Abbau. Gleichzeitig ist Alkohol auch eine Energiequelle: Kalorien, die währenddessen zusätzlich aufgenommen werden, werden erstmal geparkt — meist direkt als Körperfett. Wo genau, entscheidet deine DNA, nicht du.
-            </p>
+            <MakroTippBox
+              variant="lukas"
+              text="Willst du trinken und trotzdem schlank bleiben: Iss vorher etwas Sättigendes — das bremst, wie schnell der Alkohol wirkt, und meist isst du am Ende auch weniger dazu."
+            />
             <p className="text-xs text-foreground/80 leading-relaxed">Prost 🍻</p>
           </>
         ),
