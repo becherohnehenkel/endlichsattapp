@@ -1,6 +1,6 @@
 # PROJ-40: Kalorien
 
-## Status: Deployed (Refinement: Makronährstoffe visuell aufbereitet "In Progress")
+## Status: Deployed (Refinement: Makronährstoffe visuell aufbereitet "Approved")
 **Created:** 2026-09-01
 **Last Updated:** 2026-09-04
 
@@ -293,6 +293,44 @@ Keine neuen Pakete nötig — vollständig mit den bereits installierten shadcn/
 - **Security:** Pass (kein Backend, keine Nutzereingaben, minimale Angriffsfläche; ein nicht reproduzierbarer, dev-server-typischer Konsolenfehler dokumentiert, keine funktionale Auswirkung)
 - **Production Ready:** YES (kein Critical/High-Bug; der eine Low-Bug ist eine schnelle Textkorrektur)
 - **Recommendation:** Deploy — Bug-1 wurde vor dem Deploy behoben
+
+### QA Test Results (Refinement 2026-09-04): Makronährstoffe visuell aufbereitet
+
+**Tested:** 2026-09-04
+**App URL:** http://localhost:3000
+**Tester:** QA Engineer (AI)
+
+#### Acceptance Criteria Status
+
+##### Proteine, Kohlenhydrate, Fette, Ballaststoffe, Alkohol (bestehende ACs, unter neuer Struktur erneut geprüft)
+- [x] Alle 5 Punkte zeigen weiterhin kcal/g (wo zutreffend), Rolle im Körper und mindestens ein konkretes Beispiel — jetzt visuell über Icon+Intro, Stat-Boxen, Quellen und Tipp-Box statt reinem Fließtext
+- [x] Aminosäuren-Erklärung bei Proteinen unverändert vorhanden
+
+##### Makronährstoffe visuell aufbereitet (neue Refinement-ACs)
+- [x] Jeder der 5 Punkte zeigt oben Icon + kurzen Einleitungssatz sowie zwei Infoboxen ("kcal/g" + "Wichtig für", bei Alkohol "Fakt")
+- [x] Proteine zeigen 3 Listen (Tierisch/Vegetarisch/Vegan) mit je 5 mageren Beispielen
+- [x] Fette zeigen ebenfalls 3 Listen (Tierisch/Vegetarisch/Vegan) mit mehreren Beispielen
+- [x] Praktische Tipps sind hervorgehoben: "Gut zu wissen" bei Proteinen (Hülsenfrüchte-Hinweis) und Ballaststoffen (Tagesziel), "Lukas sagt" bei Kohlenhydraten (Sport-Tipp), Fetten (Omega-3) und Alkohol (Sättigungs-Tipp)
+
+#### Security Audit
+Pass — reine statische Inhaltsänderung, kein Backend-Bezug. Verifiziert: 0 `<input>`/`<textarea>`-Elemente auf der Seite (kein Eingabe-/XSS-Vektor), 0 `/api/`-Requests beim vollständigen Durchklicken aller 5 Punkte, 0 Konsolenfehler. Kein `dangerouslySetInnerHTML` im neuen Code — alle Texte sind fest im Code hinterlegt, keine Nutzer- oder Server-Dateninterpolation.
+
+#### Regressionstest
+- **Vitest (Gesamtsuite):** 464/464 grün (44 Testdateien), unverändert.
+- **E2E — `tests/PROJ-40-kalorien.spec.ts` (eigene Suite):** alle 15 Tests auf die neue Struktur umgestellt, 15/15 grün auf Chromium **und** Mobile Chrome (30/30 gesamt).
+- **E2E — `tests/PROJ-36-ernaehrung-hub.spec.ts` (Ernährung-Hub, verlinkt auf die Kalorien-Seite):** 19/19 grün.
+- Responsive geprüft bei 320px, 768px und 1440px — kein horizontales Scrollen bei keiner Breite (per `scrollWidth`/`clientWidth`-Vergleich sowie visuell per Screenshot).
+- `npm run build` und gezieltes `eslint` auf alle geänderten/neuen Dateien fehlerfrei.
+
+#### Bugs Found
+Keine.
+
+#### Summary
+- **Acceptance Criteria:** 5/5 passed (Refinement-ACs), bestehende ACs weiterhin erfüllt
+- **Bugs Found:** 0
+- **Security:** Pass
+- **Production Ready:** YES
+- **Recommendation:** Deploy. Reine Frontend-Änderung, keine DB-Migration, kein zusätzlicher Backend-Schritt nötig.
 
 ## Deployment
 - **Production URL:** https://app.mehralsabnehmen.de/ernaehrung/kalorien
