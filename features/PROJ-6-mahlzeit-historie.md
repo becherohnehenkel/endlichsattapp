@@ -1,6 +1,6 @@
 # PROJ-6: Mahlzeit-Historie
 
-## Status: Deployed (Refinement: Sortierung & Pagination "In Progress")
+## Status: Deployed (Refinement: Sortierung & Pagination "Approved")
 **Created:** 2026-06-10
 **Last Updated:** 2026-09-04
 
@@ -151,6 +151,40 @@ Reine Frontend-Änderung, kein Backend-/DB-Bezug — die API (`GET /api/mahlzeit
 Keine Critical/High Bugs gefunden.
 
 **Produktionsbereit: JA**
+
+### QA Test Results (Refinement 2026-09-04): Sortierung & Pagination
+
+**Tested:** 2026-09-04
+**App URL:** http://localhost:3000
+**Tester:** QA Engineer (AI)
+
+#### Acceptance Criteria Status
+Diese Runde hat keine formalen Angenommen/Wenn/Dann-ACs in der Spec (direkte Nutzeranfrage) — die betroffenen ursprünglichen ACs wurden im AC-Abschnitt oben direkt durchgestrichen/aktualisiert. Geprüft:
+
+- [x] Neueste Mahlzeit erscheint oben, älteste unten (umgedreht von vorher)
+- [x] Initial werden nur 5 Mahlzeiten geladen
+- [x] "Ältere Einträge laden" erscheint unten in der Liste (nicht mehr oben) und lädt in 10er-Schritten nach
+- [x] Neu geladene, ältere Einträge werden ans Ende angehängt, nicht an den Anfang gestellt
+- [x] Bestehende Funktionen (Löschen, Detail-Navigation, leerer Zustand, Fehlerfall) unverändert funktionsfähig
+
+#### Security Audit
+Pass (trivial) — reine Sortierungs-/Pagination-Änderung auf einem bereits bestehenden, authentifizierten Endpoint. Keine neuen Eingabefelder, keine neue Route, `user_id`-Filterung (IDOR-Schutz) und Auth-Check der API unverändert. `limit`/`offset`-Werte (5/10) liegen deutlich unter dem bestehenden Cap von 50 — keine neue Möglichkeit für übermäßig große Anfragen.
+
+#### Regressionstest
+- **Vitest (Gesamtsuite):** 464/464 grün (44 Testdateien) — keine neuen Unit-Tests nötig, Änderung betrifft nur Fetch-Parameter und Anzeige-Reihenfolge einer bereits über E2E abgedeckten Komponente.
+- **E2E — `tests/PROJ-6-mahlzeit-historie.spec.ts` (eigene Suite):** von 17 auf 19 Tests erweitert (1 Test umbenannt/auf neue Reihenfolge umgestellt, 1 neuer Test für die exakten Request-Parameter). 36/38 grün über 2 Wiederholungen (2 Fehlschläge = derselbe vorbestehende, unabhängige Flake im Test "Laden-Skelett erscheint..." — bereits vor diesem Refinement reproduzierbar, siehe unten).
+- **E2E — PROJ-17 (Wochenrückblick, rendert auf derselben Seite):** 26/26 grün. Ein erster Durchlauf zeigte 2 Fehlschläge unter starker Systemlast (paralleler Hintergrund-Task mit eigenem Dev-Server) — bei isolierter Wiederholung (9/9) und einem zweiten vollständigen Durchlauf ohne Nebenlast (26/26 in 19s statt 6+ Minuten) nicht reproduzierbar. Eindeutig Ressourcen-/Lastproblem der lokalen Umgebung, keine echte Regression.
+- `npm run build` fehlerfrei. `npm run lint` (ungescoped `eslint .`) zeigte kurzzeitig zusätzliche Fehler aus `.next`-Build-Artefakten eines parallel laufenden Hintergrund-Worktrees (`.claude/worktrees/.../\.next/...`) — kein Problem im eigentlichen Projektcode; gezielter Lint auf die geänderten Dateien (`mahlzeit-historie.tsx`, `PROJ-6-mahlzeit-historie.spec.ts`) war fehlerfrei. `npm test` 464/464.
+
+#### Bugs Found
+Keine neuen Bugs. Ein vorbestehender, unabhängiger Test-Flake ("Laden-Skelett erscheint während Daten geladen werden") wurde bereits während `/frontend` gefunden und als separater Task ausgelagert (nicht Teil dieses Refinements, reproduziert auch auf dem Stand vor der Änderung).
+
+#### Summary
+- **Acceptance Criteria:** 5/5 passed
+- **Bugs Found:** 0 (1 vorbestehender, unabhängiger Test-Flake bereits separat ausgelagert)
+- **Security:** Pass (trivial, keine neue Angriffsfläche)
+- **Production Ready:** YES
+- **Recommendation:** Deploy. Reine Frontend-Änderung, keine DB-Migration, kein zusätzlicher Backend-Schritt nötig.
 
 ## Deployment
 
