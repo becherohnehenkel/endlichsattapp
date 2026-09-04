@@ -1,6 +1,6 @@
 # PROJ-39: Heißhunger
 
-## Status: Deployed (Refinement: Icon-Feinschliff "Approved")
+## Status: Deployed (Refinement: Icon-Feinschliff "Deployed")
 **Created:** 2026-09-01
 **Last Updated:** 2026-09-04
 
@@ -260,4 +260,5 @@ Reine Frontend-Änderung, kein Backend-Bezug. Vorab per Artifact-Mockup abgestim
 - **Production URL:** https://app.mehralsabnehmen.de/ernaehrung/heisshunger
 - **Deployed:** 2026-09-01 (Vercel auto-deploy via Push zu `main`, commits `37a3411`..`f0c02b0`)
 - **Verified in Produktion:** Nutzer hat die Live-Seite geprüft, alles grün ("Alles auf Grün").
+- **Refinement-Deploy 2026-09-04** (Vercel auto-deploy via Push zu `main`, commits `b97c5ef`..`a829164`, Tag `v3.12.0-PROJ-39-refinement`): Icon-Feinschliff (neuer Intro-Text, Blutzucker-Kurven-Stretch-Bugfix + Eyebrow-Label, Stress-Icon, neue Zwischenüberschrift, 4 Sinn-Icon-Infoboxen) inkl. Bugfix für das anfangs abgeschnittene Blitz-Badge. Reine Frontend-Änderung, keine DB-Migration nötig. Direkt gegen die Produktions-URL per Playwright verifiziert: Badge-Clipping-Fix bestätigt (4,5px Abstand statt Überlappung), neue Inhalte sichtbar, keine neuen Console-Fehler (ein bekannter, seitenunabhängiger 404-Rest bereits aus der PROJ-37-QA-Runde als Dev-Rauschen eingestuft).
 - **Refinement-Deploy 2026-09-01** (Vercel auto-deploy via Push zu `main`, commits `3e0fb64`..`2e7aae4`, Tag `v2.8.0-ernaehrung-guides`): Teil eines gebündelten Deploys über PROJ-34/37/38/39/40/41 — Erstbesucher-Auto-Open (erster Punkt öffnet automatisch) + neue Überschrift "Plötzlich Hunger?". Nutzer hat auf Produktion visuell bestätigt ("Alles auf Grün").
