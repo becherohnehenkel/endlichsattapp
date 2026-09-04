@@ -54,7 +54,7 @@
 | PROJ-36 | Ernährung-Hub (Übersichtsseite) | P1 | Deployed | PROJ-35, PROJ-8 | [Spec](PROJ-36-ernaehrung-hub.md) |
 | PROJ-37 | So geht abnehmen (inkl. Kcal-Rechner) (Refinement: Icon-Layout-Feinschliff "Deployed") | P1 | Deployed | PROJ-36 | [Spec](PROJ-37-so-geht-abnehmen.md) |
 | PROJ-38 | Emotionales Essen (Refinement: Onboarding, Timer, Atemübung, Reiz-Ampel "Complete") | P2 | Deployed | PROJ-36 | [Spec](PROJ-38-emotionales-essen.md) |
-| PROJ-39 | Heißhunger (Refinement: Icon-Feinschliff "In Progress") | P2 | Deployed | PROJ-36, PROJ-38 | [Spec](PROJ-39-heisshunger.md) |
+| PROJ-39 | Heißhunger (Refinement: Icon-Feinschliff "Approved") | P2 | Deployed | PROJ-36, PROJ-38 | [Spec](PROJ-39-heisshunger.md) |
 | PROJ-40 | Kalorien | P2 | Deployed | PROJ-36, PROJ-37 | [Spec](PROJ-40-kalorien.md) |
 | PROJ-41 | Kalorien zählen | P2 | Deployed | PROJ-36, PROJ-37, PROJ-40 | [Spec](PROJ-41-kalorien-zaehlen.md) |
 | PROJ-42 | Analyse-Übersichtsseite | P1 | Deployed | PROJ-2, PROJ-4, PROJ-5, PROJ-6, PROJ-8, PROJ-17, PROJ-19, PROJ-35, PROJ-37 | [Spec](PROJ-42-analyse-uebersichtsseite.md) |

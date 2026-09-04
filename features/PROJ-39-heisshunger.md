@@ -1,6 +1,6 @@
 # PROJ-39: Heißhunger
 
-## Status: Deployed (Refinement: Icon-Feinschliff "In Progress")
+## Status: Deployed (Refinement: Icon-Feinschliff "Approved")
 **Created:** 2026-09-01
 **Last Updated:** 2026-09-04
 
@@ -182,7 +182,7 @@ Reine Frontend-/Darstellungs-Änderung, kein Backend-Bezug. Vorab per Artifact-M
 - Manuell per Playwright verifiziert (Desktop 1280px + Mobile 375px): alle 4 Änderungen rendern wie im approved Mockup, kein horizontales Overflow auf 375px, 2-spaltiges Icon-Grid bei "Sehen, riechen..." kollabiert korrekt auf 1 Spalte unterhalb `sm:`.
 
 ### Bugfix (2026-09-04): Stress-Icon oben abgeschnitten
-Nutzer meldete direkt nach dem Deploy dieses Refinements: Smiley "ab dem Zap oben abgeschnitten". Root Cause: Radix Accordion Content rendert mit `overflow-hidden` + `pt-0` (kein oberer Innenabstand) — der Blitz-Badge hatte einen negativen `top`-Offset (`-top-1.5`), der über den oberen Rand des Akkordeon-Panels hinausragen und dadurch abgeschnitten werden konnte. Fix: `top-0` statt `-top-1.5` in `src/components/arbeitspunkt-icons.tsx` (`StressIcon`) — horizontaler Overshoot (`-right-2`, klassischer Ecke-Badge-Look) bleibt erhalten, dort kein Clipping-Risiko. Per Playwright verifiziert (Desktop + Mobile, generöse Bounding-Box-Crops zur Sichtprüfung): Icon und Badge rendern vollständig. Neuer permanenter Regressionstest prüft, dass die Badge-Y-Position nie oberhalb der Gesichts-Icon-Y-Position liegt. `npm run build`, `npm run lint`, `npm test` (464/464) weiterhin grün, Suite 18 → 19 Tests.
+Nutzer meldete nach der lokalen Implementierung, noch vor dem Deploy: Smiley "ab dem Zap oben abgeschnitten". Root Cause: Radix Accordion Content rendert mit `overflow-hidden` + `pt-0` (kein oberer Innenabstand) — der Blitz-Badge hatte einen negativen `top`-Offset (`-top-1.5`), der über den oberen Rand des Akkordeon-Panels hinausragen und dadurch abgeschnitten werden konnte. Fix: `top-0` statt `-top-1.5` in `src/components/arbeitspunkt-icons.tsx` (`StressIcon`) — horizontaler Overshoot (`-right-2`, klassischer Ecke-Badge-Look) bleibt erhalten, dort kein Clipping-Risiko. Per Playwright verifiziert (Desktop + Mobile, generöse Bounding-Box-Crops zur Sichtprüfung): Icon und Badge rendern vollständig. Neuer permanenter Regressionstest prüft, dass die Badge-Y-Position nie oberhalb der Gesichts-Icon-Y-Position liegt. `npm run build`, `npm run lint`, `npm test` (464/464) weiterhin grün, Suite 18 → 19 Tests.
 
 ## QA Test Results
 
@@ -244,6 +244,17 @@ Keine.
 - **Security:** Pass (kein Backend, keine Nutzereingaben, minimale Angriffsfläche; ein nicht reproduzierbarer, dev-server-typischer Konsolenfehler dokumentiert, keine funktionale Auswirkung)
 - **Production Ready:** YES
 - **Recommendation:** Deploy
+
+### QA Summary (Refinement 2026-09-04): Icon-Feinschliff + Bugfix
+Reine Frontend-Änderung, kein Backend-Bezug. Vorab per Artifact-Mockup abgestimmt (2 Korrekturrunden), während der Umsetzung 1 zusätzlicher Bug gefunden und noch vor Deploy behoben (Blitz-Badge-Clipping im Accordion, siehe Implementation Notes/Decision Log).
+
+- **E2E-Suite:** von 13 auf 19 Tests erweitert, 19/19 grün (chromium + Mobile Chrome).
+- **Regression:** PROJ-36 (Ernährung-Hub) 19/19, PROJ-37 (teilt sich `arbeitspunkt-icons.tsx`) 36/36.
+- **Build/Lint/Vitest:** `npm run build`, `npm run lint`, `npm test` (464/464) fehlerfrei — einzige verbleibenden Lint-Fehler sind die bekannten, unabhängigen `sidebar.tsx`-Fehler (separater Task).
+- **Security:** Pass (trivial) — reine Darstellungsänderung, keine neue Angriffsfläche.
+- **Bugs Found:** 1 (Medium, Blitz-Badge-Clipping — gefunden und gefixt vor Deploy).
+- **Production Ready:** YES
+- **Recommendation:** Deploy.
 
 ## Deployment
 - **Production URL:** https://app.mehralsabnehmen.de/ernaehrung/heisshunger
