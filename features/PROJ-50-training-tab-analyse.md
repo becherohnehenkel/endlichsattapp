@@ -157,6 +157,18 @@ Keine neuen Pakete nötig — vollständig mit dem bereits installierten Next.js
 - Serverseitige Berechnung der 4 Kennzahlen (inkl. Freitext-Parsing von `wiederholungen`/`gewicht`, 26-Wochen-Deckelung der Serie) — vollständig in `/backend`.
 - `npm run build`, `npm run lint`, `npm test` (464/464) fehlerfrei. Ein bestehender PROJ-42-Test ("Klick auf 'Training' zeigt 'Bald verfügbar'") wurde an die neue Realität angepasst (prüft jetzt, dass der Platzhalter-Text NICHT mehr erscheint) — eigene Abdeckung der neuen Funktionalität folgt in `/qa`.
 
+## Implementation Notes (Backend)
+
+**Keine Migration nötig** — die Route liest ausschließlich die bestehende `training_sessions`-Tabelle aus PROJ-44 (RLS-Policy "Users see own training sessions" existiert bereits und deckt den Lesezugriff vollständig ab).
+
+**Gebaut:**
+- Neu: `GET /api/training/verlauf` (`src/app/api/training/verlauf/route.ts`) — Auth-Check (401 ohne Session), `limit`/`offset`-Pagination (Limit auf 50 gedeckelt, gleiches Muster wie `/api/mahlzeiten`), `.eq('user_id', user.id)` als explizite Anwendungs-seitige Filterung zusätzlich zur RLS (Defense-in-Depth, wie überall sonst in der App).
+- `parseLeadingNumber()`: extrahiert die erste Zahl aus einem Freitext-Feld (z. B. "10-12" → 10, "20kg" → 20); kein Treffer (z. B. "bis Muskelversagen", leer) → 0. `berechneVolumenKg()`: summiert Wiederholungen × Gewicht über alle Sätze/Übungen einer Trainingseinheit — defensiv geschrieben, da `uebungen` ein ungeprüfter JSONB-Blob ist.
+- `berechneKennzahlen()`: nur bei `offset=0` aufgerufen, mit einer zweiten, breiteren Abfrage (letzte 26 Wochen) als Grundlage. Berechnet alle 4 Kennzahlen serverseitig exakt nach Spec: "Einheiten (7 Tage)" zählt alle Pläne, "Durchschnittsgewicht" und "Steigerung" nur Fitnessstudio-Einheiten mit der vereinbarten Datenschwelle (≥1/7 Tage, ≥2/30 Tage), "Aktuelle Serie" über `getWeekStartIso()` (wiederverwendet aus PROJ-17) mit der vereinbarten Sonderregel für die laufende, noch nicht abgeschlossene Woche.
+- Response bündelt Liste und Kennzahlen in einer Antwort bei `offset=0` (Feld `kennzahlen` nur dort vorhanden) — genau wie in der Architektur festgelegt, kein zweiter Roundtrip.
+- Integrationstest: `src/app/api/training/verlauf/route.test.ts` — 11 Tests (401, Happy Path inkl. Kennzahlen, kein Kennzahlen-Query bei `offset>0`, `volumenKg: null` bei Nicht-Fitnessstudio-Plänen, Freitext-Parsing inkl. nicht-numerischer Werte, 500 bei DB-Fehler, Limit-Deckelung, `hasMore`, "Steigerung" bleibt `null` unter der Datenschwelle, "Aktuelle Serie" mit Lücke und mit leerer laufender Woche).
+- `npm run build`, `npm run lint`, `npm test` (475/475) fehlerfrei. Live gegen die echte DB verifiziert (QA-Testkonto, Playwright): API liefert reale Daten (18 Trainingseinheiten der letzten 7 Tage, alle "Zuhause ohne Equipment" aus früheren QA-Läufen), Kennzahlen-Kacheln zeigen korrekt "18" sowie die "nicht genug Daten"-Hinweise für Durchschnittsgewicht/Steigerung (keine Fitnessstudio-Einheiten vorhanden), "Aktuelle Serie" zeigt "1 Woche". "Ältere Einträge laden" per echtem Klick verifiziert: 5 → 18 Einträge, korrekt angehängt statt ersetzt. Auf einen echten Fitnessstudio-Testeintrag wurde bewusst verzichtet, da `training_sessions` keine DELETE-Policy hat (siehe PROJ-44) — das QA-Testkonto würde dauerhaft verschmutzt; die Volumen-/Steigerungs-/Kacheln-Logik für Fitnessstudio-Daten ist stattdessen vollständig über die 11 Vitest-Integrationstests mit kontrollierten Mock-Daten abgedeckt.
+
 ## QA Test Results
 _To be added by /qa_
 
