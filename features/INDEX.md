@@ -46,8 +46,8 @@
 | PROJ-28 | Zutatenliste-Transparenz auf Ergebnis- und Historie-Seite | P1 | Deployed | PROJ-4, PROJ-6 | [Spec](PROJ-28-zutatenliste-transparenz.md) |
 | PROJ-29 | Nährwert-Verbesserungen im Rezept-Editor (Zutatensuche + Live-Counter) | P2 | Deployed | PROJ-8, PROJ-9 | [Spec](PROJ-29-rezept-editor-naehrwerte.md) |
 | PROJ-30 | Rezept-Eigentümerschaft & Filter (offiziell vs. eigene Rezepte) | P1 | Deployed | PROJ-8 | [Spec](PROJ-30-rezept-eigentuemerschaft-filter.md) |
-| PROJ-31 | Nutzer legen eigene Rezepte an | P1 | Deployed | PROJ-30 | [Spec](PROJ-31-nutzer-eigene-rezepte.md) |
-| PROJ-32 | Rezept aus gescannter Mahlzeit anlegen ("wie gescannt" / "mit mehr Sättigung") | P1 | Deployed | PROJ-30, PROJ-31, PROJ-4, PROJ-5 | [Spec](PROJ-32-rezept-aus-mahlzeit.md) |
+| PROJ-31 | Nutzer legen eigene Rezepte an (Test-Fix: E2E-Testdaten-Cleanup bei Fehlschlag garantiert, PR #6) | P1 | Deployed | PROJ-30 | [Spec](PROJ-31-nutzer-eigene-rezepte.md) |
+| PROJ-32 | Rezept aus gescannter Mahlzeit anlegen ("wie gescannt" / "mit mehr Sättigung") (Test-Fix: E2E-Testdaten-Cleanup bei Fehlschlag garantiert, PR #6) | P1 | Deployed | PROJ-30, PROJ-31, PROJ-4, PROJ-5 | [Spec](PROJ-32-rezept-aus-mahlzeit.md) |
 | PROJ-33 | Geschmacks-Score (zweite Sektion der "Complete"-Umstrukturierung) | P1 | Deployed | PROJ-3, PROJ-4, PROJ-5, PROJ-16, PROJ-8 | [Spec](PROJ-33-geschmacks-score.md) |
 | PROJ-34 | Art of Eating (dritte Sektion der "Complete"-Umstrukturierung) (Refinement: Icon-Feinschliff "Deployed") | P1 | Deployed | PROJ-3, PROJ-4, PROJ-5, PROJ-16 | [Spec](PROJ-34-art-of-eating.md) |
 | PROJ-35 | Bottom-Navigation & Kontobereich-Neuordnung | P1 | Deployed | PROJ-2, PROJ-8, PROJ-13, PROJ-19 | [Spec](PROJ-35-bottom-navigation-kontobereich.md) |
