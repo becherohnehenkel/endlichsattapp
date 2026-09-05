@@ -87,12 +87,60 @@ Keine — alle offenen Punkte wurden im Interview geklärt.
 <!-- Added by /architecture -->
 | Decision | Rationale | Date |
 |----------|-----------|------|
+| Bestehende Tabelle "Trainingseinheiten" (aus PROJ-44) wiederverwenden, kein neues Datenbank-Schema | Die Daten existieren bereits — dieser Tab ist reine Anzeige/Auswertung vorhandener Trainingseinheiten | 2026-09-05 |
+| Eine einzelne, neue Lese-Route mit Pagination (analog `/api/mahlzeiten`) statt getrennter Endpunkte für Liste und Kennzahlen | Beim ersten Laden (Offset 0) liefert dieselbe Anfrage sowohl die ersten 5 Einträge als auch die 4 Kennzahlen — ein Roundtrip statt zwei, "Ältere Einträge laden" ruft danach nur noch weitere Listen-Einträge ab | 2026-09-05 |
+| Kennzahlen-Berechnung (7-Tage-Zähler, Durchschnittsgewicht, Steigerung, Serie) passiert serverseitig in dieser Route, nicht im Browser | Vermeidet doppelte Berechnungslogik und hält die Zahlen konsistent, unabhängig vom Gerät; das Parsen der Freitext-Werte (führende Zahl) passiert an einer einzigen Stelle | 2026-09-05 |
+| "Aktuelle Serie"-Berechnung auf die letzten 26 Wochen (~6 Monate) begrenzt | Verhindert eine unbegrenzt wachsende Datenbankabfrage für sehr alte Nutzerkonten; eine reale Serie über ein halbes Jahr hinaus ist ein in der Praxis vernachlässigbarer Fall — der Wert wird bei diesem Maximum gedeckelt angezeigt | 2026-09-05 |
+| Neue Client-Komponente `TrainingHistorie` (analog zu `MahlzeitHistorie` aus PROJ-6) ersetzt den bisherigen "Bald verfügbar"-Platzhalter im "Training"-Tab | Gleiches, bereits bewährtes Lade-/Pagination-Verhalten wie bei den Mahlzeiten — konsistente Nutzererfahrung über beide Tabs hinweg | 2026-09-05 |
+| Gast-Zugriff nutzt die bereits bestehende Login-Hinweis-Komponente, kein neuer Code | Identisches Muster zum "Mahlzeiten"-Tab in derselben `AnalyseHistorieTabs`-Komponente | 2026-09-05 |
 
 ---
 <!-- Sections below are added by subsequent skills -->
 
 ## Tech Design (Solution Architect)
-_To be added by /architecture_
+
+### A) Komponenten-Struktur (Visuell)
+
+```
+/analyse (Analyse-Übersichtsseite, PROJ-42)
+└── AnalyseHistorieTabs (bestehend)
+    └── Tab "Training" (ersetzt den bisherigen "Bald verfügbar"-Platzhalter)
+        ├── Gast (kein Login): Login-Hinweis-Karte (bestehende Komponente,
+        │     identisches Muster zum "Mahlzeiten"-Tab)
+        └── Eingeloggter Nutzer: TrainingHistorie (neu, analog zu MahlzeitHistorie)
+            ├── Analyse-Kennzahlen-Sektion (neu, oberhalb der Liste)
+            │   ├── "Trainingseinheiten der letzten 7 Tage"
+            │   ├── "Durchschnittsgewicht" (oder Hinweis bei zu wenig Daten)
+            │   ├── "Steigerung" (oder Hinweis bei zu wenig Daten)
+            │   └── "Aktuelle Serie"
+            ├── Trainingsliste (neueste zuerst, erste 5)
+            │   └── Trainingseinheit-Karte (neu, analog zu MahlzeitKarte)
+            │       ├── Datum
+            │       ├── Plan-Name (Zuhause ohne Equipment / Zuhause mit Bändern / Fitnessstudio)
+            │       └── Bewegtes Gewicht (nur bei Fitnessstudio-Einheiten)
+            ├── "Ältere Einträge laden"-Button (lädt in 10er-Schritten nach)
+            └── Leer-Zustand ("Noch keine Trainingseinheit")
+```
+
+### B) Datenmodell (in Worten)
+
+Kein neues Datenbank-Schema — es wird ausschließlich die bereits bestehende Tabelle "Trainingseinheiten" aus PROJ-44 gelesen (nie geschrieben). Jede Zeile darin ist ein abgeschlossenes Training mit: Nutzer, Plan, Zeitstempel und den eingetragenen Werten aller Übungen (Wiederholungen/Gewicht als Freitext, siehe Edge Case in der Spec).
+
+Für die Anzeige werden zwei Sichten auf dieselben Daten gebraucht:
+- **Liste:** die rohen Trainingseinheiten, Seite für Seite (5, dann 10er-Schritte), neueste zuerst.
+- **Kennzahlen:** eine serverseitig vorgerechnete Zusammenfassung (4 Zahlen) über die Trainingseinheiten der letzten ~6 Monate — der Browser bekommt nur die fertigen Zahlen, nie die Rohdaten für diese Berechnung.
+
+### C) Tech-Entscheidungen (Begründung für PM)
+
+1. **Kein neues Schema, nur Lesezugriff** — alle nötigen Daten liegen bereits aus PROJ-44 vor.
+2. **Eine gemeinsame Lese-Route für Liste und Kennzahlen** — beim ersten Laden liefert eine einzige Anfrage sowohl die ersten 5 Einträge als auch die 4 Kennzahlen; "Ältere Einträge laden" fragt danach nur noch weitere Listen-Seiten ab. Spart Anfragen gegenüber zwei getrennten Endpunkten.
+3. **Kennzahlen werden auf dem Server berechnet, nicht im Browser** — das Umgehen mit den Freitext-Werten (führende Zahl herauslesen, siehe Spec) passiert an genau einer Stelle, und alle Geräte sehen garantiert dieselbe Zahl.
+4. **"Aktuelle Serie" schaut maximal 26 Wochen zurück** — verhindert, dass die Abfrage für langjährige Nutzer unbegrenzt wächst; in der Praxis so gut wie nie relevant.
+5. **Wiederverwendung des bewährten Lade-Musters aus PROJ-6** (Mahlzeiten-Historie) für die neue Trainings-Komponente — gleiches Verhalten, das Nutzer bereits kennen.
+6. **Gast-Zugriff ohne neuen Code** — die bestehende Login-Hinweis-Karte wird einfach für den "Training"-Tab wiederverwendet.
+
+### D) Abhängigkeiten (Pakete)
+Keine neuen Pakete nötig — vollständig mit dem bereits installierten Next.js/Supabase-Stack umsetzbar.
 
 ## QA Test Results
 _To be added by /qa_
