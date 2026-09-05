@@ -65,7 +65,7 @@
 | PROJ-47 | Startseite Neu (Refinement: Gast-Hinweis & PWA-Installation "Deployed") | P1 | Deployed | PROJ-2, PROJ-19 | [Spec](PROJ-47-startseite-neu.md) |
 | PROJ-48 | Startseite: Ultimatives Ziel | P1 | Deployed | PROJ-47 | [Spec](PROJ-48-startseite-ultimatives-ziel.md) |
 | PROJ-49 | E2E-Testisolation: automatisches QA-Konto-Seeding für PROJ-11/PROJ-12 (Test-Infrastruktur, kein Feature-Spec) | P2 | Deployed | PROJ-11, PROJ-12 | — |
-| PROJ-50 | Training-Tab (Analyse-Seite) | P1 | Architected | PROJ-42, PROJ-44, PROJ-19 | [Spec](PROJ-50-training-tab-analyse.md) |
+| PROJ-50 | Training-Tab (Analyse-Seite) | P1 | In Progress | PROJ-42, PROJ-44, PROJ-19 | [Spec](PROJ-50-training-tab-analyse.md) |
 
 <!-- Add features above this line -->
 

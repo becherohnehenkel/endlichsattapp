@@ -115,10 +115,12 @@ test.describe('Sektion 3 — Historie der letzten Tage', () => {
     await expect(page.getByText('Wochenrückblick', { exact: true })).toBeVisible({ timeout: 8000 })
   })
 
-  test('AC: Klick auf "Training" zeigt "Bald verfügbar", keine Navigation, kein Fehler', async ({ page }) => {
+  test('AC: Klick auf "Training" zeigt echten Inhalt statt Platzhalter, keine Navigation, kein Fehler (PROJ-50)', async ({ page }) => {
+    // Seit PROJ-50 zeigt der "Training"-Tab die echte Trainingshistorie statt des früheren
+    // "Bald verfügbar"-Platzhalters — eigene Abdeckung in tests/PROJ-50-training-tab-analyse.spec.ts.
     await loginAs(page)
     await page.getByRole('tab', { name: 'Training' }).click()
-    await expect(page.getByText('Bald verfügbar.')).toBeVisible()
+    await expect(page.getByText('Bald verfügbar.')).not.toBeVisible()
     await expect(page).toHaveURL(/\/analyse$/)
   })
 

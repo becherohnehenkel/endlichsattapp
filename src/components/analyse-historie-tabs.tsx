@@ -1,10 +1,11 @@
 'use client'
 
-import { Dumbbell, ClipboardCheck } from 'lucide-react'
+import { ClipboardCheck, type LucideIcon } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import MahlzeitHistorie from '@/components/mahlzeit-historie'
+import TrainingHistorie from '@/components/training-historie'
 
-function BaldVerfuegbarTab({ icon: Icon, label }: { icon: typeof Dumbbell; label: string }) {
+function BaldVerfuegbarTab({ icon: Icon, label }: { icon: LucideIcon; label: string }) {
   return (
     <div className="flex flex-col items-center text-center gap-2 py-16">
       <Icon className="h-8 w-8 text-muted-foreground" />
@@ -29,7 +30,7 @@ export function AnalyseHistorieTabs() {
         <MahlzeitHistorie embedded />
       </TabsContent>
       <TabsContent value="training" className="mt-4">
-        <BaldVerfuegbarTab icon={Dumbbell} label="Trainingseinheiten" />
+        <TrainingHistorie />
       </TabsContent>
       <TabsContent value="checkin" className="mt-4">
         <BaldVerfuegbarTab icon={ClipboardCheck} label="Check-Ins" />

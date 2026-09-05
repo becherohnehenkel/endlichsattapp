@@ -142,6 +142,21 @@ Für die Anzeige werden zwei Sichten auf dieselben Daten gebraucht:
 ### D) Abhängigkeiten (Pakete)
 Keine neuen Pakete nötig — vollständig mit dem bereits installierten Next.js/Supabase-Stack umsetzbar.
 
+## Implementation Notes (Frontend)
+
+**Gebaut:**
+- Neu: `src/components/training-kennzahlen.tsx` — 2×2-Kachel-Grid für die 4 Kennzahlen, im selben Kachel-Stil wie die bestehenden "Nährwerte pro Portion"-Kacheln auf der Rezept-Detailseite (`rounded-lg border border-border bg-muted/40`). "Steigerung" färbt sich grün/rot je nach Vorzeichen, "—" plus erklärender Sub-Text bei fehlenden Daten (kein Fehler, keine irreführende Zahl).
+- Neu: `src/components/training-karte.tsx` — ein Listen-Eintrag (Icon, Plan-Titel via `findTrainingsplan()`, Datum, bei Fitnessstudio zusätzlich das gerundete bewegte Gewicht). Bewusst ohne Löschen-Button und ohne Link zu einer Detailseite (siehe Out of Scope).
+- Neu: `src/components/training-historie.tsx` — Lade-Logik 1:1 nach dem Muster von `MahlzeitHistorie` (PROJ-6) kopiert: erste 5 Einträge beim Mount, "Ältere Einträge laden" holt in 10er-Schritten nach und hängt an. Kennzahlen kommen im selben Response wie die erste Seite (Feld `kennzahlen`, nur bei `offset=0` vorhanden) und werden einmalig übernommen. Kein FAB, kein Lösch-Dialog (anders als bei Mahlzeiten — hier nicht Teil der Spec).
+- `src/components/analyse-historie-tabs.tsx`: `BaldVerfuegbarTab`-Platzhalter im "Training"-Tab durch `<TrainingHistorie />` ersetzt; `BaldVerfuegbarTab`s Icon-Prop-Typ von `typeof Dumbbell` auf das allgemeinere `LucideIcon` umgestellt, da `Dumbbell` nicht mehr importiert wird (wird jetzt innerhalb von `TrainingKarte` verwendet).
+- Gast-Zugriff brauchte keinen neuen Code: `AnalyseHistorieTabs` (und damit der komplette "Training"-Tab) wird in `src/app/analyse/page.tsx` bereits nur für eingeloggte Nutzer gerendert — Gäste sehen dort schon die bestehende Login-Hinweis-Karte für die gesamte Sektion 3, wie in der Architektur vorgesehen.
+- API-Vertrag für `/api/training/verlauf?limit=&offset=` (noch nicht gebaut, siehe unten) im Frontend bereits als TypeScript-Interface festgelegt: `{ trainings: TrainingEntry[], hasMore: boolean, kennzahlen?: TrainingKennzahlenData }`.
+
+**Bewusst nicht gebaut (braucht `/backend`):**
+- Die eigentliche API-Route `/api/training/verlauf` existiert noch nicht — die Komponente ruft sie bereits aktiv auf, bekommt aktuell 404 und zeigt dadurch korrekt ihren Fehlerzustand ("Deine Trainingseinheiten konnten nicht geladen werden."), darunter den Leer-Zustand. Verifiziert per Screenshot (Desktop + Mobile 375px) — beide Zustände greifen sauber ineinander, kein Absturz, kein horizontales Scrollen.
+- Serverseitige Berechnung der 4 Kennzahlen (inkl. Freitext-Parsing von `wiederholungen`/`gewicht`, 26-Wochen-Deckelung der Serie) — vollständig in `/backend`.
+- `npm run build`, `npm run lint`, `npm test` (464/464) fehlerfrei. Ein bestehender PROJ-42-Test ("Klick auf 'Training' zeigt 'Bald verfügbar'") wurde an die neue Realität angepasst (prüft jetzt, dass der Platzhalter-Text NICHT mehr erscheint) — eigene Abdeckung der neuen Funktionalität folgt in `/qa`.
+
 ## QA Test Results
 _To be added by /qa_
 
