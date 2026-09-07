@@ -78,7 +78,14 @@
 | Google Fonts wird mit dem Hinweis auf Self-Hosting (`next/font/google`, keine Laufzeit-Verbindung zu Google) dokumentiert | Vermeidet einen falschen Eindruck einer Drittanbieter-Datenübertragung, die technisch nicht stattfindet | 2026-09-07 |
 
 ### Technical Decisions
-<!-- Added by /architecture -->
+| Decision | Rationale | Date |
+|----------|-----------|------|
+| Neue Komponente `LegalFooter` wird im Root Layout (`src/app/layout.tsx`) gerendert, außerhalb von `NavigationShell` | Einzige Stelle, an der der Footer garantiert auf jeder Route erscheint, unabhängig von `NavigationShell`s bestehender `HIDDEN_PATHS`/`HIDDEN_PREFIXES`-Ausblendlogik | 2026-09-07 |
+| Die Seiten-Ausblendliste (`HIDDEN_PATHS`/`HIDDEN_PREFIXES`) wird aus `NavigationShell` in einen gemeinsam nutzbaren Baustein ausgelagert | `LegalFooter` muss wissen, ob auf der aktuellen Route eine Bottom-Nav sichtbar ist, um sich mobil richtig darüber zu positionieren — ohne die Liste zu duplizieren | 2026-09-07 |
+| Footer wird fixiert (angeheftet) dargestellt, nicht als klassischer Scroll-zum-Ende-Footer | Erfüllt die Anforderung "jederzeit angezeigt"; konsistent mit dem bereits bestehenden, ebenfalls fixierten Verhalten der Bottom-Navigation | 2026-09-07 |
+| Die 3 bestehenden Einzel-Footer-Links in `login-form.tsx`, `konto-view.tsx`, `gast-konto-view.tsx` werden entfernt | Werden durch den neuen globalen Footer ersetzt; Beibehaltung würde zu einem doppelten Footer auf denselben Seiten führen | 2026-09-07 |
+| Der Datenschutz-Hinweis im Registrierungsformular (`registrieren-form.tsx`) bleibt unverändert bestehen | Andere Funktion als der neue Footer — Einwilligungsformulierung im Moment der Dateneingabe, keine reine Navigationshilfe | 2026-09-07 |
+| Zusätzlicher reservierter Bottom-Abstand für Seiteninhalt wird global eingeführt (nicht nur innerhalb von `NavigationShell`) | Der Footer erscheint jetzt auch auf den bisher navigationslosen Seiten (Login/Registrieren/Upgrade/Admin/Auth) — auch dort darf er keinen Inhalt verdecken | 2026-09-07 |
 
 ## Bisheriger Stand (vor diesem Refinement, Stand Juli 2026)
 
@@ -108,7 +115,48 @@ Zur Orientierung für die Umsetzung — das ist der Stand, der durch dieses Refi
 - `gast-konto-view.tsx` — Footer unter dem CTA
 
 ## Tech Design (Solution Architect)
-_To be added by /architecture_
+
+### A) Komponenten-Struktur (Visuell)
+
+```
+Root Layout (gilt für jede Seite der App, ausnahmslos)
+├── NavigationShell (bestehend, unverändert in seiner Sichtbarkeitslogik)
+│   ├── TopNav (auf den meisten Seiten)
+│   ├── Seiteninhalt
+│   └── BottomNav (auf den meisten Seiten, nur mobil)
+│
+└── LegalFooter (NEU — sitzt bewusst AUSSERHALB von NavigationShell)
+    ├── Link "Impressum"
+    ├── Trennzeichen "·"
+    └── Link "Datenschutz"
+```
+
+**Warum außerhalb von NavigationShell?** NavigationShell blendet TopNav/BottomNav auf bestimmten Seiten komplett aus (`/login`, `/registrieren`, `/upgrade`, `/admin*`, `/auth*`). Der neue Footer soll aber laut Anforderung genau dort trotzdem erscheinen. Würde man ihn in NavigationShell einbauen, müsste man dieselbe Ausblend-Logik umgehen — sauberer ist es, den Footer eine Ebene höher, direkt im Root Layout, unabhängig zu platzieren.
+
+**Positionierung (angeheftet, nicht Teil des normalen Seitenendes):** Da die Anforderung "jederzeit angezeigt" lautet (nicht "am Ende der Seite nach dem Scrollen"), wird der Footer wie die bestehende Bottom-Nav angeheftet (fixiert) dargestellt:
+- Mobil, auf Seiten MIT sichtbarer Bottom-Nav: Footer sitzt direkt oberhalb der Bottom-Nav.
+- Mobil, auf Seiten OHNE Bottom-Nav (Login/Registrieren/Upgrade/Admin/Auth): Footer sitzt ganz unten.
+- Desktop (Bottom-Nav existiert grundsätzlich nicht): Footer sitzt immer ganz unten, mittig.
+
+Damit der Footer weiß, ob auf der aktuellen Seite eine Bottom-Nav sichtbar ist (um sich richtig darüber zu positionieren), wird die bestehende Seiten-Ausblendliste aus NavigationShell in einen kleinen, gemeinsam nutzbaren Baustein ausgelagert — beide Komponenten greifen dann auf dieselbe Liste zu, statt sie zu duplizieren.
+
+### B) Datenmodell (in Worten)
+
+Kein neues Datenmodell nötig. Dieses Refinement ist reine Text- und Layout-Arbeit:
+- Die Rechtstexte selbst (Datenschutzerklärung, Impressum) sind statischer Seiteninhalt, keine Datenbank-Daten.
+- Der Footer verwaltet keinen eigenen Zustand — er zeigt lediglich zwei feste Links.
+
+### C) Tech-Entscheidungen (Begründung für PM)
+
+1. **Footer lebt im Root Layout, nicht in NavigationShell** — einziger Weg, ihn wirklich auf jeder Seite ohne Ausnahme zu zeigen, inklusive der aktuell navigationslosen Seiten.
+2. **Angehefteter (fixierter) Footer statt klassischem Seitenende-Footer** — passend zur Nutzeranforderung "jederzeit angezeigt", konsistent mit dem bereits bestehenden Verhalten der Bottom-Navigation.
+3. **Die 3 bestehenden Einzel-Footer-Links** (in `login-form.tsx`, `konto-view.tsx`, `gast-konto-view.tsx` — jeweils identische "Impressum · Datenschutz"-Zeile) **werden entfernt**, da der neue globale Footer sie ersetzt und ein doppelter Footer auf denselben Seiten verwirrend wäre.
+4. **Der Datenschutz-Hinweis im Registrierungsformular bleibt bestehen** (der Satz "Mit der Registrierung akzeptierst du unsere Datenschutzerklärung" direkt vor dem Absenden-Button) — das ist inhaltlich eine Einwilligungs-Formulierung im Moment der Dateneingabe, keine reine Navigationshilfe, und hat daher eine andere Funktion als der neue Footer.
+5. **Zusätzlicher reservierter Abstand am Seitenende** wird eingeführt, damit der neue, angeheftete Footer niemals Seiteninhalt verdeckt — analog zum bereits bestehenden reservierten Abstand für die Bottom-Navigation, jetzt aber auf wirklich allen Seiten (auch den bisher navigationslosen).
+6. **Kein neues Paket nötig** — vollständig mit den bereits vorhandenen React/Tailwind/Next.js-Bausteinen umsetzbar.
+
+### D) Abhängigkeiten (Pakete)
+Keine neuen Pakete nötig.
 
 ## Implementation Notes (Frontend)
 _To be added by /frontend_
