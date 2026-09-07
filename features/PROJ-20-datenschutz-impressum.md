@@ -1,6 +1,6 @@
 # PROJ-20: Datenschutzerklärung & Impressum
 
-## Status: Deployed (Refinement: Rechtstext-Aktualisierung & globaler Footer "Approved")
+## Status: Deployed (Refinement: Rechtstext-Aktualisierung & globaler Footer "Deployed")
 **Created:** 2026-07-07
 **Last Updated:** 2026-09-07
 
@@ -226,4 +226,8 @@ Keine Bugs gefunden — weder Critical, High, Medium noch Low.
 **Production Ready: YES**
 
 ## Deployment
-_To be added by /deploy_
+
+**Deployed:** 2026-09-07
+**Production URL:** https://app.mehralsabnehmen.de/datenschutz und https://app.mehralsabnehmen.de/impressum; globaler Footer sichtbar auf allen Seiten der App.
+
+Deploy erfolgte über den regulären Push auf `main` (Vercel Auto-Deploy) — bereits während der QA-Commit-Phase gepusht. Live-Verifikation nach Deploy: `/datenschutz` zeigt den medizinischen Disclaimer und alle aktualisierten Abschnitte (u. a. "3. Besondere Kategorien personenbezogener Daten"); `/impressum` zeigt die aktualisierten Zitate "§ 5 DDG" und "§ 18 Abs. 2 MStV"; globaler Footer korrekt sichtbar auf Startseite (eingeloggt) mobil (375px) oberhalb der Bottom-Navigation, ohne Überlappung. Keine Konsolenfehler.
