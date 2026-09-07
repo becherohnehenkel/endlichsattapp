@@ -3,9 +3,7 @@
 import { usePathname } from 'next/navigation'
 import { TopNav } from './top-nav'
 import { BottomNav } from './bottom-nav'
-
-const HIDDEN_PATHS = ['/login', '/registrieren', '/upgrade']
-const HIDDEN_PREFIXES = ['/admin', '/auth']
+import { isBottomNavHidden } from '@/lib/nav-visibility'
 
 interface NavigationShellProps {
   children: React.ReactNode
@@ -18,18 +16,18 @@ interface NavigationShellProps {
 export function NavigationShell({ children }: NavigationShellProps) {
   const pathname = usePathname()
 
-  const shouldHideNav =
-    HIDDEN_PATHS.includes(pathname) ||
-    HIDDEN_PREFIXES.some((prefix) => pathname.startsWith(prefix))
+  const shouldHideNav = isBottomNavHidden(pathname)
 
+  // pb-7/md:pb-7 reservieren jeweils Platz für den global gerenderten LegalFooter
+  // (PROJ-20-Refinement), der außerhalb dieser Komponente in src/app/layout.tsx sitzt.
   if (shouldHideNav) {
-    return <>{children}</>
+    return <div className="pb-7">{children}</div>
   }
 
   return (
     <>
       <TopNav />
-      <div className="md:pt-14 pb-20 md:pb-0">
+      <div className="md:pt-14 pb-24 md:pb-7">
         {children}
       </div>
       <BottomNav />

@@ -159,7 +159,21 @@ Kein neues Datenmodell nötig. Dieses Refinement ist reine Text- und Layout-Arbe
 Keine neuen Pakete nötig.
 
 ## Implementation Notes (Frontend)
-_To be added by /frontend_
+
+**Gebaut:**
+- Neu: `src/lib/nav-visibility.ts` — exportiert `isBottomNavHidden(pathname)`, die bisher inline in `NavigationShell` liegende `HIDDEN_PATHS`/`HIDDEN_PREFIXES`-Liste ausgelagert, damit sowohl `NavigationShell` als auch der neue Footer dieselbe Quelle nutzen.
+- Neu: `src/components/legal-footer.tsx` — `LegalFooter`-Komponente, angeheftet (`fixed`), zeigt "Impressum · Datenschutz". Positioniert sich mobil bei `bottom-16` (direkt über der Bottom-Nav), wenn `isBottomNavHidden(pathname)` false ist, sonst bei `bottom-0`; auf Desktop immer `bottom-0`.
+- `src/app/layout.tsx`: `<LegalFooter />` als Geschwister-Element nach `<NavigationShell>` ergänzt — rendert dadurch unabhängig von NavigationShells Sichtbarkeitslogik auf wirklich jeder Route.
+- `src/components/navigation-shell.tsx`: nutzt jetzt `isBottomNavHidden()` aus der neuen Lib statt eigener Konstanten; reservierter Bottom-Abstand für Seiteninhalt erhöht, um Platz für den neuen Footer zu schaffen — `pb-20 md:pb-0` → `pb-24 md:pb-7` (Seiten mit Bottom-Nav) bzw. neu `pb-7` für den bisher padding-losen Zweig (Seiten ohne Bottom-Nav wie Login/Registrieren/Upgrade/Admin/Auth).
+- Die 3 identischen Einzel-Footer-Links entfernt aus `login-form.tsx`, `konto-view.tsx`, `gast-konto-view.tsx` (jeweils ersatzlos, kein Layout-Lücke sichtbar dank `space-y`-Container).
+- `src/app/datenschutz/page.tsx` vollständig überarbeitet: neue Abschnitte für Eigene Rezepte, Trainingseinheiten, Gewichts-/Ernährungsziel-Daten (Kalorien-Rechner, Art. 9), Wochen-Check-In (Art. 9), Fehler-Feedback, Einladungscodes; neuer Abschnitt 3 "Besondere Kategorien personenbezogener Daten"; Open Food Facts + Google-Fonts-Self-Hosting-Hinweis in Abschnitt 4 ergänzt; neues Widerrufsrecht (Art. 7 Abs. 3) in Abschnitt 7; medizinischer Disclaimer im Intro; Datum auf September 2026 aktualisiert.
+- `src/app/impressum/page.tsx`: Zitate aktualisiert — `§ 5 TMG` → `§ 5 DDG`, `§ 55 Abs. 2 RStV` → `§ 18 Abs. 2 MStV`. Alle übrigen Angaben (Anbieter, Kontakt, USt-IdNr, EU-Streitschlichtung) unverändert.
+- `npm run build`, gezieltes `eslint` auf alle geänderten Dateien, `npm test` (490/490) fehlerfrei. Ein `react/no-unescaped-entities`-Lint-Fehler (Anführungszeichen um "Inter") behoben durch `&bdquo;…&ldquo;`-Entities, konsistent mit bereits bestehender Konvention im Projekt (z. B. `admin-delete-button.tsx`).
+- Live-Verifikation im Dev-Server (Playwright/Browser-Tool): Footer erscheint korrekt auf Startseite, `/login` (Bottom-Nav ausgeblendet), `/admin` (Ladezustand), `/datenschutz`, `/impressum` — jeweils ohne Überlappung mit Bottom-Nav (mobil 375px) oder Seiteninhalt, kein horizontales Scrollen, keine Konsolenfehler. Footer-Links funktional getestet (Klick von `/impressum` → `/datenschutz`). Beide Rechtstext-Seiten inhaltlich vollständig gegen die Acceptance Criteria geprüft (Textinhalt per `get_page_text` verifiziert).
+
+**Bewusst nicht gebaut (kein Backend nötig):**
+- Diese Refinement ist reine Text-/Layout-Arbeit ohne Datenbankzugriff — kein `/backend`-Durchlauf nötig, weiter direkt mit `/qa`.
+- Die Einwilligungs-Checkbox-Mechanik (Consent-UI, Speicherung, Sperr-Logik) ist bewusst nicht Teil dieser Implementierung — vollständig PROJ-52 vorbehalten (siehe Out of Scope in der Spec).
 
 ## QA Test Results
 _To be added by /qa_

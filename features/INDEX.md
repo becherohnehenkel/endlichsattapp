@@ -35,7 +35,7 @@
 | PROJ-17 | Wöchentlicher Sättigungs-Recap | P2 | Deployed | PROJ-4, PROJ-5, PROJ-6 | [Spec](PROJ-17-woechentlicher-saettigungs-recap.md) |
 | PROJ-18 | Token-Optimierung Foto-Analyse | P1 | Deployed | PROJ-3, PROJ-4 | [Spec](PROJ-18-token-optimierung-foto-analyse.md) |
 | PROJ-19 | Gast-Modus (Anonyme Nutzung ohne Account) | P1 | Deployed | PROJ-1, PROJ-2, PROJ-10, PROJ-11 | [Spec](PROJ-19-gast-modus.md) |
-| PROJ-20 | Datenschutzerklärung & Impressum (Refinement: Rechtstext-Aktualisierung & globaler Footer "Architected") | P1 | Deployed | PROJ-2, PROJ-19 | [Spec](PROJ-20-datenschutz-impressum.md) |
+| PROJ-20 | Datenschutzerklärung & Impressum (Refinement: Rechtstext-Aktualisierung & globaler Footer "In Progress") | P1 | Deployed | PROJ-2, PROJ-19 | [Spec](PROJ-20-datenschutz-impressum.md) |
 | PROJ-21 | Foto-Qualität in der App-Anzeige | P1 | Deployed | PROJ-3, PROJ-18 | [Spec](PROJ-21-foto-qualitaet-anzeige.md) |
 | PROJ-22 | App-Performance & Perceived Speed | P1 | Deployed | PROJ-1–PROJ-21 | [Spec](PROJ-22-app-performance.md) |
 | PROJ-23 | Prompt Caching für Analyse-Routen | P2 | Planned | PROJ-4, PROJ-5 | [Spec](PROJ-23-prompt-caching.md) |

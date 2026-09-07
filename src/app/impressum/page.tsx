@@ -19,7 +19,7 @@ export default function ImpressumPage() {
 
         <section className="space-y-1">
           <h1 className="text-xl font-semibold">Impressum</h1>
-          <p className="text-muted-foreground text-xs">Angaben gemäß § 5 TMG</p>
+          <p className="text-muted-foreground text-xs">Angaben gemäß § 5 DDG</p>
         </section>
 
         <section className="space-y-1">
@@ -51,7 +51,7 @@ export default function ImpressumPage() {
         </section>
 
         <section className="space-y-1">
-          <h2 className="font-semibold">Verantwortlich für den Inhalt (§ 55 Abs. 2 RStV)</h2>
+          <h2 className="font-semibold">Verantwortlich für den Inhalt (§ 18 Abs. 2 MStV)</h2>
           <p>Lukas Beck</p>
           <p>Schulterblatt 122</p>
           <p>20357 Hamburg</p>

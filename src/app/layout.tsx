@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { NavigationShell } from "@/components/navigation-shell";
+import { LegalFooter } from "@/components/legal-footer";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -40,6 +41,7 @@ export default function RootLayout({
         <NavigationShell>
           {children}
         </NavigationShell>
+        <LegalFooter />
       </body>
     </html>
   );
