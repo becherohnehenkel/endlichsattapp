@@ -1,8 +1,10 @@
 # PROJ-44: Trainingspläne (Detailseiten + Gewicht-Logging)
 
-## Status: Deployed
+## Status: Deployed (Refinement: Numerische Felder beim Fitnessstudio-Plan "Planned")
 **Created:** 2026-09-02
-**Last Updated:** 2026-09-02
+**Last Updated:** 2026-09-07
+
+**Refinement (2026-09-07, Numerische Felder beim Fitnessstudio-Plan):** Bei der Umsetzung von PROJ-50 (Training-Kennzahlen auf der Analyse-Seite) hat sich gezeigt, dass die bisherigen Freitext-Felder für Wiederholungen/Gewicht eine zuverlässige Zahlen-Analyse erschweren (siehe PROJ-50 Decision Log, Freitext-Parsing als Übergangslösung). Nur Plan 3 (Fitnessstudio) wird auf echte numerische Eingabefelder umgestellt — Wiederholungen als ganze Zahl, Gewicht mit Nachkommastellen in 0,5er-Schritten (reale Hantelscheiben-Sprünge). Plan 1 bleibt unverändert (kein Gewichtsfeld). Plan 2 (Widerstandsbänder) bleibt bewusst Freitext, bekommt aber ein passenderes Label: "Gewicht" → "Widerstand", Platzhalter "z. B. 20 kg" → "z. B. Bandfarbe" (ein kg-Wert ergibt bei Bändern keinen Sinn).
 
 ## Dependencies
 - PROJ-43 (Training-Übersicht) — die 3 Plan-Karten verlinken auf die hier gebauten Detailseiten
@@ -21,7 +23,7 @@
 - Anzeige der Trainings-Historie auf der Analyse-Übersicht (PROJ-42 "Trainingseinheiten"-Tab) — diese Spec liefert nur die Speicherung, die Anzeige dort folgt als eigenes Refinement.
 - Eigene/individuelle Trainingspläne erstellen — es gibt nur die 3 festen Pläne aus PROJ-43.
 - Zielgewicht-Empfehlungen pro Übung — der Nutzer trägt frei ein, was er tatsächlich genutzt hat, keine Vorschläge.
-- Validierung/Plausibilitätsprüfung der eingetragenen Werte — reine Freitextfelder, keine Bereichsprüfung (z. B. wird "200kg" bei Bizeps Curls nicht verhindert).
+- ~~Validierung/Plausibilitätsprüfung der eingetragenen Werte — reine Freitextfelder, keine Bereichsprüfung (z. B. wird "200kg" bei Bizeps Curls nicht verhindert).~~ → **Refinement 2026-09-07:** gilt weiterhin für Plan 1/2 sowie die Pause bei allen Plänen (weiterhin Freitext ohne Bereichsprüfung). Bei Plan 3 (Fitnessstudio) erzwingen Wiederholungen/Gewicht jetzt einen gültigen Zahlenwert — aber weiterhin keine inhaltliche Plausibilitätsprüfung (z. B. wird "200 kg" bei Bizeps Curls weiterhin nicht verhindert, nur dass es überhaupt eine Zahl ist).
 - Bearbeiten oder Löschen vergangener, bereits gespeicherter Trainingseinheiten — nur Anlegen neuer Einträge.
 - Video- oder Bildanleitungen zu den Übungen — reiner Text, konsistent mit PROJ-43.
 - Timer/Stoppuhr für die Pausenzeiten — reine Textanzeige der Pausenvorgabe, kein aktiver Countdown.
@@ -38,11 +40,18 @@
 ### Übungskarten
 - [ ] Angenommen eine Übungskarte wird angezeigt, wenn sie lädt, dann zeigt sie den Übungsnamen und eine eingeklappte Ausführungs-Erklärung, die sich per Klick aufklappen lässt
 - [ ] Angenommen eine Übungskarte wird angezeigt, wenn die Felder geladen werden, dann zeigt sie eine Zeile pro Satz (3 Zeilen bei allen 3 Plänen), jede Zeile mit Wiederholungen vorausgefüllt aus dem Plan-Schema (12 bei Plan 1 & 2, 10 bei Plan 3), sowie ein gemeinsames Pause-Feld mit "60 Sek."
-- [ ] Angenommen Plan 2 oder Plan 3 wird angezeigt, wenn eine Übungskarte lädt, dann zeigt jede Satz-Zeile zusätzlich ein leeres Freitextfeld "Gewicht"
+- [x] ~~Angenommen Plan 2 oder Plan 3 wird angezeigt, wenn eine Übungskarte lädt, dann zeigt jede Satz-Zeile zusätzlich ein leeres Freitextfeld "Gewicht"~~ → **Refinement 2026-09-07:** Plan 2 zeigt weiterhin ein Freitextfeld, jetzt beschriftet "Widerstand" (Platzhalter "z. B. Bandfarbe"). Plan 3 zeigt ein numerisches Gewicht-Feld — siehe neue ACs unten.
 - [ ] Angenommen Plan 1 wird angezeigt, wenn eine Übungskarte lädt, dann zeigen die Satz-Zeilen KEIN Gewicht-Feld
 
 ### Felder anpassen
-- [ ] Angenommen ein Nutzer möchte von der Vorgabe abweichen, wenn er ein Sätze-/Wiederholungs-/Pause-/Gewicht-Feld bearbeitet, dann wird die Eingabe direkt im Feld übernommen (Freitext, keine Formatvorgabe)
+- [x] ~~Angenommen ein Nutzer möchte von der Vorgabe abweichen, wenn er ein Sätze-/Wiederholungs-/Pause-/Gewicht-Feld bearbeitet, dann wird die Eingabe direkt im Feld übernommen (Freitext, keine Formatvorgabe)~~ → **Refinement 2026-09-07:** gilt weiterhin für Pause (alle Pläne), Wiederholungen bei Plan 1 & 2, und Widerstand bei Plan 2. Bei Plan 3 sind Wiederholungen und Gewicht jetzt numerisch — siehe neue ACs unten.
+
+### Numerische Felder beim Fitnessstudio-Plan (Refinement 2026-09-07)
+- [ ] Angenommen Plan 3 (Fitnessstudio) wird angezeigt, wenn eine Satz-Zeile lädt, dann ist das Wiederholungen-Feld ein numerisches Eingabefeld, das nur ganze Zahlen akzeptiert
+- [ ] Angenommen Plan 3 wird angezeigt, wenn eine Satz-Zeile lädt, dann ist das Gewicht-Feld ein numerisches Eingabefeld, das Nachkommastellen in 0,5er-Schritten akzeptiert
+- [ ] Angenommen ein Nutzer versucht, bei Plan 3 einen nicht-numerischen Wert einzutragen, dann verhindert das Eingabefeld dies (native Zahlen-Eingabe, kein Freitext möglich)
+- [ ] Angenommen "Training abschließen" wird mit Werten außerhalb des erlaubten Formats aufgerufen (z. B. durch einen direkten API-Aufruf ohne UI), dann lehnt der Server die Anfrage mit einem Validierungsfehler ab
+- [ ] Angenommen Plan 2 (Widerstandsbänder) wird angezeigt, wenn eine Satz-Zeile lädt, dann heißt das Feld "Widerstand" mit Platzhalter "z. B. Bandfarbe" statt "Gewicht"/"z. B. 20 kg"
 
 ### Speichern (eingeloggte Nutzer)
 - [ ] Angenommen ein eingeloggter, nicht-anonymer Nutzer hat die Felder ausgefüllt (oder auf den Vorgaben belassen), wenn er auf "Training abschließen" klickt, dann werden alle Übungswerte dieser Seite als ein neuer, datierter Verlaufs-Eintrag gespeichert
@@ -85,7 +94,7 @@
 ### Plan 2 — Zu Hause mit Widerstandsbändern
 **Intro:** "Trainiere zu Hause mit einem einfachen Widerstandsband — mehr Spannung als bei reinem Bodyweight, ohne großes Equipment."
 **Warm-Up-Hinweis:** "5–10 Minuten: Hampelmann, Highknees oder eine Runde um den Block gehen."
-**Schema (Startwert aller Übungen):** 3 Sätze × 12 Wiederholungen, 60 Sek. Pause. Zusätzliches Freitextfeld "Gewicht" pro Satz-Zeile.
+**Schema (Startwert aller Übungen):** 3 Sätze × 12 Wiederholungen, 60 Sek. Pause. Zusätzliches Freitextfeld pro Satz-Zeile — **Refinement 2026-09-07:** Label "Widerstand" statt "Gewicht", Platzhalter "z. B. Bandfarbe" statt "z. B. 20 kg".
 
 | # | Übung | Ausführungs-Erklärung |
 |---|-------|------------------------|
@@ -101,7 +110,7 @@
 ### Plan 3 — Fitnessstudio
 **Intro:** "Der klassische Fitnessstudio-Plan mit Lang- und Kurzhanteln sowie Kabelzug."
 **Warm-Up-Hinweis:** "5–10 Minuten am Rad-/Ruderergometer, Fahrrad oder Laufband."
-**Schema (Startwert aller Übungen):** 3 Sätze × 10 Wiederholungen, 60 Sek. Pause. Zusätzliches Freitextfeld "Gewicht" pro Satz-Zeile.
+**Schema (Startwert aller Übungen):** 3 Sätze × 10 Wiederholungen, 60 Sek. Pause. Zusätzliches Gewicht-Feld pro Satz-Zeile — **Refinement 2026-09-07:** jetzt numerisch statt Freitext (Wiederholungen: ganze Zahl; Gewicht: Nachkommastellen in 0,5er-Schritten).
 
 | # | Übung | Ausführungs-Erklärung |
 |---|-------|------------------------|
@@ -114,8 +123,9 @@
 | 7 | Bizeps Curls am Kabelzug | Griff am unteren Kabelzug fassen, Ellbogen bleiben am Körper. Unterarme nach oben beugen, dann kontrolliert wieder strecken. |
 
 ## Open Questions
-- [ ] Exaktes Datenmodell (z. B. eine Zeile pro Übung vs. ein Datensatz pro Trainingseinheit mit den Übungswerten gebündelt) — wird bei `/architecture` entschieden
-- [ ] Wie die gespeicherten Trainingseinheiten später im "Trainingseinheiten"-Tab der Analyse-Übersicht (PROJ-42) dargestellt werden — eigenes, späteres Refinement, nicht Teil dieser Spec
+- [x] Exaktes Datenmodell (z. B. eine Zeile pro Übung vs. ein Datensatz pro Trainingseinheit mit den Übungswerten gebündelt) — wird bei `/architecture` entschieden → Ein Datensatz pro Trainingseinheit, Übungswerte als JSONB-Blob gebündelt (siehe Technical Decisions unten), entschieden bei `/architecture` (2026-09-02)
+- [x] Wie die gespeicherten Trainingseinheiten später im "Trainingseinheiten"-Tab der Analyse-Übersicht (PROJ-42) dargestellt werden — eigenes, späteres Refinement, nicht Teil dieser Spec → Umgesetzt in PROJ-50 (Training-Tab, Analyse-Seite), deployed 2026-09-07
+- [ ] Sollen bestehende, bereits gespeicherte Fitnessstudio-Einheiten mit alten Freitext-Werten (z. B. "10-12") nachträglich bereinigt werden, oder bleiben sie unverändert als historische Freitext-Daten stehen? — wird bei `/architecture` entschieden
 
 ## Decision Log
 
@@ -131,6 +141,9 @@
 | Übungs-Ausführungs-Erklärungen von Claude entworfen (generische, weit verbreitete Form-Hinweise, keine Trainer-Zertifizierung), vom Nutzer vor Freigabe geprüft und bestätigt | Sicherheitsrelevanter Content — Nutzer wollte selbst prüfen statt blind zu übernehmen | 2026-09-02 |
 | Bewusste Ausnahme vom PRD-Non-Goal "Kein Sport-/Workout-Tracking": echtes, dauerhaftes Logging für eingeloggte Nutzer, zustandslos für Gäste | Bereits in PROJ-43 als Kontext-Entscheidung festgehalten — Nutzerwunsch, verbunden mit dem "Trainingseinheiten"-Tab aus PROJ-42 | 2026-09-02 |
 | **Refinement 2026-09-02 (vor `/backend`):** Statt eines einzelnen "Sätze"-Zählfelds zeigt jede Übungskarte eine Zeile pro Satz (3 Zeilen), jede mit eigenem Wiederholungen- (und bei Plan 2/3 Gewicht-)Feld; Pause bleibt ein gemeinsames Feld. Das Feld-Label "Gewicht/Widerstand" wurde zu "Gewicht" gekürzt | Nutzerwunsch: realistischeres Logging, da sich Wiederholungen/Gewicht zwischen den Sätzen einer Übung typischerweise unterscheiden (Ermüdung); kürzeres Label ist eindeutig genug und passt besser in die schmalen Felder auf Mobile | 2026-09-02 |
+| **Refinement 2026-09-07:** Numerische Wiederholungen-/Gewicht-Felder nur bei Plan 3 (Fitnessstudio), Plan 1 & 2 bleiben unverändert | Ursprünglicher Nutzerhinweis bezog sich explizit aufs "Gymtraining"; PROJ-50s Kennzahlen-Berechnung nutzt ohnehin ausschließlich Fitnessstudio-Daten — Plan 2 (Bänder) hat keine echten kg-Werte, eine Umstellung dort brächte keinen Nutzen | 2026-09-07 |
+| **Refinement 2026-09-07:** Gewicht bei Plan 3 erlaubt Nachkommastellen in 0,5er-Schritten, Wiederholungen bleibt ganzzahlig | Reale Hantelscheiben-Sprünge sind oft 1,25 kg pro Seite (= 2,5 kg gesamt) bzw. 0,5-kg-Schritte bei kleineren Gewichten — eine reine Ganzzahl-Vorgabe hätte gängige, reale Trainingsgewichte wie "62,5 kg" verhindert | 2026-09-07 |
+| **Refinement 2026-09-07:** Plan 2 (Widerstandsbänder) bleibt Freitext, Label wechselt von "Gewicht" zu "Widerstand", Platzhalter von "z. B. 20 kg" zu "z. B. Bandfarbe" | Ein kg-Wert ergibt bei einem Widerstandsband keinen fachlich sinnvollen Sinn — das alte Label/Placeholder suggerierte fälschlich eine Gewichtsangabe | 2026-09-07 |
 
 ### Technical Decisions
 <!-- Added by /architecture -->
