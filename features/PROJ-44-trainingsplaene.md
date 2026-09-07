@@ -1,6 +1,6 @@
 # PROJ-44: Trainingspläne (Detailseiten + Gewicht-Logging)
 
-## Status: Deployed (Refinement: Numerische Felder beim Fitnessstudio-Plan "Planned")
+## Status: Deployed (Refinement: Numerische Felder beim Fitnessstudio-Plan "Architected")
 **Created:** 2026-09-02
 **Last Updated:** 2026-09-07
 
@@ -125,7 +125,7 @@
 ## Open Questions
 - [x] Exaktes Datenmodell (z. B. eine Zeile pro Übung vs. ein Datensatz pro Trainingseinheit mit den Übungswerten gebündelt) — wird bei `/architecture` entschieden → Ein Datensatz pro Trainingseinheit, Übungswerte als JSONB-Blob gebündelt (siehe Technical Decisions unten), entschieden bei `/architecture` (2026-09-02)
 - [x] Wie die gespeicherten Trainingseinheiten später im "Trainingseinheiten"-Tab der Analyse-Übersicht (PROJ-42) dargestellt werden — eigenes, späteres Refinement, nicht Teil dieser Spec → Umgesetzt in PROJ-50 (Training-Tab, Analyse-Seite), deployed 2026-09-07
-- [ ] Sollen bestehende, bereits gespeicherte Fitnessstudio-Einheiten mit alten Freitext-Werten (z. B. "10-12") nachträglich bereinigt werden, oder bleiben sie unverändert als historische Freitext-Daten stehen? — wird bei `/architecture` entschieden
+- [x] Sollen bestehende, bereits gespeicherte Fitnessstudio-Einheiten mit alten Freitext-Werten (z. B. "10-12") nachträglich bereinigt werden, oder bleiben sie unverändert als historische Freitext-Daten stehen? → Keine Migration, bleiben unverändert stehen (entschieden bei `/architecture`, 2026-09-07 — siehe Technical Decisions)
 
 ## Decision Log
 
@@ -155,6 +155,9 @@
 | Übungstexte und Plan-Schema (Sätze/Wdh/Pause-Startwerte) bleiben statischer Code-Content, nicht in der Datenbank | Ändern sich nicht pro Nutzer, gleiches Muster wie bei den Ernährung-Guides und PROJ-43 | 2026-09-02 |
 | Neuer gemeinsamer `TrainingSubHeader` für die Breadcrumb-Navigation | Analog zu den bestehenden `AnalyseSubHeader`/`ErnaehrungSubHeader`, konsistentes Navigationsmuster | 2026-09-02 |
 | Keine neuen npm-Pakete | Alles läuft über bereits installierte shadcn/ui-Komponenten und bestehende Projekt-Muster | 2026-09-02 |
+| **Refinement 2026-09-07:** Validierung auf zwei Ebenen — native HTML5-Zahlen-Eingabe im Browser + serverseitige, plan-abhängige Zod-Prüfung nur für Plan 3 | Browser-Validierung allein reicht laut Projekt-Sicherheitsregel nicht (umgehbar via direktem API-Aufruf); Plan 1/2 bleiben bewusst unvalidierter Freitext | 2026-09-07 |
+| **Refinement 2026-09-07:** Keine Datenbank-Migration, keine rückwirkende Bereinigung alter Fitnessstudio-Freitext-Werte | Trainingseinheiten sind laut Ursprungs-Entscheidung unveränderlich (kein Edit/Delete); PROJ-50s Kennzahlen-Berechnung liest alte Text-Werte bereits robust (führende Zahl) — löst die offene Frage aus der Spec | 2026-09-07 |
+| **Refinement 2026-09-07:** `parseLeadingNumber()` in PROJ-50s `/api/training/verlauf`-Route muss um den Fall "Wert ist bereits eine Zahl" ergänzt werden (aktuell wird alles außer Strings als 0 behandelt) | Ohne diese Anpassung würden neu gespeicherte, echte Zahlen-Werte fälschlich als 0 in die Kennzahlen einfließen — vor dem Fitnessstudio-Feld-Umbau zwingend mitzuziehen, sonst zeigt die Analyse-Seite falsche Werte | 2026-09-07 |
 
 ---
 <!-- Sections below are added by subsequent skills -->
@@ -198,6 +201,43 @@ Beim Öffnen einer Plan-Seite wird für eingeloggte Nutzer der neueste Eintrag f
 
 ### D) Abhängigkeiten (Pakete)
 Keine neuen Pakete.
+
+## Tech Design — Refinement: Numerische Felder beim Fitnessstudio-Plan (2026-09-07)
+
+### A) Komponenten-Struktur (Visuell)
+
+```
+Übungskarte (bestehend, pro Übung)
+├── Pause-Feld (unverändert, Freitext, alle Pläne)
+└── Satz-Zeilen (3 pro Übung)
+    ├── Wiederholungen-Feld
+    │     ├── Plan 1 & 2: Freitext (unverändert)
+    │     └── Plan 3: Zahlen-Feld, nur ganze Zahlen
+    └── Zusatzfeld
+          ├── Plan 1: kein Feld (unverändert)
+          ├── Plan 2: Freitext, Label "Widerstand", Platzhalter "z. B. Bandfarbe"
+          └── Plan 3: Zahlen-Feld, Label "Gewicht", halbe Schritte erlaubt (z. B. 62,5)
+```
+
+Rein visuell ändert sich wenig — dieselbe Zeilen-/Spalten-Struktur bleibt, nur der Feld-Typ und die Beschriftung unterscheiden sich jetzt zusätzlich zwischen Plan 2 und Plan 3 (bisher galt für beide dieselbe Regel).
+
+### B) Datenmodell (in Worten)
+
+Kein neues Datenbankschema und keine Migration. Die bestehende Tabelle "Trainingseinheiten" speichert die Übungswerte weiterhin im selben Feld wie bisher — bei Plan 3 künftig als echte Zahl statt als Text, bei Plan 1/2 unverändert als Text.
+
+**Bereits gespeicherte, alte Fitnessstudio-Einträge** (z. B. "10-12" als Text) bleiben unverändert in der Datenbank stehen — keine rückwirkende Bereinigung. Grund: Trainingseinheiten sind laut Ursprungs-Spec bewusst unveränderlich (kein Bearbeiten/Löschen vergangener Einträge), und die Analyse-Kennzahlen (PROJ-50) lesen solche alten Text-Werte ohnehin bereits robust (sie ziehen sich die erste enthaltene Zahl heraus). Damit ist die offene Frage aus der Spec entschieden: **keine Migration, alte Einträge bleiben wie sie sind.**
+
+Die Plan-Konfiguration (bereits als fester Code-Inhalt vorhanden, nicht in der Datenbank) bekommt zwei zusätzliche Angaben pro Plan: welchen Feld-Typ Wiederholungen und das Zusatzfeld jeweils haben sollen, plus den passenden Anzeige-Text (Label/Platzhalter) für das Zusatzfeld.
+
+### C) Tech-Entscheidungen (Begründung für PM)
+
+1. **Validierung auf zwei Ebenen** — im Browser (verhindert ungültige Zeichen sofort beim Tippen, gute Nutzererfahrung) UND zusätzlich auf dem Server (Pflicht laut Projekt-Sicherheitsregeln, da sich eine reine Browser-Prüfung umgehen lässt, z. B. durch einen direkten Aufruf der Speicher-Funktion ohne die App zu benutzen). Nur beim Fitnessstudio-Plan wird serverseitig auf eine echte Zahl geprüft — bei den anderen beiden Plänen bleibt es wie bisher unvalidierter Freitext.
+2. **Keine Datenbank-Änderung nötig** — die Umstellung ist rein eine Frage, WELCHE Werte künftig gespeichert werden (Zahl statt Text), nicht WO oder WIE.
+3. **Bestehende Analyse-Logik (PROJ-50) muss um einen Fall ergänzt werden**: sie erwartet aktuell ausschließlich Text-Werte und würde neue, echte Zahlen-Werte fälschlich als "0" behandeln. Das muss beim Umsetzen mitgezogen werden, sonst zeigt die Analyse-Seite nach diesem Refinement falsche (zu niedrige) Werte für neu gespeicherte Fitnessstudio-Einheiten.
+4. **Keine rückwirkende Datenbereinigung** — konsistent mit der bestehenden Regel, dass Trainingseinheiten nach dem Speichern unveränderlich sind.
+
+### D) Abhängigkeiten (Pakete)
+Keine neuen Pakete — native HTML5-Zahlen-Eingabefelder und die bereits verwendete Zod-Validierungs-Bibliothek reichen aus.
 
 ## Implementation Notes (Frontend)
 
