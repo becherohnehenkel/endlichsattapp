@@ -1,6 +1,6 @@
 # PROJ-44: Trainingspläne (Detailseiten + Gewicht-Logging)
 
-## Status: Deployed (Refinement: Numerische Felder beim Fitnessstudio-Plan "Approved")
+## Status: Deployed (Refinement: Numerische Felder beim Fitnessstudio-Plan "Deployed")
 **Created:** 2026-09-02
 **Last Updated:** 2026-09-07
 
@@ -433,3 +433,4 @@ Keine neuen Bugs in dieser Refinement-Runde.
 - **Deployed:** 2026-09-02 (Vercel auto-deploy via Push zu `main`, commits `16a28f1`..`930dac0`)
 - **Verified in Produktion:** Nutzer hat die Live-Seite geprüft, alles grün ("Alles auf Grün").
 - **Umfang dieses Deploys:** vollständige PROJ-44-Implementierung — 3 Trainingsplan-Detailseiten unter `/training/[plan]` mit Übungskarten (einklappbare Ausführungs-Erklärung, editierbare Satz-Zeilen für Wiederholungen + Gewicht bei Plan 2/3, gemeinsames Pause-Feld), neue Tabelle `training_sessions` + `POST /api/training/[plan]` zum Speichern, Vorausfüllung mit dem zuletzt gespeicherten Stand für eingeloggte Nutzer, zustandslose Nutzung für Gäste. `AnalyseLoginHinweis` in `LoginHinweis` umbenannt (jetzt von PROJ-42 und PROJ-44 geteilt). Migration wurde vom Nutzer manuell ausgeführt und live verifiziert (siehe Implementation Notes Backend).
+- **Refinement-Deploy 2026-09-07** (Vercel auto-deploy via Push zu `main`, commits `3104309`..`0970c9a`, Tag `v3.19.0-PROJ-44-refinement`): Numerische Felder beim Fitnessstudio-Plan — Wiederholungen (ganzzahlig) und Gewicht (0,5er-Schritte) sind bei Plan 3 jetzt native Zahlen-Eingaben statt Freitext, serverseitig plan-abhängig validiert. Plan 2 (Widerstandsbänder) bekommt das passendere Label "Widerstand" mit Platzhalter "z. B. Bandfarbe" statt "Gewicht"/"z. B. 20 kg". Keine DB-Migration nötig. Direkt gegen die Produktions-URL per Playwright verifiziert: Plan-3-Felder sind `type="number"` mit `step="0.5"` beim Gewicht, Plan-2-Label/Platzhalter korrekt umgestellt.
