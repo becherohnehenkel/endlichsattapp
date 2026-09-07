@@ -155,6 +155,28 @@ test.describe('Speichern (eingeloggte Nutzer)', () => {
     await page.getByRole('button', { name: 'Training abschließen' }).click()
     await expect(page.getByText('Training gespeichert ✓')).toBeVisible({ timeout: 5000 })
   })
+
+  test('AC (Refinement 2026-09-07): Plan 3 speichert numerische Werte erfolgreich, Reload lädt sie korrekt zurück', async ({ page }) => {
+    await loginAs(page, '/training/fitnessstudio')
+
+    const wdh = page.getByLabel('Kniebeuge mit Langhantel Satz 1 Wiederholungen')
+    await wdh.fill('8')
+    const gewicht = page.getByLabel('Kniebeuge mit Langhantel Satz 1 Gewicht')
+    await gewicht.fill('55.5')
+    await page.getByRole('button', { name: 'Training abschließen' }).click()
+    await expect(page.getByText('Training gespeichert ✓')).toBeVisible({ timeout: 5000 })
+
+    await page.reload()
+    await expect(page.getByLabel('Kniebeuge mit Langhantel Satz 1 Wiederholungen')).toHaveValue('8')
+    await expect(page.getByLabel('Kniebeuge mit Langhantel Satz 1 Gewicht')).toHaveValue('55.5')
+
+    // Zurück auf den Plan-Standardwert setzen (Gewicht leer), damit künftige Testläufe/
+    // manuelle Prüfungen wieder von einem sauberen Stand starten.
+    await page.getByLabel('Kniebeuge mit Langhantel Satz 1 Wiederholungen').fill('10')
+    await page.getByLabel('Kniebeuge mit Langhantel Satz 1 Gewicht').fill('')
+    await page.getByRole('button', { name: 'Training abschließen' }).click()
+    await expect(page.getByText('Training gespeichert ✓')).toBeVisible({ timeout: 5000 })
+  })
 })
 
 // ─── Gast-Verhalten ────────────────────────────────────────────────────────────

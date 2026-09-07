@@ -1,6 +1,6 @@
 # PROJ-44: Trainingspläne (Detailseiten + Gewicht-Logging)
 
-## Status: Deployed (Refinement: Numerische Felder beim Fitnessstudio-Plan "In Progress")
+## Status: Deployed (Refinement: Numerische Felder beim Fitnessstudio-Plan "Approved")
 **Created:** 2026-09-02
 **Last Updated:** 2026-09-07
 
@@ -389,6 +389,44 @@ Keine UPDATE/DELETE-Policy — laut Spec werden vergangene Einträge nie bearbei
 - **Security:** Pass — Auth/Validierung/Scoping/XSS-Schutz live gegen den echten Server verifiziert
 - **Production Ready:** YES
 - **Recommendation:** Deploy (BUG-1 als Low-Priority-Doku-Nachtrag für die Spec vermerken, nicht blockierend)
+
+### QA Test Results (Refinement 2026-09-07): Numerische Felder beim Fitnessstudio-Plan
+
+**Tested:** 2026-09-07
+**App URL:** http://localhost:3000
+**Tester:** QA Engineer (AI)
+
+#### Acceptance Criteria Status
+- [x] Plan 3: Wiederholungen-Feld ist numerisch, akzeptiert nur ganze Zahlen — `type="number"` per E2E bestätigt, native Eingabe-Beschränkung verhindert Freitext
+- [x] Plan 3: Gewicht-Feld ist numerisch, akzeptiert Nachkommastellen in 0,5er-Schritten — `step="0.5"` per E2E bestätigt, "62.5"/"55.5"/"0.5" gespeichert, "62.3" server- wie clientseitig abgelehnt
+- [x] Nicht-numerischer Wert wird bei Plan 3 verhindert — native Zahlen-Eingabe im Browser UND serverseitige Zod-Ablehnung (400) bei direktem API-Aufruf mit Freitext
+- [x] Server lehnt ungültige Werte bei direktem API-Aufruf ab — Integrationstests decken Freitext, Nicht-0,5er-Schritt und negative Werte ab, jeweils 400
+- [x] Plan 2 zeigt "Widerstand"-Label mit Platzhalter "z. B. Bandfarbe" statt "Gewicht"/"z. B. 20 kg" — per E2E + Screenshot bestätigt, Feld bleibt Freitext
+
+#### Security Audit
+- [x] Unauthentifizierter `POST /api/training/fitnessstudio` → 401
+- [x] SQL-Injection-artiger String (`"1' OR '1'='1"`) im Wiederholungen-Feld → 400 (Zod lehnt Nicht-Zahl ab), kein 500, keine Injection möglich (Supabase-Client ist ohnehin parametrisiert)
+- [x] `NaN` im Request-Body (rohes, manuell konstruiertes JSON) → 400, kein Crash
+- [x] Keine Service-Role-Keys oder sonstige Secrets in Fehler-Antworten
+- [x] Extrem hohe Gewichtswerte (999999,5 kg) werden angenommen (kein 500) — **bewusst kein Bug**: die Spec schließt inhaltliche Plausibilitätsprüfung explizit aus ("keine Bereichsprüfung"), nur der Zahlen-/Schritt-Typ wird geprüft
+
+#### Regressionstest
+- **Vitest (Gesamtsuite):** 481/481 grün (45 Testdateien) — inkl. 6 neuer Integrationstests aus `/backend` für die plan-abhängige Validierung und den `parseLeadingNumber()`-Fix.
+- **E2E — `tests/PROJ-44-trainingsplaene.spec.ts` (eigene Suite):** 2 bestehende Tests an die neue Realität angepasst, 3 neue Tests ergänzt (siehe `/frontend`- und `/qa`-Notizen) — 15/15 grün auf Chromium **und** Mobile Chrome (28/28 gesamt für den unveränderten Teil + neue Tests zusammen).
+- **E2E — `tests/PROJ-50-training-tab-analyse.spec.ts` (liest dieselben Daten):** 17/17 grün — keine Regression durch die geänderten Feldtypen.
+- **E2E — `tests/PROJ-43-training-uebersicht.spec.ts` (verlinkt auf die Plan-Seiten):** 16/16 grün.
+- Responsive geprüft bei 375px, 768px, 1440px für Plan 2 und Plan 3 — kein horizontales Scrollen, Screenshots bestätigen sauberes Layout.
+- **Live-Verifikation der kompletten Kette** (bereits in `/backend` dokumentiert, hier erneut bestätigt): Fitnessstudio-Training mit numerischen Werten gespeichert → korrekt zurückgeladen → fließt korrekt in PROJ-50s Kennzahlen ein.
+
+#### Bugs Found
+Keine neuen Bugs in dieser Refinement-Runde.
+
+#### Summary
+- **Acceptance Criteria:** 5/5 bestanden (Refinement-ACs)
+- **Bugs Found:** 0
+- **Security:** Pass
+- **Production Ready:** YES
+- **Recommendation:** Deploy. Reine Validierungs-/Feldtyp-Änderung, keine DB-Migration nötig.
 
 ## Deployment
 - **Production URL:** https://app.mehralsabnehmen.de/training/zuhause-ohne-equipment
