@@ -1,6 +1,6 @@
 # PROJ-20: Datenschutzerklärung & Impressum
 
-## Status: Deployed (Refinement: Rechtstext-Aktualisierung & globaler Footer "Planned")
+## Status: Deployed (Refinement: Rechtstext-Aktualisierung & globaler Footer "Approved")
 **Created:** 2026-07-07
 **Last Updated:** 2026-09-07
 
@@ -176,7 +176,54 @@ Keine neuen Pakete nötig.
 - Die Einwilligungs-Checkbox-Mechanik (Consent-UI, Speicherung, Sperr-Logik) ist bewusst nicht Teil dieser Implementierung — vollständig PROJ-52 vorbehalten (siehe Out of Scope in der Spec).
 
 ## QA Test Results
-_To be added by /qa_
+
+**Tested:** 2026-09-07
+**Tested by:** QA Engineer (Claude)
+
+### Acceptance Criteria Status
+
+**Inhalt der Rechtstexte**
+- [x] Impressum zeigt Name/Adresse/Kontakt/USt-IdNr + § 5 DDG + § 18 Abs. 2 MStV — PASS
+- [x] Datenschutzerklärung deckt alle Datenkategorien bis PROJ-51 ab — PASS
+- [x] Gewicht/Alter/Geschlecht/Größe/Kalorienziel + alle 6 Check-In-Metriken als Art.-9-Daten benannt, Verweis auf gesonderte Einwilligung — PASS
+- [x] Open Food Facts als nicht-personenbezogener Datenfluss dokumentiert — PASS
+- [x] Google Fonts Self-Hosting-Hinweis vorhanden — PASS
+- [x] Medizinischer Disclaimer vorhanden — PASS
+- [x] `/impressum` und `/datenschutz` ohne Login erreichbar — PASS
+
+**Globaler Footer**
+- [x] Footer mit Impressum/Datenschutz erscheint ausnahmslos auf jeder Seite, auch `/login`, `/registrieren`, `/upgrade`, `/admin*`, `/auth*` — PASS
+- [x] Mobil (< 768px): Footer sitzt als schmale Zeile oberhalb der Bottom-Navigation, keine Überlappung, kein zusätzliches Scrollen — PASS (per Bounding-Box-Test verifiziert)
+- [x] Desktop (≥ 768px): Footer als reguläre, unten mittig zentrierte Fußzeile — PASS
+- [x] Footer-Links navigieren korrekt zu `/impressum` bzw. `/datenschutz`, unabhängig vom Login-Status — PASS
+- [x] Alte, seitenspezifische Einzel-Links (Login/Konto/Gast-Konto) nicht dupliziert — PASS (Link-Count-Test: genau 1× "Impressum" auf Gast-Konto-Seite)
+
+**Ergebnis: 12/12 Acceptance Criteria bestanden.**
+
+### Security Audit (Red Team)
+- **Auth-Bypass:** `/admin` bleibt ohne Session korrekt zu `/login` umgeleitet — der neue Footer hat keinerlei Auth-Logik und beeinflusst bestehende Middleware-/Redirect-Checks nicht (rein additive UI-Komponente, kein State, keine Datenabfrage).
+- **Kein neuer Angriffsvektor:** Footer und Rechtstext-Seiten enthalten ausschließlich statischen Text und zwei feste `next/link`-Links — keine Nutzereingabe, kein API-Aufruf, keine XSS-/Injection-Fläche.
+- **Keine sensiblen Daten im Footer:** Footer ist zustandslos (keine Session-/Nutzerdaten im Markup oder in der Netzwerk-Payload).
+- **Konsolenfehler:** keine, auf allen getesteten Seiten (Startseite, `/login`, `/admin`, `/datenschutz`, `/impressum`).
+
+### Regressionstest
+- `npm test` (Vitest): **490/490 bestanden**, keine Regressionen.
+- Neue Suite `tests/PROJ-20-datenschutz-impressum.spec.ts` (isoliert): **19/19 bestanden** (Footer-Sichtbarkeit auf 5 Seitentypen, Footer-Positionierung mobil via Bounding-Box, Link-Navigation, Datenschutz-/Impressum-Inhalt).
+- Breiter Regressionslauf über alle Seiten, die `NavigationShell`, `login-form.tsx`, `konto-view.tsx` oder `gast-konto-view.tsx` nutzen — `tests/PROJ-2-user-authentication.spec.ts`, `tests/PROJ-14-konto-widerruf.spec.ts`, `tests/PROJ-19-gast-modus.spec.ts`, `tests/PROJ-35-bottom-navigation-kontobereich.spec.ts`, `tests/PROJ-15-pwa-native-navigation.spec.ts`, `tests/PROJ-36-ernaehrung-hub.spec.ts`: **122/125 bestanden, 3 skipped** (vorbestehende Skips, unabhängig von dieser Änderung), **0 Fehlschläge**.
+- `npm run build` und gezieltes `eslint` auf alle geänderten/neuen Dateien: fehlerfrei (ein `react/no-unescaped-entities`-Fehler während der Implementierung behoben, siehe Implementation Notes).
+- Visuelle Prüfung mobil (375px): kompletter Seiteninhalt der Datenschutzerklärung bis zum Seitenende ("9. Aktualität", "→ Impressum") sauber oberhalb von Footer + Bottom-Nav sichtbar, keine Überlappung, kein abgeschnittener Text.
+
+### Bugs Found
+Keine Bugs gefunden — weder Critical, High, Medium noch Low.
+
+### Summary
+- Acceptance Criteria: 12/12 PASS
+- Bugs: 0
+- Security: keine Findings; Feature ist rein additiv und zustandslos, kein neuer Angriffsvektor
+- Regressionen: keine (490 Unit-/Integrationstests, 141 E2E-Tests über PROJ-2/14/15/19/20/35/36 hinweg)
+- Hinweis (kein Bug, sondern rechtliche Empfehlung — bereits in den Open Questions der Spec dokumentiert): eine anwaltliche Prüfung der finalen Texte vor breiter Bewerbung wird weiterhin empfohlen.
+
+**Production Ready: YES**
 
 ## Deployment
 _To be added by /deploy_
