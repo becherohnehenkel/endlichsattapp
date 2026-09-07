@@ -1,6 +1,6 @@
 # PROJ-51: Check-In-Tab (Analyse-Seite)
 
-## Status: Planned
+## Status: Approved
 **Created:** 2026-09-07
 **Last Updated:** 2026-09-07
 
@@ -161,7 +161,60 @@ Keine neuen Pakete nötig — vollständig mit dem bereits installierten Next.js
 - `npm run build`, `npm run lint`, `npm test` (490/490) fehlerfrei. Live gegen die echte DB verifiziert (QA-Testkonto, Playwright): ein echter Wochen-Check-In über `/check-in` gespeichert → Check-Ins-Tab zeigt die Woche korrekt als "6. Sept. – 12. Sept." sowie alle 6 Kennzahlen mit dem richtigen aktuellen Wert (u. a. "0 Min" für Screentime, "5 / 10" für die Punkte-Slider) und korrekt "Noch nicht genug Daten" bei allen 6 Metriken, da nur 1 Check-In vorliegt (Datenschwelle von mind. 2 greift wie spezifiziert).
 
 ## QA Test Results
-_To be added by /qa_
+
+**Tested:** 2026-09-07
+**Tested by:** QA Engineer (Claude)
+**Test account:** `qa-test@endlichsatt.dev`
+
+### Acceptance Criteria Status
+
+**Check-In-Liste**
+- [x] Sortiert absteigend nach Kalenderwoche, max. 5 initial — PASS
+- [x] "Ältere Einträge laden" erscheint bei >5 Einträgen — PASS
+- [x] Klick auf "Ältere Einträge laden" hängt an (ersetzt nicht) — PASS
+- [x] Button verschwindet, wenn keine weiteren Einträge existieren — PASS
+- [x] Eintrag zeigt ausschließlich die Kalenderwoche als Datumsspanne — PASS
+- [x] Leer-Zustand bei noch nie ausgefülltem Check-In — PASS
+
+**Analyse-Kennzahlen**
+- [x] Zeigt alle 6 Metrik-Zeilen oberhalb der Liste — PASS
+- [x] Zeigt aktuellen Wert des neuesten Check-Ins (Punkte als "X / 10") — PASS
+- [x] Screentime als Std/Min formatiert, nicht als rohe Minutenzahl — PASS
+- [x] Differenz zum 30-Tage-Schnitt korrekt berechnet, Richtung je Metrik korrekt (Screentime invertiert) — PASS
+- [x] Neutraler Hinweis statt Differenz unterhalb der Datenschwelle (<2 Check-Ins/30 Tage) — PASS
+- [x] Analyse-Sektion erscheint nicht bei null Check-Ins — PASS
+
+**Gast-Zugriff**
+- [x] Gast sieht Login-Hinweis-Karte statt Check-Ins-Tab-Inhalt — PASS
+
+**Ergebnis: 13/13 Acceptance Criteria bestanden.**
+
+### Security Audit (Red Team)
+- **Authentifizierung:** `GET /api/check-in/verlauf` ohne Session → 401 (abgedeckt durch Vitest-Test).
+- **Autorisierung:** Route filtert explizit über `.eq('user_id', user.id)` zusätzlich zur bestehenden RLS-Policy auf `wochen_check_ins` — kein Zugriff auf fremde Check-Ins möglich.
+- **Datensparsamkeit (Response-Shape):** Gezielt geprüft, dass die Route ausschließlich `id`, `wocheStart` pro Listeneintrag sowie die 6 definierten Kennzahlen-Felder zurückgibt. Die Freitext-Felder des zugrunde liegenden `antworten`-JSONB-Blobs (Highlights, Lowlights, Ursache, "nächste Woche anders", Trainings-Begründung, Sonstiges) werden **nicht** an den Client ausgeliefert — bestätigt per Netzwerk-Inspektion der echten API-Antwort. Keine über die Spec hinausgehende Anforderung, aber ein sinnvoller Zusatz-Check angesichts des breiten zugrunde liegenden Datensatzes.
+- **Rate Limiting:** Keine dedizierte Rate-Limitierung auf dieser Lese-Route — konsistent mit dem bestehenden Muster bei `/api/training/verlauf` (PROJ-50) und `/api/mahlzeiten/verlauf` (PROJ-6); kein neues Risiko gegenüber bereits akzeptiertem Bestandsverhalten.
+- **Input-Validierung:** `limit`/`offset` werden serverseitig geparst und `limit` auf 50 gedeckelt — kein ungebremstes Auslesen möglich.
+- Keine XSS-Angriffsfläche: keine Freitext-Nutzereingaben werden in dieser Ansicht gerendert (nur Datum und numerische Werte).
+
+### Regressionstest
+- `npm test` (Vitest): **490/490 bestanden**, keine Regressionen.
+- `npm run test:e2e` — isolierter Lauf `tests/PROJ-51-checkin-tab-analyse.spec.ts`: **16/16 bestanden**.
+- Regressionslauf `tests/PROJ-42-analyse-uebersichtsseite.spec.ts` + `tests/PROJ-45-wochen-check-in.spec.ts` (host-Seite bzw. Datenquelle dieses Features): **39/39 bestanden**, keine Regressionen — inkl. des angepassten PROJ-42-Tests, der jetzt korrekt prüft, dass der alte "Bald verfügbar"-Platzhalter im Check-Ins-Tab nicht mehr erscheint.
+- `npm run build` und gezieltes `eslint` auf alle neuen/geänderten Dateien: fehlerfrei.
+- Responsive Sichtprüfung (375px, 768px, 1440px) mit realistischen Mock-Daten (gemischte positive/negative/neutrale Differenzen über alle 6 Metriken): sauberes Layout, kein horizontales Scrollen, keine Überlappungen auf allen drei Breakpoints.
+- Cross-Browser: Chromium getestet (Projekt-Standard, siehe bestehende Testsuite-Konfiguration); kein browserspezifischer Code in dieser Änderung (Standard-CSS/React), daher kein erhöhtes Risiko für Firefox/Safari.
+
+### Bugs Found
+Keine Bugs gefunden — weder Critical, High, Medium noch Low.
+
+### Summary
+- Acceptance Criteria: 13/13 PASS
+- Bugs: 0
+- Security: keine Findings, zusätzlicher Datensparsamkeits-Check bestätigt sauberes Response-Shape
+- Regressionen: keine (490 Unit-/Integrationstests, 55 E2E-Tests über PROJ-42/45/51 hinweg)
+
+**Production Ready: YES**
 
 ## Deployment
 _To be added by /deploy_
