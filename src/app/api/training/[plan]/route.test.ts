@@ -114,3 +114,72 @@ describe('POST /api/training/[plan]', () => {
     expect(res.status).toBe(500)
   })
 })
+
+// ─── Plan 3 (Fitnessstudio) — numerische Felder (Refinement 2026-09-07) ────────
+
+const FITNESSSTUDIO_BODY_VALID = {
+  uebungen: {
+    'kniebeuge-lh': {
+      pause: '90 Sek.',
+      saetze: [
+        { wiederholungen: 10, gewicht: 62.5 },
+        { wiederholungen: 8, gewicht: null },
+        { wiederholungen: 6, gewicht: 70 },
+      ],
+    },
+  },
+}
+
+describe('POST /api/training/[plan] — Plan 3 numerische Validierung', () => {
+  it('speichert einen gültigen Fitnessstudio-Body mit echten Zahlen (inkl. null für leere Felder)', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1', is_anonymous: false } } })
+    const { _insertFn, chain } = insertChain()
+    adminFrom.mockReturnValueOnce(chain)
+    const { POST } = await import('./route')
+    const res = await POST(makeRequest(FITNESSSTUDIO_BODY_VALID), makeParams('fitnessstudio'))
+    expect(res.status).toBe(200)
+    expect(_insertFn).toHaveBeenCalledWith({
+      user_id: 'user-1',
+      plan_slug: 'fitnessstudio',
+      uebungen: FITNESSSTUDIO_BODY_VALID.uebungen,
+    })
+  })
+
+  it('lehnt Freitext-Wiederholungen bei Plan 3 mit 400 ab (z.B. "10-12" statt einer Zahl)', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1', is_anonymous: false } } })
+    const { POST } = await import('./route')
+    const body = { uebungen: { 'kniebeuge-lh': { pause: '90 Sek.', saetze: [{ wiederholungen: '10-12', gewicht: 60 }] } } }
+    const res = await POST(makeRequest(body), makeParams('fitnessstudio'))
+    expect(res.status).toBe(400)
+    expect(adminFrom).not.toHaveBeenCalled()
+  })
+
+  it('lehnt Gewicht ohne 0,5er-Schritt bei Plan 3 mit 400 ab (z.B. 62.3)', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1', is_anonymous: false } } })
+    const { POST } = await import('./route')
+    const body = { uebungen: { 'kniebeuge-lh': { pause: '90 Sek.', saetze: [{ wiederholungen: 10, gewicht: 62.3 }] } } }
+    const res = await POST(makeRequest(body), makeParams('fitnessstudio'))
+    expect(res.status).toBe(400)
+    expect(adminFrom).not.toHaveBeenCalled()
+  })
+
+  it('lehnt negative Werte bei Plan 3 mit 400 ab', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1', is_anonymous: false } } })
+    const { POST } = await import('./route')
+    const body = { uebungen: { 'kniebeuge-lh': { pause: '90 Sek.', saetze: [{ wiederholungen: -1, gewicht: 60 }] } } }
+    const res = await POST(makeRequest(body), makeParams('fitnessstudio'))
+    expect(res.status).toBe(400)
+    expect(adminFrom).not.toHaveBeenCalled()
+  })
+
+  it('akzeptiert weiterhin Freitext bei Plan 2 (Widerstandsbänder) — unverändert', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1', is_anonymous: false } } })
+    const { _insertFn, chain } = insertChain()
+    adminFrom.mockReturnValueOnce(chain)
+    const { POST } = await import('./route')
+    const body = { uebungen: { 'kreuzheben-band': { pause: '60 Sek.', saetze: [{ wiederholungen: '12', gewicht: 'grünes Band' }] } } }
+    const res = await POST(makeRequest(body), makeParams('zuhause-mit-baendern'))
+    expect(res.status).toBe(200)
+    expect(_insertFn).toHaveBeenCalled()
+  })
+})

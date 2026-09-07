@@ -107,6 +107,33 @@ describe('GET /api/training/verlauf', () => {
     expect(data.trainings[0].volumenKg).toBe(200)
   })
 
+  it('rechnet mit echten Zahlen-Werten (Refinement 2026-09-07, Plan 3 speichert jetzt Zahlen statt Freitext)', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
+    mockRange.mockResolvedValue({
+      data: [{
+        id: 't1',
+        plan_slug: 'fitnessstudio',
+        uebungen: {
+          'kniebeuge-lh': {
+            pause: '90',
+            saetze: [
+              { wiederholungen: 10, gewicht: 62.5 },
+              { wiederholungen: 8, gewicht: null },
+            ],
+          },
+        },
+        created_at: tageVorJetzt(0),
+      }],
+      error: null,
+    })
+    mockGte.mockResolvedValue({ data: [], error: null })
+    const { GET } = await import('./route')
+    const res = await GET(makeRequest())
+    const data = await res.json()
+    // 10 * 62.5 + 8 * 0 (null zählt als 0) = 625
+    expect(data.trainings[0].volumenKg).toBe(625)
+  })
+
   it('returns 500 on DB error', async () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
     mockRange.mockResolvedValue({ data: null, error: { message: 'DB error' } })

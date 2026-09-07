@@ -303,6 +303,17 @@ Keine UPDATE/DELETE-Policy — laut Spec werden vergangene Einträge nie bearbei
 - `npm run build`, `npm run lint`, `npm test` (430/430) fehlerfrei. Live verifiziert (noch vor Migration): Gast sieht Login-Hinweis statt Button, eingeloggter Nutzer sieht den Button, Klick zeigt aktuell erwartungsgemäß "Speichern fehlgeschlagen" (Tabelle fehlt noch), Fehlerbehandlung funktioniert sauber (Werte bleiben erhalten, Button bleibt nutzbar).
 - **Migration ausgeführt und live verifiziert** (2026-09-02, temporäres Playwright-Skript, nicht committed — offizielle E2E-Abdeckung folgt in `/qa`): Satz-1-Wiederholungen bei "Kniebeuge" auf einen Testwert gesetzt → "Training abschließen" → "Training gespeichert ✓" → Reload lädt den Wert korrekt aus der echten DB zurück (Vorausfüllung mit dem zuletzt gespeicherten Stand bestätigt) → zurückgesetzt auf den Plan-Standardwert und erneut gespeichert (QA-Testkonto sauber hinterlassen).
 
+### Implementation Notes (Backend) — Refinement 2026-09-07, Numerische Felder beim Fitnessstudio-Plan
+
+**Keine Migration nötig** — reine Validierungs-Änderung, kein neues Schema, keine neue Spalte (siehe Architektur-Entscheidung: keine Bereinigung alter Freitext-Werte).
+
+**Gebaut:**
+- `src/app/api/training/[plan]/route.ts`: statisches `bodySchema` durch `buildBodySchema(plan)` ersetzt — baut das Zod-Schema pro Anfrage anhand der Plan-Konfiguration (`wiederholungenNumerisch`, `zusatzfeld.art`) statt anhand eines hartcodierten Plan-Slugs, bleibt also automatisch korrekt, falls später weitere Pläne dazukommen. Bei Plan 3: `wiederholungen` muss eine nicht-negative Ganzzahl oder `null` sein, `gewicht` eine nicht-negative Zahl im 0,5er-Schritt oder `null`. Bei Plan 1/2 unverändert Freitext-String.
+- `src/app/api/training/verlauf/route.ts` (PROJ-50): `parseLeadingNumber()` erkennt jetzt zusätzlich den Fall "Wert ist bereits eine Zahl" (`typeof value === 'number'`) und gibt sie direkt zurück, statt sie (wie zuvor bei allem außer Strings) fälschlich als 0 zu werten — die vorab in der Architektur-Phase identifizierte, notwendige Anpassung.
+- Keine Änderung an RLS-Policies oder der Tabellenstruktur nötig.
+
+**Verifiziert:** `tsc --noEmit`, gezieltes `eslint` (clean), `npm run build` (clean), `npm test` (481/481 — 6 neue Integrationstests: 5 in `src/app/api/training/[plan]/route.test.ts` für Plan-3-Validierung — gültiger Zahlen-Body inkl. `null`, Freitext-Ablehnung, Nicht-0,5er-Schritt-Ablehnung, negative Werte, Plan 2 bleibt unverändert Freitext —, 1 in `src/app/api/training/verlauf/route.test.ts` für den `parseLeadingNumber()`-Fix). Live gegen die echte DB verifiziert (QA-Testkonto, Playwright): Fitnessstudio-Training mit 10 Wiederholungen × 62,5 kg gespeichert → "Training gespeichert ✓" → Reload lädt die Werte korrekt zurück → Training-Tab auf der Analyse-Seite (PROJ-50) zeigt die neue Einheit korrekt mit "625 kg" (= 10 × 62,5) sowohl in der Liste als auch in der "Ø Gewicht / Einheit"-Kachel — bestätigt die komplette Kette Eingabe → Speichern → Auswertung funktioniert durchgängig.
+
 ## QA Test Results
 
 **Tested:** 2026-09-02

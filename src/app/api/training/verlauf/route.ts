@@ -17,10 +17,14 @@ interface UebungEintrag {
   saetze: Satz[]
 }
 
-// Extrahiert die erste in einem Freitext-Feld enthaltene Zahl (z. B. "10-12" → 10,
-// "20kg" → 20). Enthält der Text keine Zahl (z. B. "bis Muskelversagen"), wird 0
-// zurückgegeben — siehe Spec-Entscheidung "Fokussiere dich auf Zahlen".
+// Extrahiert eine Zahl aus einem Satz-Feld. Seit dem PROJ-44-Refinement (numerische Felder
+// beim Fitnessstudio-Plan) speichert die DB dort echte Zahlen (oder `null` bei leerem Feld) —
+// die geben wir direkt durch bzw. werten sie als 0. Ältere Einträge (vor dem Refinement, keine
+// Migration laut Architektur-Entscheidung) sind weiterhin Freitext, z. B. "10-12" → 10 oder
+// "20kg" → 20; enthält der Text keine Zahl (z. B. "bis Muskelversagen"), wird 0 zurückgegeben —
+// siehe Spec-Entscheidung "Fokussiere dich auf Zahlen".
 function parseLeadingNumber(value: unknown): number {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : 0
   if (typeof value !== 'string') return 0
   const match = value.match(/\d+(\.\d+)?/)
   return match ? parseFloat(match[0]) : 0

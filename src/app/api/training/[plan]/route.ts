@@ -2,21 +2,32 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { findTrainingsplan } from '@/lib/trainingsplaene'
+import { findTrainingsplan, type Trainingsplan } from '@/lib/trainingsplaene'
 
-const satzSchema = z.object({
-  wiederholungen: z.string().max(50),
-  gewicht: z.string().max(50),
-})
+// PROJ-44 (Refinement 2026-09-07): Wiederholungen/Gewicht sind nur bei Plan 3 (Fitnessstudio)
+// echte Zahlen — bei Plan 1/2 bleibt es beim ursprünglichen, unvalidierten Freitext (siehe
+// Spec-Entscheidung). Das Schema wird deshalb pro Plan gebaut statt statisch definiert, anhand
+// derselben `wiederholungenNumerisch`/`zusatzfeld`-Angaben, die auch das Frontend steuern —
+// kein hartcodierter Plan-Slug hier, bleibt korrekt, falls später weitere Pläne dazukommen.
+function buildBodySchema(plan: Trainingsplan) {
+  const satzSchema = z.object({
+    wiederholungen: plan.wiederholungenNumerisch
+      ? z.number().int().nonnegative().nullable()
+      : z.string().max(50),
+    gewicht: plan.zusatzfeld.art === 'numerisch'
+      ? z.number().nonnegative().multipleOf(plan.zusatzfeld.schritt).nullable()
+      : z.string().max(50),
+  })
 
-const uebungSchema = z.object({
-  pause: z.string().max(50),
-  saetze: z.array(satzSchema).max(20),
-})
+  const uebungSchema = z.object({
+    pause: z.string().max(50),
+    saetze: z.array(satzSchema).max(20),
+  })
 
-const bodySchema = z.object({
-  uebungen: z.record(z.string(), uebungSchema),
-})
+  return z.object({
+    uebungen: z.record(z.string(), uebungSchema),
+  })
+}
 
 // PROJ-44: Speichert eine abgeschlossene Trainingseinheit für eingeloggte, nicht-anonyme
 // Nutzer. Gäste (kein User oder anonyme Session) dürfen laut Spec nichts speichern —
@@ -35,7 +46,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ pla
   if (user.is_anonymous) return NextResponse.json({ error: 'Gäste können keine Trainings speichern' }, { status: 403 })
 
   const body = await request.json().catch(() => null)
-  const parsed = bodySchema.safeParse(body)
+  const parsed = buildBodySchema(plan).safeParse(body)
   if (!parsed.success) {
     return NextResponse.json({ error: 'Ungültige Eingabe' }, { status: 400 })
   }
