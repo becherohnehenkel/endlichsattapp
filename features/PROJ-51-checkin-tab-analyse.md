@@ -78,12 +78,59 @@ Keine — alle offenen Punkte wurden im Interview geklärt.
 <!-- Added by /architecture -->
 | Decision | Rationale | Date |
 |----------|-----------|------|
+| Bestehende Tabelle "Wochen-Check-Ins" (aus PROJ-45) wiederverwenden, kein neues Datenbank-Schema | Die Daten existieren bereits — dieser Tab ist reine Anzeige/Auswertung vorhandener Check-Ins | 2026-09-07 |
+| Eine einzelne, neue Lese-Route mit Pagination (analog `/api/training/verlauf` aus PROJ-50) statt getrennter Endpunkte für Liste und Kennzahlen | Beim ersten Laden (Offset 0) liefert dieselbe Anfrage sowohl die ersten 5 Einträge als auch die 6 Kennzahlen-Zeilen — ein Roundtrip statt zwei | 2026-09-07 |
+| Kennzahlen-Berechnung (aktueller Wert, 30-Tage-Schnitt, Differenz je Metrik) passiert serverseitig, nicht im Browser | Die Richtungs-Logik (bei Screentime ist weniger besser, bei den anderen 5 Metriken mehr) soll an einer einzigen Stelle korrekt behandelt werden, nicht dupliziert auf jedem Gerät | 2026-09-07 |
+| Zeitfenster für die Kennzahlen-Abfrage: letzte 30 Tage | Reicht für den geforderten 30-Tage-Schnitt aus; anders als bei PROJ-50 (26 Wochen für die "Aktuelle Serie") gibt es hier kein längerfristiges Muster zu berechnen | 2026-09-07 |
+| Screentime-Formatierung (Minuten → Std/Min-Anzeige) bleibt im Frontend, wie bereits bei PROJ-45 etabliert — der Server liefert nur die rohen Minuten-Werte (aktuell + Differenz) | Vermeidet doppelten Formatierungscode; die bestehende `formatScreentime()`-Funktion aus PROJ-45 wird wiederverwendet | 2026-09-07 |
+| Neue Client-Komponenten `CheckInHistorie`, `CheckInEintrag`, `CheckInKennzahlenListe` (analog zu `TrainingHistorie`/`TrainingKarte`/`TrainingKennzahlen` aus PROJ-50) ersetzen den bisherigen "Bald verfügbar"-Platzhalter im "Check-Ins"-Tab | Gleiches, bereits bewährtes Lade-/Pagination-Verhalten wie bei Training und Mahlzeiten — konsistente Nutzererfahrung über alle 3 Tabs hinweg | 2026-09-07 |
+| Gast-Zugriff nutzt die bereits bestehende Login-Hinweis-Komponente, kein neuer Code | Identisches Muster zu den Tabs "Mahlzeiten" und "Training" in derselben `AnalyseHistorieTabs`-Komponente | 2026-09-07 |
 
 ---
 <!-- Sections below are added by subsequent skills -->
 
 ## Tech Design (Solution Architect)
-_To be added by /architecture_
+
+### A) Komponenten-Struktur (Visuell)
+
+```
+/analyse (Analyse-Übersichtsseite, PROJ-42)
+└── AnalyseHistorieTabs (bestehend)
+    └── Tab "Check-Ins" (ersetzt den bisherigen "Bald verfügbar"-Platzhalter)
+        ├── Gast (kein Login): Login-Hinweis-Karte (bestehende Komponente,
+        │     identisches Muster zu den Tabs "Mahlzeiten" und "Training")
+        └── Eingeloggter Nutzer: CheckInHistorie (neu, analog zu TrainingHistorie aus PROJ-50)
+            ├── Analyse-Kennzahlen-Liste (neu, oberhalb der Liste)
+            │   └── 6 Zeilen: Schlaf, Screentime, Energielevel, Ernährung,
+            │         Bewusstes Essen, Tracking-Bereitschaft — je mit aktuellem
+            │         Wert und Differenz zum 30-Tage-Schnitt (oder Hinweis bei
+            │         zu wenig Daten)
+            ├── Check-In-Liste (neueste Woche zuerst, erste 5)
+            │   └── Check-In-Eintrag (neu, analog zu TrainingKarte)
+            │       └── Kalenderwoche als Datumsspanne, sonst nichts
+            ├── "Ältere Einträge laden"-Button (lädt in 10er-Schritten nach)
+            └── Leer-Zustand ("Noch kein Check-In")
+```
+
+### B) Datenmodell (in Worten)
+
+Kein neues Datenbank-Schema — es wird ausschließlich die bereits bestehende Tabelle "Wochen-Check-Ins" aus PROJ-45 gelesen (nie geschrieben). Jede Zeile darin ist ein Check-In für eine Kalenderwoche mit den 6 Metriken-Werten sowie weiteren Feldern (Freitexte, Trainings-Frage), die dieser Tab bewusst nicht anzeigt.
+
+Für die Anzeige werden zwei Sichten auf dieselben Daten gebraucht:
+- **Liste:** die rohen Check-In-Einträge, Seite für Seite (5, dann 10er-Schritte), neueste Woche zuerst.
+- **Kennzahlen:** eine serverseitig vorgerechnete Zusammenfassung (6 Metriken-Zeilen) über die Check-Ins der letzten 30 Tage — der Browser bekommt nur die fertigen Werte, nie die Rohdaten für diese Berechnung.
+
+### C) Tech-Entscheidungen (Begründung für PM)
+
+1. **Kein neues Schema, nur Lesezugriff** — alle nötigen Daten liegen bereits aus PROJ-45 vor.
+2. **Eine gemeinsame Lese-Route für Liste und Kennzahlen** — beim ersten Laden liefert eine einzige Anfrage sowohl die ersten 5 Einträge als auch die 6 Kennzahlen-Zeilen; "Ältere Einträge laden" fragt danach nur noch weitere Listen-Seiten ab.
+3. **Kennzahlen werden auf dem Server berechnet, nicht im Browser** — insbesondere die Richtungs-Logik (bei Screentime ist ein niedrigerer Wert besser, bei den anderen 5 Metriken ein höherer) soll an genau einer Stelle korrekt behandelt werden.
+4. **Wiederverwendung des bewährten Lade-Musters aus PROJ-50** (Training-Tab) für die neue Check-In-Komponente — gleiches Verhalten, das Nutzer bereits kennen.
+5. **Screentime-Formatierung bleibt im Frontend**, wiederverwendet aus PROJ-45 — der Server liefert nur rohe Minuten-Werte.
+6. **Gast-Zugriff ohne neuen Code** — die bestehende Login-Hinweis-Karte wird einfach für den "Check-Ins"-Tab wiederverwendet.
+
+### D) Abhängigkeiten (Pakete)
+Keine neuen Pakete nötig — vollständig mit dem bereits installierten Next.js/Supabase-Stack umsetzbar.
 
 ## QA Test Results
 _To be added by /qa_
