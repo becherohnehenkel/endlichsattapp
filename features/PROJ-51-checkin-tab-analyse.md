@@ -1,6 +1,6 @@
 # PROJ-51: Check-In-Tab (Analyse-Seite)
 
-## Status: Approved
+## Status: Deployed
 **Created:** 2026-09-07
 **Last Updated:** 2026-09-07
 
@@ -217,4 +217,8 @@ Keine Bugs gefunden — weder Critical, High, Medium noch Low.
 **Production Ready: YES**
 
 ## Deployment
-_To be added by /deploy_
+
+**Deployed:** 2026-09-07
+**Production URL:** https://app.mehralsabnehmen.de/analyse (Tab "Check-Ins")
+
+Deploy erfolgte über den regulären Push auf `main` (Vercel Auto-Deploy). Live-Verifikation nach Deploy: Login als QA-Testkonto, "Check-Ins"-Tab geöffnet — zeigt reale Analyse-Kennzahlen (alle 6 Metriken inkl. korrekt invertierter Screentime-Richtung, z. B. "−45 Min" als Verbesserung) sowie die echte Check-In-Liste ("6. Sept. – 12. Sept.", "23. Aug. – 29. Aug."). Keine Fehlerzustände, keine Konsolenfehler.
