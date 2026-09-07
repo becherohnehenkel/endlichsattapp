@@ -29,6 +29,52 @@ function leereSaetze(plan: Trainingsplan): SatzFelder[] {
   }))
 }
 
+// PROJ-44 (Refinement 2026-09-07): Wandelt ein Freitext-Feld in eine Zahl um — leere oder
+// nicht-numerische Eingaben werden zu `null` (kein Pflichtfeld, "leer" bleibt "nichts
+// eingetragen" statt fälschlich "0"). Komma wird als Dezimaltrennzeichen akzeptiert, auch
+// wenn das native Zahlen-Feld selbst schon einen Punkt liefert.
+function parseZahlOderNull(value: string): number | null {
+  const bereinigt = value.trim().replace(',', '.')
+  if (bereinigt === '') return null
+  const zahl = parseFloat(bereinigt)
+  return Number.isFinite(zahl) ? zahl : null
+}
+
+// Formt einen aus der DB gelesenen Satz-Wert (kann bei Plan 3 künftig eine echte Zahl sein,
+// bei älteren Einträgen weiterhin Freitext, siehe Architektur-Entscheidung "keine Migration")
+// zurück in einen String fürs Eingabefeld — Formulare sind hier immer string-kontrolliert.
+function alsFeldString(value: unknown): string {
+  if (value === null || value === undefined) return ''
+  return String(value)
+}
+
+function normalisiereGespeicherteWerte(werte: UebungsWerte): UebungsWerte {
+  return {
+    pause: alsFeldString(werte.pause),
+    saetze: werte.saetze.map(satz => ({
+      wiederholungen: alsFeldString(satz.wiederholungen),
+      gewicht: alsFeldString(satz.gewicht),
+    })),
+  }
+}
+
+// Formt die Formular-Werte (immer Strings, auch bei numerischen Feldern) in das Format um,
+// das die API erwartet — bei Plan 3 (Fitnessstudio) echte Zahlen statt Freitext.
+function serialisiereWerte(plan: Trainingsplan, werte: Record<string, UebungsWerte>) {
+  return Object.fromEntries(
+    Object.entries(werte).map(([id, uebungsWerte]) => [
+      id,
+      {
+        pause: uebungsWerte.pause,
+        saetze: uebungsWerte.saetze.map(satz => ({
+          wiederholungen: plan.wiederholungenNumerisch ? parseZahlOderNull(satz.wiederholungen) : satz.wiederholungen,
+          gewicht: plan.zusatzfeld.art === 'numerisch' ? parseZahlOderNull(satz.gewicht) : satz.gewicht,
+        })),
+      },
+    ])
+  )
+}
+
 function UebungsKarte({
   uebung,
   plan,
@@ -70,26 +116,43 @@ function UebungsKarte({
       </div>
 
       <div className="space-y-2">
-        <div className={cn('grid gap-2 text-[11px] text-muted-foreground uppercase tracking-wide px-0.5', plan.zeigtGewichtsfeld ? 'grid-cols-[2rem_1fr_1fr]' : 'grid-cols-[2rem_1fr]')}>
+        <div className={cn('grid gap-2 text-[11px] text-muted-foreground uppercase tracking-wide px-0.5', plan.zusatzfeld.art !== 'keins' ? 'grid-cols-[2rem_1fr_1fr]' : 'grid-cols-[2rem_1fr]')}>
           <span>Satz</span>
           <span>Wdh.</span>
-          {plan.zeigtGewichtsfeld && <span>Gewicht</span>}
+          {plan.zusatzfeld.art !== 'keins' && <span>{plan.zusatzfeld.label}</span>}
         </div>
         {werte.saetze.map((satz, index) => (
-          <div key={index} className={cn('grid gap-2 items-center', plan.zeigtGewichtsfeld ? 'grid-cols-[2rem_1fr_1fr]' : 'grid-cols-[2rem_1fr]')}>
+          <div key={index} className={cn('grid gap-2 items-center', plan.zusatzfeld.art !== 'keins' ? 'grid-cols-[2rem_1fr_1fr]' : 'grid-cols-[2rem_1fr]')}>
             <span className="text-sm font-medium text-foreground">{index + 1}</span>
             <Input
               aria-label={`${uebung.name} Satz ${index + 1} Wiederholungen`}
+              type={plan.wiederholungenNumerisch ? 'number' : 'text'}
+              inputMode={plan.wiederholungenNumerisch ? 'numeric' : undefined}
+              step={plan.wiederholungenNumerisch ? 1 : undefined}
+              min={plan.wiederholungenNumerisch ? 0 : undefined}
               value={satz.wiederholungen}
               onChange={e => setSatzFeld(index, 'wiederholungen', e.target.value)}
               className="h-9 text-sm"
             />
-            {plan.zeigtGewichtsfeld && (
+            {plan.zusatzfeld.art === 'freitext' && (
               <Input
-                aria-label={`${uebung.name} Satz ${index + 1} Gewicht`}
+                aria-label={`${uebung.name} Satz ${index + 1} ${plan.zusatzfeld.label}`}
                 value={satz.gewicht}
                 onChange={e => setSatzFeld(index, 'gewicht', e.target.value)}
-                placeholder="z. B. 20 kg"
+                placeholder={plan.zusatzfeld.platzhalter}
+                className="h-9 text-sm"
+              />
+            )}
+            {plan.zusatzfeld.art === 'numerisch' && (
+              <Input
+                aria-label={`${uebung.name} Satz ${index + 1} ${plan.zusatzfeld.label}`}
+                type="number"
+                inputMode="decimal"
+                step={plan.zusatzfeld.schritt}
+                min={0}
+                value={satz.gewicht}
+                onChange={e => setSatzFeld(index, 'gewicht', e.target.value)}
+                placeholder="z. B. 62,5"
                 className="h-9 text-sm"
               />
             )}
@@ -115,7 +178,9 @@ export function TrainingsplanDetail({ plan, isGuest, letzterStand }: Trainingspl
     Object.fromEntries(
       plan.uebungen.map(uebung => [
         uebung.id,
-        letzterStand?.[uebung.id] ?? { pause: plan.schemaPause, saetze: leereSaetze(plan) },
+        letzterStand?.[uebung.id]
+          ? normalisiereGespeicherteWerte(letzterStand[uebung.id])
+          : { pause: plan.schemaPause, saetze: leereSaetze(plan) },
       ])
     )
   )
@@ -135,7 +200,7 @@ export function TrainingsplanDetail({ plan, isGuest, letzterStand }: Trainingspl
       const res = await fetch(`/api/training/${plan.slug}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uebungen: werte }),
+        body: JSON.stringify({ uebungen: serialisiereWerte(plan, werte) }),
       })
       if (!res.ok) throw new Error()
       setErfolg(true)

@@ -8,6 +8,14 @@ export interface TrainingsUebung {
   ausfuehrung: string
 }
 
+// PROJ-44 (Refinement 2026-09-07): Das Zusatzfeld pro Satz-Zeile unterscheidet sich jetzt
+// zwischen Plan 2 (Widerstandsbänder, weiterhin Freitext — ein kg-Wert ergäbe dort keinen
+// Sinn) und Plan 3 (Fitnessstudio, echte Zahl mit halben Schritten). "keins" für Plan 1.
+export type Zusatzfeld =
+  | { art: 'keins' }
+  | { art: 'freitext'; label: string; platzhalter: string }
+  | { art: 'numerisch'; label: string; schritt: number }
+
 export interface Trainingsplan {
   slug: string
   titel: string
@@ -16,7 +24,9 @@ export interface Trainingsplan {
   schemaSaetze: string
   schemaWiederholungen: string
   schemaPause: string
-  zeigtGewichtsfeld: boolean
+  /** Nur bei Plan 3 (Fitnessstudio) `true` — Wiederholungen wird dort zur Ganzzahl-Eingabe. */
+  wiederholungenNumerisch: boolean
+  zusatzfeld: Zusatzfeld
   uebungen: TrainingsUebung[]
 }
 
@@ -29,7 +39,8 @@ export const TRAININGSPLAENE: Trainingsplan[] = [
     schemaSaetze: '3',
     schemaWiederholungen: '12',
     schemaPause: '60 Sek.',
-    zeigtGewichtsfeld: false,
+    wiederholungenNumerisch: false,
+    zusatzfeld: { art: 'keins' },
     uebungen: [
       { id: 'kniebeuge', name: 'Kniebeuge', ausfuehrung: 'Füße schulterbreit, Zehen leicht nach außen. Gesäß nach hinten schieben, als würdest du dich auf einen Stuhl setzen. Knie zeigen in Zehenrichtung, Rücken bleibt gerade. Runter bis Oberschenkel etwa parallel zum Boden, dann hochdrücken.' },
       { id: 'glute-bridge', name: 'Glute Bridge', ausfuehrung: 'Rückenlage, Knie angewinkelt, Füße hüftbreit aufgestellt. Po anspannen und Becken nach oben heben, bis Schultern-Knie eine Linie bilden. Kurz halten, dann kontrolliert absenken.' },
@@ -47,7 +58,8 @@ export const TRAININGSPLAENE: Trainingsplan[] = [
     schemaSaetze: '3',
     schemaWiederholungen: '12',
     schemaPause: '60 Sek.',
-    zeigtGewichtsfeld: true,
+    wiederholungenNumerisch: false,
+    zusatzfeld: { art: 'freitext', label: 'Widerstand', platzhalter: 'z. B. Bandfarbe' },
     uebungen: [
       { id: 'kreuzheben-band', name: 'Kreuzheben', ausfuehrung: 'Auf die Mitte des Bandes stellen, Enden mit beiden Händen greifen. Hüfte nach hinten schieben, Rücken gerade, Band an den Beinen entlang nach unten führen, dann Hüfte nach vorne strecken und aufrichten.' },
       { id: 'rudern-band', name: 'Rudern vorgebeugt', ausfuehrung: 'Band unter den Füßen fixieren, leicht in der Hüfte vorbeugen, Rücken gerade. Ellbogen nah am Körper nach hinten ziehen, Schulterblätter zusammenziehen, dann kontrolliert zurückführen.' },
@@ -67,7 +79,8 @@ export const TRAININGSPLAENE: Trainingsplan[] = [
     schemaSaetze: '3',
     schemaWiederholungen: '10',
     schemaPause: '60 Sek.',
-    zeigtGewichtsfeld: true,
+    wiederholungenNumerisch: true,
+    zusatzfeld: { art: 'numerisch', label: 'Gewicht', schritt: 0.5 },
     uebungen: [
       { id: 'kniebeuge-lh', name: 'Kniebeuge mit Langhantel', ausfuehrung: 'Stange auf dem oberen Rücken (nicht im Nacken), Füße schulterbreit. Wie eine normale Kniebeuge absenken, Rücken bleibt gerade, Knie in Zehenrichtung, dann hochdrücken.' },
       { id: 'rudern-lh', name: 'Vorgebeugtes Rudern mit Langhantel', ausfuehrung: 'Hüfte nach hinten schieben, Oberkörper etwa 45° vorgebeugt, Rücken gerade. Stange zum unteren Bauch ziehen, Ellbogen nah am Körper, dann kontrolliert absenken.' },

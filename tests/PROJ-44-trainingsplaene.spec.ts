@@ -90,9 +90,9 @@ test.describe('Übungskarten', () => {
     await expect(page.getByLabel('Kniebeuge mit Langhantel Satz 1 Wiederholungen')).toHaveValue('10')
   })
 
-  test('AC: Plan 2 und 3 zeigen ein Gewicht-Feld pro Satz-Zeile', async ({ page }) => {
+  test('AC: Plan 2 und 3 zeigen ein Zusatzfeld pro Satz-Zeile (Widerstand bzw. Gewicht, Refinement 2026-09-07)', async ({ page }) => {
     await page.goto('/training/zuhause-mit-baendern')
-    await expect(page.getByLabel('Kreuzheben Satz 1 Gewicht')).toBeVisible()
+    await expect(page.getByLabel('Kreuzheben Satz 1 Widerstand')).toBeVisible()
     await page.goto('/training/fitnessstudio')
     await expect(page.getByLabel('Kniebeuge mit Langhantel Satz 1 Gewicht')).toBeVisible()
   })
@@ -106,19 +106,32 @@ test.describe('Übungskarten', () => {
 // ─── Felder anpassen ──────────────────────────────────────────────────────────
 
 test.describe('Felder anpassen', () => {
-  test('AC: Wiederholungen, Pause und Gewicht sind frei editierbar', async ({ page }) => {
+  test('AC: Pause bleibt frei editierbar (alle Pläne), Wiederholungen/Widerstand bei Plan 2 ebenfalls', async ({ page }) => {
+    await page.goto('/training/zuhause-mit-baendern')
+    const widerstand = page.getByLabel('Kreuzheben Satz 1 Widerstand')
+    await widerstand.fill('grün')
+    await expect(widerstand).toHaveValue('grün')
+
+    const pause = page.locator('#kreuzheben-band-pause')
+    await pause.fill('90 Sek.')
+    await expect(pause).toHaveValue('90 Sek.')
+  })
+
+  test('AC (Refinement 2026-09-07): Bei Plan 3 sind Wiederholungen und Gewicht numerisch — Wiederholungen ganzzahlig, Gewicht mit 0,5er-Schritten', async ({ page }) => {
     await page.goto('/training/fitnessstudio')
     const wdh = page.getByLabel('Kniebeuge mit Langhantel Satz 1 Wiederholungen')
+    await expect(wdh).toHaveAttribute('type', 'number')
     await wdh.fill('8')
     await expect(wdh).toHaveValue('8')
 
     const gewicht = page.getByLabel('Kniebeuge mit Langhantel Satz 1 Gewicht')
-    await gewicht.fill('60 kg')
-    await expect(gewicht).toHaveValue('60 kg')
+    await expect(gewicht).toHaveAttribute('type', 'number')
+    await expect(gewicht).toHaveAttribute('step', '0.5')
+    await gewicht.fill('62.5')
+    await expect(gewicht).toHaveValue('62.5')
 
-    const pause = page.locator('#kniebeuge-lh-pause')
-    await pause.fill('90 Sek.')
-    await expect(pause).toHaveValue('90 Sek.')
+    // Freitext lässt sich in ein natives Zahlen-Feld gar nicht erst eintippen.
+    await expect(async () => await gewicht.fill('bis Muskelversagen')).rejects.toThrow()
   })
 })
 

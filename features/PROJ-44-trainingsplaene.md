@@ -1,6 +1,6 @@
 # PROJ-44: Trainingspläne (Detailseiten + Gewicht-Logging)
 
-## Status: Deployed (Refinement: Numerische Felder beim Fitnessstudio-Plan "Architected")
+## Status: Deployed (Refinement: Numerische Felder beim Fitnessstudio-Plan "In Progress")
 **Created:** 2026-09-02
 **Last Updated:** 2026-09-07
 
@@ -255,6 +255,18 @@ Keine neuen Pakete — native HTML5-Zahlen-Eingabefelder und die bereits verwend
 - Kein Gast-Hinweis-Banner ("Eingaben gehen verloren") — ohne echte Persistenz gibt es aktuell keinen Unterschied zwischen Gast und eingeloggtem Nutzer; der Hinweis ergibt erst Sinn, sobald eingeloggte Nutzer tatsächlich speichern können. Kommt zusammen mit dem Speichern in `/backend`.
 - Vorausfüllung mit dem zuletzt gespeicherten Stand — setzt die Speicherung voraus, folgt in `/backend`.
 - `npm run build`, `npm run lint`, `npm test` (423/423) fehlerfrei.
+
+### Implementation Notes (Frontend) — Refinement 2026-09-07, Numerische Felder beim Fitnessstudio-Plan
+
+**Gebaut:**
+- `src/lib/trainingsplaene.ts`: `zeigtGewichtsfeld: boolean` durch zwei präzisere Felder ersetzt — `wiederholungenNumerisch: boolean` (nur Plan 3 `true`) und `zusatzfeld: { art: 'keins' } | { art: 'freitext'; label; platzhalter } | { art: 'numerisch'; label; schritt }`. Plan 1 = `keins`, Plan 2 = `freitext` (Label "Widerstand", Platzhalter "z. B. Bandfarbe"), Plan 3 = `numerisch` (Label "Gewicht", Schritt `0.5`).
+- `src/components/trainingsplan-detail.tsx`: Wiederholungen-Feld wird bei Plan 3 zu `type="number"` (`inputMode="numeric"`, `step={1}`, `min={0}`); das Zusatzfeld rendert je nach `zusatzfeld.art` entweder das bisherige Freitextfeld (Plan 2, neues Label/Platzhalter) oder ein Zahlen-Feld (Plan 3, `step={0.5}`, `min={0}`, Platzhalter "z. B. 62,5"). Spaltenbreite/Grid-Logik nutzt jetzt `plan.zusatzfeld.art !== 'keins'` statt der alten Boolean.
+- Neue Hilfsfunktionen: `parseZahlOderNull()` wandelt einen Feld-String beim Speichern in eine Zahl oder `null` um (leeres Feld bleibt "nichts eingetragen", nicht fälschlich "0"; Komma wird als Dezimaltrennzeichen akzeptiert). `serialisiereWerte()` baut daraus den API-Payload — bei Plan 3 echte Zahlen, bei Plan 1/2 unverändert Freitext-Strings. `normalisiereGespeicherteWerte()` macht das Gegenteil beim Laden: egal ob ein zuvor gespeicherter Wert eine Zahl (neue Plan-3-Einträge) oder ein String (alte Einträge, keine Migration siehe Architektur) ist, wird er für die kontrollierten Eingabefelder zuverlässig in einen String zurückverwandelt.
+- Bewusst **kein** eigener Formular-Validierungs-Hinweistext ergänzt — das native Zahlen-Feld verhindert ungültige Zeichen bereits beim Tippen, ein zusätzlicher Fehlertext wäre redundant.
+
+**Bekannte, erwartete Lücke (schließt `/backend`):** Die Server-Route `/api/training/[plan]` validiert `wiederholungen`/`gewicht` aktuell noch als reinen String (Zod-Schema aus der Ursprungs-Implementierung) — ein Speichern bei Plan 3 schlägt deshalb momentan mit "Speichern fehlgeschlagen" fehl (Wert bleibt im Feld erhalten, bestehendes Fehlerverhalten funktioniert korrekt). Erwartetes Verhalten in dieser Phase, live per Playwright verifiziert (Screenshot: Zahlen-Feld korrekt befüllt mit "62.5", Fehlermeldung erscheint, Wert bleibt erhalten). Wird mit `/backend` behoben.
+
+**Verifiziert:** `tsc --noEmit`, gezieltes `eslint` (clean), `npm run build` (clean), `npm test` (475/475, unverändert — reine Frontend-Änderung ohne API-Bezug). `tests/PROJ-44-trainingsplaene.spec.ts`: 2 bestehende Tests an die neue Realität angepasst (Plan-2-Label "Widerstand" statt "Gewicht"; Plan-3-Feld ist jetzt `type="number"` statt Freitext-`fill()`), 2 neue Tests ergänzt (native Zahlen-Constraint bei Plan 3, Freitext-Editierbarkeit bei Plan 2) — 14/14 grün. `tests/PROJ-43-training-uebersicht.spec.ts` (Regression, verlinkt auf die Plan-Seiten): 16/16 grün.
 
 ## Implementation Notes (Backend)
 
