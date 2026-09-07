@@ -227,4 +227,12 @@ Keine weiteren Bugs gefunden.
 - **Recommendation:** Deploy
 
 ## Deployment
-_To be added by /deploy_
+
+**Production URL:** https://app.mehralsabnehmen.de/analyse (Training-Tab)
+**Deployed:** 2026-09-07 (Vercel auto-deploy via Push zu `main`, commits `e26a43a`..`4b5ae12`, Tag `v3.18.0-PROJ-50`)
+**Neue Env-Variablen:** keine
+**DB-Migrationen:** keine (liest nur die bestehende `training_sessions`-Tabelle aus PROJ-44)
+
+**Hinweis zum Deploy-Ablauf:** Der lokale `main`-Branch war nach dem letzten PROJ-24-Deploy divergiert, ohne dass ein `git push` tatsächlich stattgefunden hatte — eine parallel laufende Session hatte in der Zwischenzeit ihren eigenen Fix (PROJ-31/32 Testdaten-Bereinigung) über einen separaten PR gemerged. Dadurch blieb Produktion zunächst auf dem alten Stand, obwohl lokale Checks fälschlich "bereits synchron" meldeten. Per `git rebase origin/main` sauber aufgelöst (keine Konflikte, da unterschiedliche Dateien betroffen), dann erfolgreich gepusht.
+
+**Post-Deployment-Verifikation:** Direkt gegen die Produktions-URL per Playwright verifiziert (QA-Testkonto) — Training-Tab zeigt alle 4 Kennzahlen-Kacheln ("Einheiten (7 Tage)": 20, "Aktuelle Serie": 2 Wochen, korrekte "nicht genug Daten"-Hinweise für Durchschnittsgewicht/Steigerung mangels Fitnessstudio-Historie), Trainingsliste mit echten Einträgen, "Ältere Einträge laden" vorhanden. Kein "Bald verfügbar"-Platzhalter, kein Fehlerzustand mehr sichtbar. Screenshot geprüft.
