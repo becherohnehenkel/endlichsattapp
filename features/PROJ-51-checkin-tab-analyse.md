@@ -148,6 +148,18 @@ Keine neuen Pakete nötig — vollständig mit dem bereits installierten Next.js
 - Serverseitige Berechnung der 6 Kennzahlen (aktueller Wert, 30-Tage-Schnitt, Differenz, Datenschwelle) — vollständig in `/backend`.
 - `npm run build`, `npm run lint`, `npm test` (481/481) fehlerfrei. Ein bestehender PROJ-42-Test ("Klick auf 'Check-Ins' zeigt 'Bald verfügbar'") wurde an die neue Realität angepasst (prüft jetzt, dass der Platzhalter-Text NICHT mehr erscheint) — eigene Abdeckung der neuen Funktionalität folgt in `/qa`.
 
+## Implementation Notes (Backend)
+
+**Keine Migration nötig** — die Route liest ausschließlich die bestehende `wochen_check_ins`-Tabelle aus PROJ-45 (RLS-Policy "Users see own wochen check-ins" existiert bereits und deckt den Lesezugriff vollständig ab; passender Index auf `(user_id, woche_start DESC)` ebenfalls schon vorhanden).
+
+**Gebaut:**
+- Neu: `GET /api/check-in/verlauf` (`src/app/api/check-in/verlauf/route.ts`) — Auth-Check (401 ohne Session), `limit`/`offset`-Pagination (Limit auf 50 gedeckelt, gleiches Muster wie `/api/training/verlauf`), `.eq('user_id', user.id)` als explizite Filterung zusätzlich zur RLS.
+- `berechneKennzahlen()`: nur bei `offset=0` aufgerufen. "Aktueller Wert" kommt direkt aus dem ersten Eintrag der ohnehin bereits geladenen Liste (neueste-zuerst sortiert) — keine zusätzliche Abfrage nötig dafür. Für den 30-Tage-Schnitt läuft eine zweite, breitere Abfrage (`gte('woche_start', ...)`). Datenschwelle: mind. 2 Check-Ins im 30-Tage-Fenster, sonst `differenz: null`.
+- Werte werden serverseitig gerundet, bevor sie zurückgehen: Punkte-Metriken auf 1 Nachkommastelle, Screentime (Minuten) auf ganze Zahlen — vermeidet hässliche Fließkomma-Reste im Frontend.
+- Response bündelt Liste und Kennzahlen in einer Antwort bei `offset=0` (Feld `kennzahlen` nur dort vorhanden), identisch zur PROJ-50-Architektur.
+- Integrationstest: `src/app/api/check-in/verlauf/route.test.ts` — 9 Tests (401, Happy Path inkl. Kennzahlen, kein Kennzahlen-Query bei `offset>0`, korrekte Differenz-Berechnung inkl. invertierter Screentime-Richtung, Rundung auf 1 Nachkommastelle, leere Liste ohne Fehler, 500 bei DB-Fehler, Limit-Deckelung, `hasMore`).
+- `npm run build`, `npm run lint`, `npm test` (490/490) fehlerfrei. Live gegen die echte DB verifiziert (QA-Testkonto, Playwright): ein echter Wochen-Check-In über `/check-in` gespeichert → Check-Ins-Tab zeigt die Woche korrekt als "6. Sept. – 12. Sept." sowie alle 6 Kennzahlen mit dem richtigen aktuellen Wert (u. a. "0 Min" für Screentime, "5 / 10" für die Punkte-Slider) und korrekt "Noch nicht genug Daten" bei allen 6 Metriken, da nur 1 Check-In vorliegt (Datenschwelle von mind. 2 greift wie spezifiziert).
+
 ## QA Test Results
 _To be added by /qa_
 
