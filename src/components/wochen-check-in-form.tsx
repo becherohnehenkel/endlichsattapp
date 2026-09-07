@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { cn } from '@/lib/utils'
 import { SCREENTIME_MINUTEN_SCHRITTE } from '@/lib/screentime-schritte'
+import { formatScreentime, formatWochenLabel } from '@/lib/format-wochen-check-in'
 
 export interface WochenCheckInAntworten {
   highlights: string
@@ -71,13 +72,6 @@ function SliderFrage({ id, frage, min, max, minLabel, maxLabel, value, onChange,
       )}
     </div>
   )
-}
-
-function formatScreentime(minuten: number): string {
-  if (minuten < 60) return `${minuten} Min`
-  const stunden = minuten / 60
-  const stundenText = Number.isInteger(stunden) ? `${stunden}` : stunden.toFixed(1).replace('.', ',')
-  return `${stundenText} Std`
 }
 
 interface ScreentimeSliderFrageProps {
@@ -177,14 +171,6 @@ const LEERE_ANTWORTEN: WochenCheckInAntworten = {
   training: null,
   trainingGrund: '',
   sonstiges: '',
-}
-
-function formatWochenLabel(wocheStart: string): string {
-  const start = new Date(`${wocheStart}T00:00:00Z`)
-  const end = new Date(start)
-  end.setUTCDate(end.getUTCDate() + 6)
-  const fmt = (d: Date) => d.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' })
-  return `${fmt(start)} – ${fmt(end)}`
 }
 
 function formatZuletztAktualisiert(updatedAt: string): string {

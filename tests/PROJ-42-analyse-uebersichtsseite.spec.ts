@@ -124,10 +124,12 @@ test.describe('Sektion 3 — Historie der letzten Tage', () => {
     await expect(page).toHaveURL(/\/analyse$/)
   })
 
-  test('AC: Klick auf "Check-Ins" zeigt "Bald verfügbar", keine Navigation, kein Fehler', async ({ page }) => {
+  test('AC: Klick auf "Check-Ins" zeigt echten Inhalt statt Platzhalter, keine Navigation, kein Fehler (PROJ-51)', async ({ page }) => {
+    // Seit PROJ-51 zeigt der "Check-Ins"-Tab die echte Check-In-Historie statt des früheren
+    // "Bald verfügbar"-Platzhalters — eigene Abdeckung in tests/PROJ-51-checkin-tab-analyse.spec.ts.
     await loginAs(page)
     await page.getByRole('tab', { name: 'Check-Ins' }).click()
-    await expect(page.getByText('Bald verfügbar.')).toBeVisible()
+    await expect(page.getByText('Bald verfügbar.')).not.toBeVisible()
     await expect(page).toHaveURL(/\/analyse$/)
   })
 })

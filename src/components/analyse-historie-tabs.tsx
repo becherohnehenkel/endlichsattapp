@@ -1,19 +1,9 @@
 'use client'
 
-import { ClipboardCheck, type LucideIcon } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import MahlzeitHistorie from '@/components/mahlzeit-historie'
 import TrainingHistorie from '@/components/training-historie'
-
-function BaldVerfuegbarTab({ icon: Icon, label }: { icon: LucideIcon; label: string }) {
-  return (
-    <div className="flex flex-col items-center text-center gap-2 py-16">
-      <Icon className="h-8 w-8 text-muted-foreground" />
-      <p className="font-semibold text-foreground">{label}</p>
-      <p className="text-sm text-muted-foreground">Bald verfügbar.</p>
-    </div>
-  )
-}
+import CheckInHistorie from '@/components/checkin-historie'
 
 // PROJ-42: Sektion 3 der Analyse-Übersicht, nur für eingeloggte Nutzer gerendert.
 // Struktur bewusst so gebaut, dass Trainingseinheiten/Check-Ins später als gleichwertige
@@ -33,7 +23,7 @@ export function AnalyseHistorieTabs() {
         <TrainingHistorie />
       </TabsContent>
       <TabsContent value="checkin" className="mt-4">
-        <BaldVerfuegbarTab icon={ClipboardCheck} label="Check-Ins" />
+        <CheckInHistorie />
       </TabsContent>
     </Tabs>
   )

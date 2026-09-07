@@ -132,6 +132,22 @@ Für die Anzeige werden zwei Sichten auf dieselben Daten gebraucht:
 ### D) Abhängigkeiten (Pakete)
 Keine neuen Pakete nötig — vollständig mit dem bereits installierten Next.js/Supabase-Stack umsetzbar.
 
+## Implementation Notes (Frontend)
+
+**Gebaut:**
+- Neu: `src/lib/format-wochen-check-in.ts` — `formatScreentime()` und `formatWochenLabel()` aus `wochen-check-in-form.tsx` (PROJ-45) hierher ausgelagert und dort durch einen Import ersetzt (reine Verschiebung, kein Verhaltensunterschied), damit dieser Tab dieselbe Formatierung ohne Duplikat nutzt — analog zur bereits bestehenden Auslagerung von `getWeekStartIso` in `wochen-grenzen.ts`.
+- Neu: `src/components/checkin-eintrag.tsx` — ein Listen-Eintrag zeigt ausschließlich die Kalenderwoche (`formatWochenLabel`), keine weiteren Details (siehe Spec).
+- Neu: `src/components/checkin-kennzahlen.tsx` — kompakte Liste mit 6 Zeilen (Label, aktueller Wert, Differenz-Badge). Punkte-Metriken zeigen "X / 10", Screentime nutzt `formatScreentime()`. Die Differenz-Farbe (grün/rot) berücksichtigt die Richtung pro Metrik (`richtung: 'mehr' | 'weniger'`) — bei Screentime bedeutet ein negativer Wert eine Verbesserung, bei den anderen 5 ein positiver. Bei `differenz === null` erscheint der neutrale "Noch nicht genug Daten"-Hinweis statt eines Vorzeichens.
+- Neu: `src/components/checkin-historie.tsx` — Lade-Logik 1:1 nach dem Muster von `TrainingHistorie` (PROJ-50) kopiert: erste 5 Einträge beim Mount, "Ältere Einträge laden" holt in 10er-Schritten nach. Kennzahlen kommen im selben Response wie die erste Seite (Feld `kennzahlen`, nur bei `offset=0`).
+- `src/components/analyse-historie-tabs.tsx`: `BaldVerfuegbarTab`-Platzhalter im "Check-Ins"-Tab durch `<CheckInHistorie />` ersetzt; da `BaldVerfuegbarTab` (und der zugehörige `ClipboardCheck`-Import) dadurch keinen Aufrufer mehr hatte, wurde er entfernt statt auskommentiert zu bleiben.
+- Gast-Zugriff brauchte keinen neuen Code — `AnalyseHistorieTabs` wird in `src/app/analyse/page.tsx` bereits nur für eingeloggte Nutzer gerendert, identisch zum bestehenden Verhalten der Tabs "Mahlzeiten" und "Training".
+- API-Vertrag für `/api/check-in/verlauf?limit=&offset=` (noch nicht gebaut) im Frontend bereits als TypeScript-Interface festgelegt: `{ checkIns: CheckInEntry[], hasMore: boolean, kennzahlen?: CheckInMetrikErgebnis[] }`.
+
+**Bewusst nicht gebaut (braucht `/backend`):**
+- Die eigentliche API-Route `/api/check-in/verlauf` existiert noch nicht — die Komponente ruft sie bereits aktiv auf, bekommt aktuell 404 und zeigt dadurch korrekt ihren Fehlerzustand ("Deine Check-Ins konnten nicht geladen werden."), darunter den Leer-Zustand. Verifiziert per Screenshot (Desktop + Mobile 375px) — beide Zustände greifen sauber ineinander, kein Absturz, kein horizontales Scrollen.
+- Serverseitige Berechnung der 6 Kennzahlen (aktueller Wert, 30-Tage-Schnitt, Differenz, Datenschwelle) — vollständig in `/backend`.
+- `npm run build`, `npm run lint`, `npm test` (481/481) fehlerfrei. Ein bestehender PROJ-42-Test ("Klick auf 'Check-Ins' zeigt 'Bald verfügbar'") wurde an die neue Realität angepasst (prüft jetzt, dass der Platzhalter-Text NICHT mehr erscheint) — eigene Abdeckung der neuen Funktionalität folgt in `/qa`.
+
 ## QA Test Results
 _To be added by /qa_
 
