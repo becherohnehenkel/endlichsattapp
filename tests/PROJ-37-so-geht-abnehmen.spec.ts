@@ -158,7 +158,7 @@ test.describe('Eiweißbedarf', () => {
 // ─── Gäste (zustandslos) ────────────────────────────────────────────────────
 
 test.describe('Gäste', () => {
-  test('AC: Gast öffnet den Rechner mit leeren Feldern', async ({ page, context }) => {
+  test('AC: Gast öffnet den Rechner mit leeren Feldern (ohne vorherige lokale Werte)', async ({ page, context }) => {
     await context.clearCookies()
     await page.goto('/ernaehrung/so-geht-abnehmen')
     await oeffneArbeitspunkt(page, 'Kcal-Rechner')
@@ -167,16 +167,92 @@ test.describe('Gäste', () => {
     await expect(page.locator('#kcal-alter')).toHaveValue('')
   })
 
-  test('AC: Gast berechnet ein Ergebnis, nach Reload sind die Felder wieder leer (nichts gespeichert)', async ({ page, context }) => {
+  // PROJ-37 (Refinement 2026-09-08: Stateless Gast-Persistenz) — ersetzt den bisherigen
+  // Test "Felder nach Reload wieder leer": Gäste bekommen ihre Werte jetzt im Browser
+  // (localStorage) gespeichert, rein client-seitig, nie an den Server gesendet.
+  test('AC (Refinement 2026-09-08): Gast berechnet ein Ergebnis, nach Reload sind Formular + Ergebnis aus dem Browser-Speicher vorausgefüllt', async ({ page, context }) => {
     await context.clearCookies()
     await page.goto('/ernaehrung/so-geht-abnehmen')
+
+    let kcalRechnerAufgerufen = false
+    await page.route('**/api/kcal-rechner', (route) => {
+      kcalRechnerAufgerufen = true
+      route.continue()
+    })
+
     await fillValidesFormular(page)
     await page.getByRole('button', { name: 'Berechnen' }).click()
     await expect(page.getByText('2759 kcal', { exact: true })).toBeVisible()
+    expect(kcalRechnerAufgerufen).toBe(false)
+
+    const gastSpeicher = await page.evaluate(() => localStorage.getItem('mehralsabnehmen_kcal_gast'))
+    expect(gastSpeicher).not.toBeNull()
+    expect(JSON.parse(gastSpeicher!)).toMatchObject({ gewichtKg: 80, groesseCm: 180, alterJahre: 30 })
 
     await page.reload()
     await oeffneArbeitspunkt(page, 'Kcal-Rechner')
+    await expect(page.locator('#kcal-gewicht')).toHaveValue('80')
+    await expect(page.locator('#kcal-groesse')).toHaveValue('180')
+    await expect(page.locator('#kcal-alter')).toHaveValue('30')
+    await expect(page.getByText('2759 kcal', { exact: true })).toBeVisible()
+    expect(kcalRechnerAufgerufen).toBe(false)
+  })
+
+  test('AC (Refinement 2026-09-08): ohne Browser-Speicher (z. B. privater Modus) bleibt der Rechner wie zuvor — leer, kein Fehler', async ({ page, context }) => {
+    await context.clearCookies()
+    await page.addInitScript(() => {
+      Object.defineProperty(window, 'localStorage', {
+        get() { throw new Error('localStorage blockiert (simuliert privater Modus)') },
+      })
+    })
+    await page.goto('/ernaehrung/so-geht-abnehmen')
+    await oeffneArbeitspunkt(page, 'Kcal-Rechner')
     await expect(page.locator('#kcal-gewicht')).toHaveValue('')
+    await expect(page.locator('#kcal-groesse')).toHaveValue('')
+  })
+})
+
+// ─── Gast-Persistenz auf anderen Seiten (Refinement 2026-09-08) ────────────
+
+async function setzeGastWerte(page: Page) {
+  await page.addInitScript(() => {
+    localStorage.setItem('mehralsabnehmen_kcal_gast', JSON.stringify({
+      gewichtKg: 80, groesseCm: 180, alterJahre: 30,
+      geschlecht: 'maennlich', aktivitaetslevel: 'moderat_aktiv', ziel: 'fett_verlieren',
+    }))
+  })
+}
+
+test.describe('Gast-Persistenz auf anderen Seiten', () => {
+  test('AC: Analyse-Übersicht zeigt für Gäste mit lokalem Kalorienziel eine schlanke Variante statt des Login-Hinweises', async ({ page, context }) => {
+    await context.clearCookies()
+    await setzeGastWerte(page)
+    await page.goto('/analyse')
+    await expect(page.getByText('Dein Mahlzeiten-Fortschritt braucht ein Konto')).toBeVisible()
+    await page.getByRole('button', { name: 'Kannst du noch etwas essen?' }).click()
+    await expect(page.getByText('Noch ca.')).toBeVisible()
+    await expect(page.getByText('2483 kcal')).toBeVisible()
+  })
+
+  test('AC: Analyse-Übersicht zeigt weiterhin den Login-Hinweis, wenn kein lokales Kalorienziel vorhanden ist', async ({ page, context }) => {
+    await context.clearCookies()
+    await page.goto('/analyse')
+    await expect(page.getByText('Melde dich an, um deinen Tagesfortschritt zu sehen.')).toBeVisible()
+  })
+
+  test('AC: Emotionales Essen berücksichtigt für Gäste das lokal gespeicherte Kalorienziel bei "Feste Mahlzeiten planen"', async ({ page, context }) => {
+    await context.clearCookies()
+    await setzeGastWerte(page)
+    await page.goto('/ernaehrung/emotionales-essen')
+    await oeffneArbeitspunkt(page, 'Feste Mahlzeiten planen (ohne Ablenkung)')
+    await expect(page.getByText(/Basierend auf deinem berechneten Tagesbedarf von 2483 kcal/)).toBeVisible()
+  })
+
+  test('AC: Emotionales Essen zeigt weiterhin den 2000-kcal-Referenzwert, wenn kein lokales Kalorienziel vorhanden ist', async ({ page, context }) => {
+    await context.clearCookies()
+    await page.goto('/ernaehrung/emotionales-essen')
+    await oeffneArbeitspunkt(page, 'Feste Mahlzeiten planen (ohne Ablenkung)')
+    await expect(page.getByText(/Referenzwert: 2000 kcal/)).toBeVisible()
   })
 })
 

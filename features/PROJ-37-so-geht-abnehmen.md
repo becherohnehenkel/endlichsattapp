@@ -1,6 +1,6 @@
 # PROJ-37: So geht abnehmen (inkl. Kcal-Rechner)
 
-## Status: Deployed (Refinement: Stateless Gast-Persistenz "Planned")
+## Status: Deployed (Refinement: Stateless Gast-Persistenz "Approved")
 **Created:** 2026-08-31
 **Last Updated:** 2026-09-08
 
@@ -646,6 +646,51 @@ Nutzer hat den Vortages-Deploy auf Produktion geprüft: Spaltenbündigkeit und I
 - Per Playwright verifiziert: Text-Mittelpunkt (via `Range.getBoundingClientRect()` über den kompletten `<p>`-Inhalt) liegt jetzt bei allen 4 Punkten innerhalb 0,3px des Icon-Mittelpunkts (vorher bis zu ~8px Abweichung). Mobile-Verhalten (Text volle Breite, linksbündig) unverändert korrekt — dort bleibt `self-stretch` unterhalb `sm:` aktiv.
 - **Neuer permanenter E2E-Test** (`tests/PROJ-37-so-geht-abnehmen.spec.ts`): prüft für alle 4 Krafttraining-Punkte sowohl `align-self !== 'stretch'` als auch die tatsächliche Y-Zentrierung (Toleranz 2px) — schließt die Testlücke, durch die dieser Bug am Vortag trotz grüner Spaltenbündigkeits-Suite unentdeckt blieb (der bestehende Test prüfte nur die X-Achse). Suite: 32 → 36 Tests, 36/36 grün (chromium + Mobile Chrome).
 - `npm run build`, `npm run lint`, `npm test` (464/464) fehlerfrei. Einzige verbleibenden Lint-Fehler weiterhin die bekannten, unabhängigen `sidebar.tsx`-Fehler (separater Task).
+
+### QA Test Results (Refinement 2026-09-08): Stateless Gast-Persistenz
+
+**Tested:** 2026-09-08
+**Tester:** QA Engineer (Claude)
+
+#### Acceptance Criteria Status
+
+**Gäste**
+- [x] Kcal-Rechner öffnet ohne vorherige lokale Werte mit leeren Feldern — PASS
+- [x] Berechnen speichert Gewicht/Größe/Alter/Geschlecht/Aktivitätslevel/Ziel ausschließlich in `localStorage`, keine Anfrage an `/api/kcal-rechner` — PASS (per Route-Interception verifiziert: `kcalRechnerAufgerufen` bleibt `false`)
+- [x] Nach Reload (auch simulierter Browser-Neustart über neuen Kontext) sind Formular und Ergebnis aus dem Browser-Speicher vorausgefüllt — PASS
+- [x] Analyse-Übersicht und Emotionales Essen berücksichtigen das lokal gespeicherte Kalorienziel für Gäste — PASS (beide Stellen zeigen exakt "2483 kcal", identisch zur eingeloggten Berechnung)
+- [x] Ohne verfügbaren Browser-Speicher (simulierter privater Modus) verhält sich der Rechner wie zuvor — leer, kein Fehler, kein Absturz — PASS
+
+**Ergebnis: 5/5 Acceptance Criteria bestanden.**
+
+#### Security Audit (Red Team)
+- **Kein Server-Kontakt für Gäste bestätigt:** Route-Interception auf `/api/kcal-rechner` zeigt keine Anfrage während des gesamten Gast-Flows (Berechnen, Reload, Navigation zu anderen Seiten) — die Kernanforderung dieses Refinements ist technisch verifiziert, nicht nur behauptet.
+- **Kein neuer Server-Angriffsvektor:** keine neue API-Route, keine neue Datenbank-Spalte, keine geänderte Auth-/Autorisierungslogik.
+- **Tampering-Robustheit (Low-Finding, nicht blockierend):** `ladeKcalGastWerte()` validiert nur die Feld-*Typen* (z. B. `gewichtKg` muss `number` sein), nicht die gültigen Wertebereiche/Enums. Ein Nutzer, der über DevTools manuell einen ungültigen `aktivitaetslevel`-Wert in `localStorage` einträgt, sieht "NaN kcal" statt eines Fehlers oder Absturzes — kein Sicherheitsrisiko (rein clientseitige, selbstbezogene Manipulation ohne Auswirkung auf andere Nutzer oder den Server), aber als kleine kosmetische Lücke dokumentiert. Konsistent mit der bereits bestehenden Spec-Entscheidung "keine zusätzliche Plausibilitätsprüfung über die harten Grenzen hinaus (bewusst einfach gehalten)".
+- **Keine sensiblen Daten preisgegeben:** die im Browser gespeicherten Werte (Gewicht/Größe/Alter/Geschlecht/Aktivitätslevel/Ziel) sind exakt dieselben Werte, die der Nutzer ohnehin selbst sichtbar in die Formularfelder eingibt — keine neue Datenkategorie, kein zusätzliches Preisgabe-Risiko.
+
+#### Regressionstest
+- **Vitest (Gesamtsuite):** 490/490 grün.
+- **E2E — `tests/PROJ-37-so-geht-abnehmen.spec.ts` (eigene Suite, erweitert um 2 neue/angepasste Gast-Tests + 4 neue Cross-Page-Tests):** 74/77 grün. 1 Fehlschlag, 2 nicht ausgeführt — **kein Bezug zu diesem Refinement**, siehe Bugs Found.
+- **E2E — `tests/PROJ-38-emotionales-essen.spec.ts`, `tests/PROJ-42-analyse-uebersichtsseite.spec.ts`:** alle Tests grün, keine Regression durch die geänderten `FesteMahlzeitenPlaner`-Props oder die neue `AnalyseTagesuebersichtGast`-Komponente.
+- `npm run build`, gezieltes `eslint`: fehlerfrei.
+
+#### Bugs Found
+
+##### BUG-1 (nicht durch dieses Refinement verursacht, bereits vor QA-Start bekannt und eskaliert): Kalorien-Rechner und Wochen-Check-In für eingeloggte Nutzer aktuell durch PROJ-52 blockiert
+- **Severity:** High (Produktionsauswirkung), aber **außerhalb des Scopes dieses Refinements**
+- **Ursache:** PROJ-52s Einwilligungs-Gate ist bereits im Frontend live (auch auf Produktion), die zugehörige Backend-Route existiert aber noch nicht — jeder eingeloggte Nutzer sieht dauerhaft "Einwilligung erforderlich" ohne Möglichkeit, fortzufahren.
+- **Auswirkung auf diese QA-Runde:** Der bestehende Test "Berechnen speichert automatisch — nach Reload vorausgefüllt" (Login-Pfad) kann die Formularfelder nicht mehr erreichen, da sie hinter dem Gate liegen. 2 nachfolgende Tests im selben `.serial`-Block wurden dadurch übersprungen (Standard-Playwright-Verhalten bei einem fehlgeschlagenen Test im selben Serial-Block).
+- **Bereits eskaliert:** Dem Nutzer während dieser QA-Runde gemeldet und gemeinsam entschieden, PROJ-37 zuerst abzuschließen und direkt danach mit `/backend` für PROJ-52 fortzufahren, um die Lücke zu schließen.
+- **Nicht Teil dieses Refinements:** betrifft ausschließlich eingeloggte Nutzer und die bereits bestehende Speicherfunktion — die hier getestete Gast-Persistenz ist davon nicht betroffen (Gäste durchlaufen das PROJ-52-Gate nie, siehe Architektur-Entscheidung).
+
+#### Summary
+- **Acceptance Criteria (dieses Refinement):** 5/5 PASS
+- **Bugs in diesem Refinement:** 0
+- **Bugs außerhalb des Scopes, aber während der QA entdeckt/bestätigt:** 1 (BUG-1, PROJ-52-bedingt, bereits eskaliert)
+- **Security:** Pass — Kernversprechen (kein Serverkontakt für Gäste) technisch verifiziert, ein Low-Finding dokumentiert (kein Blocker)
+- **Production Ready (dieses Refinement):** YES — die Gast-Persistenz selbst ist vollständig funktionsfähig und unabhängig vom PROJ-52-Zustand
+- **Hinweis:** BUG-1 sollte vor einem eigenständigen Deploy dieses Refinements nicht als Blocker gewertet werden, da es bereits jetzt (unabhängig von diesem Deploy) live auf Produktion besteht und durch PROJ-52s Backend behoben wird, nicht durch etwas in diesem Refinement.
 
 ## Deployment
 
