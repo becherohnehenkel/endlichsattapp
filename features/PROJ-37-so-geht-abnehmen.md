@@ -276,6 +276,16 @@ Am Ende: dezenter Text-Link *"Trainingspläne findest du im Training-Bereich →
 | Formular-Steuerelemente: Geschlecht als Radio-Buttons, Ziel als antippbare Schaltflächen (Segmented-Control-Stil), Aktivitätslevel als Dropdown | Nutzervorgabe — Dropdown hält die 5 PAL-Stufen platzsparend, Radio/Buttons passen zur geringen Optionsanzahl bei Geschlecht/Ziel | 2026-08-31 |
 | **Refinement 2026-08-31 (im Zuge von PROJ-38):** `so-geht-abnehmen-guide.tsx` auf die neue, gemeinsame `ArbeitspunkteListe`-Komponente umgestellt (Ein-/Ausklappen statt alles auf einmal sichtbar); Kcal-Rechner startet automatisch aufgeklappt, wenn gespeicherte Werte vorhanden sind (`defaultOffenIds`), damit das Ergebnis weiterhin ohne Klick sichtbar bleibt; Desktop-Breite auf 850px erhöht, Fließtext auf `text-xs` verkleinert | Nutzerwunsch nach konsistentem Ein-/Ausklapp-Verhalten über alle drei "Arbeitspunkte"-Guides hinweg — Details siehe PROJ-38 Decision Log | 2026-08-31 |
 
+#### Refinement (2026-09-08): Stateless Gast-Persistenz
+
+| Decision | Rationale | Date |
+|----------|-----------|------|
+| Neuer, gemeinsam genutzter Baustein kapselt Lesen/Schreiben/Löschen von `window.localStorage` unter einem festen Schlüssel, statt die Logik in jeder der 3 betroffenen Komponenten zu duplizieren | Einzige Quelle der Wahrheit für das Speicherformat; Änderungen am Format müssen nur an einer Stelle gepflegt werden | 2026-09-08 |
+| Die bereits bestehende, reine `berechneKcal()`-Funktion aus `src/lib/kcal-rechner.ts` wird unverändert auch für die Gast-Berechnung in `AnalyseTagesuebersicht` und `FesteMahlzeitenPlaner` wiederverwendet | Vermeidet eine zweite Implementierung derselben Formel; die Funktion ist bereits reines TypeScript ohne React-/Server-Abhängigkeit und damit überall aufrufbar | 2026-09-08 |
+| Die 3 betroffenen Client-Komponenten (`KcalRechner`, `AnalyseTagesuebersicht`, `FesteMahlzeitenPlaner`) prüfen den Browser-Speicher als Fallback, wenn kein serverseitiger Wert vorliegt — ohne explizite Gast-Erkennung (kein neuer `isGuest`-Prop nötig) | Ein eingeloggter Nutzer ohne gespeicherte Werte hat ohnehin keinen lokalen Eintrag; die Fallback-Logik ist dadurch für beide Nutzergruppen sicher und einheitlich, ohne zusätzliche Verzweigung | 2026-09-08 |
+| Kein Umbau von `EmotionalesEssenGuide` zu einer Client Component | Die eigentliche Anzeige/Berechnung passiert bereits in der darunterliegenden `FesteMahlzeitenPlaner`-Komponente, die schon eine Client Component ist — der Fallback kann dort eingebaut werden, ohne die Server/Client-Grenze zu verschieben | 2026-09-08 |
+| Alle Speicherzugriffe defensiv (try/catch), Fallback auf bisheriges Verhalten bei Fehlern | Private Browsing, deaktivierter Speicher oder Kontingent-Überschreitung dürfen die App nie zum Absturz bringen | 2026-09-08 |
+
 ---
 <!-- Sections below are added by subsequent skills -->
 
@@ -306,6 +316,43 @@ Neue, optionale Felder in der bestehenden `profiles`-Tabelle: Gewicht, Größe, 
 
 ### Backend-Bedarf
 Eine neue API-Route zum Speichern der Rechner-Eingaben für eingeloggte Nutzer (Lesen der zuletzt gespeicherten Werte erfolgt serverseitig beim Seitenaufruf, kein separater API-Aufruf nötig).
+
+### Tech Design — Refinement (2026-09-08): Stateless Gast-Persistenz
+
+#### A) Komponenten-Struktur (Visuell)
+
+```
+Kcal-Rechner (bestehend, Client Component)
+├── Eingeloggter Nutzer: Werte kommen weiterhin vom Server (unverändert)
+└── Gast (NEU): Werte werden beim Laden aus dem Browser-Speicher gelesen
+      (Formular vorausgefüllt) und nach jeder Berechnung dorthin
+      zurückgeschrieben — kein Server-Kontakt
+
+Analyse-Übersicht → "Verbleibende Tageskalorien"-Anzeige (bestehend, Client Component)
+└── NEU: Wenn kein serverseitiger Wert vorliegt, wird zusätzlich der
+      Browser-Speicher als zweite Quelle geprüft, bevor der leere
+      Zustand gezeigt wird
+
+Emotionales Essen → "Feste Mahlzeiten planen" (bestehend, Client Component)
+└── NEU: dieselbe zusätzliche Browser-Speicher-Prüfung wie oben
+```
+
+**Kein Umbau von Server- zu Client-Komponenten nötig** — alle 3 betroffenen Anzeige-Stellen sind bereits Client Components (sie laufen ohnehin im Browser). Die Erweiterung besteht nur darin, dass sie zusätzlich zur bisherigen Quelle (Server-Wert) den Browser-Speicher als zweite, clientseitige Quelle abfragen können.
+
+#### B) Datenmodell (in Worten)
+
+Ein einziger Datensatz im Browser-Speicher des Gasts, mit denselben 6 Werten wie beim eingeloggten Nutzer (Gewicht, Größe, Alter, Geschlecht, Aktivitätslevel, Ziel). Keine serverseitige Entsprechung, keine Verknüpfung zu einem Nutzerkonto — rein lokal auf dem jeweiligen Gerät/Browser.
+
+#### C) Tech-Entscheidungen (Begründung für PM)
+
+1. **Ein gemeinsamer Baustein kapselt Lesen/Schreiben/Löschen des Browser-Speichers** — von allen 3 betroffenen Stellen genutzt, keine Duplikation der Speicherlogik.
+2. **Die bereits bestehende, rein mathematische Berechnungsfunktion wird unverändert wiederverwendet** — dieselbe Formel rechnet serverseitig für eingeloggte Nutzer und jetzt clientseitig für Gäste, keine zweite Implementierung der Kalorien-Formel.
+3. **Browser-Speicher wird als Fallback-Quelle behandelt, unabhängig vom Login-Status** — die 3 Anzeige-Stellen prüfen zuerst den serverseitig gelieferten Wert; ist der leer, wird zusätzlich der lokale Speicher geprüft. Das erspart eine explizite "Ist das ein Gast?"-Prüfung in diesen Komponenten und hält die Änderung minimal.
+4. **Alle Zugriffe auf den Browser-Speicher sind defensiv** — ein blockierter oder nicht unterstützter Zugriff (z. B. strikter privater Modus) führt zum bisherigen Verhalten (leerer Zustand), nie zu einem Fehler oder Absturz.
+5. **Kein neuer Backend-Bedarf** — betrifft ausschließlich Komponenten, die bereits im Browser laufen.
+
+#### D) Abhängigkeiten (Pakete)
+Keine neuen Pakete nötig — `window.localStorage` ist eine Standard-Browser-API.
 
 ## Implementation Notes (Frontend)
 - Neu: `src/lib/kcal-rechner.ts` — reine Berechnungslogik (Mifflin-St-Jeor, PAL-Faktoren, Ziel-Faktoren, Validierungsgrenzen), keine React-Abhängigkeit, gut isoliert testbar.
