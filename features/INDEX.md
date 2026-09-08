@@ -67,7 +67,7 @@
 | PROJ-49 | E2E-Testisolation: automatisches QA-Konto-Seeding für PROJ-11/PROJ-12 (Test-Infrastruktur, kein Feature-Spec) | P2 | Deployed | PROJ-11, PROJ-12 | — |
 | PROJ-50 | Training-Tab (Analyse-Seite) | P1 | Deployed | PROJ-42, PROJ-44, PROJ-19 | [Spec](PROJ-50-training-tab-analyse.md) |
 | PROJ-51 | Check-In-Tab (Analyse-Seite) | P1 | Deployed | PROJ-42, PROJ-45, PROJ-19 | [Spec](PROJ-51-checkin-tab-analyse.md) |
-| PROJ-52 | Explizite Einwilligung für gesundheitsnahe Daten (Art. 9 DSGVO) | P1 | Architected | PROJ-2, PROJ-19, PROJ-37, PROJ-45, PROJ-14, PROJ-20, PROJ-51 | [Spec](PROJ-52-einwilligung-gesundheitsdaten.md) |
+| PROJ-52 | Explizite Einwilligung für gesundheitsnahe Daten (Art. 9 DSGVO) | P1 | In Progress | PROJ-2, PROJ-19, PROJ-37, PROJ-45, PROJ-14, PROJ-20, PROJ-51 | [Spec](PROJ-52-einwilligung-gesundheitsdaten.md) |
 
 <!-- Add features above this line -->
 

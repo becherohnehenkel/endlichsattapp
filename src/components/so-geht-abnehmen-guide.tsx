@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { KcalRechner, type KcalRechnerGespeicherteWerte } from './kcal-rechner'
+import { GesundheitsdatenConsentGate } from './gesundheitsdaten-consent-gate'
 import { WochenBalkenDiagramm } from './wochen-balken-diagramm'
 import { ArbeitspunkteListe, type ArbeitspunkteSektion } from './arbeitspunkte-liste'
 import {
@@ -27,7 +28,11 @@ export function SoGehtAbnehmenGuide({ kannSpeichern, gespeicherteWerte }: SoGeht
         {
           id: 1,
           titel: 'Kcal-Rechner',
-          inhalt: <KcalRechner kannSpeichern={kannSpeichern} gespeicherteWerte={gespeicherteWerte} />,
+          inhalt: (
+            <GesundheitsdatenConsentGate aktiv={kannSpeichern}>
+              <KcalRechner kannSpeichern={kannSpeichern} gespeicherteWerte={gespeicherteWerte} />
+            </GesundheitsdatenConsentGate>
+          ),
         },
         {
           id: 2,

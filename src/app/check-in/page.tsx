@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getWeekStartIso } from '@/lib/wochen-grenzen'
 import { WochenCheckInForm, type WochenCheckInAntworten, type WochenCheckInEintrag } from '@/components/wochen-check-in-form'
 import { GewohnheitenListe } from '@/components/gewohnheiten-liste'
+import { GesundheitsdatenConsentGate } from '@/components/gesundheitsdaten-consent-gate'
 
 export default async function CheckInPage() {
   const supabase = await createClient()
@@ -41,12 +42,14 @@ export default async function CheckInPage() {
       </header>
 
       <main className="max-w-sm md:max-w-[850px] mx-auto px-4 py-6 space-y-8">
-        <WochenCheckInForm
-          isGuest={isGuest}
-          aktuelleWoche={aktuelleWoche}
-          initialEintrag={aktuellerEintrag}
-          historie={historie}
-        />
+        <GesundheitsdatenConsentGate aktiv={!isGuest}>
+          <WochenCheckInForm
+            isGuest={isGuest}
+            aktuelleWoche={aktuelleWoche}
+            initialEintrag={aktuellerEintrag}
+            historie={historie}
+          />
+        </GesundheitsdatenConsentGate>
 
         <div className="h-px bg-border" />
 

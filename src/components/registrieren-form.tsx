@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface RegistrierenFormProps {
@@ -17,6 +18,7 @@ export default function RegistrierenForm({ isAnonymousUpgrade = false }: Registr
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [gesundheitsdatenEinwilligung, setGesundheitsdatenEinwilligung] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -26,6 +28,12 @@ export default function RegistrierenForm({ isAnonymousUpgrade = false }: Registr
 
     if (password.length < 8) {
       setError('Das Passwort muss mindestens 8 Zeichen lang sein.')
+      return
+    }
+
+    // PROJ-52: Pflicht-Checkbox — ohne ausdrückliche Einwilligung keine Registrierung.
+    if (!gesundheitsdatenEinwilligung) {
+      setError('Bitte stimme der Verarbeitung deiner Gesundheitsdaten zu, um fortzufahren.')
       return
     }
 
@@ -40,7 +48,7 @@ export default function RegistrierenForm({ isAnonymousUpgrade = false }: Registr
         const { error } = await supabase.auth.updateUser({
           email,
           password,
-          data: { name },
+          data: { name, gesundheitsdaten_einwilligung: true },
         })
         if (error) {
           setError('Upgrade fehlgeschlagen. Bitte versuche es erneut.')
@@ -51,7 +59,7 @@ export default function RegistrierenForm({ isAnonymousUpgrade = false }: Registr
           email,
           password,
           options: {
-            data: { name },
+            data: { name, gesundheitsdaten_einwilligung: true },
             emailRedirectTo: `${window.location.origin}/auth/callback`,
           },
         })
@@ -124,6 +132,20 @@ export default function RegistrierenForm({ isAnonymousUpgrade = false }: Registr
                   required
                   autoComplete="new-password"
                 />
+              </div>
+
+              <div className="flex items-start gap-2 pt-1">
+                <Checkbox
+                  id="gesundheitsdaten-einwilligung"
+                  checked={gesundheitsdatenEinwilligung}
+                  onCheckedChange={(checked) => setGesundheitsdatenEinwilligung(checked === true)}
+                  className="mt-0.5"
+                />
+                <Label htmlFor="gesundheitsdaten-einwilligung" className="text-xs font-normal text-muted-foreground leading-relaxed">
+                  Ich stimme der Verarbeitung meiner Gewichts-, Ernährungsziel- und Wochen-Check-In-Daten
+                  (besondere Kategorie personenbezogener Daten nach Art. 9 DSGVO) gemäß der{' '}
+                  <Link href="/datenschutz" className="text-[#2E9E6B] hover:underline">Datenschutzerklärung</Link> zu.
+                </Label>
               </div>
 
               {error && (

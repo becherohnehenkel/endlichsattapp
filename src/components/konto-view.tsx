@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ChevronLeft, ShieldAlert } from 'lucide-react'
+import { ChevronLeft, ShieldAlert, ShieldOff } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -62,6 +62,23 @@ export default function KontoView({
   const [mahlzeitenZiel, setMahlzeitenZiel] = useState(mahlzeitenProTag ?? MAHLZEITEN_ZIEL_DEFAULT)
   const [zielSpeichernFehler, setZielSpeichernFehler] = useState(false)
 
+  // PROJ-52: eigener State-Satz, bewusst nicht "widerruf*" genannt — dieser Name ist im
+  // selben File bereits für den Abo-Widerruf (PROJ-11/14) vergeben.
+  const [gesundheitEingewilligt, setGesundheitEingewilligt] = useState(false)
+  const [gesundheitWiderrufOpen, setGesundheitWiderrufOpen] = useState(false)
+  const [gesundheitWiderrufLoading, setGesundheitWiderrufLoading] = useState(false)
+  const [gesundheitWiderrufError, setGesundheitWiderrufError] = useState<string | null>(null)
+  const [gesundheitWiderrufSuccess, setGesundheitWiderrufSuccess] = useState(false)
+
+  useEffect(() => {
+    let abgebrochen = false
+    fetch('/api/einwilligung/gesundheitsdaten')
+      .then(res => (res.ok ? res.json() : { eingewilligt: false }))
+      .then(data => { if (!abgebrochen) setGesundheitEingewilligt(!!data.eingewilligt) })
+      .catch(() => {})
+    return () => { abgebrochen = true }
+  }, [])
+
   const isSubscribed = subscriptionStatus != null && ACTIVE_STATUSES.includes(subscriptionStatus)
 
   async function handleLogout() {
@@ -97,6 +114,22 @@ export default function KontoView({
     } catch (err) {
       setWiderrufError(err instanceof Error ? err.message : 'Widerruf konnte nicht verarbeitet werden.')
       setWiderrufLoading(false)
+    }
+  }
+
+  async function handleGesundheitWiderruf() {
+    setGesundheitWiderrufLoading(true)
+    setGesundheitWiderrufError(null)
+    try {
+      const res = await fetch('/api/einwilligung/gesundheitsdaten', { method: 'DELETE' })
+      if (!res.ok) throw new Error()
+      setGesundheitWiderrufOpen(false)
+      setGesundheitEingewilligt(false)
+      setGesundheitWiderrufSuccess(true)
+    } catch {
+      setGesundheitWiderrufError('Widerruf konnte nicht verarbeitet werden. Bitte versuche es erneut.')
+    } finally {
+      setGesundheitWiderrufLoading(false)
     }
   }
 
@@ -181,6 +214,34 @@ export default function KontoView({
             <p className="text-xs text-destructive">Speichern fehlgeschlagen. Bitte erneut versuchen.</p>
           )}
         </div>
+
+        {/* Gesundheitsdaten-Einwilligung (PROJ-52) */}
+        {gesundheitEingewilligt && !gesundheitWiderrufSuccess && (
+          <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
+            <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Gesundheitsdaten</p>
+            <p className="text-sm text-muted-foreground">
+              Du hast der Verarbeitung deiner Gewichts-, Ernährungsziel- und Wochen-Check-In-Daten zugestimmt.
+            </p>
+            <Button
+              className="w-full border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300"
+              variant="outline"
+              onClick={() => { setGesundheitWiderrufError(null); setGesundheitWiderrufOpen(true) }}
+            >
+              <ShieldOff className="h-4 w-4 mr-2" />
+              Einwilligung für Gesundheitsdaten widerrufen
+            </Button>
+          </div>
+        )}
+
+        {gesundheitWiderrufSuccess && (
+          <div className="rounded-2xl border border-green-200 bg-green-50 p-4 space-y-1">
+            <p className="text-sm font-semibold text-green-800">Einwilligung widerrufen</p>
+            <p className="text-sm text-green-700">
+              Deine Gewichts-, Ernährungsziel- und Wochen-Check-In-Daten wurden gelöscht.
+              Kalorien-Rechner und Wochen-Check-In sind gesperrt, bis du erneut zustimmst.
+            </p>
+          </div>
+        )}
 
         {/* Abo-Details */}
         {isSubscribed && !widerrufSuccess && stripeDetails && (
@@ -332,6 +393,37 @@ export default function KontoView({
               className="bg-red-600 hover:bg-red-700 text-white"
             >
               {widerrufLoading ? 'Wird verarbeitet…' : 'Jetzt widerrufen'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Gesundheitsdaten-Widerruf-Dialog (PROJ-52) */}
+      <AlertDialog open={gesundheitWiderrufOpen} onOpenChange={setGesundheitWiderrufOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Einwilligung für Gesundheitsdaten widerrufen</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-sm text-muted-foreground">
+                <p>
+                  Beim Widerruf werden deine Gewichts- und Ernährungsziel-Werte sowie{' '}
+                  <strong className="text-foreground">alle deine Wochen-Check-In-Einträge unwiderruflich gelöscht</strong>.
+                  Kalorien-Rechner und Wochen-Check-In sind danach gesperrt, bis du erneut zustimmst.
+                </p>
+                {gesundheitWiderrufError && (
+                  <p className="text-destructive font-medium">{gesundheitWiderrufError}</p>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={gesundheitWiderrufLoading}>Abbrechen</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); handleGesundheitWiderruf() }}
+              disabled={gesundheitWiderrufLoading}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {gesundheitWiderrufLoading ? 'Wird verarbeitet…' : 'Widerrufen und löschen'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

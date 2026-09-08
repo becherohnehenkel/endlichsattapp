@@ -165,6 +165,24 @@ Bei Ablehnung oder Widerruf werden zusätzlich entfernt:
 ### D) Abhängigkeiten (Pakete)
 Keine neuen Pakete nötig — Checkbox, AlertDialog etc. sind bereits installiert.
 
+## Implementation Notes (Frontend)
+
+**Gebaut:**
+- Neu: `src/components/gesundheitsdaten-consent-gate.tsx` — die gemeinsame `GesundheitsdatenConsentGate`-Komponente. Nimmt eine `aktiv`-Prop (bei `false` werden `children` immer direkt gerendert, z. B. für Gäste); bei `true` lädt sie den Status via `GET /api/einwilligung/gesundheitsdaten` und zeigt je nach Ergebnis entweder `children`, ein Lade-Skeleton oder den Zustimmungs-Bildschirm mit "Zustimmen"/"Ablehnen" (rufen `POST`/`DELETE` auf derselben Route auf). Fail-closed: ein Ladefehler oder 404 wird wie "keine Einwilligung" behandelt.
+- `src/components/so-geht-abnehmen-guide.tsx`: `KcalRechner` mit `<GesundheitsdatenConsentGate aktiv={kannSpeichern}>` umschlossen — `kannSpeichern` (bereits vorhandene Prop, `true` nur für eingeloggte, nicht-anonyme Nutzer) wird direkt als Aktivierungs-Bedingung wiederverwendet.
+- `src/app/check-in/page.tsx`: `WochenCheckInForm` (inkl. Mini-Historie) mit `<GesundheitsdatenConsentGate aktiv={!isGuest}>` umschlossen — `GewohnheitenListe` (PROJ-46) bleibt bewusst außerhalb des Gates, da unbetroffen.
+- `src/components/analyse-historie-tabs.tsx`: `CheckInHistorie` (PROJ-51) mit `<GesundheitsdatenConsentGate aktiv>` umschlossen (immer aktiv, da diese Komponente ohnehin nur für eingeloggte, nicht-anonyme Nutzer gerendert wird).
+- `src/components/registrieren-form.tsx`: neue Pflicht-Checkbox (`Checkbox` aus shadcn/ui) mit eigenem State; blockiert das Absenden clientseitig mit Fehlermeldung, wenn nicht aktiviert. Bei erfolgreicher Aktivierung wird `gesundheitsdaten_einwilligung: true` sowohl in `supabase.auth.signUp()`'s als auch in `updateUser()`'s (PROJ-19-Anonym-Upgrade-Pfad) `options.data` mitgeschickt.
+- `src/components/konto-view.tsx`: neuer, eigenständiger State-Satz (`gesundheitEingewilligt`, `gesundheitWiderruf*` — bewusst nicht `widerruf*`, das ist im selben File bereits für die Stripe-Kündigung vergeben) plus neue Sektion "Gesundheitsdaten" mit Widerruf-Button (nur sichtbar, wenn `gesundheitEingewilligt`) und eigenem `AlertDialog` mit Löschungs-Hinweis, analog zum bestehenden Widerruf-Dialog-Muster.
+- `npm run build`, gezieltes `eslint` auf alle geänderten/neuen Dateien, `npm test` (490/490) fehlerfrei.
+- Live-Verifikation im Dev-Server (Playwright/Browser-Tool): Gast sieht den Kcal-Rechner unverändert direkt (kein Gate); eingeloggter QA-Test-Nutzer sieht den Zustimmungs-Bildschirm an allen 3 Haupt-Einstiegspunkten (Kcal-Rechner, `/check-in`, Check-In-Tab auf `/analyse`) — jeweils mit erwartetem Fehlerzustand bei Klick auf "Zustimmen" (404, da Route noch nicht existiert); Registrierungs-Checkbox blockiert das Absenden korrekt mit Fehlermeldung und lässt sich aktivieren; `/konto` zeigt die neue Sektion korrekt NICHT an, solange keine Einwilligung vorliegt (erwarteter Zustand vor `/backend`).
+
+**Bewusst nicht gebaut (braucht `/backend`):**
+- Die eigentliche API-Route `/api/einwilligung/gesundheitsdaten` (GET/POST/DELETE) existiert noch nicht — alle Aufrufer bekommen aktuell 404 und zeigen dadurch korrekt ihren fail-closed-Zustimmungs-Bildschirm bzw. bleiben ausgeblendet (Konto-Sektion). Das neue Feld `gesundheitsdaten_einwilligung_at` auf `profiles` existiert noch nicht.
+- Die 3 "passiven" Anzeige-Stellen (So-geht-abnehmen-Guide-Restinhalt/-Charts sofern betroffen, `/analyse`-Übersicht-Widget, `/ernaehrung/emotionales-essen`) wurden bewusst NICHT angefasst — ihre bestehenden direkten Supabase-Abfragen auf die `kcal_*`-Felder würden ohne die neue Spalte nicht kaputtgehen, sollen aber erst in `/backend` um die zentrale Einwilligungs-Prüfung erweitert werden, sobald die Migration existiert (vermeidet, Datenbankabfragen auf eine noch nicht existierende Spalte zu bauen).
+- Der Mechanismus, wie die bei der Registrierung übergebene `gesundheitsdaten_einwilligung`-Metadata tatsächlich in die neue `profiles`-Spalte übernommen wird (Datenbank-Trigger beim Anlegen des Profils vs. Backfill beim ersten Login/`/auth/callback`) — der direkte `signUp()`-Aufruf erzeugt noch keine Session, ein authentifizierter API-Aufruf direkt danach ist für den Fresh-Signup-Pfad nicht möglich; für den PROJ-19-Anonym-Upgrade-Pfad (bereits bestehende Session) ist ein direkter authentifizierter Aufruf dagegen möglich. Empfehlung für `/backend`: Metadata-Auslesen im bestehenden Profil-Anlage-Trigger bzw. in `/auth/callback`.
+- Löschlogik bei Ablehnung/Widerruf (`kcal_*`-Felder nullen, `wochen_check_ins`-Zeilen löschen) sowie die Korrektur des betroffenen Satzes in der Datenschutzerklärung (PROJ-20) zum Widerrufsverhalten.
+
 ## QA Test Results
 _To be added by /qa_
 

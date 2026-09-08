@@ -4,6 +4,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import MahlzeitHistorie from '@/components/mahlzeit-historie'
 import TrainingHistorie from '@/components/training-historie'
 import CheckInHistorie from '@/components/checkin-historie'
+import { GesundheitsdatenConsentGate } from '@/components/gesundheitsdaten-consent-gate'
 
 // PROJ-42: Sektion 3 der Analyse-Übersicht, nur für eingeloggte Nutzer gerendert.
 // Struktur bewusst so gebaut, dass Trainingseinheiten/Check-Ins später als gleichwertige
@@ -23,7 +24,9 @@ export function AnalyseHistorieTabs() {
         <TrainingHistorie />
       </TabsContent>
       <TabsContent value="checkin" className="mt-4">
-        <CheckInHistorie />
+        <GesundheitsdatenConsentGate aktiv>
+          <CheckInHistorie />
+        </GesundheitsdatenConsentGate>
       </TabsContent>
     </Tabs>
   )
