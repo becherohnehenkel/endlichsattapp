@@ -1,9 +1,10 @@
 import Link from 'next/link'
-import { ArrowRight, Plus, UserRound, UtensilsCrossed, Clock } from 'lucide-react'
+import { ArrowRight, Plus, UserRound, Clock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { berechneKcal, type Geschlecht, type Aktivitaetslevel, type Ziel } from '@/lib/kcal-rechner'
 import { MAHLZEITEN_ZIEL_DEFAULT } from '@/lib/mahlzeiten-ziel'
 import { AnalyseTagesuebersicht } from '@/components/analyse-tagesuebersicht'
+import { AnalyseTagesuebersichtGast } from '@/components/analyse-tagesuebersicht-gast'
 import { AnalyseHistorieTabs } from '@/components/analyse-historie-tabs'
 import { LoginHinweis } from '@/components/login-hinweis'
 
@@ -117,11 +118,7 @@ export default async function AnalyseHubPage() {
             </p>
           </div>
           {isGuest ? (
-            <LoginHinweis
-              icon={UtensilsCrossed}
-              text="Melde dich an, um deinen Tagesfortschritt zu sehen."
-              reason="tagesuebersicht"
-            />
+            <AnalyseTagesuebersichtGast />
           ) : (
             <AnalyseTagesuebersicht
               mahlzeitenHeute={mahlzeitenHeute}

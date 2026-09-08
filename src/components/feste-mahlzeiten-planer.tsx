@@ -1,11 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Switch } from '@/components/ui/switch'
+import { ladeKcalGastWerte } from '@/lib/kcal-gast-speicher'
+import { berechneKcal } from '@/lib/kcal-rechner'
+
+const REFERENZWERT_KCAL = 2000
 
 interface FesteMahlzeitenPlanerProps {
-  tagesKcal: number
-  istEigenerWert: boolean
+  tagesKcal: number | null
 }
 
 interface MahlzeitBlock {
@@ -28,9 +31,27 @@ const MIT_SNACK: MahlzeitBlock[] = [
   { emoji: '🌙', label: 'Abendessen', anteil: 0.3, farbe: 'bg-[#3B6FA8]' },
 ]
 
-export function FesteMahlzeitenPlaner({ tagesKcal, istEigenerWert }: FesteMahlzeitenPlanerProps) {
+export function FesteMahlzeitenPlaner({ tagesKcal }: FesteMahlzeitenPlanerProps) {
   const [mitSnack, setMitSnack] = useState(false)
   const bloecke = mitSnack ? MIT_SNACK : OHNE_SNACK
+
+  // PROJ-37 (Refinement: Stateless Gast-Persistenz) — greift nur, wenn kein serverseitiger
+  // Wert vorliegt (tagesKcal === null). Bewusst ein `useEffect`, nicht ein lazy
+  // `useState`-Initializer — der Server rendert immer mit `REFERENZWERT_KCAL` (kein
+  // `window.localStorage`), ein Initializer, der auf dem Client sofort den echten Wert
+  // läse, erzeugt einen Hydration-Mismatch (führte bei einem harten Seitenaufruf
+  // reproduzierbar zu einem Absturz der gesamten Sektion, siehe QA).
+  const [gastTagesKcal, setGastTagesKcal] = useState<number | null>(null)
+  useEffect(() => {
+    if (tagesKcal != null) return
+    const gastWerte = ladeKcalGastWerte()
+    if (!gastWerte) return
+    setGastTagesKcal(berechneKcal(gastWerte).zielKcal)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const effektivTagesKcal = tagesKcal ?? gastTagesKcal ?? REFERENZWERT_KCAL
+  const istEigenerWert = tagesKcal != null || gastTagesKcal != null
 
   return (
     <div className="space-y-3">
@@ -52,7 +73,7 @@ export function FesteMahlzeitenPlaner({ tagesKcal, istEigenerWert }: FesteMahlze
               <span className="text-xs font-semibold text-foreground">{b.label}</span>
             </div>
             <div className="text-right">
-              <p className="text-xs font-semibold text-foreground">{Math.round(tagesKcal * b.anteil)} kcal</p>
+              <p className="text-xs font-semibold text-foreground">{Math.round(effektivTagesKcal * b.anteil)} kcal</p>
               <p className="text-[10px] text-muted-foreground">{Math.round(b.anteil * 100)}%</p>
             </div>
           </div>
@@ -68,11 +89,11 @@ export function FesteMahlzeitenPlaner({ tagesKcal, istEigenerWert }: FesteMahlze
 
       {istEigenerWert ? (
         <p className="text-[10px] text-muted-foreground">
-          Basierend auf deinem berechneten Tagesbedarf von {tagesKcal} kcal.
+          Basierend auf deinem berechneten Tagesbedarf von {effektivTagesKcal} kcal.
         </p>
       ) : (
         <p className="text-[10px] text-muted-foreground">
-          Referenzwert: {tagesKcal} kcal (noch kein eigener Wert berechnet —{' '}
+          Referenzwert: {effektivTagesKcal} kcal (noch kein eigener Wert berechnet —{' '}
           <a href="/ernaehrung/so-geht-abnehmen" className="text-[#2E9E6B] hover:underline font-medium">
             jetzt berechnen
           </a>

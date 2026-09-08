@@ -1,10 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ChevronDown, UtensilsCrossed } from 'lucide-react'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { cn } from '@/lib/utils'
+import { ladeKcalGastWerte } from '@/lib/kcal-gast-speicher'
+import { berechneKcal } from '@/lib/kcal-rechner'
 
 interface AnalyseTagesuebersichtProps {
   mahlzeitenHeute: number
@@ -21,6 +23,23 @@ export function AnalyseTagesuebersicht({ mahlzeitenHeute, mahlzeitenZiel, kcalRe
   const [offen, setOffen] = useState(false)
   const erledigt = mahlzeitenHeute >= mahlzeitenZiel
   const nochOffen = Math.max(mahlzeitenZiel - mahlzeitenHeute, 0)
+
+  // PROJ-37 (Refinement: Stateless Gast-Persistenz) — greift nur, wenn kein serverseitiger
+  // Wert vorliegt (kcalRest === null). Für Gäste gibt es kein Tracking der heute bereits
+  // verzehrten Kalorien, daher entspricht der Fallback direkt dem vollen Tagesziel. Bewusst
+  // ein `useEffect`, nicht ein lazy `useState`-Initializer — sonst würde der Client beim
+  // ersten Rendern (Hydration) einen anderen Wert anzeigen als der Server, was zu einem
+  // Hydration-Mismatch führt (bei einem harten Seitenaufruf reproduzierbar zu einem Absturz
+  // geführt, siehe QA an `feste-mahlzeiten-planer.tsx`).
+  const [gastKcalRest, setGastKcalRest] = useState<number | null>(null)
+  useEffect(() => {
+    if (kcalRest != null) return
+    const gastWerte = ladeKcalGastWerte()
+    if (!gastWerte) return
+    setGastKcalRest(berechneKcal(gastWerte).zielKcal)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  const effektivesKcalRest = kcalRest ?? gastKcalRest
 
   return (
     <div className="rounded-2xl border border-border bg-card p-4 space-y-4">
@@ -46,16 +65,16 @@ export function AnalyseTagesuebersicht({ mahlzeitenHeute, mahlzeitenZiel, kcalRe
           {offen ? 'Genauen Wert ausblenden' : 'Kannst du noch etwas essen?'}
         </CollapsibleTrigger>
         <CollapsibleContent className="pt-2">
-          {kcalRest == null ? (
+          {effektivesKcalRest == null ? (
             <p className="text-sm text-muted-foreground">
               Dafür fehlt noch dein Kalorienziel.{' '}
               <Link href="/ernaehrung/so-geht-abnehmen" className="text-[#2E9E6B] hover:underline font-medium">
                 Kcal-Rechner ausfüllen →
               </Link>
             </p>
-          ) : kcalRest > 0 ? (
+          ) : effektivesKcalRest > 0 ? (
             <p className="text-sm text-muted-foreground">
-              Noch ca. <span className="font-semibold text-foreground">{kcalRest} kcal</span> übrig heute.
+              Noch ca. <span className="font-semibold text-foreground">{effektivesKcalRest} kcal</span> übrig heute.
             </p>
           ) : (
             <p className="text-sm text-muted-foreground">Dein Kalorienziel ist heute schon erreicht — passt schon.</p>

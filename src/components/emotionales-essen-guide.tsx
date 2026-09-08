@@ -273,10 +273,7 @@ export function EmotionalesEssenGuide({ tagesKcal }: EmotionalesEssenGuideProps)
         id: 8,
         titel: 'Feste Mahlzeiten planen (ohne Ablenkung)',
         inhalt: (
-          <FesteMahlzeitenPlaner
-            tagesKcal={tagesKcal ?? 2000}
-            istEigenerWert={tagesKcal != null}
-          />
+          <FesteMahlzeitenPlaner tagesKcal={tagesKcal} />
         ),
       },
       {

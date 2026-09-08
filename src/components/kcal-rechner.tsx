@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
@@ -32,6 +32,7 @@ import {
   type Ziel,
   type KcalRechnerErgebnis,
 } from '@/lib/kcal-rechner'
+import { ladeKcalGastWerte, speichereKcalGastWerte } from '@/lib/kcal-gast-speicher'
 
 export interface KcalRechnerGespeicherteWerte {
   gewichtKg: number
@@ -67,6 +68,29 @@ export function KcalRechner({ kannSpeichern, gespeicherteWerte, onBerechnet }: K
   const [speicherFehler, setSpeicherFehler] = useState(false)
   const [wirdGespeichert, setWirdGespeichert] = useState(false)
   const [letztesGespeichertesGewicht, setLetztesGespeichertesGewicht] = useState(gespeicherteWerte?.gewichtKg ?? null)
+
+  // PROJ-37 (Refinement: Stateless Gast-Persistenz) — läuft nur für Gäste (kannSpeichern
+  // false), da eingeloggte Nutzer ihre Werte bereits serverseitig über `gespeicherteWerte`
+  // vorausgefüllt bekommen. Bewusst ein `useEffect`, nicht ein lazy `useState`-Initializer:
+  // der Server rendert immer mit leeren Feldern (kein `window.localStorage`), ein
+  // Initializer, der auf dem Client sofort den echten Wert läse, würde einen Hydration-
+  // Mismatch erzeugen (bei einem harten Seitenaufruf reproduzierbar zu einem Absturz der
+  // gesamten Sektion geführt, siehe QA). Der Effekt läuft erst NACH dem ersten,
+  // server-identischen Client-Render — sicher, aber mit kurzem sichtbaren "Nachladen".
+  useEffect(() => {
+    if (kannSpeichern) return
+    const gastWerte = ladeKcalGastWerte()
+    if (!gastWerte) return
+    setGewicht(gastWerte.gewichtKg.toString())
+    setGroesse(gastWerte.groesseCm.toString())
+    setAlter(gastWerte.alterJahre.toString())
+    setGeschlecht(gastWerte.geschlecht)
+    setAktivitaetslevel(gastWerte.aktivitaetslevel)
+    setZiel(gastWerte.ziel)
+    setErgebnis(berechneKcal(gastWerte))
+    setLetztesGespeichertesGewicht(gastWerte.gewichtKg)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const gewichtNum = parseFloat(gewicht)
   const groesseNum = parseFloat(groesse)
@@ -104,7 +128,12 @@ export function KcalRechner({ kannSpeichern, gespeicherteWerte, onBerechnet }: K
     setSpeicherFehler(false)
     onBerechnet?.()
 
-    if (!kannSpeichern) return
+    if (!kannSpeichern) {
+      // PROJ-37 (Refinement: Stateless Gast-Persistenz) — rein lokal, kein Server-Kontakt.
+      speichereKcalGastWerte({ gewichtKg: gewichtNum, groesseCm: groesseNum, alterJahre: alterNum, geschlecht, aktivitaetslevel, ziel })
+      setLetztesGespeichertesGewicht(gewichtNum)
+      return
+    }
 
     setWirdGespeichert(true)
     try {
