@@ -1,8 +1,10 @@
 # PROJ-37: So geht abnehmen (inkl. Kcal-Rechner)
 
-## Status: Deployed (Refinement: Icon-Layout-Feinschliff "Deployed")
+## Status: Deployed (Refinement: Stateless Gast-Persistenz "Planned")
 **Created:** 2026-08-31
-**Last Updated:** 2026-09-03
+**Last Updated:** 2026-09-08
+
+**Refinement (2026-09-08, Stateless Gast-Persistenz):** Gäste bekommen ihre Kcal-Rechner-Eingaben und ihr Ergebnis künftig im Browser (localStorage) gespeichert — rein client-seitig, landet nie auf dem Server. Dadurch bleibt der Rechner beim nächsten Besuch vorausgefüllt (analog zu eingeloggten Nutzern), und das berechnete Kalorienziel steht auch auf der Analyse-Übersicht und bei "Emotionales Essen" zur Verfügung, wo es bisher nur für eingeloggte Nutzer sichtbar war. Ausgelöst durch einen Nutzerwunsch während der PROJ-52-Backend-Vorbereitung ("tolles Komfortfeature, kann auch ohne Speichern gemacht werden").
 
 **Refinement (2026-09-03, Arbeitspunkte-Feinschliff):** Betrifft Arbeitspunkt 2 (Layout gestapelt statt nebeneinander, neue Farbgebung, Wochentag-Beschriftungen, neue Überschrift/Captions), einen komplett neuen Arbeitspunkt 4 "Warum auf Ballaststoffe achten" (bisherige Arbeitspunkte 4+5 rücken auf 5+6), sowie 4 neue Vergleichsicons bei Krafttraining und ein neues Icon bei Schlaf/Erholung. Aus 5 Arbeitspunkten werden 6. Deployed.
 
@@ -20,6 +22,7 @@
 - Als Nutzer möchte ich zwischen drei Zielen (Fett verlieren, Gewicht halten, Muskeln aufbauen) wählen, damit ich direkt eine für mein Ziel passende Kalorienzahl sehe.
 - Als eingeloggter Nutzer, dessen aktuelles Gewicht deutlich von meinem letzten gespeicherten Wert abweicht, möchte ich einen Hinweis bekommen, damit ich weiß, dass ich neu berechnen sollte.
 - Als Nutzer möchte ich bei ungültigen Eingaben (z. B. Alter außerhalb des sinnvollen Bereichs) eine klare Fehlermeldung sehen, statt ein falsches Ergebnis zu bekommen.
+- Als Gast möchte ich, dass mein berechnetes Kalorienziel beim nächsten Besuch noch da ist und auch auf der Analyse-Übersicht sowie bei "Emotionales Essen" berücksichtigt wird — ohne dass ich mich registrieren oder irgendetwas davon auf einem Server gespeichert werden muss. *(Refinement 2026-09-08)*
 
 ## Out of Scope
 - Tägliches Tracking/Fortschrittsanzeige gegen das berechnete Kalorienziel — explizites Non-Goal laut `docs/PRD.md` ("Kein Kalorienzählen oder Tracking von Tageskalorienzielen"), wird hier nicht gebaut
@@ -27,6 +30,8 @@
 - Automatische zeitbasierte Erinnerung (z. B. "nach 30 Tagen neu berechnen") — nur die 5kg-Abweichungsprüfung beim Bearbeiten des Gewichtsfelds
 - Eigener Trainingsplan-Inhalt hinter dem Krafttraining-Arbeitspunkt — der Verweis zeigt nur zum `/training`-Bereich (Platzhalter aus PROJ-35, eigener Inhalt folgt in einer späteren, noch nicht angelegten Spec), Trainingsinhalte selbst sind nicht Teil dieser Spec
 - Schlaf-Tracking (Dauer/Qualität erfassen) — dieser Arbeitspunkt ist reine Aufklärung/Anleitung, kein Tracking-Tool
+- Automatische Übernahme lokal gespeicherter Gast-Werte in den Account bei Registrierung/Login — bewusst nicht gebaut, um Komplexität (localStorage-Lesezugriff im Auth-Flow) und eine Verzahnung mit der PROJ-52-Einwilligungspflicht zu vermeiden; der Nutzer berechnet nach dem Einloggen einmal neu *(Refinement 2026-09-08)*
+- Geräteübergreifender Abgleich der lokal gespeicherten Gast-Werte — localStorage ist bewusst pro Gerät/Browser isoliert, kein Cloud-Sync für Gäste *(Refinement 2026-09-08)*
 
 ## Acceptance Criteria
 
@@ -56,9 +61,12 @@
 - [ ] Angenommen ein eingeloggter Nutzer ändert das Gewichtsfeld auf einen Wert, der um mindestens 5 kg vom zuletzt gespeicherten Gewicht abweicht, dann erscheint ein Hinweis, dass er neu berechnen sollte, damit die Werte übereinstimmen.
 - [ ] Angenommen das Speichern schlägt fehl (z. B. Netzwerkfehler), dann wird das berechnete Ergebnis trotzdem angezeigt, zusätzlich erscheint ein Hinweis, dass das Speichern fehlgeschlagen ist.
 
-### Gäste
-- [ ] Angenommen ein Gast (keine Session oder anonym) öffnet den Kcal-Rechner, dann sind alle Felder leer, keine Werte werden vorausgefüllt.
-- [ ] Angenommen ein Gast berechnet ein Ergebnis, dann wird nichts gespeichert — beim nächsten Besuch sind die Felder wieder leer.
+### Gäste (Refinement 2026-09-08: stateless Gast-Persistenz)
+- [ ] Angenommen ein Gast (keine Session oder anonym) öffnet den Kcal-Rechner zum ersten Mal, dann sind alle Felder leer, keine Werte werden vorausgefüllt.
+- [ ] Angenommen ein Gast berechnet ein Ergebnis, dann werden Gewicht, Größe, Alter, Geschlecht, Aktivitätslevel und Ziel ausschließlich im Browser (localStorage) gespeichert — zu keinem Zeitpunkt wird dafür eine Anfrage an den Server geschickt.
+- [ ] Angenommen ein Gast mit im Browser gespeicherten Werten öffnet die Seite erneut (auch nach Browser-Neustart), dann sind alle Felder vorausgefüllt und das zuletzt berechnete Ergebnis wird sofort angezeigt — identisches Verhalten zu eingeloggten Nutzern, nur lokal statt serverseitig gespeichert.
+- [ ] Angenommen ein Gast hat im Browser gespeicherte Kcal-Rechner-Werte, wenn er die Analyse-Übersicht (`/analyse`) oder "Emotionales Essen" (`/ernaehrung/emotionales-essen`) besucht, dann wird sein Kalorienziel dort genauso berücksichtigt wie bei einem eingeloggten Nutzer mit gespeicherten Werten (verbleibende Tageskalorien bzw. Kalorien-Verteilung auf feste Mahlzeiten) — vollständig aus dem lokalen Browser-Speicher berechnet, ohne Serverkontakt.
+- [ ] Angenommen der Browser eines Gasts unterstützt localStorage nicht oder blockiert den Zugriff (z. B. strikter privater Modus), dann verhält sich der Rechner wie zuvor (Felder leer, kein Fehler, kein Absturz) — kein Pflichtfeature, reine Verbesserung wenn verfügbar.
 
 ### Seiten-Struktur "So geht abnehmen"
 - [ ] Angenommen ein Nutzer öffnet `/ernaehrung/so-geht-abnehmen`, dann sieht er 6 Arbeitspunkte in dieser Reihenfolge, alle mit echtem Inhalt (keine Platzhalter mehr): 1. Kcal-Rechner, 2. Wöchentlich vs. tägliches Kaloriendefizit, 3. Warum auf Proteine achten, 4. Warum auf Ballaststoffe achten, 5. Krafttraining, 6. Schlaf/Erholung. *(Refinement 2026-09-03: neuer Arbeitspunkt 4, bisherige 4+5 rücken auf 5+6)*
@@ -100,9 +108,16 @@
 - Eingeloggter Nutzer berechnet zum ersten Mal (keine vorher gespeicherten Werte) → Formular startet leer, kein 5kg-Hinweis möglich (kein Vergleichswert vorhanden).
 - Nutzer wechselt nur das Ziel (z. B. Fett verlieren → Muskeln aufbauen), ohne Gewicht/Größe/Alter zu ändern → sofortige Neuberechnung, keine 5kg-Warnung (nur eine Gewichtsänderung löst die Warnung aus).
 - Sehr extreme, aber technisch valide Eingaben (z. B. 300 kg + 120 cm) → Formel liefert trotzdem ein Ergebnis, keine zusätzliche Plausibilitätsprüfung über die harten Grenzen hinaus (bewusst einfach gehalten).
+- Gast löscht Browser-Daten/Cookies → lokale Kcal-Rechner-Werte gehen verloren, identisches Verhalten zum bisherigen Verlust der anonymen Session-Daten. *(Refinement 2026-09-08)*
+- Gast registriert sich oder loggt sich ein, nachdem er bereits lokale Kcal-Rechner-Werte hat → keine automatische Übernahme in den neuen Account (siehe Out of Scope); der Nutzer berechnet einmal neu, danach greift die normale, serverseitige Speicherung für eingeloggte Nutzer. *(Refinement 2026-09-08)*
+- Gast berechnet auf einem Gerät, ruft die App aber auf einem zweiten Gerät auf → kein Abgleich, jedes Gerät hat seinen eigenen lokalen Stand (localStorage ist geräte-/browserspezifisch). *(Refinement 2026-09-08)*
 
 ## Technical Requirements (optional)
 - Security: Gespeicherte Biometrie-Daten sind personenbezogen — Zugriff ausschließlich auf die eigenen Daten des eingeloggten Nutzers (RLS), Details in `/architecture`/`/backend`.
+
+### Refinement (2026-09-08): Stateless Gast-Persistenz
+- Privacy: die im Browser gespeicherten Gast-Werte dürfen zu keinem Zeitpunkt Teil einer Netzwerkanfrage werden (kein `fetch`, kein Formular-Submit) — rein lokale Lese-/Schreibzugriffe auf `window.localStorage`.
+- Kein neuer Backend-Bedarf — betrifft ausschließlich den bereits bestehenden, rein client-seitigen Gast-Pfad.
 
 ### Refinement (2026-09-03): Arbeitspunkte-Feinschliff
 - `BicepsFlexed`-Icon aus `lucide-react` — Paket bereits im Projekt installiert (v0.562.0), kein neuer Dependency-Eintrag nötig.
@@ -203,6 +218,15 @@ Am Ende: dezenter Text-Link *"Trainingspläne findest du im Training-Bereich →
 | Eiweiß-Faktoren gelten unabhängig vom gewählten Ziel (Fett verlieren/Halten/Muskeln aufbauen) | Nutzerentscheidung — einfachste Umsetzung, entspricht der Original-Vorgabe ohne zusätzliche Ziel-abhängige Faktoren | 2026-09-03 |
 | Anzeige zunächst als zwei zusätzliche Zeilen im bestehenden Ergebnis-Kästchen statt eigener Karte oder Spannen-Darstellung | Nutzerentscheidung nach 3 vorgestellten Optionen — bleibt im bestehenden, kompakten Kästchen-Stil, kein neues UI-Element nötig | 2026-09-03 |
 | **Iteration 2026-09-03:** Nach Live-Ansicht durch Nutzer ersetzt — Ergebnis-Kästchen vertikal 2-geteilt: links Kalorien (volle Höhe), rechts oben Mindest-Eiweiß, rechts unten optimales Eiweiß, statt schmaler Textzeilen | Nutzerwunsch: Eiweißwerte sollen präsenter/prominenter wirken als reiner Fließtext unter dem Kalorienergebnis — als direkte Skizze vom Nutzer vorgegeben, live im Code umgesetzt und per Screenshot bestätigt | 2026-09-03 |
+
+#### Refinement (2026-09-08): Stateless Gast-Persistenz
+
+| Decision | Rationale | Date |
+|----------|-----------|------|
+| Kcal-Rechner-Werte für Gäste werden im localStorage gespeichert (dauerhaft, bis Browser-Daten gelöscht werden) statt in sessionStorage | Nutzerwunsch, geprüft gegen zwei getrennte Rechtsfragen: (1) DSGVO/Art. 9 greift nicht, da die Daten nie den Server erreichen und damit keine "Verarbeitung durch einen Verantwortlichen" stattfindet; (2) das Speichern selbst braucht laut §25 TTDSG/Art. 5 Abs. 3 ePrivacy-RL keine Einwilligung, da es unter die Ausnahme "technisch notwendig für einen vom Nutzer ausdrücklich gewünschten Dienst" fällt (Standardbeispiel: Formular-Eingaben über mehrere Seiten hinweg merken, analog zu einem Warenkorb) | 2026-09-08 |
+| Formular wird für Gäste ebenfalls aus dem lokalen Speicher vorausgefüllt (nicht nur das Endergebnis anderswo genutzt) | Nutzerentscheidung — ein einziger Mechanismus (gespeicherte Eingabewerte) bedient sowohl das Vorausfüllen des Rechners als auch die Weiterverwendung auf Analyse-Übersicht und Emotionales Essen, statt zwei getrennte Verhalten zu pflegen | 2026-09-08 |
+| Analyse-Übersicht (`kcalRest`) und Emotionales Essen (`tagesKcal`) berücksichtigen für Gäste denselben lokal gespeicherten Wert wie der Kcal-Rechner | Schließt die vom Nutzer explizit genannte Lücke — bisher hatten Gäste dort trotz Berechnung im Kcal-Rechner keinen sichtbaren Nutzen, obwohl beide Stellen "unter Ernährung aufgegriffen" bereits für eingeloggte Nutzer existieren | 2026-09-08 |
+| Keine automatische Übernahme der Gast-Werte in den Account bei Registrierung/Login | Vermeidet zusätzliche Komplexität (localStorage-Zugriff mitten im Auth-Flow) und eine unnötige Verzahnung mit der parallel laufenden PROJ-52-Einwilligungspflicht — einmaliges Neu-Berechnen nach dem Login ist ein akzeptabler Trade-off für ein reines Komfortfeature | 2026-09-08 |
 
 #### Refinement (2026-09-03): Arbeitspunkte-Feinschliff
 
