@@ -91,13 +91,79 @@ Keine — alle offenen Punkte wurden im Interview geklärt.
 | Der Datenschutztext aus PROJ-20 zum Widerrufsverhalten wird korrigiert (Löschung statt reiner Sperre), sobald diese Spec deployed ist | Text muss die tatsächliche, jetzt korrigierte Produktentscheidung widerspiegeln; Korrektur erfolgt erst mit dem Deploy dieser Spec, nicht vorher, um keine noch nicht existierende Fähigkeit zu versprechen | 2026-09-08 |
 
 ### Technical Decisions
-<!-- Added by /architecture -->
+| Decision | Rationale | Date |
+|----------|-----------|------|
+| Neues Feld `gesundheitsdaten_einwilligung_at` (Zeitstempel, leer = keine Einwilligung) direkt am bestehenden Nutzerprofil, kein neues Schema | Einfacher Ja/Nein-mit-Zeitstempel-Zustand pro Nutzer, kein eigenständiges Datenmodell nötig | 2026-09-08 |
+| Eine gemeinsame Gate-Komponente für alle 3 Haupt-Einstiegspunkte (Kalorien-Rechner, Check-In-Formular, Check-In-Tab aus PROJ-51) statt 3 separater Implementierungen | Konsistentes Verhalten, weniger Wartungsaufwand, ein Ort für zukünftige Anpassungen | 2026-09-08 |
+| Eine zentrale, serverseitige Prüf-Funktion für den Einwilligungsstatus, von allen 6 betroffenen Stellen genutzt (3 Haupt-Einstiegspunkte + 3 passive Anzeigen) | Verhindert, dass eine Stelle vergessen wird oder abweichend prüft; einzige Quelle der Wahrheit | 2026-09-08 |
+| Registrierung bleibt ein direkter `supabase.auth.signUp()`-Aufruf vom Client (keine Umstellung auf eine eigene Registrierungs-Route) — die Einwilligungs-Checkbox wird client-seitig vor dem Absenden geprüft, der eigentliche Zeitstempel wird direkt im Anschluss an ein erfolgreiches Signup serverseitig gesetzt | Die tatsächliche Durchsetzung passiert ohnehin am zentralen Gate (Punkt 3): selbst bei einer theoretisch umgangenen Client-Prüfung bliebe das Feld leer, und der Nutzer würde beim ersten Zugriff auf die betroffenen Funktionen denselben Zustimmungs-Bildschirm sehen wie ein Bestandsnutzer — keine Compliance-Lücke, keine Notwendigkeit die bestehende Registrierungs-Architektur umzubauen | 2026-09-08 |
+| Löschung bei Widerruf/Ablehnung: `kcal_*`-Felder auf dem Profil werden geleert, alle Zeilen des Nutzers in `wochen_check_ins` werden gelöscht (nicht nur einzelne Felder) | Direkte technische Umsetzung der Art.-7-Abs.-3-Entscheidung aus dem Spec-Interview; vollständige Zeilen-Löschung ist einfacher als Teil-Löschung im JSON | 2026-09-08 |
+| Widerruf-Button und -Dialog in der Konto-Ansicht nutzen dieselbe `AlertDialog`-Komponente wie die bestehende Stripe-Kündigung, aber mit eigenem State/eigenen Namen (nicht `widerrufOpen`/`handleWiderruf`, da diese Namen in `konto-view.tsx` bereits für die Abo-Kündigung vergeben sind) | Vermeidet Namenskollision und Verwechslung zwischen Abo-Widerruf (PROJ-11/14) und Gesundheitsdaten-Einwilligungs-Widerruf im selben File | 2026-09-08 |
 
 ---
 <!-- Sections below are added by subsequent skills -->
 
 ## Tech Design (Solution Architect)
-_To be added by /architecture_
+
+### A) Komponenten-Struktur (Visuell)
+
+```
+Registrierung (PROJ-2, bestehend)
+└── Registrierungsformular
+    └── NEU: Pflicht-Checkbox "Einwilligung für Gesundheitsdaten"
+          (zusätzlich zum bestehenden allgemeinen Datenschutz-Hinweis)
+
+Kalorien-Rechner-Seite (/ernaehrung/so-geht-abnehmen, PROJ-37)
+└── NEU: Einwilligungs-Gate
+    ├── Keine Einwilligung → Zustimmungs-Bildschirm (Zustimmen / Ablehnen)
+    └── Einwilligung vorhanden → bestehender Kalorien-Rechner (unverändert)
+
+Wochen-Check-In-Seite (/check-in, PROJ-45)
+└── NEU: dasselbe Einwilligungs-Gate (identische, wiederverwendete Komponente)
+    ├── Zustimmungs-Bildschirm
+    └── bestehendes Check-In-Formular + Mini-Historie
+
+Check-In-Tab (Analyse-Seite, PROJ-51)
+└── NEU: dasselbe Einwilligungs-Gate
+    ├── Zustimmungs-Bildschirm
+    └── bestehende Check-In-Historie
+
+"Passive" Anzeige-Stellen (So-geht-abnehmen-Guide, Analyse-Übersicht-Widget,
+Emotionales-Essen-Seite)
+└── Keine UI-Änderung nötig — lesen die Werte über denselben zentralen
+      Baustein, der bei fehlender Einwilligung automatisch "kein Wert
+      vorhanden" liefert (identisch zum bereits bestehenden Leerzustand)
+
+Konto-Ansicht (/konto, PROJ-14)
+└── NEU: Abschnitt "Gesundheitsdaten" mit Button "Einwilligung widerrufen"
+      (nur sichtbar, wenn aktuell eine Einwilligung vorliegt)
+    └── Bestätigungsdialog (bestehendes Muster, wie bei der
+          Stripe-Kündigung), mit ausdrücklichem Löschungs-Hinweis
+```
+
+### B) Datenmodell (in Worten)
+
+Ein einziges neues Feld am bestehenden Nutzerprofil:
+- **Zeitpunkt der Einwilligung** — leer bedeutet keine Einwilligung (egal ob nie erteilt, abgelehnt oder widerrufen); ein gesetzter Zeitpunkt bedeutet, wann zugestimmt wurde.
+
+Kein neues Schema, keine neue Tabelle.
+
+Bei Ablehnung oder Widerruf werden zusätzlich entfernt:
+- Die 6 gespeicherten Kalorien-Rechner-Werte (Gewicht, Größe, Alter, Geschlecht, Aktivitätslevel, Ziel) — werden geleert.
+- Alle gespeicherten Wochen-Check-In-Einträge dieses Nutzers — werden vollständig gelöscht (nicht nur einzelne Felder).
+
+### C) Tech-Entscheidungen (Begründung für PM)
+
+1. **Ein einziges neues Datenfeld statt neuer Tabelle** — die Einwilligung ist ein einfacher "Ja, seit wann"-Zustand pro Nutzer, passt auf das bestehende Profil.
+2. **Eine gemeinsame, wiederverwendbare Gate-Komponente statt drei getrennter Umsetzungen** — Kalorien-Rechner, Check-In-Formular und Check-In-Tab zeigen alle denselben Zustimmungs-Bildschirm. Hält das Verhalten konsistent und reduziert Aufwand.
+3. **Eine zentrale Prüf-Funktion statt verstreuter Einzelchecks** — alle 6 betroffenen Stellen (3 Haupt-Einstiegspunkte + 3 passive Anzeigen) fragen denselben zentralen Baustein, ob eine gültige Einwilligung vorliegt. Verhindert, dass eine Stelle vergessen oder inkonsistent geprüft wird.
+4. **Die eigentliche Durchsetzung passiert am zentralen Gate, nicht (nur) beim Registrierungsformular** — die Registrierungs-Checkbox ist ein proaktives Vorab-Fragen, das den allermeisten Nutzern die spätere Nachfrage erspart. Selbst falls die Zustimmung bei der Registrierung technisch umgangen würde, bliebe das Einwilligungsfeld leer — der Nutzer würde dann beim ersten Zugriff auf Kalorien-Rechner oder Check-In ganz normal denselben Zustimmungs-Bildschirm sehen wie ein Bestandsnutzer. Es entsteht dadurch keine Lücke.
+5. **Löschung statt reiner Sperre bei Widerruf/Ablehnung** — direkte Umsetzung der im Spec-Interview getroffenen rechtlichen Entscheidung (Art. 7 Abs. 3 DSGVO).
+6. **Wiederverwendung des bereits bestehenden Bestätigungsdialog-Musters** (wie bei der Stripe-Kündigung in der Konto-Ansicht) für den Widerruf — keine neue UI-Bibliothek nötig, konsistentes Nutzererlebnis.
+7. **Eigene, klar unterscheidbare Bezeichnung für den neuen Widerruf-Bereich** — die Konto-Ansicht hat bereits einen "Widerruf"-Bereich für Abo-Kündigungen (PROJ-11/14). Der neue Bereich für die Gesundheitsdaten-Einwilligung bekommt einen eigenen Namen ("Einwilligung für Gesundheitsdaten widerrufen"), um Verwechslungen mit der bestehenden Abo-Kündigung zu vermeiden.
+
+### D) Abhängigkeiten (Pakete)
+Keine neuen Pakete nötig — Checkbox, AlertDialog etc. sind bereits installiert.
 
 ## QA Test Results
 _To be added by /qa_
