@@ -212,7 +212,81 @@ Ausgeführt vom Nutzer manuell im Supabase SQL Editor (Supabase-MCP war diese Se
 - **Debugging-Hinweis (kein Produkt-Bug):** Während der Verifikation zeigte `/konto` die neue Sektion trotz korrekt `eingewilligt: true` liefernder API zunächst nicht an. Ursache war ein veralteter PWA-Service-Worker-Cache (`endlichsatt-v1`, aus PROJ-15) im Test-Browser-Tab, der eine ältere, cache-first zwischengespeicherte JS-Chunk-Version von `konto-view.tsx` (vor PROJ-52) auslieferte — bestätigt über die React-Fiber-Hook-Anzahl der gemounteten Komponente (9 statt der erwarteten 15 Hooks). Kein Code-Fehler; Ursache ist dev-spezifisch, da Turbopack-Chunk-URLs im Dev-Modus (anders als in Produktions-Builds) nicht zwingend bei jeder Änderung wechseln, wodurch der Service Worker eine alte Version cache-first weiter ausliefert. In Produktion sind `/_next/static/`-Chunk-Namen content-gehasht, sodass ein echtes Deploy automatisch neue URLs erzeugt und dieses Szenario dort nicht auftritt. Behoben für die Testsession durch Unregister des Service Workers und Löschen des Caches; kein Code wurde dafür geändert.
 
 ## QA Test Results
-_To be added by /qa_
+
+**Tested:** 2026-09-08
+**App URL:** http://localhost:3000 (Dev-Server, gegen die migrierte Supabase-DB)
+**Tester:** QA Engineer (AI)
+
+### Acceptance Criteria Status
+
+#### Registrierung (neue Nutzer)
+- [x] Absenden ohne aktivierte Checkbox wird mit Validierungsfehler abgelehnt ("Bitte stimme der Verarbeitung deiner Gesundheitsdaten zu, um fortzufahren."), Formular bleibt stehen — live verifiziert (manuell + E2E-Test)
+- [x] Erfolgreiche Registrierung speichert die Einwilligung mit Zeitstempel — verifiziert durch Code-Review + 7 neue Vitest-Tests für `src/app/auth/callback/route.ts` (Backfill-Logik inkl. Idempotenz-Guard und Open-Redirect-Schutz für `next`). **Voller Live-E2E-Durchlauf (Signup → E-Mail-Bestätigung → Backfill) war nicht möglich**, da Supabase in dieser Dev-Umgebung nach ca. 4 Signups innerhalb weniger Minuten mit `429 over_email_send_rate_limit` blockt (per direktem API-Aufruf bestätigt, kein PROJ-52-Code-Fehler). Empfehlung: bei Gelegenheit (z. B. nach Ablauf des Rate-Limit-Fensters oder in einer Umgebung mit höherem Limit) einen einzelnen vollen Durchlauf nachholen.
+
+#### Bestandsnutzer ohne Einwilligung
+- [x] Kalorien-Rechner (`/ernaehrung/so-geht-abnehmen`) zeigt den Zustimmungs-Bildschirm statt der Eingabefelder
+- [x] Wochen-Check-In (`/check-in`) zeigt denselben Zustimmungs-Bildschirm
+- [x] Check-In-Tab auf der Analyse-Seite (PROJ-51) zeigt ebenfalls denselben Zustimmungs-Bildschirm (dritter Haupt-Einstiegspunkt)
+- [x] "Zustimmen" speichert die Einwilligung mit Zeitstempel; Kalorien-Rechner UND Wochen-Check-In sind sofort nutzbar, ohne erneutes Laden — cross-page live verifiziert
+- [x] "Ablehnen" nullt vorhandene Kalorien-Rechner-Werte, löscht alle Wochen-Check-In-Einträge, beide Funktionen bleiben gesperrt — Löschverhalten identisch zum Widerruf-Pfad (dieselbe DELETE-Route), live verifiziert
+- [x] Andere Bereiche der App (Mahlzeit-Analyse, Rezepte, Training, Startseite, Analyse-Übersicht) uneingeschränkt nutzbar ohne den Zustimmungs-Bildschirm
+
+#### Widerruf
+- [x] Widerruf-Button in der Konto-Ansicht öffnet Bestätigungsdialog mit ausdrücklichem Löschungs-Hinweis
+- [x] Bestätigter Widerruf: Kalorien-Rechner-Werte genullt, alle Wochen-Check-In-Einträge gelöscht, Einwilligung zurückgesetzt, beide Funktionen sofort wieder gesperrt
+- [x] Abbrechen im Dialog lässt Einwilligung und Daten unverändert
+
+#### Passive Anzeige-Stellen
+- [x] So-geht-abnehmen-Guide (Item 2, generische Inhalte ohne persönliche Werte): kein Gate nötig, korrekt bestätigt
+- [x] Analyse-Übersicht ("Kannst du noch etwas essen?"): zeigt Leerzustand mit Verweis auf den Kcal-Rechner statt Gate oder gelöschter Werte
+- [x] Emotionales Essen ("Feste Mahlzeiten planen"): fällt korrekt auf den 2000-kcal-Referenzwert zurück statt Gate oder gelöschter Werte
+
+#### Datenschutztext
+- [x] Datenschutzerklärung beschreibt das Widerrufsverhalten korrekt (automatische, unwiderrufliche Löschung, Art. 7 Abs. 3 DSGVO) — Korrektur des ursprünglich zu vorsichtigen PROJ-20-Texts bestätigt
+
+**12/12 Acceptance Criteria bestanden** (AC „erfolgreiche Registrierung" mit der oben genannten Live-E2E-Einschränkung, aber durch Unit-Tests + Code-Review abgedeckt).
+
+### Edge Cases Status
+
+- [x] Nutzer schließt den Zustimmungs-Bildschirm ohne Klick (Navigation weg): keine Datenänderung, da nur Zustimmen/Ablehnen einen API-Call auslösen — durch Architektur garantiert, stichprobenartig bestätigt
+- [x] Widerruf/Ablehnung, danach erneut zustimmen: Kalorien-Rechner und Wochen-Check-In starten leer, keine Wiederherstellung — live verifiziert (Kcal-Rechner-Formular war nach Widerruf+erneutem Zustimmen leer)
+- [x] Neuer Nutzer aktiviert die Registrierungs-Checkbox nicht: Registrierung wird blockiert — live verifiziert
+- [x] Gleichzeitiger Zugriff auf zwei Haupt-Einstiegspunkte in zwei Tabs: durch unabhängiges Fetching pro Komponente architektonisch gegeben, kein Realtime-Sync nötig (laut Spec) — nicht gesondert nachgestellt, da rein additive Bestätigung eines bereits durch Code-Review abgesicherten Verhaltens
+- [x] Widerruf, während unsaved Freitext im Check-In-Formular offen ist: nur gespeicherte DB-Einträge werden gelöscht, unsaved lokale Eingaben wurden nie an den Server gesendet — durch Architektur garantiert
+- [x] Account-Löschung (PROJ-14) unabhängig vom Einwilligungsstatus: keine Änderung an der bestehenden Account-Löschung nötig, kein Sonderfall — durch Code-Review bestätigt (PROJ-52 fügt keine Abhängigkeit hinzu)
+
+### Security Audit Results
+- [x] Authentication: `GET/POST/DELETE /api/einwilligung/gesundheitsdaten`, `POST /api/kcal-rechner`, `POST /api/check-in/wochen`, `GET /api/check-in/verlauf` liefern alle live bestätigt `401` ohne Session
+- [x] Autorisierung Gast/anonym: alle Schreib-Routen liefern live bestätigt `403` für eine echte anonyme PROJ-19-Session (ausgelöst über `/analyse/start`); `GET` der Einwilligungsroute liefert für Gäste harmlos `eingewilligt: false`
+- [x] IDOR/Parameter-Tampering: `user.id` wird ausschließlich serverseitig aus der verifizierten Session (`supabase.auth.getUser()`) gelesen, niemals aus dem Request-Body — durch Code-Review aller 4 Routen bestätigt, kein clientseitig kontrollierbarer User-Identifier vorhanden
+- [x] Defense-in-Depth: Konsistenz-Check bestätigt, dass alle 3 Haupt-Einstiegspunkte UND alle 3 passiven Anzeige-Stellen serverseitig dieselbe zentrale Prüf-Funktion nutzen (`hatGesundheitsdatenEinwilligung`) — ein Umgehen des Frontend-Gates (z. B. direkter API-Aufruf) bringt keinen Zugriff
+- [x] Fehlerantworten (401/403/500) enthalten keine internen Details (Stack-Traces, DB-Fehlermeldungen) — nur kurze, generische deutsche Fehlertexte
+- [x] Rate-Limiting: keine dedizierten Limits auf den neuen Routen (laut Spec nicht gefordert); Registrierungs-Rate-Limit besteht bereits auf Supabase-Ebene (siehe BUG-Notiz unten, betrifft nur die Testumgebung)
+- [x] Injection/XSS: keine Freitext-Eingabefelder im Einwilligungs-Flow selbst (nur Checkbox/Buttons) — kein zusätzlicher Angriffsvektor durch PROJ-52
+
+Keine Sicherheitsbefunde.
+
+### Bugs Found
+
+#### BUG-1: Volle Regressionssuite kann PROJ-37/45/51 fälschlich zum Scheitern bringen, wenn PROJ-52-Tests direkt davor liefen
+- **Severity:** Medium (Test-Infrastruktur, kein Produkt-Bug — betrifft nur automatisierte Regressionsläufe, nicht echte Nutzer)
+- **Steps to Reproduce:**
+  1. Vollen Regressionslauf mit `--workers=1` starten, der `tests/PROJ-52-einwilligung-gesundheitsdaten.spec.ts` VOR oder zusammen mit `tests/PROJ-37-so-geht-abnehmen.spec.ts`, `tests/PROJ-45-wochen-check-in.spec.ts` und/oder `tests/PROJ-51-checkin-tab-analyse.spec.ts` ausführt (bei mehreren Playwright-Projекten läuft z. B. das komplette Chromium-Projekt vor dem Mobile-Chrome-Projekt)
+  2. PROJ-52s eigener Test „Bestätigter Widerruf löscht die Daten…" widerruft am Ende die Einwilligung des gemeinsam genutzten QA-Testkontos (`qa-test@endlichsatt.dev`) — beabsichtigtes Verhalten des Tests selbst
+  3. Läuft danach im selben Gesamtlauf noch eine ANDERE Projekt-Variante (z. B. Mobile Chrome) von PROJ-37/45/51, die direkt auf Kcal-Rechner-Formular bzw. Check-In-Historie zugreift, ohne die Einwilligung vorher zu setzen
+  4. Erwartet: alle Tests bestehen unabhängig von der Lauf-Reihenfolge
+  5. Tatsächlich: 16 Tests aus PROJ-37/45/51 scheitern, weil sie auf das jetzt durch PROJ-52 gesperrte Formular/Historie treffen statt auf den erwarteten Inhalt — bei diesem QA-Durchgang reproduzierbar beobachtet, und nach manuellem Wiederherstellen der Einwilligung (`POST /api/einwilligung/gesundheitsdaten`) liefen alle 83 betroffenen Tests fehlerfrei durch
+- **Root Cause:** PROJ-37/45/51 wurden vor PROJ-52 geschrieben und gehen implizit davon aus, dass Kcal-Rechner/Check-In für den QA-Test-Nutzer immer ohne Gate zugänglich sind — sie seeden (anders als z. B. PROJ-45s eigene Wochen-Check-In-Einträge) keinen Einwilligungs-Zeitstempel. PROJ-52 selbst räumt seinen eigenen Verbrauch nicht wieder auf.
+- **Priority:** Fix in next sprint (kein Blocker für dieses Deploy — Produktverhalten ist korrekt, nur die CI/Regressions-Zuverlässigkeit für 3 andere Features ist betroffen, wenn Testläufe genau in dieser Reihenfolge/Kombination laufen)
+- **Empfohlener Fix:** analog zum bestehenden PROJ-49-Muster (automatisches QA-Konto-Seeding) — entweder PROJ-52s eigenes Spec-File setzt die Einwilligung in einem file-weiten `afterAll` zurück auf „erteilt", oder PROJ-37/45/51 seeden die Einwilligung selbst in ihrem jeweiligen `beforeAll` (konsistent mit deren bestehendem Muster für ihre eigenen Fixture-Daten). Nicht selbst behoben, da dies Backend-/Test-Infrastruktur-Arbeit außerhalb des QA-Scopes ist.
+
+### Summary
+- **Acceptance Criteria:** 12/12 passed (1 mit dokumentierter Live-Test-Einschränkung, durch Unit-Tests abgedeckt)
+- **Bugs Found:** 1 total (0 critical, 0 high, 1 medium, 0 low)
+- **Security:** Pass — keine Befunde
+- **Automatisierte Tests:** Vitest 513/513 grün (7 neu für `/auth/callback`); Playwright: 14 neue PROJ-52-Tests grün, volle Regressionssuite für PROJ-2/14/19/37/42/45/50/51 grün bei korrektem QA-Konto-Zustand (siehe BUG-1)
+- **Production Ready:** YES
+- **Recommendation:** Deploy. BUG-1 als separate, kleine Test-Infrastruktur-Aufgabe nachziehen (nicht deploy-blockierend).
 
 ## Deployment
 _To be added by /deploy_
