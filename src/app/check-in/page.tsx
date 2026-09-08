@@ -5,6 +5,7 @@ import { getWeekStartIso } from '@/lib/wochen-grenzen'
 import { WochenCheckInForm, type WochenCheckInAntworten, type WochenCheckInEintrag } from '@/components/wochen-check-in-form'
 import { GewohnheitenListe } from '@/components/gewohnheiten-liste'
 import { GesundheitsdatenConsentGate } from '@/components/gesundheitsdaten-consent-gate'
+import { hatGesundheitsdatenEinwilligung } from '@/lib/gesundheitsdaten-einwilligung'
 
 export default async function CheckInPage() {
   const supabase = await createClient()
@@ -15,7 +16,12 @@ export default async function CheckInPage() {
   const aktuelleWoche = getWeekStartIso(new Date())
   let historie: WochenCheckInEintrag[] = []
 
-  if (!isGuest && user) {
+  // PROJ-52: ohne Einwilligung wird die Historie serverseitig gar nicht erst geladen —
+  // sie würde sonst Teil des initialen Seiten-Payloads, obwohl das Frontend-Gate die
+  // eigentliche Anzeige blockiert (Datensparsamkeit, nicht nur UI-Verstecken).
+  const eingewilligt = !isGuest && user ? await hatGesundheitsdatenEinwilligung(supabase, user.id) : false
+
+  if (!isGuest && user && eingewilligt) {
     // Fehler (z. B. Tabelle existiert noch nicht) werden bewusst ignoriert — die Seite
     // fällt dann einfach auf ein leeres Formular zurück statt zu crashen (gleiches Muster
     // wie beim zuletzt gespeicherten Trainingsstand aus PROJ-44).

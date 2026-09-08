@@ -2,11 +2,15 @@ import { createClient } from '@/lib/supabase/server'
 import { ErnaehrungSubHeader } from '@/components/ernaehrung-sub-header'
 import { EmotionalesEssenGuide } from '@/components/emotionales-essen-guide'
 import { berechneKcal, type Geschlecht, type Aktivitaetslevel, type Ziel } from '@/lib/kcal-rechner'
+import { hatGesundheitsdatenEinwilligung } from '@/lib/gesundheitsdaten-einwilligung'
 
 // Liest den zuletzt berechneten Tages-Kcal-Bedarf aus den PROJ-37-Kcal-Rechner-Feldern in
 // `profiles`, für die Mahlzeiten-Verteilung in "Feste Mahlzeiten planen" (Arbeitspunkt 8).
+// PROJ-52: nur nach erteilter Einwilligung — sonst gilt kein eigener Wert als vorhanden.
 async function ladeTagesKcal(userId: string): Promise<number | null> {
   const supabase = await createClient()
+  if (!(await hatGesundheitsdatenEinwilligung(supabase, userId))) return null
+
   const { data } = await supabase
     .from('profiles')
     .select('kcal_gewicht_kg, kcal_groesse_cm, kcal_alter_jahre, kcal_geschlecht, kcal_aktivitaetslevel, kcal_ziel')

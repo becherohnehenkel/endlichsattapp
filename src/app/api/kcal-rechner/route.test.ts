@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const mockGetUser = vi.fn()
+const userFrom = vi.fn()
 const adminFrom = vi.fn()
 const mockCreateClient = vi.fn()
 const mockCreateAdminClient = vi.fn()
@@ -11,6 +12,21 @@ vi.mock('@/lib/supabase/server', () => ({
 vi.mock('@/lib/supabase/admin', () => ({
   createAdminClient: mockCreateAdminClient,
 }))
+
+// PROJ-52: `hatGesundheitsdatenEinwilligung` liest über den regulären (nicht Admin-)Client.
+// Standardmäßig "eingewilligt", damit bestehende Tests unverändert grün bleiben — der
+// Einwilligungs-Check selbst wird in eigenen Tests unten geprüft.
+function consentChain(eingewilligt: boolean) {
+  return {
+    select: vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        maybeSingle: vi.fn().mockResolvedValue({
+          data: { gesundheitsdaten_einwilligung_at: eingewilligt ? '2026-09-08T00:00:00Z' : null },
+        }),
+      }),
+    }),
+  }
+}
 
 function makeRequest(body: unknown) {
   return new Request('http://localhost/api/kcal-rechner', {
@@ -38,8 +54,9 @@ function profileUpdateChain(error: object | null = null) {
 
 beforeEach(() => {
   vi.resetAllMocks()
-  mockCreateClient.mockResolvedValue({ auth: { getUser: mockGetUser } })
+  mockCreateClient.mockResolvedValue({ auth: { getUser: mockGetUser }, from: userFrom })
   mockCreateAdminClient.mockReturnValue({ from: adminFrom })
+  userFrom.mockReturnValue(consentChain(true))
 })
 
 describe('POST /api/kcal-rechner', () => {
@@ -108,5 +125,16 @@ describe('POST /api/kcal-rechner', () => {
     const { POST } = await import('./route')
     const res = await POST(makeRequest(VALID_BODY))
     expect(res.status).toBe(500)
+  })
+
+  // PROJ-52: Gewicht/Größe/Alter/Geschlecht/Aktivitätslevel/Ziel sind Art.-9-Daten —
+  // ohne Einwilligung darf serverseitig nichts gespeichert werden.
+  it('returns 403 without an explicit Art. 9 consent, even for a logged-in non-anonymous user', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1', is_anonymous: false } } })
+    userFrom.mockReturnValue(consentChain(false))
+    const { POST } = await import('./route')
+    const res = await POST(makeRequest(VALID_BODY))
+    expect(res.status).toBe(403)
+    expect(adminFrom).not.toHaveBeenCalled()
   })
 })

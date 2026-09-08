@@ -7,6 +7,7 @@ import { AnalyseTagesuebersicht } from '@/components/analyse-tagesuebersicht'
 import { AnalyseTagesuebersichtGast } from '@/components/analyse-tagesuebersicht-gast'
 import { AnalyseHistorieTabs } from '@/components/analyse-historie-tabs'
 import { LoginHinweis } from '@/components/login-hinweis'
+import { hatGesundheitsdatenEinwilligung } from '@/lib/gesundheitsdaten-einwilligung'
 
 interface RawAnalyse {
   analysis_typ: string | null
@@ -32,7 +33,7 @@ export default async function AnalyseHubPage() {
     // (profiles.photo_scans_today_date) statt echter Nutzer-Zeitzone.
     const todayStart = `${new Date().toISOString().split('T')[0]}T00:00:00.000Z`
 
-    const [{ data: heutigeMeals }, { data: profile }] = await Promise.all([
+    const [{ data: heutigeMeals }, { data: profile }, eingewilligt] = await Promise.all([
       supabase
         .from('meals')
         .select('id, meal_analyses ( analysis_typ, macros_before )')
@@ -43,6 +44,7 @@ export default async function AnalyseHubPage() {
         .select('kcal_gewicht_kg, kcal_groesse_cm, kcal_alter_jahre, kcal_geschlecht, kcal_aktivitaetslevel, kcal_ziel, mahlzeiten_pro_tag')
         .eq('id', user.id)
         .single(),
+      hatGesundheitsdatenEinwilligung(supabase, user.id),
     ])
 
     mahlzeitenZiel = profile?.mahlzeiten_pro_tag ?? MAHLZEITEN_ZIEL_DEFAULT
@@ -56,7 +58,10 @@ export default async function AnalyseHubPage() {
     mahlzeitenHeute = heutigeMahlzeitAnalysen.length
     const kcalHeute = heutigeMahlzeitAnalysen.reduce((sum, a) => sum + (a.macros_before?.kcal ?? 0), 0)
 
+    // PROJ-52: ohne Einwilligung gilt das Kalorienziel als "nicht vorhanden", auch wenn
+    // noch Altwerte in der Datenbank stehen.
     if (
+      eingewilligt &&
       profile?.kcal_gewicht_kg != null &&
       profile?.kcal_groesse_cm != null &&
       profile?.kcal_alter_jahre != null &&

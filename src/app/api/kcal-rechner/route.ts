@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { hatGesundheitsdatenEinwilligung } from '@/lib/gesundheitsdaten-einwilligung'
 import {
   GEWICHT_MIN_KG,
   GEWICHT_MAX_KG,
@@ -28,6 +29,13 @@ export async function POST(request: Request) {
 
   if (!user) return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 })
   if (user.is_anonymous) return NextResponse.json({ error: 'Gäste können keine Werte speichern' }, { status: 403 })
+
+  // PROJ-52: Gewicht/Größe/Alter/Geschlecht/Aktivitätslevel/Ziel sind Art.-9-Daten —
+  // ohne ausdrückliche Einwilligung darf hier serverseitig nichts gespeichert werden,
+  // unabhängig davon, ob das Frontend-Gate umgangen wurde.
+  if (!(await hatGesundheitsdatenEinwilligung(supabase, user.id))) {
+    return NextResponse.json({ error: 'Einwilligung erforderlich' }, { status: 403 })
+  }
 
   const body = await request.json().catch(() => null)
   const parsed = schema.safeParse(body)

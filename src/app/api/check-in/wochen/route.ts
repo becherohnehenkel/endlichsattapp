@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { hatGesundheitsdatenEinwilligung } from '@/lib/gesundheitsdaten-einwilligung'
 import { getWeekStartIso } from '@/lib/wochen-grenzen'
 import { SCREENTIME_MINUTEN_SCHRITTE } from '@/lib/screentime-schritte'
 
@@ -45,6 +46,12 @@ export async function POST(request: Request) {
 
   if (!user) return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 })
   if (user.is_anonymous) return NextResponse.json({ error: 'Gäste können keine Check-Ins speichern' }, { status: 403 })
+
+  // PROJ-52: die 6 Slider-Metriken sind Art.-9-Daten — ohne ausdrückliche Einwilligung
+  // darf serverseitig nichts gespeichert werden, unabhängig vom Frontend-Gate.
+  if (!(await hatGesundheitsdatenEinwilligung(supabase, user.id))) {
+    return NextResponse.json({ error: 'Einwilligung erforderlich' }, { status: 403 })
+  }
 
   const body = await request.json().catch(() => null)
   const parsed = bodySchema.safeParse(body)

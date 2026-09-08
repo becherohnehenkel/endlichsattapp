@@ -261,6 +261,7 @@ export type Database = {
           email: string | null
           feedback_today_count: number
           feedback_today_date: string | null
+          gesundheitsdaten_einwilligung_at: string | null
           id: string
           invite_code_redeemed_at: string | null
           kcal_aktivitaetslevel: string | null
@@ -283,6 +284,7 @@ export type Database = {
           email?: string | null
           feedback_today_count?: number
           feedback_today_date?: string | null
+          gesundheitsdaten_einwilligung_at?: string | null
           id: string
           invite_code_redeemed_at?: string | null
           kcal_aktivitaetslevel?: string | null
@@ -305,6 +307,7 @@ export type Database = {
           email?: string | null
           feedback_today_count?: number
           feedback_today_date?: string | null
+          gesundheitsdaten_einwilligung_at?: string | null
           id?: string
           invite_code_redeemed_at?: string | null
           kcal_aktivitaetslevel?: string | null

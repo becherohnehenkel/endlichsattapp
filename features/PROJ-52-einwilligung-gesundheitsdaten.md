@@ -183,6 +183,34 @@ Keine neuen Pakete nötig — Checkbox, AlertDialog etc. sind bereits installier
 - Der Mechanismus, wie die bei der Registrierung übergebene `gesundheitsdaten_einwilligung`-Metadata tatsächlich in die neue `profiles`-Spalte übernommen wird (Datenbank-Trigger beim Anlegen des Profils vs. Backfill beim ersten Login/`/auth/callback`) — der direkte `signUp()`-Aufruf erzeugt noch keine Session, ein authentifizierter API-Aufruf direkt danach ist für den Fresh-Signup-Pfad nicht möglich; für den PROJ-19-Anonym-Upgrade-Pfad (bereits bestehende Session) ist ein direkter authentifizierter Aufruf dagegen möglich. Empfehlung für `/backend`: Metadata-Auslesen im bestehenden Profil-Anlage-Trigger bzw. in `/auth/callback`.
 - Löschlogik bei Ablehnung/Widerruf (`kcal_*`-Felder nullen, `wochen_check_ins`-Zeilen löschen) sowie die Korrektur des betroffenen Satzes in der Datenschutzerklärung (PROJ-20) zum Widerrufsverhalten.
 
+## Implementation Notes (Backend)
+
+**Migration:**
+```sql
+ALTER TABLE profiles
+  ADD COLUMN gesundheitsdaten_einwilligung_at TIMESTAMPTZ;
+```
+Ausgeführt vom Nutzer manuell im Supabase SQL Editor (Supabase-MCP war diese Session getrennt), bestätigt am 2026-09-08.
+
+**Gebaut:**
+- Neu: `src/lib/gesundheitsdaten-einwilligung.ts` — zentrale Prüf-Funktion `hatGesundheitsdatenEinwilligung(supabase, userId)`, liest `profiles.gesundheitsdaten_einwilligung_at` und liefert `boolean`. Einzige Quelle der Wahrheit, genutzt von allen API-Routen und Server-Component-Seiten (Tech Decision #3 aus der Architektur wortgetreu umgesetzt).
+- Neu: `src/app/api/einwilligung/gesundheitsdaten/route.ts` — `GET` (liefert `{ eingewilligt: boolean }`), `POST` (setzt Zeitstempel, 403 für Gäste/anonyme Sessions), `DELETE` (löscht zuerst alle `wochen_check_ins`-Zeilen des Nutzers, dann nullt 7 Profilfelder inkl. des Einwilligungs-Zeitstempels selbst — Reihenfolge bewusst so, damit ein Fehler beim Löschen der Check-Ins nicht zu einem inkonsistenten Zustand führt, in dem die Einwilligung schon zurückgesetzt aber die Check-Ins noch da sind). Schreibvorgänge laufen über `createAdminClient()` (Service-Role, RLS-Bypass), Lesevorgänge über den regulären, RLS-gebundenen Client.
+- **Server-seitige Durchsetzung an allen 6 betroffenen Stellen** (nicht nur am Frontend-Gate — Defense-in-Depth, da das Frontend-Gate allein umgehbar wäre):
+  - `POST /api/kcal-rechner`, `POST /api/check-in/wochen`, `GET /api/check-in/verlauf` — jeweils 403 ohne Einwilligung, geprüft vor jeder Datenbank-Operation.
+  - `so-geht-abnehmen/page.tsx`, `check-in/page.tsx`, `analyse/page.tsx`, `emotionales-essen/page.tsx` — die 4 Server-Component-Seiten, die Kalorien-Rechner- bzw. Check-In-Werte direkt aus Supabase lesen, behandeln fehlende Einwilligung wie ihren bestehenden Leerzustand (wie in der Architektur für die "passiven" Stellen vorgesehen).
+- `src/components/registrieren-form.tsx`: nach erfolgreichem `updateUser()` im PROJ-19-Anonym-Upgrade-Pfad (bereits bestehende Session) wird zusätzlich ein Best-Effort-`POST /api/einwilligung/gesundheitsdaten` ausgelöst — für den Fresh-Signup-Pfad ist dagegen kein direkter Aufruf möglich (keine Session zum Zeitpunkt von `signUp()`), siehe Backfill unten.
+- `src/app/auth/callback/route.ts`: nach `exchangeCodeForSession` wird `user.user_metadata.gesundheitsdaten_einwilligung` gelesen und, falls gesetzt, der Zeitstempel nachgetragen — idempotent via `.is('gesundheitsdaten_einwilligung_at', null)`-Bedingung, läuft also nur einmal.
+- `src/types/database.ts`: `gesundheitsdaten_einwilligung_at` zu den `profiles`-Typen (Row/Insert/Update) ergänzt.
+- `src/app/datenschutz/page.tsx`: Satz zum Widerrufsverhalten korrigiert (Löschung statt reiner Sperre) — schließt das letzte offene Acceptance Criterion aus dem Spec-Abschnitt "Datenschutztext".
+- Vitest: 3 bestehende Integrationstests (`kcal-rechner`, `check-in/wochen`, `check-in/verlauf`) um Einwilligungs-Mocks (Standard: eingewilligt, damit bestehende Happy-Path-Tests unverändert grün bleiben) sowie neue 403-Tests erweitert; neue Datei `src/app/api/einwilligung/gesundheitsdaten/route.test.ts` mit 13 Tests für GET/POST/DELETE inkl. Lösch-Reihenfolge. Gesamt: **506/506 Tests grün**.
+- `npm run build` und `npm run lint` fehlerfrei.
+
+**Live-Verifikation gegen die migrierte Datenbank (Dev-Server, QA-Test-Konto):**
+- Kalorien-Rechner: Zustimmungs-Bildschirm → "Zustimmen" → Formular erscheint → Speichern liefert 200 → Werte bleiben nach Reload erhalten.
+- `/check-in`: dieselbe (gemeinsame) Einwilligung schaltet auch hier frei, Formular vollständig nutzbar.
+- `/konto`: Widerruf-Button öffnet Bestätigungsdialog mit korrektem Löschungs-Hinweis → Bestätigen liefert Erfolgsmeldung → Kalorien-Rechner und `/check-in` sind danach wieder gesperrt (Zustimmungs-Bildschirm erscheint erneut) → erneutes "Zustimmen" schaltet beide wieder frei.
+- **Debugging-Hinweis (kein Produkt-Bug):** Während der Verifikation zeigte `/konto` die neue Sektion trotz korrekt `eingewilligt: true` liefernder API zunächst nicht an. Ursache war ein veralteter PWA-Service-Worker-Cache (`endlichsatt-v1`, aus PROJ-15) im Test-Browser-Tab, der eine ältere, cache-first zwischengespeicherte JS-Chunk-Version von `konto-view.tsx` (vor PROJ-52) auslieferte — bestätigt über die React-Fiber-Hook-Anzahl der gemounteten Komponente (9 statt der erwarteten 15 Hooks). Kein Code-Fehler; Ursache ist dev-spezifisch, da Turbopack-Chunk-URLs im Dev-Modus (anders als in Produktions-Builds) nicht zwingend bei jeder Änderung wechseln, wodurch der Service Worker eine alte Version cache-first weiter ausliefert. In Produktion sind `/_next/static/`-Chunk-Namen content-gehasht, sodass ein echtes Deploy automatisch neue URLs erzeugt und dieses Szenario dort nicht auftritt. Behoben für die Testsession durch Unregister des Service Workers und Löschen des Caches; kein Code wurde dafür geändert.
+
 ## QA Test Results
 _To be added by /qa_
 

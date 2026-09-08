@@ -3,10 +3,15 @@ import { ErnaehrungSubHeader } from '@/components/ernaehrung-sub-header'
 import { SoGehtAbnehmenGuide } from '@/components/so-geht-abnehmen-guide'
 import type { KcalRechnerGespeicherteWerte } from '@/components/kcal-rechner'
 import type { Geschlecht, Aktivitaetslevel, Ziel } from '@/lib/kcal-rechner'
+import { hatGesundheitsdatenEinwilligung } from '@/lib/gesundheitsdaten-einwilligung'
 
 // PROJ-37: Liest die zuletzt gespeicherten Kcal-Rechner-Werte aus `profiles`.
+// PROJ-52: nur nach erteilter Einwilligung — sonst gelten die Werte als "nicht vorhanden",
+// unabhängig davon, was tatsächlich noch in der Datenbank steht.
 async function ladeGespeicherteWerte(userId: string): Promise<KcalRechnerGespeicherteWerte | null> {
   const supabase = await createClient()
+  if (!(await hatGesundheitsdatenEinwilligung(supabase, userId))) return null
+
   const { data } = await supabase
     .from('profiles')
     .select('kcal_gewicht_kg, kcal_groesse_cm, kcal_alter_jahre, kcal_geschlecht, kcal_aktivitaetslevel, kcal_ziel')

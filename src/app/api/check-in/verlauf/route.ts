@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { hatGesundheitsdatenEinwilligung } from '@/lib/gesundheitsdaten-einwilligung'
 
 // PROJ-51: Reine Lese-Route für den "Check-Ins"-Tab der Analyse-Seite. Liest ausschließlich
 // die bestehende `wochen_check_ins`-Tabelle aus PROJ-45 — kein neues Schema, kein Schreiben.
@@ -70,6 +71,13 @@ export async function GET(request: Request) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 })
+
+  // PROJ-52: ohne Einwilligung dürfen die Check-In-Daten auch lesend nicht ausgeliefert
+  // werden — das Frontend-Gate allein wäre kein ausreichender Schutz (die Route wäre sonst
+  // direkt aufrufbar, ohne dass die UI das verhindert).
+  if (!(await hatGesundheitsdatenEinwilligung(supabase, user.id))) {
+    return NextResponse.json({ error: 'Einwilligung erforderlich' }, { status: 403 })
+  }
 
   const { searchParams } = new URL(request.url)
   const limit = Math.min(parseInt(searchParams.get('limit') ?? '20'), 50)

@@ -3,17 +3,31 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 const mockGetUser = vi.fn()
 const mockRange = vi.fn()
 const mockGte = vi.fn()
+// PROJ-52: `hatGesundheitsdatenEinwilligung` liest `profiles` über denselben Client —
+// `.from()` muss deshalb je nach Tabelle eine andere Chain zurückgeben.
+const mockConsentMaybeSingle = vi.fn()
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn().mockResolvedValue({
     auth: { getUser: mockGetUser },
-    from: vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          order: vi.fn().mockReturnValue({ range: mockRange }),
-          gte: mockGte,
+    from: vi.fn().mockImplementation((table: string) => {
+      if (table === 'profiles') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              maybeSingle: mockConsentMaybeSingle,
+            }),
+          }),
+        }
+      }
+      return {
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            order: vi.fn().mockReturnValue({ range: mockRange }),
+            gte: mockGte,
+          }),
         }),
-      }),
+      }
     }),
   }),
 }))
@@ -32,7 +46,10 @@ function antworten(overrides: Partial<Record<string, number>> = {}) {
 }
 
 describe('GET /api/check-in/verlauf', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockConsentMaybeSingle.mockResolvedValue({ data: { gesundheitsdaten_einwilligung_at: '2026-09-08T00:00:00Z' } })
+  })
 
   it('returns 401 when not authenticated', async () => {
     mockGetUser.mockResolvedValue({ data: { user: null } })
@@ -153,5 +170,16 @@ describe('GET /api/check-in/verlauf', () => {
     const res = await GET(makeRequest('http://localhost/api/check-in/verlauf?limit=5'))
     const data = await res.json()
     expect(data.hasMore).toBe(true)
+  })
+
+  // PROJ-52: ohne Einwilligung dürfen die Check-In-Daten auch lesend nicht ausgeliefert
+  // werden — Schutz auf Route-Ebene, unabhängig vom Frontend-Gate.
+  it('returns 403 without an explicit Art. 9 consent', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
+    mockConsentMaybeSingle.mockResolvedValue({ data: { gesundheitsdaten_einwilligung_at: null } })
+    const { GET } = await import('./route')
+    const res = await GET(makeRequest())
+    expect(res.status).toBe(403)
+    expect(mockRange).not.toHaveBeenCalled()
   })
 })

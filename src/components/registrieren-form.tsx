@@ -54,6 +54,15 @@ export default function RegistrierenForm({ isAnonymousUpgrade = false }: Registr
           setError('Upgrade fehlgeschlagen. Bitte versuche es erneut.')
           return
         }
+        // PROJ-52: anders als beim Fresh-Signup existiert hier bereits eine Session
+        // (dieselbe anonyme Session wird nur um E-Mail/Passwort ergänzt) — die Einwilligung
+        // kann direkt gesetzt werden. Best-effort: schlägt der Aufruf fehl, greift beim
+        // nächsten Zugriff auf Kalorien-Rechner/Check-In der Nachtrag-Zustimmungs-Bildschirm.
+        try {
+          await fetch('/api/einwilligung/gesundheitsdaten', { method: 'POST' })
+        } catch {
+          // bewusst ignoriert, siehe Kommentar oben
+        }
       } else {
         const { error } = await supabase.auth.signUp({
           email,

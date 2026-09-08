@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function GET(request: NextRequest) {
@@ -10,8 +11,22 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     const supabase = await createClient()
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
+      // PROJ-52: bei einem frischen Signup (nicht dem PROJ-19-Anonym-Upgrade-Pfad, der die
+      // Einwilligung bereits direkt beim Upgrade setzt) existiert erst hier — nach
+      // erfolgreicher E-Mail-Bestätigung — eine echte Session. Die bei der Registrierung
+      // in den user_metadata mitgegebene Zustimmung wird jetzt in `profiles` übernommen.
+      // `is null` macht den Aufruf idempotent, falls der Bestätigungslink doppelt geöffnet wird.
+      const user = data.user
+      if (user?.user_metadata?.gesundheitsdaten_einwilligung === true) {
+        const admin = createAdminClient()
+        await admin
+          .from('profiles')
+          .update({ gesundheitsdaten_einwilligung_at: new Date().toISOString() })
+          .eq('id', user.id)
+          .is('gesundheitsdaten_einwilligung_at', null)
+      }
       return NextResponse.redirect(new URL(next, origin))
     }
   }
