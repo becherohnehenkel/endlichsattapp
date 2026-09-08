@@ -289,4 +289,12 @@ Keine Sicherheitsbefunde.
 - **Recommendation:** Deploy. BUG-1 als separate, kleine Test-Infrastruktur-Aufgabe nachziehen (nicht deploy-blockierend).
 
 ## Deployment
-_To be added by /deploy_
+
+**Deployed:** 2026-09-08
+**Production URL:** https://app.mehralsabnehmen.de/konto (Sektion "Gesundheitsdaten"), https://app.mehralsabnehmen.de/ernaehrung/so-geht-abnehmen, https://app.mehralsabnehmen.de/check-in, https://app.mehralsabnehmen.de/analyse (Tab "Check-Ins")
+
+Deploy erfolgte über den regulären Push auf `main` (Vercel Auto-Deploy) — Backend- und QA-Commits waren zum Zeitpunkt dieses Skills bereits automatisch live. Pre-Deployment-Checks: `npm run build` fehlerfrei; `npm run lint` fehlerfrei für den eigenen Code (264 gemeldete Fehler stammen ausschließlich aus `.claude/worktrees/<anderer-Worktree>/`, einer parallel laufenden, separaten Session — nicht Teil dieses Deploys, siehe Hinweis unten). Migration bereits vor `/backend` vom Nutzer manuell ausgeführt und bestätigt.
+
+Live-Verifikation nach Deploy (QA-Testkonto, echte Produktions-DB): `/konto` zeigt die Sektion "Gesundheitsdaten" korrekt mit Widerruf-Button; `/ernaehrung/so-geht-abnehmen` zeigt den Kcal-Rechner korrekt entsperrt mit den zuvor gespeicherten echten Werten (80 kg, 180 cm, 30 Jahre, Männlich, Moderat aktiv, Gewicht halten) — bestätigt, dass Dev- und Prod-Verifikation dieselbe Datenbank teilen und konsistent sind. Keine Konsolenfehler, keine Fehlerzustände.
+
+**Hinweis (kein PROJ-52-Bug):** Während der Pre-Deployment-Lint-Prüfung wurden 264 Fehler in `.claude/worktrees/determined-feynman-5796a5/.next/dev/...` gefunden — kompilierte Build-Artefakte einer parallel laufenden, separaten Claude-Code-Session in einem eigenen Git-Worktree (ausgelöst durch zwei zuvor aus dieser QA vorgeschlagene Hintergrund-Tasks). Die ESLint-Konfiguration schließt `.claude/worktrees/**` aktuell nicht aus, wodurch fremde `.next`-Build-Ausgaben in den Lint-Lauf hineinlecken. Betrifft keinen Code dieses Features; nicht behoben, da außerhalb des Deploy-Scopes und um die parallele Session nicht zu stören.
