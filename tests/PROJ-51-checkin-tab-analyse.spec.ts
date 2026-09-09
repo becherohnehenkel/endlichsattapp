@@ -10,9 +10,42 @@
  */
 
 import { test, expect, type Page, type Route } from '@playwright/test'
+import fs from 'fs'
+import { createClient } from '@supabase/supabase-js'
 
 const TEST_EMAIL = 'qa-test@endlichsatt.dev'
 const TEST_PASSWORD = 'QaTest123!'
+
+function readEnv() {
+  const content = fs.readFileSync('.env.local', 'utf8')
+  const env: Record<string, string> = {}
+  for (const line of content.split('\n')) {
+    const trimmed = line.trim()
+    if (!trimmed || trimmed.startsWith('#')) continue
+    const idx = trimmed.indexOf('=')
+    if (idx === -1) continue
+    env[trimmed.slice(0, idx)] = trimmed.slice(idx + 1)
+  }
+  return env
+}
+
+const env = readEnv()
+const admin = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY)
+
+// Seit PROJ-52 sitzt der Check-In-Tab hinter dem Einwilligungs-Gate für Gesundheitsdaten.
+// Selbst geseedet statt von der Lauf-Reihenfolge anderer Spec-Files (z.B. PROJ-52 selbst,
+// das die Einwilligung des gleichen QA-Kontos zwischenzeitlich widerruft) abhängig zu sein.
+test.beforeAll(async () => {
+  let found: { id: string } | undefined
+  for (let page = 1; page <= 50 && !found; page++) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 })
+    if (error) throw error
+    found = data.users.find(u => u.email === TEST_EMAIL)
+    if (data.users.length < 200) break
+  }
+  if (!found) throw new Error('QA-Testkonto qa-test@endlichsatt.dev nicht gefunden')
+  await admin.from('profiles').update({ gesundheitsdaten_einwilligung_at: new Date().toISOString() }).eq('id', found.id)
+})
 
 async function loginAs(page: Page) {
   await page.goto('/login')

@@ -85,6 +85,12 @@ test.beforeAll(async () => {
   // durchgelaufen ist. So bleibt die "0 gespeicherte Check-Ins"-Vorbedingung für den
   // allerersten Test tatsächlich wahr.
   await admin.from('wochen_check_ins').delete().eq('user_id', qaUserId)
+
+  // Seit PROJ-52 sitzt /check-in hinter dem Einwilligungs-Gate für Gesundheitsdaten.
+  // Selbst geseedet statt von der Lauf-Reihenfolge anderer Spec-Files (z.B. PROJ-52
+  // selbst) abhängig zu sein, die die Einwilligung des gleichen QA-Kontos zwischenzeitlich
+  // widerrufen können.
+  await admin.from('profiles').update({ gesundheitsdaten_einwilligung_at: new Date().toISOString() }).eq('id', qaUserId)
 })
 
 // ─── Seitenstruktur ─────────────────────────────────────────────────────────

@@ -53,6 +53,19 @@ test.beforeAll(async () => {
   qaUserId = found.id
 })
 
+// Dieses File manipuliert die Einwilligung des gemeinsamen QA-Kontos aktiv (u.a. der
+// "Widerruf"-Block widerruft sie als letzten Testschritt echt). Andere Spec-Files
+// (PROJ-37/45/51) laufen zwar mittlerweile selbst mit eigener Vorbedingung (siehe dort),
+// aber dieser afterAll stellt zusätzlich sicher, dass das Konto nach diesem File in jedem
+// Fall — unabhängig davon, welcher Test zuletzt lief — wieder im eingewilligten
+// Normalzustand zurückbleibt, statt andere Files/manuelle QA-Durchgänge zu überraschen.
+test.afterAll(async () => {
+  await admin
+    .from('profiles')
+    .update({ gesundheitsdaten_einwilligung_at: new Date().toISOString() })
+    .eq('id', qaUserId)
+})
+
 async function setzeEinwilligung(eingewilligt: boolean) {
   await admin
     .from('profiles')

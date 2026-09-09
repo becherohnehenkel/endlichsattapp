@@ -268,7 +268,11 @@ Keine Sicherheitsbefunde.
 
 ### Bugs Found
 
-#### BUG-1: Volle Regressionssuite kann PROJ-37/45/51 fälschlich zum Scheitern bringen, wenn PROJ-52-Tests direkt davor liefen
+#### BUG-1: Volle Regressionssuite kann PROJ-37/45/51 fälschlich zum Scheitern bringen, wenn PROJ-52-Tests direkt davor liefen — RESOLVED
+- **Status:** Resolved (2026-09-09). Fix umgesetzt nach dem empfohlenen Muster (beide Varianten kombiniert für Redundanz):
+  1. `tests/PROJ-37-so-geht-abnehmen.spec.ts`, `tests/PROJ-45-wochen-check-in.spec.ts` und `tests/PROJ-51-checkin-tab-analyse.spec.ts` seeden jetzt jeweils selbst in ihrem eigenen `beforeAll` (analog zum bestehenden `readEnv()` + Service-Role-`createClient`-Muster) `gesundheitsdaten_einwilligung_at` des QA-Kontos auf „erteilt" — dadurch unabhängig von der Lauf-Reihenfolge anderer Spec-Files.
+  2. `tests/PROJ-52-einwilligung-gesundheitsdaten.spec.ts` erhielt zusätzlich einen file-weiten `afterAll`, der die Einwilligung nach Abschluss des gesamten Files wieder auf „erteilt" zurücksetzt, unabhängig davon, welcher Test zuletzt lief.
+  - **Verifikation:** Voller Regressionslauf (`tests/PROJ-2/14/19/37/42/45/50/51/52`, `--workers=1`, beide Playwright-Projekte chromium + Mobile Chrome, kein `--project`-Filter) lief sauber durch — 390 passed, 0 Fehler in PROJ-37/45/51/52. Ein erster Lauf-Versuch war durch abnormale System-Auslastung auf der Testmaschine verlangsamt (4,7h statt der üblichen ~11min, 17 breit gestreute Fehler quer über unabhängige Features inkl. PROJ-14/19, keiner davon mit dem Einwilligungs-Gate-Symptom) und wurde als Umgebungs-Flake verworfen; ein sauberer Re-Run (10,8min) bestätigte den Fix. Verbleibend: 2 vorbestehende, unabhängige Flakes in `PROJ-14-konto-widerruf.spec.ts` (Mobile-Chrome-Locator für `a[href="/konto"]` findet vereinzelt ein verstecktes Element zuerst) — nicht durch diesen Fix verursacht, außerhalb des BUG-1-Scopes, separat geflaggt.
 - **Severity:** Medium (Test-Infrastruktur, kein Produkt-Bug — betrifft nur automatisierte Regressionsläufe, nicht echte Nutzer)
 - **Steps to Reproduce:**
   1. Vollen Regressionslauf mit `--workers=1` starten, der `tests/PROJ-52-einwilligung-gesundheitsdaten.spec.ts` VOR oder zusammen mit `tests/PROJ-37-so-geht-abnehmen.spec.ts`, `tests/PROJ-45-wochen-check-in.spec.ts` und/oder `tests/PROJ-51-checkin-tab-analyse.spec.ts` ausführt (bei mehreren Playwright-Projекten läuft z. B. das komplette Chromium-Projekt vor dem Mobile-Chrome-Projekt)
@@ -282,11 +286,11 @@ Keine Sicherheitsbefunde.
 
 ### Summary
 - **Acceptance Criteria:** 12/12 passed (1 mit dokumentierter Live-Test-Einschränkung, durch Unit-Tests abgedeckt)
-- **Bugs Found:** 1 total (0 critical, 0 high, 1 medium, 0 low)
+- **Bugs Found:** 1 total (0 critical, 0 high, 1 medium, 0 low) — resolved
 - **Security:** Pass — keine Befunde
-- **Automatisierte Tests:** Vitest 513/513 grün (7 neu für `/auth/callback`); Playwright: 14 neue PROJ-52-Tests grün, volle Regressionssuite für PROJ-2/14/19/37/42/45/50/51 grün bei korrektem QA-Konto-Zustand (siehe BUG-1)
+- **Automatisierte Tests:** Vitest 513/513 grün (7 neu für `/auth/callback`); Playwright: 14 neue PROJ-52-Tests grün, volle Regressionssuite für PROJ-2/14/19/37/42/45/50/51/52 (`--workers=1`, beide Projekte) grün — 0 Fehler unabhängig von Lauf-Reihenfolge (BUG-1 behoben, siehe oben)
 - **Production Ready:** YES
-- **Recommendation:** Deploy. BUG-1 als separate, kleine Test-Infrastruktur-Aufgabe nachziehen (nicht deploy-blockierend).
+- **Recommendation:** Deploy.
 
 ## Deployment
 
