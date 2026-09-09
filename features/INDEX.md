@@ -64,7 +64,7 @@
 | PROJ-46 | Gewohnheiten | P1 | Deployed | PROJ-45, PROJ-35 | [Spec](PROJ-46-gewohnheiten.md) |
 | PROJ-47 | Startseite Neu (Refinement: Gast-Hinweis & PWA-Installation "Deployed") | P1 | Deployed | PROJ-2, PROJ-19 | [Spec](PROJ-47-startseite-neu.md) |
 | PROJ-48 | Startseite: Ultimatives Ziel | P1 | Deployed | PROJ-47 | [Spec](PROJ-48-startseite-ultimatives-ziel.md) |
-| PROJ-49 | E2E-Testisolation: automatisches QA-Konto-Seeding für PROJ-11/PROJ-12 (Test-Infrastruktur, kein Feature-Spec) | P2 | Deployed | PROJ-11, PROJ-12 | — |
+| PROJ-49 | E2E-Testisolation: automatisches QA-Konto-Seeding für PROJ-11/PROJ-12 (Test-Infrastruktur) | P2 | Deployed | PROJ-11, PROJ-12 | [Spec](PROJ-49-e2e-test-isolation.md) |
 | PROJ-50 | Training-Tab (Analyse-Seite) | P1 | Deployed | PROJ-42, PROJ-44, PROJ-19 | [Spec](PROJ-50-training-tab-analyse.md) |
 | PROJ-51 | Check-In-Tab (Analyse-Seite) | P1 | Deployed | PROJ-42, PROJ-45, PROJ-19 | [Spec](PROJ-51-checkin-tab-analyse.md) |
 | PROJ-52 | Explizite Einwilligung für gesundheitsnahe Daten (Art. 9 DSGVO) | P1 | Deployed | PROJ-2, PROJ-19, PROJ-37, PROJ-45, PROJ-14, PROJ-20, PROJ-51 | [Spec](PROJ-52-einwilligung-gesundheitsdaten.md) |
