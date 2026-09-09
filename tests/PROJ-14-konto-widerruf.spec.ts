@@ -71,7 +71,9 @@ test.describe('Konto-Icon in Headers', () => {
   test('/ (Startseite): Konto-Icon verlinkt auf /konto', async ({ page }) => {
     await loginAs(page)
     await page.goto('/')
-    const kontoLink = page.locator('a[href="/konto"]').first()
+    // Desktop (TopNav) und Mobile Header rendern beide einen a[href="/konto"];
+    // je nach Viewport ist nur einer davon sichtbar (CSS hidden/md:flex).
+    const kontoLink = page.locator('a[href="/konto"]:visible').first()
     await expect(kontoLink).toBeVisible()
   })
 
@@ -79,7 +81,7 @@ test.describe('Konto-Icon in Headers', () => {
     await loginAs(page)
     // /analyse may redirect to /upgrade if no access — both have the icon
     await page.goto('/analyse')
-    const kontoLink = page.locator('a[href="/konto"]').first()
+    const kontoLink = page.locator('a[href="/konto"]:visible').first()
     await expect(kontoLink).toBeVisible()
   })
 
