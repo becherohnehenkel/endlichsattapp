@@ -28,7 +28,7 @@
 | PROJ-11 | Paywall (Refinement: Trial-Trigger-Fix + Rückfall-Modell statt harter Sperre) | P2 | Deployed | PROJ-1, PROJ-2, PROJ-8, PROJ-10, PROJ-19 | [Spec](PROJ-11-paywall.md) |
 | PROJ-12 | Invite-Codes | P2 | Deployed | PROJ-11 | [Spec](PROJ-12-invite-codes.md) |
 | PROJ-13 | Admin-Dashboard | P2 | Deployed | PROJ-8, PROJ-12 | [Spec](PROJ-13-admin-dashboard.md) |
-| PROJ-14 | Kontoübersicht & Widerrufsbutton | P1 | Deployed | PROJ-2, PROJ-11 | [Spec](PROJ-14-konto-widerruf.md) |
+| PROJ-14 | Kontoübersicht & Widerrufsbutton (Test-Fix: Konto-Icon-Locator-Flake auf Mobile Chrome behoben, PR #7) | P1 | Deployed | PROJ-2, PROJ-11 | [Spec](PROJ-14-konto-widerruf.md) |
 | PROJ-15 | PWA & Native Navigation | P1 | Deployed | PROJ-2, PROJ-13 | [Spec](PROJ-15-pwa-native-navigation.md) |
 
 | PROJ-16 | Beilagen-Kontext (Refinement: Snack-Rezepttyp + Typ-Filter "Deployed") | P1 | Deployed | PROJ-8, PROJ-4, PROJ-5, PROJ-30 | [Spec](PROJ-16-beilagen-kontext.md) |
