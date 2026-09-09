@@ -68,10 +68,17 @@ test.describe('Zugriffskontrolle: /konto', () => {
 // ─── Navigation: Konto-Icon in Hauptseiten-Headern ────────────────────────
 
 test.describe('Konto-Icon in Headers', () => {
+  // Auf `/` und `/analyse` rendert NavigationShell sowohl den TopNav-Konto-Link
+  // (Desktop, `hidden md:flex`) als auch den seiteneigenen mobilen Header-Konto-Link
+  // (`md:hidden`) gleichzeitig ins DOM — je nach Viewport ist nur einer davon
+  // tatsächlich sichtbar. `.first()` verlässt sich auf DOM-Reihenfolge statt auf
+  // Sichtbarkeit und griff auf Mobile-Viewports daher manchmal den versteckten
+  // Desktop-Link. `:visible` filtert auf das Element, das im jeweiligen Viewport
+  // tatsächlich angezeigt wird.
   test('/ (Startseite): Konto-Icon verlinkt auf /konto', async ({ page }) => {
     await loginAs(page)
     await page.goto('/')
-    const kontoLink = page.locator('a[href="/konto"]').first()
+    const kontoLink = page.locator('a[href="/konto"]:visible')
     await expect(kontoLink).toBeVisible()
   })
 
@@ -79,7 +86,7 @@ test.describe('Konto-Icon in Headers', () => {
     await loginAs(page)
     // /analyse may redirect to /upgrade if no access — both have the icon
     await page.goto('/analyse')
-    const kontoLink = page.locator('a[href="/konto"]').first()
+    const kontoLink = page.locator('a[href="/konto"]:visible')
     await expect(kontoLink).toBeVisible()
   })
 
@@ -87,7 +94,7 @@ test.describe('Konto-Icon in Headers', () => {
     await loginAs(page)
     await page.goto('/upgrade')
     await expect(page).toHaveURL(/\/upgrade/, { timeout: 5000 })
-    const kontoLink = page.locator('a[href="/konto"]').first()
+    const kontoLink = page.locator('a[href="/konto"]:visible')
     await expect(kontoLink).toBeVisible()
   })
 })

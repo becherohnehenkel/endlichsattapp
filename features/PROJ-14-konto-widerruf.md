@@ -280,9 +280,15 @@ Kein neues Datenbankschema nötig — alle Infos kommen aus dem vorhandenen `pro
 - **Severity:** Medium
 - **Fix:** `await page.goto('/konto')` in `tests/PROJ-2-user-authentication.spec.ts` vor dem Klick auf Abmelden ergänzt. 18/18 Tests bestehen wieder.
 
+#### BUG-2: Konto-Icon-Header-Tests flaky auf Mobile Chrome (`.first()` griff manchmal den unsichtbaren Desktop-Link) — BEHOBEN (2026-09-09)
+- **Severity:** Low (Testinfrastruktur, kein Produktionsbug)
+- **Ursache:** Auf `/` und `/analyse` rendert `NavigationShell` (`src/components/navigation-shell.tsx`) sowohl den `TopNav`-Konto-Link (`src/components/top-nav.tsx`, `hidden md:flex`) als auch den seiteneigenen mobilen Header-Konto-Link (`md:hidden`, z. B. `src/app/page.tsx`) gleichzeitig ins DOM. `page.locator('a[href="/konto"]').first()` wählt strikt nach DOM-Reihenfolge (TopNav kommt zuerst), nicht nach tatsächlicher Sichtbarkeit — auf dem Mobile-Chrome-Viewport ist der TopNav-Link aber per CSS versteckt, wodurch `toBeVisible()` je nach Timing/Rendering fehlschlug.
+- **Fix:** Locator in `tests/PROJ-14-konto-widerruf.spec.ts` (Zeilen "/ (Startseite)", "/analyse", "/upgrade") von `.first()` auf das CSS-Pseudo-Selektor `:visible` umgestellt (`page.locator('a[href="/konto"]:visible')`), sodass unabhängig vom Viewport immer der tatsächlich sichtbare Link ausgewählt wird. Verifiziert mit 3× Wiederholung auf `--project="Mobile Chrome"` (jeweils 11 passed, 3 skipped) sowie 1× auf `--project="chromium"` (11 passed, 3 skipped).
+- **Hinweis:** `/upgrade` hatte nie zwei gleichzeitige Links (kein `TopNav`, siehe `src/lib/nav-visibility.ts`) und war nie betroffen, wurde aber aus Konsistenzgründen auf denselben Selektor umgestellt.
+
 ### Summary
 - **Acceptance Criteria:** 17/17 bestätigt (14 via Tests, 3 via Code Review + conditional E2E)
-- **Bugs Found:** 1 total (0 Critical, 0 High, 1 Medium → behoben, 0 Low)
+- **Bugs Found:** 2 total (0 Critical, 0 High, 1 Medium → behoben, 1 Low → behoben)
 - **Security:** Pass
 - **Production Ready:** YES
 - **Recommendation:** Deploy
