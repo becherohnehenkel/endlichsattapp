@@ -46,8 +46,7 @@ const ZIELE = [
 // (/analyse, /ernaehrung/rezepte).
 export default async function StartPage() {
   const supabase = await createClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  const user = session?.user ?? null
+  const { data: { user } } = await supabase.auth.getUser()
   const isGuest = !user || user.is_anonymous === true
 
   let vorname: string | null = null
