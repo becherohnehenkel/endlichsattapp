@@ -2,7 +2,7 @@
 
 ## Status: Deployed
 **Created:** 2026-06-10
-**Last Updated:** 2026-06-12
+**Last Updated:** 2026-09-09
 **Deployed:** 2026-06-12 — https://endlichsattapp.vercel.app
 
 ## Implementation Notes
@@ -29,6 +29,9 @@ Fix: `middleware.ts` auf `/` vereinheitlicht. Diese Spec (Acceptance Criteria + 
 **Tatsächliche Ursache:** `/login` und `/registrieren` waren reine `'use client'`-Seiten ohne serverseitige Datenabfrage — Next.js optimierte sie dadurch zu vollständig statischen Routen (`○` im Build-Output statt `ƒ`). Bei vollständig statischen Routen griff die Middleware-Weiterleitung in diesem Next.js-16/Turbopack-Dev-Setup nicht, unabhängig von Sessions/Cookies/Tabs.
 
 **Fix:** `src/app/login/page.tsx` und `src/app/registrieren/page.tsx` sind jetzt dünne async Server-Component-Wrapper (gleiches Muster wie `/` und `/analyse`), die selbst `getSession()` prüfen und bei bereits eingeloggtem Nutzer redirecten — die eigentliche Formular-UI wurde nach `src/components/login-form.tsx`/`registrieren-form.tsx` ausgelagert. Macht die Routen dynamisch (`ƒ` im Build-Output bestätigt), Middleware-Logik bleibt als zusätzliche Absicherung bestehen. Alle 18 Tests in `tests/PROJ-2-user-authentication.spec.ts` grün (Chromium + Mobile Chrome), inkl. der beiden vorher `test.fixme()`-markierten. Regression auf PROJ-3/PROJ-10 verifiziert (16/17, der eine "Fehler" war eine nicht zurückgesetzte Test-Vorbedingung, kein Bug).
+
+### Refinement 2026-09-09 — Startseite: getUser() statt getSession()
+`src/app/page.tsx` (Startseite, PROJ-47) prüfte den Login-/Gast-Status bisher über `supabase.auth.getSession()`, das die im Cookie liegende Session ungeprüft übernimmt statt sie serverseitig gegen Supabase Auth zu verifizieren. Auf `getUser()` umgestellt (verifiziert das JWT server-seitig), passend zu den bestehenden Auth Best Practices dieses Projekts. Kein Verhaltensunterschied im Normalfall, schließt aber die theoretische Lücke eines manipulierten/veralteten Session-Cookies. PR #10.
 
 ## Dependencies
 - Requires: PROJ-1 (Supabase Infrastructure Setup) — Auth läuft über Supabase Auth, Profil-Eintrag wird bei Registrierung angelegt

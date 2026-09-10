@@ -16,7 +16,7 @@
 | ID | Feature | Priority | Status | Abhängigkeiten | Spec |
 |----|---------|----------|--------|----------------|------|
 | PROJ-1 | Supabase Infrastructure Setup | P0 | Deployed | — | [Spec](PROJ-1-supabase-infrastructure.md) |
-| PROJ-2 | User Authentication | P0 | Deployed | PROJ-1 | [Spec](PROJ-2-user-authentication.md) |
+| PROJ-2 | User Authentication (Refinement: getUser() statt getSession() auf Startseite) | P0 | Deployed | PROJ-1 | [Spec](PROJ-2-user-authentication.md) |
 | PROJ-3 | Mahlzeit-Input (Foto & Freitext) | P0 | Deployed | PROJ-1, PROJ-2 | [Spec](PROJ-3-mahlzeit-input.md) |
 | PROJ-4 | KI-Analyse-Agent (Rückfragen + BLS + Makros) (Refinement: Schritt-0-Klassifikation "Complete") | P0 | Deployed | PROJ-3, Sättigungsmatrix verifiziert | [Spec](PROJ-4-ki-analyse-agent.md) |
 | PROJ-5 | Sättigungs-Einschätzung & Verbesserungsvorschlag (Refinement: Drei-Säulen-Modell "Complete") | P0 | Deployed | PROJ-4 | [Spec](PROJ-5-saettigungs-einschaetzung.md) |

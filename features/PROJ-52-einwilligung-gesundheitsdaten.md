@@ -1,8 +1,8 @@
 # PROJ-52: Explizite Einwilligung für gesundheitsnahe Daten (Kalorien-Rechner + Wochen-Check-In)
 
-## Status: Planned
+## Status: Deployed
 **Created:** 2026-09-08
-**Last Updated:** 2026-09-08
+**Last Updated:** 2026-09-09
 
 ## Dependencies
 - Requires: PROJ-2 (User Authentication) — Registrierungsformular erhält die neue Pflicht-Checkbox
